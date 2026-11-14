@@ -9,7 +9,10 @@ import { sanitizeSingleLine, sanitizeText } from "./src/utils/sanitize.ts";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isProd = process.env.NODE_ENV === "production";
+const isProd =
+  process.env.NODE_ENV === "production" ||
+  process.env.npm_lifecycle_event === "start" ||
+  Boolean(process.env.K_SERVICE);
 const PORT = Number(process.env.PORT) || 3000;
 const DIST_DIR = path.resolve(__dirname, "dist");
 

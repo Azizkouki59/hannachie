@@ -1,7 +1,10 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import {fileURLToPath} from 'url';
 import {defineConfig} from 'vite';
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => {
   const mapsKey =
@@ -20,13 +23,16 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
-        'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
-        'next/image': path.resolve(__dirname, './src/shims/next-image.tsx'),
-        'next/navigation': path.resolve(__dirname, './src/shims/next-navigation.ts'),
-        'next/font/google': path.resolve(__dirname, './src/shims/next-font-google.ts'),
-        'next': path.resolve(__dirname, './src/shims/next.ts'),
+        '@': path.resolve(rootDir, './src'),
+        'next/link': path.resolve(rootDir, './src/shims/next-link.tsx'),
+        'next/image': path.resolve(rootDir, './src/shims/next-image.tsx'),
+        'next/navigation': path.resolve(rootDir, './src/shims/next-navigation.ts'),
+        'next/font/google': path.resolve(rootDir, './src/shims/next-font-google.ts'),
+        'next': path.resolve(rootDir, './src/shims/next.ts'),
       },
+    },
+    build: {
+      chunkSizeWarningLimit: 1600,
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

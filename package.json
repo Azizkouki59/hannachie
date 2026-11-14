@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "start": "NODE_ENV=production node server.ts",
+    "start": "node server.ts",
     "preview": "NODE_ENV=production node server.ts",
     "deploy:cf": "vite build && npx wrangler deploy",
     "clean": "rm -rf dist server.js",
