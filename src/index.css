@@ -267,6 +267,59 @@
   }
 }
 
+/* Short attention-grabbing hover icon animation for WhatsApp button variant */
+@keyframes whatsapp-hover-pop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  28% {
+    transform: scale(1.24) rotate(-14deg);
+  }
+  58% {
+    transform: scale(1.16) rotate(10deg);
+  }
+  82% {
+    transform: scale(1.06) rotate(-4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.whatsapp-hover-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn-whatsapp-hover {
+  position: relative;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.btn-whatsapp-hover:hover {
+  transform: translateY(-1.5px);
+}
+
+.btn-whatsapp-hover:active {
+  transform: translateY(0) scale(0.985);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn-whatsapp-hover:hover .whatsapp-hover-icon,
+  .btn-whatsapp-hover:focus-visible .whatsapp-hover-icon,
+  .group:hover .whatsapp-hover-icon {
+    animation: whatsapp-hover-pop 0.48s cubic-bezier(0.22, 1, 0.36, 1) 1;
+  }
+}
+
 /* Glassmorphism container style variant for .floating-support-launcher */
 .floating-support-launcher[data-variant="glassmorphism"],
 .floating-support-launcher.floating-support-launcher--glassmorphism {

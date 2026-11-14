@@ -1,11 +1,158 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
-import { ArrowRight, Clock3, Quote, Star } from "lucide-react";
+import { ArrowRight, Clock3, MessageCircle, Quote, Star } from "lucide-react";
 import type { Review, Service } from "@/data/site";
 import { serviceIcons } from "./Illustrations";
 import { ApplianceGraphic } from "./AnimatedAppliances";
 import { ServiceCardSkeleton } from "./Skeletons";
+
+export type WhatsAppButtonVariant =
+  | "hover-emerald"
+  | "hover-outline-light"
+  | "hover-outline"
+  | "emerald";
+
+export function WhatsAppHoverIcon({
+  size = 17,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`whatsapp-hover-icon shrink-0 ${className}`.trim()}
+      aria-hidden="true"
+    >
+      <MessageCircle size={size} />
+    </span>
+  );
+}
+
+type WhatsAppButtonBaseProps = {
+  variant?: WhatsAppButtonVariant;
+  iconSize?: number;
+  showArrow?: boolean;
+  children: ReactNode;
+  className?: string;
+  "data-testid"?: string;
+};
+
+type WhatsAppButtonAsLink = WhatsAppButtonBaseProps & {
+  href: string;
+  external?: boolean;
+  onClick?: AnchorHTMLAttributes<HTMLAnchorElement>["onClick"];
+};
+
+type WhatsAppButtonAsButton = WhatsAppButtonBaseProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "className"> & {
+    href?: undefined;
+  };
+
+export type WhatsAppButtonProps = WhatsAppButtonAsLink | WhatsAppButtonAsButton;
+
+export function WhatsAppButton(props: WhatsAppButtonProps) {
+  const {
+    variant = "hover-emerald",
+    iconSize = 17,
+    showArrow = false,
+    children,
+    className = "",
+  } = props;
+
+  const variantClasses: Record<WhatsAppButtonVariant, string> = {
+    "hover-emerald":
+      "btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/25 cursor-pointer",
+    "hover-outline-light":
+      "btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-500/15 hover:bg-emerald-500/25 hover:border-emerald-400/60 px-5 py-3 text-sm font-bold text-white backdrop-blur-xs cursor-pointer",
+    "hover-outline":
+      "btn-whatsapp-hover group inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-500/10 hover:bg-emerald-500/18 hover:border-emerald-500/60 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-300 cursor-pointer",
+    emerald:
+      "inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3 text-sm font-extrabold text-white shadow-md transition-colors cursor-pointer",
+  };
+
+  const combinedClassName = `${variantClasses[variant]} ${className}`.trim();
+
+  const content = (
+    <>
+      <WhatsAppHoverIcon
+        size={iconSize}
+        className={
+          variant === "hover-outline-light"
+            ? "text-emerald-300"
+            : variant === "hover-outline"
+            ? "text-emerald-600 dark:text-emerald-400"
+            : "text-white"
+        }
+      />
+      <span>{children}</span>
+      {showArrow && (
+        <ArrowRight
+          size={15}
+          className="shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      )}
+    </>
+  );
+
+  if ("href" in props && typeof props.href === "string") {
+    const { href, external, onClick, "data-testid": testId } = props;
+    if (external || href.startsWith("http")) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClick}
+          data-testid={testId}
+          data-variant={variant}
+          className={combinedClassName}
+        >
+          {content}
+        </a>
+      );
+    }
+    return (
+      <Link
+        href={href}
+        onClick={onClick}
+        data-testid={testId}
+        data-variant={variant}
+        className={combinedClassName}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  const {
+    variant: _v,
+    iconSize: _i,
+    showArrow: _a,
+    children: _c,
+    className: _cl,
+    ...buttonRest
+  } = props as WhatsAppButtonAsButton;
+
+  return (
+    <button
+      type={buttonRest.type || "button"}
+      data-variant={variant}
+      className={combinedClassName}
+      {...buttonRest}
+    >
+      {content}
+    </button>
+  );
+}
 
 export function SectionHeading({
   title,

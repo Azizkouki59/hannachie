@@ -65,6 +65,7 @@ const coordinatesSchema = z
 const repairIntakeSchema = z
   .object({
     inquiryMode: z.enum(["repair", "question"]).default("repair"),
+    visitType: z.enum(["home_visit", "workshop"]).default("home_visit"),
     device: z.string().trim().min(1).max(120),
     customDevice: z.string().trim().max(120).optional().default(""),
     brand: z.string().trim().min(1).max(120),
@@ -72,7 +73,7 @@ const repairIntakeSchema = z
     problem: z.string().trim().min(4).max(1500),
     urgency: z.enum(["normal", "express", "notfall"]).default("normal"),
     callbackTime: z.string().trim().max(120).optional().default("Jederzeit erreichbar"),
-    zip: z.string().trim().min(3).max(80),
+    zip: z.string().trim().max(80).optional().default(""),
     streetAddress: z.string().trim().max(200).optional().default(""),
     mapsLocationUrl: z.string().trim().max(500).optional().default(""),
     locationVerified: z.boolean().optional().default(false),
@@ -111,6 +112,13 @@ const repairIntakeSchema = z
         message: "Bitte nennen Sie kurz Ihr Gerät.",
       });
     }
+    if (val.visitType === "home_visit" && val.zip.trim().length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["zip"],
+        message: "Bitte wählen Sie Ihren Einsatzort in Osnabrück & Umgebung.",
+      });
+    }
   });
 
 function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) {
@@ -131,24 +139,25 @@ function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) 
   }
 
   const scriptSrc = isProd
-    ? "script-src 'self'"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+    ? "script-src 'self' https://maps.googleapis.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com";
   const connectSrc = isProd
-    ? "connect-src 'self' https://nominatim.openstreetmap.org"
-    : "connect-src 'self' ws: wss: https://nominatim.openstreetmap.org";
+    ? "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com"
+    : "connect-src 'self' ws: wss: https://nominatim.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com";
 
-  // Tailored CSP allowing self-hosted assets/fonts, Google Maps embeds (only when consented on client),
-  // OpenStreetMap reverse geocoding on explicit click, and WhatsApp handoff form/links.
+  // Tailored CSP allowing self-hosted assets/fonts, interactive Google Maps JS API & vector workers
+  // (only loaded on demand when user opens the pin picker), OpenStreetMap reverse geocoding, and WhatsApp handoff.
   // Intentionally avoids frame-ancestors 'none' so iframe-based studio previews work reliably.
   res.setHeader(
     "Content-Security-Policy",
     [
       "default-src 'self'",
       scriptSrc,
-      "style-src 'self' 'unsafe-inline'",
-      "font-src 'self' data:",
-      "img-src 'self' data: blob: https://hannachi.de",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://hannachi.de https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com",
       connectSrc,
+      "worker-src 'self' blob:",
       "frame-src https://maps.google.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -223,6 +232,7 @@ async function createApp() {
 
     const sanitizedInput = {
       inquiryMode: rawBody.inquiryMode === "question" ? "question" : "repair",
+      visitType: rawBody.visitType === "workshop" ? "workshop" : "home_visit",
       device: sanitizeSingleLine(rawBody.device, 120),
       customDevice: sanitizeSingleLine(rawBody.customDevice, 120),
       brand: sanitizeSingleLine(rawBody.brand, 120),
@@ -277,6 +287,7 @@ async function createApp() {
       receivedAt,
       summary: {
         inquiryMode: parsed.data.inquiryMode,
+        visitType: parsed.data.visitType,
         device: parsed.data.customDevice || parsed.data.device,
         brand: parsed.data.brand,
         urgency: parsed.data.urgency,

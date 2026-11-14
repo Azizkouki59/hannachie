@@ -63,9 +63,12 @@ export default function ContactCta() {
           <button
             type="button"
             onClick={() => openQuickRequest("Waschmaschine", "", "", "question")}
-            className="group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 sm:px-6 py-3.5 text-center text-sm sm:text-[15px] font-semibold text-white shadow-md transition-all duration-200 hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            data-variant="hover-emerald"
+            className="btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 sm:px-6 py-3.5 text-center text-sm sm:text-[15px] font-semibold text-white shadow-md transition-all duration-200 hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           >
-            <MessageCircle size={18} className="shrink-0" />
+            <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
+              <MessageCircle size={18} />
+            </span>
             <span className="flex-1 sm:flex-initial">Direkte Frage für WhatsApp ausfüllen</span>
             <ArrowRight size={16} className="shrink-0 sm:ml-auto transition-transform group-hover:translate-x-1" />
           </button>

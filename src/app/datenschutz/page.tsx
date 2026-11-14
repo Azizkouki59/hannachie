@@ -128,29 +128,42 @@ export default function Datenschutz() {
           {/* 4. Google Maps & Zwei-Klick-Zustimmungslösung */}
           <div className="space-y-3">
             <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-              4. Einbindung von Google Maps (Zwei-Klick-Lösung &amp; vorherige Einwilligung)
+              4. Einbindung von Google Maps (Zwei-Klick-Lösung &amp; interaktive Standortauswahl)
             </h2>
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
-              Auf unserer Kontaktseite binden wir den Kartendienst <strong>Google Maps</strong> (Google
-              LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA; für den EWR: Google
-              Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland) ein, um Ihnen unseren
-              Standort an der Iburger Straße 5 in Osnabrück interaktiv darzustellen.
+              Auf unserer Kontaktseite sowie optional in unserem Reparaturformular (bei Auswahl eines{" "}
+              <em>Vor-Ort-Einsatzes</em>) binden wir den Kartendienst <strong>Google Maps</strong>{" "}
+              (Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA; für den EWR:
+              Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland) ein, damit Sie
+              unseren Werkstattstandort ansehen oder bei Bedarf Ihren Einsatzort per Karten-Pin genau
+              markieren können. Es gelten hierbei die{" "}
+              <a
+                href="https://maps.google.com/help/terms_maps/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-accent underline underline-offset-4"
+              >
+                zusätzlichen Nutzungsbedingungen für Google Maps
+              </a>
+              .
             </p>
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
               <strong className="font-semibold text-primary dark:text-slate-200">
-                Zwei-Klick-Lösung:
+                Zwei-Klick-Lösung &amp; bedarfsgerechtes Laden:
               </strong>{" "}
               Zum Schutz Ihrer Privatsphäre ist Google Maps standardmäßig deaktiviert. Es wird kein
-              Skript und kein Iframe geladen, solange Sie nicht in unserem Cookie-Banner oder direkt
-              am Platzhalter der Karte auf <em>„Karte laden &amp; aktivieren“</em> geklickt haben.
+              Skript und kein Iframe geladen, solange Sie nicht ausdrücklich in unserem
+              Cookie-Banner, am Platzhalter auf <em>„Karte laden &amp; aktivieren“</em> oder im
+              Formular aktiv auf <em>„Auf Google Maps markieren (Roter Pin)“</em> geklickt haben.
             </p>
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
               <strong className="font-semibold text-primary dark:text-slate-200">
                 Rechtsgrundlage:
               </strong>{" "}
-              Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG (Ihre ausdrückliche Einwilligung). Google
-              LLC ist unter dem <strong>EU-US Data Privacy Framework (DPF)</strong> zertifiziert,
-              wodurch ein angemessenes Datenschutzniveau gewährleistet ist.
+              Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG (Ihre ausdrückliche Einwilligung /
+              aktive Anforderung). Google LLC ist unter dem{" "}
+              <strong>EU-US Data Privacy Framework (DPF)</strong> zertifiziert, wodurch ein
+              angemessenes Datenschutzniveau gewährleistet ist.
             </p>
             <p className="text-xs text-ink-faint">
               Sie können Ihre Einwilligung in externe Medien jederzeit mit Wirkung für die Zukunft
@@ -166,8 +179,9 @@ export default function Datenschutz() {
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
               Wenn Sie über unser Online-Formular eine Reparaturanfrage oder eine kurze Frage
               zusammenstellen, werden Ihre Eingaben (z. B. Gerätename, Fehlerbild, Name,
-              Telefonnummer, Adressangabe) sowohl im Browser als auch über eine verschlüsselte
-              HTTPS-Verbindung durch unseren Server-Endpunkt (<code className="font-mono text-xs text-accent">/api/repair-request</code>)
+              Telefonnummer, optionale Einsatzart Vor-Ort vs. Werkstatt sowie ggf. Adressangabe)
+              sowohl im Browser als auch über eine verschlüsselte HTTPS-Verbindung durch unseren
+              Server-Endpunkt (<code className="font-mono text-xs text-accent">/api/repair-request</code>)
               auf Plausibilität, Sicherheit und Spam-Schutz geprüft. Es findet hierbei keine
               dauerhafte Speicherung Ihrer Kontaktdaten in einer externen Marketing-Datenbank statt.
             </p>
@@ -178,12 +192,12 @@ export default function Datenschutz() {
             </p>
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
               <strong className="font-semibold text-primary dark:text-slate-200">
-                Optionale GPS-Standorthilfe (OpenStreetMap Nominatim):
+                Optionale GPS- &amp; Karten-Pin-Standorthilfe (OpenStreetMap Nominatim):
               </strong>{" "}
-              Nur wenn Sie im Formular ausdrücklich auf <em>„Aktuellen Standort teilen“</em> klicken
-              und die Standortfreigabe Ihres Browsers bestätigen, werden die ermittelten Koordinaten
-              zur Auflösung von Straße und Postleitzahl einmalig über HTTPS an den Dienst
-              Nominatim (OpenStreetMap Foundation) übermittelt (Art. 6 Abs. 1 lit. a DSGVO).
+              Nur wenn Sie im Formular ausdrücklich auf <em>„Mein GPS-Standort“</em> klicken oder
+              im Karten-Fenster einen Pin setzen, werden die gewählten Koordinaten zur Auflösung von
+              Straße und Postleitzahl einmalig über HTTPS an Nominatim (OpenStreetMap Foundation)
+              übermittelt (Art. 6 Abs. 1 lit. a DSGVO).
             </p>
           </div>
 
@@ -205,6 +219,12 @@ export default function Datenschutz() {
               <li>
                 <code className="font-mono text-xs text-accent">hannachi-cookie-consent</code>:
                 Speichert Ihre getroffene Entscheidung bezüglich externer Medien (Google Maps).
+              </li>
+              <li>
+                <code className="font-mono text-xs text-accent">hannachi_repair_draft_v1</code>:
+                Speichert Ihren laufenden Formular-Entwurf (inkl. aktuellem Schritt und optionalem
+                Karten-Pin) lokal auf Ihrem Gerät, damit Eingaben bei versehentlichem Schließen nicht
+                verloren gehen (Löschung automatisch nach dem Absenden oder nach 7 Tagen).
               </li>
               <li>
                 <code className="font-mono text-xs text-accent">hannachi_repair_inquiries_v1</code>:

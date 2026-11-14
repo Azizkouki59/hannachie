@@ -1,7 +1,7 @@
 import { isSafeHttpsUrl, sanitizeSingleLine, sanitizeText } from "@/utils/sanitize";
 
 export type WhatsAppInquiryMode = "repair" | "question";
-
+export type WhatsAppVisitType = "home_visit" | "workshop";
 export type WhatsAppUrgencyLevel = "normal" | "express" | "notfall";
 
 export interface WhatsAppCoordinates {
@@ -12,6 +12,7 @@ export interface WhatsAppCoordinates {
 
 export interface WhatsAppMessageInput {
   mode?: WhatsAppInquiryMode;
+  visitType?: WhatsAppVisitType;
   name: string;
   device: string;
   customDevice?: string;
@@ -60,9 +61,9 @@ export type WhatsAppBuildResult =
 export const HANNACHI_WHATSAPP_PHONE = "491703493494";
 
 const URGENCY_LABELS: Record<WhatsAppUrgencyLevel, string> = {
-  normal: "Normal (Termin in den nächsten Tagen)",
-  express: "Dringend (heute oder morgen gewünscht)",
-  notfall: "Notfall (Kühlgerät fällt aus / Wasser tritt aus)",
+  normal: "Normal (nächste Tage)",
+  express: "Dringend (heute oder morgen)",
+  notfall: "NOTFALL (Kühlgerät / Wasseraustritt)",
 };
 
 function sanitizeLine(value?: string | null, multiline = false): string {
@@ -156,59 +157,74 @@ export function validateWhatsAppFields(
 }
 
 /**
- * Formats validated input fields into a structured, professional WhatsApp
- * message ready to send to Hannachi for either 'repair' or 'question' mode.
+ * Formats validated input fields into a crisp, scan-friendly WhatsApp
+ * message for Herr Hannachi. Includes Google Maps pin & address ONLY when
+ * a home visit (`visitType === "home_visit"`) is requested.
  */
 export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): string {
   const mode: WhatsAppInquiryMode = input.mode === "question" ? "question" : "repair";
+  const visitType: WhatsAppVisitType =
+    input.visitType === "workshop"
+      ? "workshop"
+      : input.visitType === "home_visit"
+      ? "home_visit"
+      : mode === "question"
+      ? "workshop"
+      : "home_visit";
+
+  const isHomeVisit = visitType === "home_visit";
   const name = sanitizeLine(input.name);
   const deviceDisplay = resolveDeviceDisplay(input.device, input.customDevice);
-  const brand = sanitizeLine(input.brand) || "Vor Ort / siehe Typenschild";
+  const brand = sanitizeLine(input.brand) || "Siehe Typenschild";
   const model = sanitizeLine(input.model);
   const phone = sanitizeLine(input.phone);
-  const symptom = sanitizeLine(input.symptom);
+  const symptom = sanitizeLine(input.symptom, true);
   const email = sanitizeLine(input.email);
   const referenceId = sanitizeLine(input.referenceId);
+  const photoName = sanitizeLine(input.photoName);
 
-  const locationText = [sanitizeLine(input.streetAddress), sanitizeLine(input.location)]
-    .filter(Boolean)
-    .join(", ");
-  const hasLocation = locationText.length > 0 || Boolean(input.coordinates);
-  const mapsLink = hasLocation ? resolveMapsLink(input) : "";
+  const equipmentLabel = `${deviceDisplay} · ${brand}${model ? ` (${model})` : ""}`;
 
-  const coordsLine =
-    input.locationVerified && input.coordinates
-      ? `• Standort-Status: ✓ Verifiziert (${input.coordinates.lat.toFixed(5)}°, ${input.coordinates.lng.toFixed(5)}°${
-          input.coordinates.accuracy ? ` · ±${Math.round(input.coordinates.accuracy)} m` : ""
-        })`
-      : null;
+  const locationText = isHomeVisit
+    ? [sanitizeLine(input.streetAddress), sanitizeLine(input.location)].filter(Boolean).join(", ")
+    : "";
+  const hasPinOrLocation = isHomeVisit && (locationText.length > 0 || Boolean(input.coordinates));
+  const mapsLink = hasPinOrLocation ? resolveMapsLink(input) : "";
+
+  const verifiedCoordsTag =
+    isHomeVisit && input.locationVerified && input.coordinates
+      ? `${input.coordinates.lat.toFixed(5)}°, ${input.coordinates.lng.toFixed(5)}°`
+      : "";
 
   if (mode === "question") {
     const lines: string[] = [
-      `Hallo Herr Hannachi,`,
-      `ich habe eine *direkte Frage*${referenceId ? ` (Nr. ${referenceId})` : ""}:`,
+      `Guten Tag Herr Hannachi,`,
+      `kurze *Anfrage*${referenceId ? ` · *#${referenceId}*` : ""}:`,
       ``,
-      `*1. Frage / Anliegen:*`,
-      `${symptom}`,
+      `*Anliegen:* ${symptom}`,
+      `• Gerät: ${equipmentLabel}`,
+      `• Service: ${
+        isHomeVisit
+          ? "Vor-Ort-Einsatz (Anfahrt gewünscht)"
+          : "Werkstatt / Beratung (keine Anfahrt nötig)"
+      }`,
       ``,
-      `*2. Gerät & Hersteller:*`,
-      `• Gerät: ${deviceDisplay}`,
-      `• Marke: ${brand}`,
-      ...(model ? [`• Modell / E-Nr.: ${model}`] : []),
-      ``,
-      `*3. Kontaktdaten:*`,
-      `• Name: ${name}`,
-      `• Telefon: ${phone}`,
-      ...(locationText ? [`• Ort / Adresse: ${locationText}`] : []),
-      ...(coordsLine ? [coordsLine] : []),
-      ...(email ? [`• E-Mail: ${email}`] : []),
+      `*Kontakt:* ${name} · ${phone}${email ? ` · ${email}` : ""}`,
     ];
 
-    if (mapsLink) {
-      lines.push(``, `📍 *Google Maps Standort:*`, mapsLink);
+    if (hasPinOrLocation) {
+      lines.push(
+        ``,
+        `📍 *Standort / Google Maps Pin (Anfahrt):*`,
+        `• Adresse: ${locationText || "Siehe Karten-Pin"}${
+          verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
+        }`,
+        mapsLink
+      );
     }
-    if (sanitizeLine(input.photoName)) {
-      lines.push(``, `📷 (Foto beigefügt: ${sanitizeLine(input.photoName)})`);
+
+    if (photoName) {
+      lines.push(``, `📷 *Foto:* ${photoName} (wird im Chat mitgesendet)`);
     }
 
     return lines.join("\n");
@@ -218,30 +234,39 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
   const callbackTime = sanitizeLine(input.callbackTime) || "Jederzeit erreichbar";
 
   const lines: string[] = [
-    `Hallo Herr Hannachi,`,
-    `hier ist meine *komplette Reparaturanfrage*${referenceId ? ` (Anfrage-Nr. ${referenceId})` : ""}:`,
+    `Guten Tag Herr Hannachi,`,
+    `neue *${isHomeVisit ? "Reparaturanfrage" : "Werkstatt-Anfrage"}*${
+      referenceId ? ` · *#${referenceId}*` : ""
+    }`,
     ``,
-    `*1. Gerät & Fehlerbild:*`,
-    `• Gerät: ${deviceDisplay}`,
-    `• Marke: ${brand}`,
-    ...(model ? [`• Modell / E-Nr.: ${model}`] : []),
-    `• Fehler / Symptom: ${symptom}`,
-    `• Dringlichkeit: ${urgency}`,
+    `*Einsatzart:* ${
+      isHomeVisit
+        ? "Vor-Ort-Einsatz (Anfahrt gewünscht)"
+        : "Werkstatt-Service (keine Anfahrt nötig)"
+    }`,
+    `*Dringlichkeit:* ${urgency}`,
     ``,
-    `*2. Kunde & Kontaktdaten:*`,
+    `*Gerät & Problem:*`,
+    `• Gerät: ${equipmentLabel}`,
+    `• Fehlerbild: ${symptom}`,
+    ...(photoName ? [`• Foto: ${photoName} (wird im Chat angehängt)`] : []),
+    ``,
+    `*Kunde:*`,
     `• Name: ${name}`,
     `• Telefon: ${phone}`,
-    ...(locationText ? [`• Ort / Adresse: ${locationText}`] : []),
-    ...(coordsLine ? [coordsLine] : []),
+    `• Erreichbar: ${callbackTime}`,
     ...(email ? [`• E-Mail: ${email}`] : []),
-    `• Erreichbarkeit: ${callbackTime} (ausschließlich per WhatsApp)`,
   ];
 
-  if (mapsLink) {
-    lines.push(``, `📍 *Google Maps Standort / Route für Anfahrt:*`, mapsLink);
-  }
-  if (sanitizeLine(input.photoName)) {
-    lines.push(``, `📷 (Foto vom Gerät / Typenschild: ${sanitizeLine(input.photoName)})`);
+  if (hasPinOrLocation) {
+    lines.push(
+      ``,
+      `📍 *Einsatzort & Google Maps Pin (Anfahrt):*`,
+      `• Adresse: ${locationText || "Siehe Karten-Pin"}${
+        verifiedCoordsTag ? ` · Pin: ${verifiedCoordsTag}` : ""
+      }`,
+      mapsLink
+    );
   }
 
   return lines.join("\n");

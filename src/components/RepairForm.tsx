@@ -25,6 +25,8 @@ import {
   Wrench,
   X,
   Zap,
+  Home,
+  Building2,
 } from "lucide-react";
 import { business } from "@/data/site";
 import {
@@ -51,7 +53,12 @@ import {
   resolveVerifiedFallbackLocation,
   formatCoordinatesDisplay,
   getSuggestedModels,
+  hasMeaningfulDraftContent,
+  saveRepairDraft,
+  loadRepairDraft,
+  clearRepairDraft,
   type InquiryMode,
+  type ServiceVisitType,
   type RepairErrors,
   type RepairValues,
   type UrgencyLevel,
@@ -65,6 +72,7 @@ import {
 } from "@/utils/whatsapp";
 import { RepairFormStepSkeleton } from "@/components/Skeletons";
 import ValidationToast from "@/components/ValidationToast";
+import GoogleMapsPinModal from "@/components/GoogleMapsPinModal";
 
 type Status = "idle" | "loading" | "completing" | "success" | "error";
 
@@ -354,10 +362,12 @@ function LocationVerifiedIndicator({
   verifiedInfo,
   streetAddress,
   zip,
+  onEdit,
 }: {
   verifiedInfo: VerifiedLocationInfo;
   streetAddress?: string;
   zip: string;
+  onEdit?: () => void;
 }) {
   const fullAddress = [
     streetAddress?.trim() || verifiedInfo.streetAddress,
@@ -365,56 +375,65 @@ function LocationVerifiedIndicator({
   ]
     .filter(Boolean)
     .join(", ");
+  const isMapPin = verifiedInfo.source === "map-pin";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -6, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -6, scale: 0.98 }}
-      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.2 }}
       role="status"
       aria-live="polite"
       data-testid="location-verified-indicator"
-      className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.08] dark:bg-emerald-500/[0.12] p-3.5 sm:p-4 shadow-xs"
+      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-500/35 bg-emerald-500/[0.08] dark:bg-emerald-500/[0.12] px-3.5 py-2.5 text-xs"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
-            <ShieldCheck size={20} />
-            <span
-              aria-hidden="true"
-              className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center"
-            >
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" />
-            </span>
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-white">
-                <Check size={12} strokeWidth={3} />
-                Standort verifiziert
-              </span>
-              <span className="rounded-md border border-emerald-500/30 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300 tabular-nums">
-                {verifiedInfo.formattedCoords} (±{verifiedInfo.accuracy} m)
-              </span>
-            </div>
-
-            <p className="mt-1.5 text-xs font-bold text-primary dark:text-slate-100">
-              Erfasste Adresse für Herrn Hannachi:{" "}
-              <span className="text-emerald-700 dark:text-emerald-300">
-                {fullAddress || "Region Osnabrück"}
-              </span>
-            </p>
-            <p className="mt-0.5 text-[11px] text-ink-muted">
-              Exakte Koordinaten &amp; Anfahrtsadresse werden nach Abschluss automatisch per WhatsApp beigefügt.
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-white ${
+            isMapPin ? "bg-red-600" : "bg-emerald-600"
+          }`}
+        >
+          {isMapPin ? <MapPin size={13} /> : <Check size={13} strokeWidth={3} />}
+        </span>
+        <span className="font-bold text-primary dark:text-slate-100 truncate">
+          Standort gespeichert:{" "}
+          <span className="text-emerald-700 dark:text-emerald-300">
+            {fullAddress || "Region Osnabrück"}
+          </span>
+        </span>
       </div>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="shrink-0 font-extrabold text-accent hover:underline cursor-pointer"
+        >
+          Auf Karte ändern
+        </button>
+      )}
     </motion.div>
   );
+}
+
+type ToastValidationScope = "step1" | "step2" | "all";
+
+function filterWaErrorsByScope(
+  waErrors: WhatsAppValidationErrors,
+  scope: ToastValidationScope
+): WhatsAppValidationErrors {
+  if (scope === "all") return waErrors;
+  const allowed: WhatsAppValidationField[] =
+    scope === "step1"
+      ? ["device", "customDevice", "brand"]
+      : ["device", "customDevice", "brand", "symptom"];
+  const scoped: WhatsAppValidationErrors = {};
+  for (const key of allowed) {
+    if (waErrors[key]) {
+      scoped[key] = waErrors[key];
+    }
+  }
+  return scoped;
 }
 
 export default function RepairForm({
@@ -432,21 +451,66 @@ export default function RepairForm({
 }) {
   const uid = useId();
   const initial = resolveInitialDevice(defaultDevice);
+  const initialDraftRef = useRef<ReturnType<typeof loadRepairDraft> | undefined>(undefined);
+  if (initialDraftRef.current === undefined) {
+    initialDraftRef.current = loadRepairDraft();
+  }
+  const restoredDraft = initialDraftRef.current;
+  const hasExplicitPreset = Boolean(defaultSymptom || defaultBrand);
+  const hasExplicitDeviceOverride =
+    Boolean(defaultDevice) && defaultDevice !== "Waschmaschine";
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(() =>
+    restoredDraft && !hasExplicitPreset ? restoredDraft.step : 1
+  );
   const [stepDirection, setStepDirection] = useState<1 | -1>(1);
   const [isStepLoading, setIsStepLoading] = useState<boolean>(true);
   const stepSkeletonTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [values, setValues] = useState<RepairValues>({
-    ...emptyValues,
-    inquiryMode: defaultMode,
-    device: initial.device || "Waschmaschine",
-    customDevice: initial.custom,
-    brand: defaultBrand || "",
-    problem: defaultSymptom || "",
+  const userToggledVisitTypeRef = useRef<boolean>(Boolean(restoredDraft));
+  const [values, setValues] = useState<RepairValues>(() => {
+    const base: RepairValues = {
+      ...emptyValues,
+      inquiryMode: defaultMode,
+      visitType: defaultMode === "question" ? "workshop" : "home_visit",
+      device: initial.device || "Waschmaschine",
+      customDevice: initial.custom,
+      brand: defaultBrand || "",
+      problem: defaultSymptom || "",
+    };
+    if (!restoredDraft) return base;
+    return {
+      ...base,
+      ...restoredDraft.values,
+      photo: null,
+      inquiryMode:
+        defaultMode === "question"
+          ? "question"
+          : restoredDraft.values.inquiryMode || defaultMode,
+      visitType:
+        restoredDraft.values.visitType ||
+        (defaultMode === "question" ? "workshop" : "home_visit"),
+      device:
+        hasExplicitPreset || hasExplicitDeviceOverride
+          ? initial.device || restoredDraft.values.device
+          : restoredDraft.values.device,
+      customDevice:
+        hasExplicitPreset || hasExplicitDeviceOverride
+          ? initial.custom
+          : restoredDraft.values.customDevice,
+      brand: defaultBrand || restoredDraft.values.brand,
+      problem: defaultSymptom || restoredDraft.values.problem,
+    };
   });
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(
-    defaultSymptom ? [defaultSymptom] : []
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(() =>
+    defaultSymptom
+      ? [defaultSymptom]
+      : restoredDraft
+      ? restoredDraft.selectedSymptoms
+      : []
+  );
+  const [restoredFromDraft, setRestoredFromDraft] = useState<boolean>(() =>
+    Boolean(restoredDraft)
   );
   const [errors, setErrors] = useState<RepairErrors>({});
   const [status, setStatus] = useState<Status>("idle");
@@ -455,13 +519,16 @@ export default function RepairForm({
   const [referenceId, setReferenceId] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const [sharedMapsUrl, setSharedMapsUrl] = useState("");
-  const [gpsStatus, setGpsStatus] = useState<"idle" | "locating" | "shared" | "fallback">("idle");
-  const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocationInfo | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "locating" | "shared" | "fallback">(() =>
+    restoredDraft ? restoredDraft.gpsStatus : "idle"
+  );
+  const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocationInfo | null>(() =>
+    restoredDraft ? restoredDraft.verifiedLocation : null
+  );
   const [messageText, setMessageText] = useState("");
   const [hasSentWhatsApp, setHasSentWhatsApp] = useState(false);
   const [showRedirectSuccess, setShowRedirectSuccess] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [toastDismissed, setToastDismissed] = useState(false);
+  const [waToastScope, setWaToastScope] = useState<ToastValidationScope | null>(null);
   const [waToastErrors, setWaToastErrors] = useState<WhatsAppValidationErrors | null>(null);
   const [copied, setCopied] = useState(false);
   const [serviceDoneRated, setServiceDoneRated] = useState(false);
@@ -473,6 +540,29 @@ export default function RepairForm({
   const formRef = useRef<HTMLFormElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
   const redirectFeedbackTimerRef = useRef<number | null>(null);
+  const prevDefaultsRef = useRef({
+    defaultDevice,
+    defaultSymptom,
+    defaultBrand,
+    defaultMode,
+  });
+  const isFirstDraftSyncRef = useRef(true);
+  const draftStateRef = useRef({
+    step,
+    values,
+    selectedSymptoms,
+    verifiedLocation,
+    gpsStatus,
+    hasSentWhatsApp,
+  });
+  draftStateRef.current = {
+    step,
+    values,
+    selectedSymptoms,
+    verifiedLocation,
+    gpsStatus,
+    hasSentWhatsApp,
+  };
 
   const triggerStepSkeleton = (durationMs = 150) => {
     if (stepSkeletonTimerRef.current) {
@@ -506,8 +596,63 @@ export default function RepairForm({
     }
   }, [status]);
 
-  // Sync external device / symptom / brand selection smoothly
+  // Auto-save in-progress draft on every edit and flush if user closes page/tab accidentally
   useEffect(() => {
+    if (isFirstDraftSyncRef.current) {
+      isFirstDraftSyncRef.current = false;
+      return;
+    }
+    if (hasSentWhatsApp) {
+      clearRepairDraft();
+      setRestoredFromDraft(false);
+      return;
+    }
+    if (hasMeaningfulDraftContent(values, step, selectedSymptoms)) {
+      saveRepairDraft({
+        step,
+        values,
+        selectedSymptoms,
+        verifiedLocation,
+        gpsStatus,
+      });
+    } else {
+      clearRepairDraft();
+      setRestoredFromDraft(false);
+    }
+  }, [values, step, selectedSymptoms, verifiedLocation, gpsStatus, hasSentWhatsApp]);
+
+  useEffect(() => {
+    const flushDraft = () => {
+      const current = draftStateRef.current;
+      if (current.hasSentWhatsApp) return;
+      if (
+        hasMeaningfulDraftContent(
+          current.values,
+          current.step,
+          current.selectedSymptoms
+        )
+      ) {
+        saveRepairDraft({
+          step: current.step,
+          values: current.values,
+          selectedSymptoms: current.selectedSymptoms,
+          verifiedLocation: current.verifiedLocation,
+          gpsStatus: current.gpsStatus,
+        });
+      }
+    };
+    window.addEventListener("pagehide", flushDraft);
+    window.addEventListener("beforeunload", flushDraft);
+    return () => {
+      window.removeEventListener("pagehide", flushDraft);
+      window.removeEventListener("beforeunload", flushDraft);
+    };
+  }, []);
+
+  // Sync external device / symptom / brand selection smoothly (only when props change after mount)
+  useEffect(() => {
+    if (prevDefaultsRef.current.defaultDevice === defaultDevice) return;
+    prevDefaultsRef.current.defaultDevice = defaultDevice;
     if (defaultDevice) {
       const resolved = resolveInitialDevice(defaultDevice);
       setValues((prev) => ({
@@ -520,6 +665,8 @@ export default function RepairForm({
   }, [defaultDevice]);
 
   useEffect(() => {
+    if (prevDefaultsRef.current.defaultSymptom === defaultSymptom) return;
+    prevDefaultsRef.current.defaultSymptom = defaultSymptom;
     if (defaultSymptom) {
       setSelectedSymptoms([defaultSymptom]);
       setValues((prev) => ({
@@ -531,6 +678,8 @@ export default function RepairForm({
   }, [defaultSymptom]);
 
   useEffect(() => {
+    if (prevDefaultsRef.current.defaultBrand === defaultBrand) return;
+    prevDefaultsRef.current.defaultBrand = defaultBrand;
     if (defaultBrand) {
       setValues((prev) => ({
         ...prev,
@@ -541,9 +690,16 @@ export default function RepairForm({
   }, [defaultBrand]);
 
   useEffect(() => {
+    if (prevDefaultsRef.current.defaultMode === defaultMode) return;
+    prevDefaultsRef.current.defaultMode = defaultMode;
     setValues((prev) => ({
       ...prev,
       inquiryMode: defaultMode,
+      visitType: userToggledVisitTypeRef.current
+        ? prev.visitType
+        : defaultMode === "question"
+        ? "workshop"
+        : "home_visit",
     }));
   }, [defaultMode]);
 
@@ -559,18 +715,21 @@ export default function RepairForm({
   valuesRef.current = values;
 
   useEffect(() => {
-    if (!hasInteracted || status === "success") {
+    if (!waToastScope || status === "success") {
       setWaToastErrors(null);
       return;
     }
-    const nextWaErrors = validateWhatsAppFields(toWhatsAppInput(values));
+    const nextWaErrors = filterWaErrorsByScope(
+      validateWhatsAppFields(toWhatsAppInput(values)),
+      waToastScope
+    );
     if (Object.keys(nextWaErrors).length === 0) {
       setWaToastErrors(null);
-      setToastDismissed(false);
-    } else if (!toastDismissed) {
+      setWaToastScope(null);
+    } else {
       setWaToastErrors(nextWaErrors);
     }
-  }, [values, hasInteracted, toastDismissed, status]);
+  }, [values, waToastScope, status]);
 
   const jumpToMissingField = (field: WhatsAppValidationField) => {
     const domField = field === "symptom" ? "problem" : field;
@@ -602,7 +761,6 @@ export default function RepairForm({
   };
 
   const set = <K extends keyof RepairValues>(k: K, val: RepairValues[K]) => {
-    setHasInteracted(true);
     const next = { ...valuesRef.current, [k]: val };
     valuesRef.current = next;
     setValues(next);
@@ -612,20 +770,18 @@ export default function RepairForm({
   };
 
   const blur = (k: keyof RepairValues) => {
-    setHasInteracted(true);
+    const raw = valuesRef.current[k];
+    const isEmpty = typeof raw === "string" ? raw.trim().length === 0 : !raw;
+    // Empty required fields ("réponse vide") are only flagged when advancing/submitting,
+    // unless an error is already shown or the user entered invalid non-empty text.
+    if (isEmpty && !errors[k]) {
+      return;
+    }
     const fieldErr = validateField(k, valuesRef.current);
     setErrors((prev) => ({ ...prev, [k]: fieldErr }));
-    if (fieldErr) {
-      const waErrors = validateWhatsAppFields(toWhatsAppInput(valuesRef.current));
-      if (Object.keys(waErrors).length > 0) {
-        setToastDismissed(false);
-        setWaToastErrors(waErrors);
-      }
-    }
   };
 
   function toggleSymptomChip(symptom: string) {
-    setHasInteracted(true);
     const isAlreadySelected = selectedSymptoms.includes(symptom);
     const nextChips = isAlreadySelected
       ? selectedSymptoms.filter((s) => s !== symptom)
@@ -664,8 +820,11 @@ export default function RepairForm({
   function goToStep(targetStep: 1 | 2 | 3) {
     if (targetStep === step) return;
 
-    // Going backwards is always allowed immediately
+    // Going backwards is always allowed immediately and clears active step errors
     if (targetStep < step) {
+      setErrors({});
+      setWaToastScope(null);
+      setWaToastErrors(null);
       setStepDirection(-1);
       setStep(targetStep);
       triggerStepSkeleton(140);
@@ -676,12 +835,14 @@ export default function RepairForm({
     if (step === 1 && targetStep >= 2) {
       const step1Errors = validateStep(1, values);
       if (Object.keys(step1Errors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...step1Errors }));
-        setHasInteracted(true);
-        const waErrors = validateWhatsAppFields(toWhatsAppInput(values));
-        if (Object.keys(waErrors).length > 0) {
-          setToastDismissed(false);
-          setWaToastErrors(waErrors);
+        setErrors(step1Errors);
+        const scopedWa = filterWaErrorsByScope(
+          validateWhatsAppFields(toWhatsAppInput(values)),
+          "step1"
+        );
+        if (Object.keys(scopedWa).length > 0) {
+          setWaToastScope("step1");
+          setWaToastErrors(scopedWa);
         }
         const firstKey = Object.keys(step1Errors)[0];
         formRef.current?.querySelector<HTMLElement>(`[data-field="${firstKey}"]`)?.focus();
@@ -693,12 +854,14 @@ export default function RepairForm({
     if (targetStep === 3) {
       const step2Errors = validateStep(2, values);
       if (Object.keys(step2Errors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...step2Errors }));
-        setHasInteracted(true);
-        const waErrors = validateWhatsAppFields(toWhatsAppInput(values));
-        if (Object.keys(waErrors).length > 0) {
-          setToastDismissed(false);
-          setWaToastErrors(waErrors);
+        setErrors(step2Errors);
+        const scopedWa = filterWaErrorsByScope(
+          validateWhatsAppFields(toWhatsAppInput(values)),
+          "step2"
+        );
+        if (Object.keys(scopedWa).length > 0) {
+          setWaToastScope("step2");
+          setWaToastErrors(scopedWa);
         }
         if (step !== 2) {
           setStepDirection(1);
@@ -714,6 +877,8 @@ export default function RepairForm({
     }
 
     setErrors({});
+    setWaToastScope(null);
+    setWaToastErrors(null);
     setStepDirection(1);
     setStep(targetStep);
     triggerStepSkeleton(150);
@@ -722,13 +887,47 @@ export default function RepairForm({
   function switchInquiryMode(mode: InquiryMode) {
     if (values.inquiryMode === mode) return;
     setErrors({});
-    setHasInteracted(false);
-    setToastDismissed(false);
+    setWaToastScope(null);
     setWaToastErrors(null);
     setValues((prev) => ({
       ...prev,
       inquiryMode: mode,
+      visitType: userToggledVisitTypeRef.current
+        ? prev.visitType
+        : mode === "question"
+        ? "workshop"
+        : "home_visit",
     }));
+  }
+
+  function handleVisitTypeChange(nextVisitType: ServiceVisitType) {
+    userToggledVisitTypeRef.current = true;
+    setValues((prev) => ({
+      ...prev,
+      visitType: nextVisitType,
+    }));
+    setErrors((prev) => ({ ...prev, zip: undefined }));
+  }
+
+  function handleConfirmMapPin(verified: VerifiedLocationInfo) {
+    userToggledVisitTypeRef.current = true;
+    setVerifiedLocation(verified);
+    setGpsStatus("shared");
+    setValues((prev) => ({
+      ...prev,
+      visitType: "home_visit",
+      mapsLocationUrl: verified.mapsUrl,
+      zip: verified.zipAndCity || prev.zip || "49082 Osnabrück",
+      streetAddress: verified.streetAddress || prev.streetAddress || "",
+      locationVerified: true,
+      coordinates: {
+        lat: verified.lat,
+        lng: verified.lng,
+        accuracy: verified.accuracy,
+      },
+    }));
+    setErrors((prev) => ({ ...prev, zip: undefined }));
+    setIsMapModalOpen(false);
   }
 
   function shareGoogleMapsLocation() {
@@ -818,9 +1017,8 @@ export default function RepairForm({
     const found = validate(values);
     const waErrors = validateWhatsAppFields(toWhatsAppInput(values));
     if (Object.keys(found).length > 0 || Object.keys(waErrors).length > 0) {
-      setHasInteracted(true);
       if (Object.keys(waErrors).length > 0) {
-        setToastDismissed(false);
+        setWaToastScope("all");
         setWaToastErrors(waErrors);
       }
       setErrors(found);
@@ -843,8 +1041,8 @@ export default function RepairForm({
       return;
     }
 
+    setWaToastScope(null);
     setWaToastErrors(null);
-    setToastDismissed(false);
 
     setErrors({});
     setSubmitErrorMsg(null);
@@ -903,6 +1101,8 @@ export default function RepairForm({
       window.clearTimeout(redirectFeedbackTimerRef.current);
       redirectFeedbackTimerRef.current = null;
     }
+    userToggledVisitTypeRef.current = false;
+    setIsMapModalOpen(false);
     onPhoto(null);
     setSelectedSymptoms([]);
     setGpsStatus("idle");
@@ -911,6 +1111,7 @@ export default function RepairForm({
     setValues({
       ...emptyValues,
       inquiryMode: values.inquiryMode || "repair",
+      visitType: values.inquiryMode === "question" ? "workshop" : "home_visit",
       device: initial.device || "Waschmaschine",
       customDevice: initial.custom,
       brand: defaultBrand || "",
@@ -925,13 +1126,15 @@ export default function RepairForm({
     setMessageText("");
     setHasSentWhatsApp(false);
     setShowRedirectSuccess(false);
-    setHasInteracted(false);
-    setToastDismissed(false);
+    setWaToastScope(null);
     setWaToastErrors(null);
+    setRestoredFromDraft(false);
+    clearRepairDraft();
   }
 
   const isSubmitting = status === "loading" || status === "completing";
   const isQuestionMode = values.inquiryMode === "question";
+  const isHomeVisit = values.visitType !== "workshop";
   const currentSymptoms = symptomsByDevice[values.device] || symptomsByDevice["Anderes Gerät (Sonstiges)"];
   const currentDiagnostic =
     diagnosticHintByDevice[values.device] || diagnosticHintByDevice["Waschmaschine"];
@@ -940,20 +1143,27 @@ export default function RepairForm({
   const step2Complete = step2Schema.safeParse(values).success;
   const step3Complete = step3Schema.safeParse(values).success;
 
-  // Compute live completion percentage across the 5 core required fields (Device, Problem, Location, Name, Phone)
-  const completedCount = [
-    Boolean(values.device.trim() || isQuestionMode),
-    values.problem.trim().length >= 4,
-    values.zip.trim().length >= 3,
-    values.name.trim().length >= 2,
-    values.phone.replace(/\D/g, "").length >= 6,
-  ].filter(Boolean).length;
-  const fieldPercent = Math.round((completedCount / 5) * 100);
+  // Compute live completion percentage across active required fields
+  const completedCount = isHomeVisit
+    ? [
+        Boolean(values.device.trim() || isQuestionMode),
+        values.problem.trim().length >= 4,
+        values.zip.trim().length >= 3,
+        values.name.trim().length >= 2,
+        values.phone.replace(/\D/g, "").length >= 6,
+      ].filter(Boolean).length
+    : [
+        Boolean(values.device.trim() || isQuestionMode),
+        values.problem.trim().length >= 4,
+        values.name.trim().length >= 2,
+        values.phone.replace(/\D/g, "").length >= 6,
+      ].filter(Boolean).length;
+  const fieldPercent = Math.round((completedCount / (isHomeVisit ? 5 : 4)) * 100);
   const stepBasePercent = isQuestionMode ? 100 : step === 1 ? 33 : step === 2 ? 67 : 100;
   const progressPercent = isQuestionMode
     ? Math.max(fieldPercent, 35)
     : Math.max(fieldPercent, step === 1 ? 25 : step === 2 ? 60 : 88);
-  const liveMapsPreviewUrl = buildClientGoogleMapsLink(values);
+  const liveMapsPreviewUrl = isHomeVisit ? buildClientGoogleMapsLink(values) : "";
 
   if (status === "success") {
     return (
@@ -1118,7 +1328,8 @@ export default function RepairForm({
                 {values.device}
                 {values.brand ? ` (${values.brand})` : ""}
               </strong>{" "}
-              ({values.zip}) wurde für WhatsApp an{" "}
+              {isHomeVisit && values.zip ? `(${values.zip}) ` : "(Werkstatt / Beratung) "}
+              wurde für WhatsApp an{" "}
               <strong className="text-emerald-700 dark:text-emerald-400">Herrn Hannachi</strong> geöffnet. Bitte klicken Sie in WhatsApp nur noch auf Senden.
             </>
           ) : isQuestionMode ? (
@@ -1128,7 +1339,12 @@ export default function RepairForm({
                 {values.device}
                 {values.brand ? ` (${values.brand})` : ""}
               </strong>{" "}
-              aus <strong className="text-primary dark:text-slate-100">{values.zip}</strong> ist vorbereitet, aber{" "}
+              {isHomeVisit && values.zip ? (
+                <>
+                  aus <strong className="text-primary dark:text-slate-100">{values.zip}</strong>{" "}
+                </>
+              ) : null}
+              ist vorbereitet, aber{" "}
               <strong className="text-primary dark:text-slate-100">noch nicht versendet</strong>. Klicken Sie jetzt unten, um die Nachricht ausschließlich per{" "}
               <strong className="text-emerald-700 dark:text-emerald-400">WhatsApp an Herrn Hannachi</strong> zu senden:
             </>
@@ -1139,7 +1355,14 @@ export default function RepairForm({
                 {values.device}
                 {values.brand ? ` (${values.brand})` : ""}
               </strong>{" "}
-              in <strong className="text-primary dark:text-slate-100">{values.zip}</strong> ist vorbereitet, aber{" "}
+              {isHomeVisit && values.zip ? (
+                <>
+                  in <strong className="text-primary dark:text-slate-100">{values.zip}</strong>{" "}
+                </>
+              ) : (
+                <> (Werkstatt / ohne Anfahrt) </>
+              )}
+              ist vorbereitet, aber{" "}
               <strong className="text-primary dark:text-slate-100">noch nicht versendet</strong>. Klicken Sie jetzt unten, um die Nachricht ausschließlich per{" "}
               <strong className="text-emerald-700 dark:text-emerald-400">WhatsApp an Herrn Hannachi</strong> zu senden:
             </>
@@ -1162,20 +1385,23 @@ export default function RepairForm({
               if (Object.keys(waErrors).length > 0) {
                 e.preventDefault();
                 setStatus("idle");
-                setHasInteracted(true);
-                setToastDismissed(false);
+                setWaToastScope("all");
                 setWaToastErrors(waErrors);
                 const firstKey = Object.keys(waErrors)[0] as WhatsAppValidationField | undefined;
                 if (firstKey) jumpToMissingField(firstKey);
                 return;
               }
+              setWaToastScope(null);
               setWaToastErrors(null);
+              clearRepairDraft();
+              setRestoredFromDraft(false);
               setConfettiBurstCount((c) => c + 1);
               setHasSentWhatsApp(true);
               triggerRedirectSuccessFeedback();
             }}
             data-testid="send-whatsapp-only-cta"
-            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-600 px-4 sm:px-6 py-4 text-center text-sm sm:text-base font-extrabold leading-snug text-white shadow-lg shadow-emerald-600/30 transition-all duration-200 hover:bg-emerald-700 hover:-translate-y-0.5"
+            data-variant="hover-emerald"
+            className="btn-whatsapp-hover group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-600 px-4 sm:px-6 py-4 text-center text-sm sm:text-base font-extrabold leading-snug text-white shadow-lg shadow-emerald-600/30 transition-all duration-200 hover:bg-emerald-700 hover:-translate-y-0.5"
           >
             <AnimatePresence mode="wait" initial={false}>
               {showRedirectSuccess ? (
@@ -1196,7 +1422,7 @@ export default function RepairForm({
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.16 }}
-                  className="inline-flex shrink-0"
+                  className="whatsapp-hover-icon inline-flex shrink-0"
                 >
                   <MessageCircle size={20} aria-hidden="true" />
                 </motion.span>
@@ -1211,7 +1437,7 @@ export default function RepairForm({
                 ? "Fertige Frage jetzt per WhatsApp an Herrn Hannachi senden"
                 : "Komplette Anfrage jetzt per WhatsApp an Herrn Hannachi senden"}
             </span>
-            <ArrowRight size={17} className="shrink-0" />
+            <ArrowRight size={17} className="shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
           </a>
 
           {/* Short Success Animation directly in the submit area after confirming WhatsApp redirect */}
@@ -1303,52 +1529,35 @@ export default function RepairForm({
               </pre>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className={`mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-xs ${
-                values.locationVerified
-                  ? "border-emerald-500/40 bg-emerald-500/10"
-                  : "border-sky-500/30 bg-sky-500/10"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white ${
-                    values.locationVerified ? "bg-emerald-600" : "bg-sky-500"
-                  }`}
-                >
-                  {values.locationVerified ? <ShieldCheck size={18} /> : <MapPin size={16} />}
-                </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-extrabold text-primary dark:text-slate-100 truncate">
-                      {values.locationVerified
-                        ? "Standort verifiziert & an Herrn Hannachi übermittelt"
-                        : "Google Maps Standort für Herrn Hannachi beigefügt"}
-                    </p>
-                    {values.locationVerified && values.coordinates && (
-                      <span className="rounded-md bg-emerald-600/15 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
-                        {formatCoordinatesDisplay(values.coordinates.lat, values.coordinates.lng)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-ink-muted truncate mt-0.5">
-                    {[values.streetAddress?.trim(), values.zip.trim()].filter(Boolean).join(", ")}
+            {isHomeVisit && (sharedMapsUrl || liveMapsPreviewUrl) && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-2xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-600 text-white">
+                    <MapPin size={15} />
+                  </span>
+                  <p className="font-bold text-primary dark:text-slate-100 truncate">
+                    Standort im Ticket:{" "}
+                    <span className="text-emerald-700 dark:text-emerald-300">
+                      {[values.streetAddress?.trim(), values.zip.trim()].filter(Boolean).join(", ") || "Osnabrück"}
+                    </span>
                   </p>
                 </div>
-              </div>
-              <a
-                href={sharedMapsUrl || liveMapsPreviewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[42px] w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-white dark:bg-slate-800 border border-primary/15 dark:border-white/15 px-3.5 py-2 text-center font-extrabold text-accent hover:underline shrink-0"
-              >
-                <span>Standort auf Google Maps prüfen</span>
-                <ExternalLink size={13} className="shrink-0" />
-              </a>
-            </motion.div>
+                <a
+                  href={sharedMapsUrl || liveMapsPreviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[38px] w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-white dark:bg-slate-800 border border-primary/15 dark:border-white/15 px-3 py-1.5 text-center font-extrabold text-accent hover:underline shrink-0"
+                >
+                  <span>Auf Karte öffnen</span>
+                  <ExternalLink size={12} className="shrink-0" />
+                </a>
+              </motion.div>
+            )}
 
             <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5">
               <button
@@ -1484,7 +1693,10 @@ export default function RepairForm({
         <ValidationToast
           errors={waToastErrors}
           mode={isQuestionMode ? "question" : "repair"}
-          onDismiss={() => setToastDismissed(true)}
+          onDismiss={() => {
+            setWaToastScope(null);
+            setWaToastErrors(null);
+          }}
           onFieldSelect={jumpToMissingField}
         />
       </motion.div>
@@ -1661,6 +1873,32 @@ export default function RepairForm({
         )}
       </div>
 
+      {/* Saved Draft Restored Notice */}
+      <AnimatePresence>
+        {restoredFromDraft && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="mt-4 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-900 dark:text-emerald-200"
+          >
+            <span className="flex items-center gap-2 font-semibold">
+              <CheckCircle2 size={15} className="shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+              <span>Ihre bisherigen Angaben wurden automatisch gespeichert und wiederhergestellt.</span>
+            </span>
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center gap-1 rounded-lg border border-emerald-600/25 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <RotateCw size={12} aria-hidden />
+              <span>Neu starten</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Zod Validation Summary Alert Banner */}
       <AnimatePresence>
         {Object.values(errors).some(Boolean) && (
@@ -1759,7 +1997,6 @@ export default function RepairForm({
                       type="button"
                       data-field={idx === 0 ? "device" : undefined}
                       onClick={() => {
-                        setHasInteracted(true);
                         setValues((prev) => ({
                           ...prev,
                           device: d,
@@ -1814,120 +2051,114 @@ export default function RepairForm({
               </div>
             </div>
 
-            {/* 2. Location in Osnabrück & Umgebung + 1-Tap Current Location Geolocation Button */}
-            <div className="rounded-2xl border border-accent/25 bg-surface/80 dark:bg-slate-800/60 p-4 sm:p-5 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-extrabold text-primary dark:text-slate-100 flex items-center gap-2">
-                    <MapPin size={16} className="text-accent shrink-0" />
-                    <span>2. Ihr Standort (Osnabrück &amp; ganzes Umland) *</span>
-                  </p>
-                  <p className="text-xs text-ink-muted mt-0.5">
-                    Erfassen Sie Ihre GPS-Koordinaten &amp; Adresse automatisch mit 1 Klick oder wählen Sie Ihren Ort.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={shareGoogleMapsLocation}
-                  disabled={gpsStatus === "locating"}
-                  data-testid="share-current-location-btn-question"
-                  className={`inline-flex min-h-[44px] w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-xs font-extrabold leading-snug transition-all shadow-xs cursor-pointer ${
-                    values.locationVerified
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      : "bg-accent hover:bg-accent-dark text-white"
-                  }`}
-                >
-                  {values.locationVerified ? (
-                    <ShieldCheck size={15} />
-                  ) : (
-                    <Navigation size={14} className={gpsStatus === "locating" ? "animate-spin" : ""} />
-                  )}
-                  <span>
-                    {gpsStatus === "locating"
-                      ? "GPS & Adresse werden ermittelt…"
-                      : values.locationVerified
-                      ? "✓ Aktueller Standort verifiziert (Erneut prüfen)"
-                      : "Aktuellen Standort teilen (GPS & Adresse)"}
-                  </span>
-                </button>
-              </div>
-
-              {/* Visual "Location Verified" Indicator */}
-              <AnimatePresence>
-                {values.locationVerified && verifiedLocation && (
-                  <LocationVerifiedIndicator
-                    verifiedInfo={verifiedLocation}
-                    streetAddress={values.streetAddress}
-                    zip={values.zip}
-                  />
-                )}
-              </AnimatePresence>
-
-              {/* 1-Tap Osnabrück & Surrounding Towns Chips */}
-              <div>
-                <p className="text-[11px] font-bold text-ink-muted mb-1.5">
-                  Schnellauswahl: Osnabrück &amp; Landkreis Osnabrück:
+            {/* 2. Optional Home Visit Choice + Clean Google Maps Pin Picker */}
+            <div className="rounded-2xl border border-accent/25 bg-surface/80 dark:bg-slate-800/60 p-4 space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <p className="text-sm font-extrabold text-primary dark:text-slate-100 flex items-center gap-2">
+                  <MapPin size={16} className="text-accent shrink-0" />
+                  <span>2. Anfahrt gewünscht? (Optional)</span>
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {osnabrueckServiceAreas.map((area) => {
-                    const isSelected = values.zip.toLowerCase().includes(area.label.split(" ")[0].toLowerCase()) || values.zip === area.value;
-                    return (
-                      <button
-                        key={area.value}
-                        type="button"
-                        onClick={() => {
-                          set("zip", area.value);
-                          setErrors((prev) => ({ ...prev, zip: undefined }));
-                        }}
-                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-accent bg-accent text-white shadow-xs"
-                            : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-primary dark:text-slate-200 hover:border-accent"
-                        }`}
-                      >
-                        {area.label}
-                      </button>
-                    );
-                  })}
+
+                <div className="inline-grid grid-cols-2 gap-1.5 rounded-xl bg-white dark:bg-slate-900 p-1 border border-primary/10 dark:border-white/10">
+                  <button
+                    type="button"
+                    data-testid="visit-type-home-btn-question"
+                    aria-pressed={isHomeVisit}
+                    onClick={() => handleVisitTypeChange("home_visit")}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
+                      isHomeVisit
+                        ? "bg-accent text-white shadow-xs"
+                        : "text-ink-muted hover:text-primary dark:hover:text-slate-100"
+                    }`}
+                  >
+                    <Home size={13} />
+                    <span>Vor-Ort-Einsatz</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="visit-type-workshop-btn-question"
+                    aria-pressed={!isHomeVisit}
+                    onClick={() => handleVisitTypeChange("workshop")}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
+                      !isHomeVisit
+                        ? "bg-accent text-white shadow-xs"
+                        : "text-ink-muted hover:text-primary dark:hover:text-slate-100"
+                    }`}
+                  >
+                    <Building2 size={13} />
+                    <span>Werkstatt / Ohne Anfahrt</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Ort / PLZ (Osnabrück & Umgebung) *" htmlFor={id("q-zip")} error={errors.zip}>
-                  <input
-                    id={id("q-zip")}
-                    data-field="zip"
-                    value={values.zip}
-                    onChange={(e) => set("zip", e.target.value)}
-                    onBlur={() => blur("zip")}
-                    className={input(errors.zip)}
-                    placeholder="z. B. 49082 Osnabrück, Georgsmarienhütte, Wallenhorst..."
-                  />
-                </Field>
-                <Field label="Straße & Hausnr. (wird per GPS automatisch ausgefüllt)" htmlFor={id("q-street")}>
-                  <input
-                    id={id("q-street")}
-                    value={values.streetAddress || ""}
-                    onChange={(e) => set("streetAddress", e.target.value)}
-                    className={input()}
-                    placeholder="Optional: z. B. Musterstraße 12"
-                  />
-                </Field>
-              </div>
+              {isHomeVisit ? (
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="PLZ & Ort *" htmlFor={id("q-zip")} error={errors.zip}>
+                      <input
+                        id={id("q-zip")}
+                        data-field="zip"
+                        value={values.zip}
+                        onChange={(e) => set("zip", e.target.value)}
+                        onBlur={() => blur("zip")}
+                        className={input(errors.zip)}
+                        placeholder="z. B. 49082 Osnabrück"
+                      />
+                    </Field>
+                    <Field label="Straße & Hausnr. (optional)" htmlFor={id("q-street")}>
+                      <input
+                        id={id("q-street")}
+                        value={values.streetAddress || ""}
+                        onChange={(e) => set("streetAddress", e.target.value)}
+                        className={input()}
+                        placeholder="z. B. Musterstraße 12"
+                      />
+                    </Field>
+                  </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white dark:bg-slate-900 px-3.5 py-2.5 border border-primary/10 dark:border-white/10 text-xs">
-                <span className="text-ink-muted truncate">
-                  📍 Standort für WhatsApp vorgemerkt:{" "}
-                  <strong className="text-primary dark:text-slate-100">
-                    {[values.streetAddress?.trim(), values.zip.trim()].filter(Boolean).join(", ") || "Osnabrück"}
-                  </strong>
-                </span>
-                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
-                  <CheckCircle2 size={13} />
-                  <span>Wird mitgesendet</span>
-                </span>
-              </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      data-testid="open-google-maps-picker-btn-question"
+                      className="inline-flex min-h-[42px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-4 py-2 text-xs font-extrabold text-white shadow-xs transition-all cursor-pointer"
+                    >
+                      <MapPin size={15} />
+                      <span>
+                        {verifiedLocation?.source === "map-pin"
+                          ? "Karten-Pin ändern"
+                          : "Standort auf Karte wählen (Pin)"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={shareGoogleMapsLocation}
+                      disabled={gpsStatus === "locating"}
+                      data-testid="share-current-location-btn-question"
+                      className="inline-flex min-h-[42px] w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-all cursor-pointer"
+                    >
+                      <Navigation size={13} className={gpsStatus === "locating" ? "animate-spin" : ""} />
+                      <span>{gpsStatus === "locating" ? "GPS lädt…" : "Mein GPS"}</span>
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {values.locationVerified && verifiedLocation && (
+                      <LocationVerifiedIndicator
+                        verifiedInfo={verifiedLocation}
+                        streetAddress={values.streetAddress}
+                        zip={values.zip}
+                        onEdit={() => setIsMapModalOpen(true)}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <p className="text-xs text-ink-muted">
+                  Werkstatt ({business.street}, {business.zip} {business.city}) – für diese Frage wird keine Anfahrtsadresse benötigt.
+                </p>
+              )}
             </div>
 
             {/* 3. Name & Phone */}
@@ -1961,14 +2192,15 @@ export default function RepairForm({
 
             <div className="pt-3 border-t border-primary/8 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <p className="text-xs text-ink-muted">
-                Versand ausschließlich per <strong className="text-emerald-600 dark:text-emerald-400">WhatsApp an Herrn Hannachi</strong> – inklusive Google-Maps-Standort.
+                Direkt per <strong className="text-emerald-600 dark:text-emerald-400">WhatsApp an Herrn Hannachi</strong>
               </p>
               <motion.button
                 type="submit"
                 layout
                 disabled={isSubmitting}
                 whileTap={!isSubmitting ? { scale: 0.98 } : undefined}
-                className={`relative overflow-hidden inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl px-4 sm:px-7 py-3.5 text-center text-sm sm:text-[15px] font-bold leading-snug text-white shadow-lg transition-colors duration-300 w-full sm:w-auto sm:min-w-[260px] sm:whitespace-nowrap cursor-pointer disabled:cursor-not-allowed ${
+                data-variant="hover-emerald"
+                className={`btn-whatsapp-hover group relative overflow-hidden inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl px-4 sm:px-7 py-3.5 text-center text-sm sm:text-[15px] font-bold leading-snug text-white shadow-lg transition-colors duration-300 w-full sm:w-auto sm:min-w-[260px] sm:whitespace-nowrap cursor-pointer disabled:cursor-not-allowed ${
                   status === "completing"
                     ? "bg-emerald-600 shadow-emerald-500/30"
                     : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25"
@@ -2017,9 +2249,11 @@ export default function RepairForm({
                       transition={{ duration: 0.16 }}
                       className="relative z-10 inline-flex items-center gap-2.5"
                     >
-                      <MessageCircle size={18} />
+                      <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
+                        <MessageCircle size={18} />
+                      </span>
                       <span>Fertige Frage für WhatsApp erstellen</span>
-                      <ArrowRight size={16} />
+                      <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -2077,7 +2311,6 @@ export default function RepairForm({
                           data-field={idx === 0 ? "device" : undefined}
                           aria-pressed={isSelected}
                           onClick={() => {
-                            setHasInteracted(true);
                             setValues((prev) => ({
                               ...prev,
                               device: d,
@@ -2497,123 +2730,115 @@ export default function RepairForm({
                   </button>
                 </div>
 
-                {/* Location in Osnabrück & Umgebung + 1-Tap Current Location Geolocation Button */}
-                <div className="rounded-2xl border border-accent/25 bg-surface/80 dark:bg-slate-800/60 p-4 sm:p-5 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-extrabold text-primary dark:text-slate-100 flex items-center gap-2">
-                        <MapPin size={16} className="text-accent shrink-0" />
-                        <span>Einsatzort in Osnabrück &amp; Umgebung + GPS-Verifizierung *</span>
-                      </p>
-                      <p className="text-xs text-ink-muted mt-0.5">
-                        Erfassen Sie Ihre GPS-Koordinaten &amp; Adresse automatisch für Herrn Hannachi oder wählen Sie Ihren Ort.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={shareGoogleMapsLocation}
-                      disabled={gpsStatus === "locating"}
-                      data-testid="share-current-location-btn"
-                      className={`inline-flex min-h-[44px] w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-xs font-extrabold leading-snug transition-all shadow-xs cursor-pointer ${
-                        values.locationVerified
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                          : "bg-accent hover:bg-accent-dark text-white"
-                      }`}
-                    >
-                      {values.locationVerified ? (
-                        <ShieldCheck size={15} />
-                      ) : (
-                        <Navigation size={14} className={gpsStatus === "locating" ? "animate-spin" : ""} />
-                      )}
-                      <span>
-                        {gpsStatus === "locating"
-                          ? "GPS & Adresse werden ermittelt…"
-                          : values.locationVerified
-                          ? "✓ Aktueller Standort verifiziert (Erneut prüfen)"
-                          : "Aktuellen Standort teilen (GPS & Adresse)"}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Visual "Location Verified" Indicator */}
-                  <AnimatePresence>
-                    {values.locationVerified && verifiedLocation && (
-                      <LocationVerifiedIndicator
-                        verifiedInfo={verifiedLocation}
-                        streetAddress={values.streetAddress}
-                        zip={values.zip}
-                      />
-                    )}
-                  </AnimatePresence>
-
-                  {/* 1-Tap Osnabrück & Surrounding Towns Chips */}
-                  <div>
-                    <p className="text-[11px] font-bold text-ink-muted mb-1.5">
-                      1-Klick-Ortsauswahl (Osnabrück &amp; Landkreis Osnabrück):
+                {/* Optional Home Visit Choice + Clean Google Maps Pin Picker */}
+                <div className="rounded-2xl border border-accent/25 bg-surface/80 dark:bg-slate-800/60 p-4 space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p className="text-sm font-extrabold text-primary dark:text-slate-100 flex items-center gap-2">
+                      <MapPin size={16} className="text-accent shrink-0" />
+                      <span>Einsatzart (Vor Ort oder Werkstatt)</span>
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {osnabrueckServiceAreas.map((area) => {
-                        const isSelected =
-                          values.zip.toLowerCase().includes(area.label.split(" ")[0].toLowerCase()) ||
-                          values.zip === area.value;
-                        return (
-                          <button
-                            key={area.value}
-                            type="button"
-                            onClick={() => {
-                              set("zip", area.value);
-                              setErrors((prev) => ({ ...prev, zip: undefined }));
-                            }}
-                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
-                              isSelected
-                                ? "border-accent bg-accent text-white shadow-xs"
-                                : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-primary dark:text-slate-200 hover:border-accent"
-                            }`}
-                          >
-                            {area.label}
-                          </button>
-                        );
-                      })}
+
+                    <div className="inline-grid grid-cols-2 gap-1.5 rounded-xl bg-white dark:bg-slate-900 p-1 border border-primary/10 dark:border-white/10">
+                      <button
+                        type="button"
+                        data-testid="visit-type-home-btn"
+                        aria-pressed={isHomeVisit}
+                        onClick={() => handleVisitTypeChange("home_visit")}
+                        className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
+                          isHomeVisit
+                            ? "bg-accent text-white shadow-xs"
+                            : "text-ink-muted hover:text-primary dark:hover:text-slate-100"
+                        }`}
+                      >
+                        <Home size={13} />
+                        <span>Vor-Ort-Einsatz</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="visit-type-workshop-btn"
+                        aria-pressed={!isHomeVisit}
+                        onClick={() => handleVisitTypeChange("workshop")}
+                        className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
+                          !isHomeVisit
+                            ? "bg-accent text-white shadow-xs"
+                            : "text-ink-muted hover:text-primary dark:hover:text-slate-100"
+                        }`}
+                      >
+                        <Building2 size={13} />
+                        <span>Werkstatt / Ohne Anfahrt</span>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Ort / PLZ (Osnabrück & Umgebung) *" htmlFor={id("zip")} error={errors.zip}>
-                      <input
-                        id={id("zip")}
-                        data-field="zip"
-                        value={values.zip}
-                        onChange={(e) => set("zip", e.target.value)}
-                        onBlur={() => blur("zip")}
-                        className={input(errors.zip)}
-                        placeholder="z. B. 49082 Osnabrück, Georgsmarienhütte, Wallenhorst..."
-                      />
-                    </Field>
+                  {isHomeVisit ? (
+                    <div className="space-y-3">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="PLZ & Ort (Osnabrück & Umgebung) *" htmlFor={id("zip")} error={errors.zip}>
+                          <input
+                            id={id("zip")}
+                            data-field="zip"
+                            value={values.zip}
+                            onChange={(e) => set("zip", e.target.value)}
+                            onBlur={() => blur("zip")}
+                            className={input(errors.zip)}
+                            placeholder="z. B. 49082 Osnabrück"
+                          />
+                        </Field>
 
-                    <Field label="Straße & Hausnr. (wird per GPS automatisch ausgefüllt)" htmlFor={id("streetAddress")}>
-                      <input
-                        id={id("streetAddress")}
-                        value={values.streetAddress || ""}
-                        onChange={(e) => set("streetAddress", e.target.value)}
-                        className={input()}
-                        placeholder="Optional: z. B. Iburger Str. 10"
-                      />
-                    </Field>
-                  </div>
+                        <Field label="Straße & Hausnr. (optional)" htmlFor={id("streetAddress")}>
+                          <input
+                            id={id("streetAddress")}
+                            value={values.streetAddress || ""}
+                            onChange={(e) => set("streetAddress", e.target.value)}
+                            className={input()}
+                            placeholder="z. B. Iburger Str. 10"
+                          />
+                        </Field>
+                      </div>
 
-                  {/* Read-only Location Status Preview (no external redirect before send) */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white dark:bg-slate-900 px-3.5 py-2.5 border border-primary/10 dark:border-white/10 text-xs">
-                    <span className="text-ink-muted truncate">
-                      📍 Standort für WhatsApp vorgemerkt:{" "}
-                      <strong className="text-primary dark:text-slate-100">
-                        {[values.streetAddress?.trim(), values.zip.trim()].filter(Boolean).join(", ") || "Osnabrück"}
-                      </strong>
-                    </span>
-                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
-                      Wird mitgesendet
-                    </span>
-                  </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsMapModalOpen(true)}
+                          data-testid="open-google-maps-picker-btn"
+                          className="inline-flex min-h-[42px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-4 py-2 text-xs font-extrabold text-white shadow-xs transition-all cursor-pointer"
+                        >
+                          <MapPin size={15} />
+                          <span>
+                            {verifiedLocation?.source === "map-pin"
+                              ? "Karten-Pin ändern"
+                              : "Standort auf Karte wählen (Pin)"}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={shareGoogleMapsLocation}
+                          disabled={gpsStatus === "locating"}
+                          data-testid="share-current-location-btn"
+                          className="inline-flex min-h-[42px] w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-all cursor-pointer"
+                        >
+                          <Navigation size={13} className={gpsStatus === "locating" ? "animate-spin" : ""} />
+                          <span>{gpsStatus === "locating" ? "GPS lädt…" : "Mein GPS"}</span>
+                        </button>
+                      </div>
+
+                      <AnimatePresence>
+                        {values.locationVerified && verifiedLocation && (
+                          <LocationVerifiedIndicator
+                            verifiedInfo={verifiedLocation}
+                            streetAddress={values.streetAddress}
+                            zip={values.zip}
+                            onEdit={() => setIsMapModalOpen(true)}
+                          />
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-ink-muted">
+                      Werkstattabgabe / Beratung ({business.street}, {business.zip} {business.city}) – keine Anfahrtsadresse erforderlich.
+                    </p>
+                  )}
                 </div>
 
                 {/* Required Contact Inputs: Name & Phone ONLY (Email optional) */}
@@ -2711,7 +2936,8 @@ export default function RepairForm({
                     layout
                     disabled={status === "loading" || status === "completing"}
                     whileTap={status === "idle" ? { scale: 0.98 } : undefined}
-                    className={`relative overflow-hidden inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl px-4 sm:px-7 py-3.5 text-center text-sm sm:text-[15px] font-bold leading-snug text-white shadow-lg transition-colors duration-300 w-full sm:w-auto sm:min-w-[260px] sm:whitespace-nowrap ${
+                    data-variant="hover-emerald"
+                    className={`btn-whatsapp-hover group relative overflow-hidden inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl px-4 sm:px-7 py-3.5 text-center text-sm sm:text-[15px] font-bold leading-snug text-white shadow-lg transition-colors duration-300 w-full sm:w-auto sm:min-w-[260px] sm:whitespace-nowrap cursor-pointer ${
                       status === "completing"
                         ? "bg-emerald-600 shadow-emerald-500/30"
                         : "bg-accent hover:bg-accent-dark shadow-accent/25"
@@ -2767,9 +2993,11 @@ export default function RepairForm({
                           transition={{ duration: 0.16 }}
                           className="relative z-10 inline-flex items-center gap-2.5"
                         >
-                          <MessageCircle size={18} />
+                          <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
+                            <MessageCircle size={18} />
+                          </span>
                           <span>Anfrage fertig für WhatsApp erstellen</span>
-                          <ArrowRight size={16} />
+                          <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                         </motion.span>
                       )}
                     </AnimatePresence>
@@ -2784,8 +3012,20 @@ export default function RepairForm({
       <ValidationToast
         errors={waToastErrors}
         mode={isQuestionMode ? "question" : "repair"}
-        onDismiss={() => setToastDismissed(true)}
+        onDismiss={() => {
+          setWaToastScope(null);
+          setWaToastErrors(null);
+        }}
         onFieldSelect={jumpToMissingField}
+      />
+      <GoogleMapsPinModal
+        isOpen={isMapModalOpen}
+        initialLat={values.coordinates?.lat ?? verifiedLocation?.lat}
+        initialLng={values.coordinates?.lng ?? verifiedLocation?.lng}
+        initialZip={values.zip}
+        initialStreet={values.streetAddress}
+        onClose={() => setIsMapModalOpen(false)}
+        onConfirm={handleConfirmMapPin}
       />
     </form>
   );

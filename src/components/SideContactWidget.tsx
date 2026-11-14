@@ -15,11 +15,18 @@ import {
   X,
   ArrowRight,
   ExternalLink,
+  RotateCcw,
 } from "lucide-react";
 import { business, type ServiceNotice } from "@/data/site";
 import { herrHannachiImage } from "@/data/images";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { triggerHapticFeedback } from "@/lib/haptics";
+import {
+  clearRepairDraft,
+  loadRepairDraft,
+  REPAIR_DRAFT_EVENT,
+  type RepairDraft,
+} from "@/lib/repairRequest";
 
 const PROMPT_DISMISSED_STORAGE_KEY = "hannachi-contact-prompt-dismissed";
 const PROMPT_DELAY_MS = 2500;
@@ -80,10 +87,11 @@ export default function SideContactWidget({
   hours = business.hours,
   serviceNotice = business.serviceNotice,
 }: SideContactWidgetProps) {
-  const { openQuickRequest } = useQuickRequest();
+  const { isOpen: isQuickRequestOpen, openQuickRequest } = useQuickRequest();
   const containerRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<RepairDraft | null>(() => loadRepairDraft());
   const [isPromptDismissed, setIsPromptDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -94,6 +102,19 @@ export default function SideContactWidget({
   });
   const [isPromptVisible, setIsPromptVisible] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const syncDraft = () => {
+      setSavedDraft(loadRepairDraft());
+    };
+    syncDraft();
+    window.addEventListener(REPAIR_DRAFT_EVENT, syncDraft);
+    window.addEventListener("storage", syncDraft);
+    return () => {
+      window.removeEventListener(REPAIR_DRAFT_EVENT, syncDraft);
+      window.removeEventListener("storage", syncDraft);
+    };
+  }, [isQuickRequestOpen, open]);
 
   const isServiceNoticeActive = Boolean(
     serviceNotice?.active && serviceNotice.message.trim().length > 0
@@ -177,7 +198,54 @@ export default function SideContactWidget({
     setOpen((prev) => !prev);
   };
 
+  const isQuestionDraft = savedDraft?.values.inquiryMode === "question";
+  const draftStepLabel = isQuestionDraft
+    ? "Direkte Frage"
+    : savedDraft?.step === 3
+    ? "Schritt 3/3 · Kontakt"
+    : savedDraft?.step === 2
+    ? "Schritt 2/3 · Fehlerbild"
+    : "Schritt 1/3 · Gerät";
+  const draftShortBadge = isQuestionDraft
+    ? "Frage"
+    : savedDraft
+    ? `${savedDraft.step}/3`
+    : "";
+  const draftDeviceSummary = savedDraft
+    ? [
+        savedDraft.values.customDevice || savedDraft.values.device,
+        savedDraft.values.brand,
+        savedDraft.values.visitType === "workshop" ? "Werkstatt" : "Vor Ort",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+
+  const handleResumeDraft = () => {
+    if (!savedDraft) return;
+    triggerHapticFeedback(50);
+    persistPromptDismissed();
+    setOpen(false);
+    openQuickRequest(
+      savedDraft.values.device || "Waschmaschine",
+      "",
+      "",
+      savedDraft.values.inquiryMode === "question" ? "question" : "repair"
+    );
+  };
+
+  const handleDiscardDraft = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    triggerHapticFeedback(50);
+    clearRepairDraft();
+    setSavedDraft(null);
+  };
+
   const handlePromptClick = () => {
+    if (savedDraft) {
+      handleResumeDraft();
+      return;
+    }
     triggerHapticFeedback(50);
     persistPromptDismissed();
     setOpen(true);
@@ -270,6 +338,42 @@ export default function SideContactWidget({
               </div>
             )}
 
+            {/* Resume Paused Inquiry Banner (when user exited mid-form) */}
+            {savedDraft && (
+              <div className="relative mt-3.5 rounded-xl border border-emerald-400/40 bg-emerald-500/15 p-2.5">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResumeDraft}
+                    data-testid="contact-widget-resume-draft-btn"
+                    className="flex min-h-[42px] flex-1 items-center justify-between gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-left text-xs font-bold text-white shadow-sm hover:bg-emerald-500 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  >
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-1.5 text-xs font-extrabold leading-tight">
+                        <RotateCcw size={13} className="shrink-0" aria-hidden="true" />
+                        <span className="truncate">Anfrage fortsetzen ({draftStepLabel})</span>
+                      </span>
+                      {draftDeviceSummary && (
+                        <span className="mt-0.5 block truncate text-[11px] font-medium text-emerald-100">
+                          {draftDeviceSummary}
+                        </span>
+                      )}
+                    </span>
+                    <ArrowRight size={14} className="shrink-0" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDiscardDraft}
+                    aria-label="Gespeicherten Entwurf verwerfen"
+                    title="Entwurf verwerfen"
+                    className="flex h-10 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white/75 hover:bg-white/15 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Consolidated 4 Contact Actions */}
             <div className="relative mt-3.5 space-y-2">
               {/* 1. Repair Request */}
@@ -284,7 +388,11 @@ export default function SideContactWidget({
               >
                 <span className="flex items-center gap-2.5">
                   <Wrench size={15} aria-hidden="true" />
-                  <span>Reparaturanfrage starten</span>
+                  <span>
+                    {savedDraft && !isQuestionDraft
+                      ? `Reparaturanfrage fortsetzen (${savedDraft.step}/3)`
+                      : "Reparaturanfrage starten"}
+                  </span>
                 </span>
                 <ArrowRight size={14} aria-hidden="true" />
               </button>
@@ -297,11 +405,18 @@ export default function SideContactWidget({
                   setOpen(false);
                   openQuickRequest("Waschmaschine", "", "", "question");
                 }}
-                className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-emerald-500/40 bg-emerald-600/20 px-4 py-2.5 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                data-variant="hover-outline-light"
+                className="btn-whatsapp-hover group flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-emerald-500/40 bg-emerald-600/20 px-4 py-2.5 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
               >
                 <span className="flex items-center gap-2.5">
-                  <MessageCircle size={15} aria-hidden="true" />
-                  <span>Direkte WhatsApp-Frage</span>
+                  <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
+                    <MessageCircle size={15} />
+                  </span>
+                  <span>
+                    {savedDraft && isQuestionDraft
+                      ? "Direkte Frage fortsetzen"
+                      : "Direkte WhatsApp-Frage"}
+                  </span>
                 </span>
                 <ArrowRight size={14} aria-hidden="true" />
               </button>
@@ -428,13 +543,13 @@ export default function SideContactWidget({
                     variants={promptItemVariants}
                     className="text-[11px] font-bold text-white/75 truncate leading-tight"
                   >
-                    Persönlicher Fachbetrieb
+                    {savedDraft ? `Pausiert · ${draftStepLabel}` : "Persönlicher Fachbetrieb"}
                   </motion.p>
                   <motion.div
                     variants={promptItemVariants}
                     className="mt-0.5 inline-flex items-center gap-1 text-xs sm:text-[13px] font-black text-sky-300 group-hover:text-white transition-colors"
                   >
-                    <span>Hannachi kontaktieren</span>
+                    <span>{savedDraft ? "Anfrage fortsetzen" : "Hannachi kontaktieren"}</span>
                     <ArrowRight
                       size={13}
                       className="shrink-0 transition-transform group-hover:translate-x-1"
@@ -523,6 +638,16 @@ export default function SideContactWidget({
               </>
             )}
           </motion.button>
+
+          {/* Saved draft step badge on closed contact trigger (outside overflow-hidden button) */}
+          {!open && savedDraft && draftShortBadge && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-1.5 -left-1.5 z-20 rounded-full border border-white bg-emerald-500 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white shadow-md tabular-nums"
+            >
+              {draftShortBadge}
+            </span>
+          )}
         </div>
       </div>
     </aside>

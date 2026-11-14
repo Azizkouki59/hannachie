@@ -83,7 +83,7 @@ export type VerifiedLocationInfo = {
   streetAddress: string;
   zipAndCity: string;
   mapsUrl: string;
-  source: "gps" | "region-verified";
+  source: "gps" | "map-pin" | "region-verified";
 };
 
 function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -383,14 +383,15 @@ export const diagnosticHintByDevice: Record<
 };
 
 export type InquiryMode = "repair" | "question";
+export type ServiceVisitType = "home_visit" | "workshop";
 export type UrgencyLevel = "normal" | "express" | "notfall";
 export type ContactChannel = "whatsapp";
 
 export const MAX_PHOTO_MB = 8;
 
 /* ── Streamlined Zod Validation Schemas ──
- * Required fields ONLY: Device (for repair), Problem/Question, Location (zip/town or Google Maps pin), Name, and Phone.
- * Brand, Model/E-Nr., Street Address, Email, and Photo are optional so customers are never blocked.
+ * Required fields ONLY: Device (for repair), Brand, Problem/Question, Name, Phone,
+ * plus Location (zip/town or Google Maps pin) ONLY when `visitType === "home_visit"`.
  */
 
 const photoSchema = z
@@ -442,7 +443,8 @@ export const step2Schema = z.object({
   photo: photoSchema,
 });
 
-export const step3Schema = z.object({
+const step3ObjectSchema = z.object({
+  visitType: z.enum(["home_visit", "workshop"]).default("home_visit"),
   name: z
     .string()
     .trim()
@@ -457,13 +459,7 @@ export const step3Schema = z.object({
         val.replace(/\D/g, "").length >= 6,
       "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
     ),
-  zip: z
-    .string()
-    .trim()
-    .min(
-      3,
-      "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder teilen Sie Ihren Google Maps Standort."
-    ),
+  zip: z.string().trim().optional().default(""),
   streetAddress: z.string().optional(),
   mapsLocationUrl: z.string().optional(),
   email: z
@@ -478,46 +474,63 @@ export const step3Schema = z.object({
   callbackTime: z.string().optional(),
 });
 
-export const quickQuestionSchema = z.object({
-  problem: z
-    .string()
-    .trim()
-    .min(4, "Bitte geben Sie Ihre Frage oder Ihr Anliegen kurz ein."),
-  zip: z
-    .string()
-    .trim()
-    .min(
-      3,
-      "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder teilen Sie Ihren Google Maps Standort."
-    ),
-  name: z
-    .string()
-    .trim()
-    .min(2, "Bitte geben Sie Ihren Namen ein."),
-  phone: z
-    .string()
-    .trim()
-    .min(6, "Bitte geben Sie Ihre Telefonnummer für die Antwort ein.")
-    .refine(
-      (val) =>
-        /^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
-        val.replace(/\D/g, "").length >= 6,
-      "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
-    ),
-  device: z.string().trim().min(1, "Bitte wählen Sie ein Gerät aus."),
-  brand: z.string().trim().min(1, "Bitte wählen Sie den Hersteller / die Marke aus."),
-  streetAddress: z.string().optional(),
-  mapsLocationUrl: z.string().optional(),
-  email: z
-    .string()
-    .trim()
-    .optional()
-    .refine(
-      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val),
-      "Bitte geben Sie eine gültige E-Mail-Adresse ein (oder lassen Sie das Feld frei)."
-    ),
-  photo: photoSchema,
+export const step3Schema = step3ObjectSchema.superRefine((val, ctx) => {
+  if (val.visitType === "home_visit" && val.zip.trim().length < 3) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["zip"],
+      message:
+        "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder markieren Sie Ihren Standort auf Google Maps.",
+    });
+  }
 });
+
+export const quickQuestionSchema = z
+  .object({
+    visitType: z.enum(["home_visit", "workshop"]).default("workshop"),
+    problem: z
+      .string()
+      .trim()
+      .min(4, "Bitte geben Sie Ihre Frage oder Ihr Anliegen kurz ein."),
+    zip: z.string().trim().optional().default(""),
+    name: z
+      .string()
+      .trim()
+      .min(2, "Bitte geben Sie Ihren Namen ein."),
+    phone: z
+      .string()
+      .trim()
+      .min(6, "Bitte geben Sie Ihre Telefonnummer für die Antwort ein.")
+      .refine(
+        (val) =>
+          /^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
+          val.replace(/\D/g, "").length >= 6,
+        "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
+      ),
+    device: z.string().trim().min(1, "Bitte wählen Sie ein Gerät aus."),
+    brand: z.string().trim().min(1, "Bitte wählen Sie den Hersteller / die Marke aus."),
+    streetAddress: z.string().optional(),
+    mapsLocationUrl: z.string().optional(),
+    email: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val),
+        "Bitte geben Sie eine gültige E-Mail-Adresse ein (oder lassen Sie das Feld frei)."
+      ),
+    photo: photoSchema,
+  })
+  .superRefine((val, ctx) => {
+    if (val.visitType === "home_visit" && val.zip.trim().length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["zip"],
+        message:
+          "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder markieren Sie Ihren Standort auf Google Maps.",
+      });
+    }
+  });
 
 export const modelsByDeviceAndBrand: Record<string, Record<string, string[]>> = {
   "Waschmaschine": {
@@ -689,7 +702,7 @@ export function getSuggestedModels(device: string, brand: string): string[] {
 
 export const repairFormSchema = step1ObjectSchema
   .merge(step2Schema)
-  .merge(step3Schema)
+  .merge(step3ObjectSchema)
   .superRefine((val, ctx) => {
     if (val.device && (val.device.includes("Anderes") || val.device === "Sonstiges")) {
       if (!val.customDevice || val.customDevice.trim().length < 2) {
@@ -701,10 +714,19 @@ export const repairFormSchema = step1ObjectSchema
         });
       }
     }
+    if (val.visitType === "home_visit" && val.zip.trim().length < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["zip"],
+        message:
+          "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder markieren Sie Ihren Standort auf Google Maps.",
+      });
+    }
   });
 
 export type RepairValues = {
   inquiryMode?: InquiryMode;
+  visitType: ServiceVisitType;
   device: string;
   customDevice?: string;
   brand: string;
@@ -728,6 +750,7 @@ export type RepairErrors = Partial<Record<keyof RepairValues, string>>;
 
 export const emptyValues: RepairValues = {
   inquiryMode: "repair",
+  visitType: "home_visit",
   device: "",
   customDevice: "",
   brand: "",
@@ -794,8 +817,13 @@ export function validateField<K extends keyof RepairValues>(
 }
 
 export function toWhatsAppInput(v: RepairValues, referenceId?: string): WhatsAppMessageInput {
+  const visitType: ServiceVisitType =
+    v.visitType === "workshop" ? "workshop" : "home_visit";
+  const isHomeVisit = visitType === "home_visit";
+
   return {
     mode: v.inquiryMode === "question" ? "question" : "repair",
+    visitType,
     name: v.name,
     device: v.device,
     customDevice: v.customDevice,
@@ -804,11 +832,11 @@ export function toWhatsAppInput(v: RepairValues, referenceId?: string): WhatsApp
     symptom: v.problem,
     model: v.model,
     urgency: v.urgency,
-    location: v.zip,
-    streetAddress: v.streetAddress,
-    mapsLocationUrl: v.mapsLocationUrl,
-    locationVerified: v.locationVerified,
-    coordinates: v.coordinates,
+    location: isHomeVisit ? v.zip : "",
+    streetAddress: isHomeVisit ? v.streetAddress : "",
+    mapsLocationUrl: isHomeVisit ? v.mapsLocationUrl : "",
+    locationVerified: isHomeVisit ? v.locationVerified : false,
+    coordinates: isHomeVisit ? v.coordinates : null,
     callbackTime: v.callbackTime,
     email: v.email,
     photoName: v.photo ? v.photo.name : null,
@@ -818,15 +846,20 @@ export function toWhatsAppInput(v: RepairValues, referenceId?: string): WhatsApp
 
 /**
  * Builds a clickable Google Maps URL for Mr. Hannachi from either:
- * 1. The client's shared GPS coordinates (`coordinates` or `mapsLocationUrl`)
+ * 1. The client's shared GPS / Map Pin coordinates (`coordinates` or `mapsLocationUrl`)
  * 2. The client's entered street address + Osnabrück/Umland town
+ * Returns "" when `visitType === "workshop"`.
  */
 export function buildClientGoogleMapsLink(v: {
+  visitType?: ServiceVisitType;
   zip: string;
   streetAddress?: string;
   mapsLocationUrl?: string;
   coordinates?: CapturedCoordinates | null;
 }): string {
+  if (v.visitType === "workshop") {
+    return "";
+  }
   if (v.mapsLocationUrl && v.mapsLocationUrl.trim().startsWith("http")) {
     return v.mapsLocationUrl.trim();
   }
@@ -861,6 +894,7 @@ export type SubmittedInquiryRecord = {
   referenceId: string;
   createdAt: string;
   inquiryMode: InquiryMode;
+  visitType: ServiceVisitType;
   device: string;
   brand: string;
   model: string;
@@ -891,6 +925,278 @@ export type SubmitResult = {
 };
 
 const STORAGE_KEY = "hannachi_repair_inquiries_v1";
+const DRAFT_STORAGE_KEY = "hannachi_repair_draft_v1";
+export const REPAIR_DRAFT_EVENT = "hannachi-repair-draft-change";
+const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export type SerializableRepairValues = Omit<RepairValues, "photo">;
+
+export type RepairDraft = {
+  step: 1 | 2 | 3;
+  values: SerializableRepairValues;
+  selectedSymptoms: string[];
+  verifiedLocation: VerifiedLocationInfo | null;
+  gpsStatus: "idle" | "shared" | "fallback";
+  updatedAt: number;
+};
+
+export function hasMeaningfulDraftContent(
+  values: Omit<RepairValues, "photo"> | RepairValues,
+  step: 1 | 2 | 3,
+  selectedSymptoms: string[]
+): boolean {
+  return (
+    step > 1 ||
+    selectedSymptoms.length > 0 ||
+    Boolean(
+      values.brand.trim() ||
+        values.customDevice?.trim() ||
+        values.model.trim() ||
+        values.problem.trim() ||
+        values.name.trim() ||
+        values.phone.trim() ||
+        values.email.trim() ||
+        values.streetAddress?.trim() ||
+        values.locationVerified
+    ) ||
+    values.urgency !== "normal" ||
+    values.inquiryMode === "question" ||
+    values.visitType === "workshop" ||
+    (Boolean(values.zip.trim()) && values.zip.trim() !== emptyValues.zip) ||
+    (Boolean(values.device) && values.device !== "Waschmaschine")
+  );
+}
+
+export function saveRepairDraft(draft: {
+  step: 1 | 2 | 3;
+  values: RepairValues | SerializableRepairValues;
+  selectedSymptoms: string[];
+  verifiedLocation: VerifiedLocationInfo | null;
+  gpsStatus: "idle" | "locating" | "shared" | "fallback";
+}): void {
+  if (typeof window === "undefined") return;
+  try {
+    const v = draft.values;
+    const inquiryMode: InquiryMode = v.inquiryMode === "question" ? "question" : "repair";
+    const visitType: ServiceVisitType =
+      v.visitType === "workshop" ? "workshop" : "home_visit";
+
+    const serializableValues: SerializableRepairValues = {
+      inquiryMode,
+      visitType,
+      device: sanitizeSingleLine(v.device, 120),
+      customDevice: sanitizeSingleLine(v.customDevice, 120),
+      brand: sanitizeSingleLine(v.brand, 120),
+      model: sanitizeSingleLine(v.model, 120),
+      problem: sanitizeText(v.problem, 1500, true),
+      urgency:
+        v.urgency === "express" || v.urgency === "notfall" ? v.urgency : "normal",
+      preferredChannel: "whatsapp",
+      callbackTime: sanitizeSingleLine(v.callbackTime, 120) || "Jederzeit erreichbar",
+      zip: sanitizeSingleLine(v.zip, 80),
+      streetAddress: sanitizeSingleLine(v.streetAddress, 200),
+      mapsLocationUrl: isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+      locationVerified: Boolean(v.locationVerified),
+      coordinates:
+        v.coordinates &&
+        Number.isFinite(v.coordinates.lat) &&
+        Number.isFinite(v.coordinates.lng)
+          ? {
+              lat: v.coordinates.lat,
+              lng: v.coordinates.lng,
+              ...(typeof v.coordinates.accuracy === "number" &&
+              Number.isFinite(v.coordinates.accuracy)
+                ? { accuracy: v.coordinates.accuracy }
+                : {}),
+            }
+          : null,
+      name: sanitizeSingleLine(v.name, 120),
+      phone: sanitizeSingleLine(v.phone, 30),
+      email: sanitizeSingleLine(v.email, 160),
+    };
+
+    const payload: RepairDraft = {
+      step: draft.step,
+      values: serializableValues,
+      selectedSymptoms: draft.selectedSymptoms
+        .map((s) => sanitizeSingleLine(s, 140))
+        .filter(Boolean)
+        .slice(0, 12),
+      verifiedLocation: draft.verifiedLocation
+        ? {
+            ...draft.verifiedLocation,
+            mapsUrl: isSafeHttpsUrl(draft.verifiedLocation.mapsUrl)
+              ? draft.verifiedLocation.mapsUrl
+              : "",
+          }
+        : null,
+      gpsStatus:
+        draft.gpsStatus === "shared" || draft.gpsStatus === "fallback"
+          ? draft.gpsStatus
+          : "idle",
+      updatedAt: Date.now(),
+    };
+
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    window.dispatchEvent(new CustomEvent(REPAIR_DRAFT_EVENT));
+  } catch {
+    // Ignore storage quota or restricted iframe errors
+  }
+}
+
+export function loadRepairDraft(): RepairDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = safeJsonParse<Record<string, unknown> | null>(
+      raw,
+      (val): val is Record<string, unknown> =>
+        typeof val === "object" && val !== null && !Array.isArray(val),
+      null
+    );
+    if (!parsed) return null;
+
+    const updatedAt = typeof parsed.updatedAt === "number" ? parsed.updatedAt : 0;
+    if (!updatedAt || Date.now() - updatedAt > DRAFT_TTL_MS) {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      return null;
+    }
+
+    const step = parsed.step === 2 || parsed.step === 3 ? parsed.step : 1;
+    const rawValues =
+      typeof parsed.values === "object" && parsed.values !== null
+        ? (parsed.values as Record<string, unknown>)
+        : null;
+    if (!rawValues) return null;
+
+    const rawCoords =
+      typeof rawValues.coordinates === "object" && rawValues.coordinates !== null
+        ? (rawValues.coordinates as Record<string, unknown>)
+        : null;
+    const coordinates: CapturedCoordinates | null =
+      rawCoords &&
+      typeof rawCoords.lat === "number" &&
+      Number.isFinite(rawCoords.lat) &&
+      typeof rawCoords.lng === "number" &&
+      Number.isFinite(rawCoords.lng)
+        ? {
+            lat: rawCoords.lat,
+            lng: rawCoords.lng,
+            ...(typeof rawCoords.accuracy === "number" &&
+            Number.isFinite(rawCoords.accuracy)
+              ? { accuracy: rawCoords.accuracy }
+              : {}),
+          }
+        : null;
+
+    const inquiryMode: InquiryMode =
+      rawValues.inquiryMode === "question" ? "question" : "repair";
+    const visitType: ServiceVisitType =
+      rawValues.visitType === "workshop"
+        ? "workshop"
+        : rawValues.visitType === "home_visit"
+        ? "home_visit"
+        : inquiryMode === "question"
+        ? "workshop"
+        : "home_visit";
+
+    const values: SerializableRepairValues = {
+      inquiryMode,
+      visitType,
+      device: sanitizeSingleLine(rawValues.device, 120) || "Waschmaschine",
+      customDevice: sanitizeSingleLine(rawValues.customDevice, 120),
+      brand: sanitizeSingleLine(rawValues.brand, 120),
+      model: sanitizeSingleLine(rawValues.model, 120),
+      problem: sanitizeText(rawValues.problem, 1500, true),
+      urgency:
+        rawValues.urgency === "express" || rawValues.urgency === "notfall"
+          ? rawValues.urgency
+          : "normal",
+      preferredChannel: "whatsapp",
+      callbackTime:
+        sanitizeSingleLine(rawValues.callbackTime, 120) || "Jederzeit erreichbar",
+      zip: sanitizeSingleLine(rawValues.zip, 80) || emptyValues.zip,
+      streetAddress: sanitizeSingleLine(rawValues.streetAddress, 200),
+      mapsLocationUrl: isSafeHttpsUrl(rawValues.mapsLocationUrl)
+        ? (rawValues.mapsLocationUrl as string).trim()
+        : "",
+      locationVerified: Boolean(rawValues.locationVerified),
+      coordinates,
+      name: sanitizeSingleLine(rawValues.name, 120),
+      phone: sanitizeSingleLine(rawValues.phone, 30),
+      email: sanitizeSingleLine(rawValues.email, 160),
+    };
+
+    const selectedSymptoms = Array.isArray(parsed.selectedSymptoms)
+      ? parsed.selectedSymptoms
+          .map((item) => sanitizeSingleLine(item, 140))
+          .filter(Boolean)
+          .slice(0, 12)
+      : [];
+
+    if (!hasMeaningfulDraftContent(values, step, selectedSymptoms)) {
+      return null;
+    }
+
+    const rawLoc =
+      typeof parsed.verifiedLocation === "object" && parsed.verifiedLocation !== null
+        ? (parsed.verifiedLocation as Record<string, unknown>)
+        : null;
+    const verifiedLocation: VerifiedLocationInfo | null =
+      rawLoc &&
+      typeof rawLoc.lat === "number" &&
+      Number.isFinite(rawLoc.lat) &&
+      typeof rawLoc.lng === "number" &&
+      Number.isFinite(rawLoc.lng)
+        ? {
+            lat: rawLoc.lat,
+            lng: rawLoc.lng,
+            accuracy:
+              typeof rawLoc.accuracy === "number" && Number.isFinite(rawLoc.accuracy)
+                ? rawLoc.accuracy
+                : 18,
+            formattedCoords: sanitizeSingleLine(rawLoc.formattedCoords, 80),
+            streetAddress: sanitizeSingleLine(rawLoc.streetAddress, 200),
+            zipAndCity: sanitizeSingleLine(rawLoc.zipAndCity, 120),
+            mapsUrl: isSafeHttpsUrl(rawLoc.mapsUrl) ? (rawLoc.mapsUrl as string) : "",
+            source:
+              rawLoc.source === "gps"
+                ? "gps"
+                : rawLoc.source === "map-pin"
+                ? "map-pin"
+                : "region-verified",
+          }
+        : null;
+
+    const gpsStatus =
+      parsed.gpsStatus === "shared" || parsed.gpsStatus === "fallback"
+        ? parsed.gpsStatus
+        : "idle";
+
+    return {
+      step,
+      values,
+      selectedSymptoms,
+      verifiedLocation,
+      gpsStatus,
+      updatedAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function clearRepairDraft(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    window.dispatchEvent(new CustomEvent(REPAIR_DRAFT_EVENT));
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export function getSavedInquiries(): SubmittedInquiryRecord[] {
   if (typeof window === "undefined") return [];
@@ -920,17 +1226,24 @@ export async function submitRepairRequest(
   v: RepairValues,
   honeypot = ""
 ): Promise<SubmitResult> {
+  const visitType: ServiceVisitType = v.visitType === "workshop" ? "workshop" : "home_visit";
+  const isHomeVisit = visitType === "home_visit";
+
   const normalizedValues: RepairValues = {
     ...v,
+    visitType,
     device: sanitizeSingleLine(v.device, 120),
     customDevice: sanitizeSingleLine(v.customDevice, 120),
     brand: sanitizeSingleLine(v.brand, 120),
     model: sanitizeSingleLine(v.model, 120),
     problem: sanitizeText(v.problem, 1500, true),
     callbackTime: sanitizeSingleLine(v.callbackTime, 120) || "Jederzeit erreichbar",
-    zip: sanitizeSingleLine(v.zip, 80),
-    streetAddress: sanitizeSingleLine(v.streetAddress, 200),
-    mapsLocationUrl: isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+    zip: isHomeVisit ? sanitizeSingleLine(v.zip, 80) : "",
+    streetAddress: isHomeVisit ? sanitizeSingleLine(v.streetAddress, 200) : "",
+    mapsLocationUrl:
+      isHomeVisit && isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+    locationVerified: isHomeVisit ? Boolean(v.locationVerified) : false,
+    coordinates: isHomeVisit ? v.coordinates : null,
     name: sanitizeSingleLine(v.name, 120),
     phone: sanitizeSingleLine(v.phone, 30),
     email: sanitizeSingleLine(v.email, 160),
@@ -942,7 +1255,7 @@ export async function submitRepairRequest(
   }
 
   let referenceId = generateClientReferenceId();
-  const mapsLocationUrl = buildClientGoogleMapsLink(normalizedValues);
+  const mapsLocationUrl = isHomeVisit ? buildClientGoogleMapsLink(normalizedValues) : "";
 
   // Validate & register request with hardened Express backend (/api/repair-request)
   try {
@@ -957,6 +1270,7 @@ export async function submitRepairRequest(
       signal: controller.signal,
       body: JSON.stringify({
         inquiryMode: normalizedValues.inquiryMode || "repair",
+        visitType: normalizedValues.visitType,
         device: normalizedValues.device,
         customDevice: normalizedValues.customDevice || "",
         brand: normalizedValues.brand,
@@ -1033,6 +1347,7 @@ export async function submitRepairRequest(
       minute: "2-digit",
     }),
     inquiryMode: normalizedValues.inquiryMode || "repair",
+    visitType: normalizedValues.visitType,
     device: deviceDisplay,
     brand: normalizedValues.brand.trim() || "Vor Ort",
     model: normalizedValues.model.trim(),

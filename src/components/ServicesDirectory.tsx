@@ -125,10 +125,13 @@ function ApplianceCard({
           type="button"
           onClick={() => onSelectQuestion(device.name)}
           title={`Direkte WhatsApp-Frage für ${device.name} ausfüllen`}
-          className="inline-flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+          data-variant="hover-outline"
+          className="btn-whatsapp-hover group inline-flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
           aria-label={`Direkte WhatsApp-Frage für ${device.name} ausfüllen`}
         >
-          <MessageCircle size={16} aria-hidden />
+          <span className="whatsapp-hover-icon" aria-hidden="true">
+            <MessageCircle size={16} />
+          </span>
         </button>
       </div>
     </article>
