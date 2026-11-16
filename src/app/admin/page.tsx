@@ -29,6 +29,7 @@ import {
   Phone,
   Plus,
   Printer,
+  QrCode,
   RefreshCw,
   Save,
   Search,
@@ -86,6 +87,7 @@ import {
   type MarketplaceItem,
 } from "@/data/marketplaceItems";
 import AdminMarketplaceManager from "@/components/AdminMarketplaceManager";
+import AdminBrandCardStudio from "@/components/AdminBrandCardStudio";
 
 interface TicketDraftFields {
   grossPriceInput: string;
@@ -140,8 +142,10 @@ export default function AdminPage() {
   const [tickets, setTickets] = useState<AdminRepairTicket[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
 
-  // Workspace Tabs (Orders | Today/Schedule | Marketplace)
-  const [activeTab, setActiveTab] = useState<"orders" | "schedule" | "marketplace">("orders");
+  // Workspace Tabs (Orders | Today/Schedule | Marketplace | Visitenkarte & Logo)
+  const [activeTab, setActiveTab] = useState<
+    "orders" | "schedule" | "marketplace" | "branding"
+  >("orders");
 
   // Simple Filters & Sorting
   const [searchQuery, setSearchQuery] = useState("");
@@ -1373,10 +1377,10 @@ export default function AdminPage() {
         )}
 
         <main className="max-w-6xl mx-auto px-3.5 sm:px-6 pt-4 sm:pt-7 space-y-5">
-          {/* Pro 3-Tab Workspace Switcher (Phone-First Segmented Navigation) */}
+          {/* Pro 4-Tab Workspace Switcher (Phone-First Segmented Navigation) */}
           <nav
             aria-label="Admin Bereiche"
-            className="grid grid-cols-3 gap-1.5 rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-1 shadow-xs"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-1 shadow-xs"
           >
             <button
               type="button"
@@ -1413,6 +1417,19 @@ export default function AdminPage() {
             >
               <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span className="truncate">Marktplatz</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("branding")}
+              data-testid="admin-tab-branding-btn"
+              className={`min-h-[44px] rounded-lg px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === "branding"
+                  ? "bg-primary text-white dark:bg-accent dark:text-white shadow-xs"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Visitenkarte &amp; Logo</span>
             </button>
           </nav>
 
@@ -1457,7 +1474,9 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {activeTab === "marketplace" ? (
+          {activeTab === "branding" ? (
+            <AdminBrandCardStudio onToast={showToast} />
+          ) : activeTab === "marketplace" ? (
             <AdminMarketplaceManager
               adminToken={token}
               onToast={showToast}
