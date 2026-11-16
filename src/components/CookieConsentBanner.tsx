@@ -93,8 +93,8 @@ export default function CookieConsentBanner() {
             >
               Wir nutzen keine Werbe- oder Tracking-Cookies. Unsere Website speichert
               lediglich technisch notwendige Einstellungen (z. B. Ihr gewähltes
-              Farbdesign) lokal in Ihrem Browser (§ 25 Abs. 2 TDDDG). Für die
-              interaktive Anzeige unseres Werkstatt-Standorts bieten wir Google Maps an.
+              Farbdesign) lokal in Ihrem Browser. Für die
+              interaktive Kartenanzeige unserer Einsatzregion in Osnabrück bieten wir Google Maps an.
               Dabei können Daten an Server von Google in den USA übertragen werden.
             </p>
 

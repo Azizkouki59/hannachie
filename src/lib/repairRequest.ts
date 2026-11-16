@@ -11,6 +11,8 @@ import {
   sanitizeSingleLine,
   sanitizeText,
 } from "@/utils/sanitize";
+import { getTodayIsoDate, type AdminRepairTicket } from "@/lib/adminTypes";
+import { recordClientSubmittedTicket, resolveCoordinatesForZip } from "@/lib/adminClient";
 
 export const deviceTypes = [
   "Waschmaschine",
@@ -253,86 +255,72 @@ export function resolveVerifiedFallbackLocation(
  * 1-Tap Presets for customers asking a Direct Question
  */
 export const quickQuestionPresets = [
-  "Lohnt sich die Reparatur für mein Gerät noch?",
-  "Kommen Sie für eine Reparatur auch zu meinem Wohnort?",
-  "Haben Sie das passende Ersatzteil auf Lager?",
-  "Was kostet eine Diagnose vor Ort in Osnabrück & Umgebung?",
-  "Kann ich mein Gerät oder die Platine in die Werkstatt bringen?",
+  "Gerät macht Probleme – Vor-Ort-Termin bei mir zu Hause gewünscht",
+  "Haben Sie das passende Ersatzteil nach Typenschild verfügbar?",
+  "Altgerät lohnt nicht mehr – suche geprüftes Ersatzgerät mit Garantie",
+  "Garantie-Anfrage zu einem bei Hannachi gekauften Gerät",
+  "Ich möchte ein Marken-Haushaltsgerät zum Ankauf anbieten",
 ] as const;
 
 export const symptomsByDevice: Record<string, string[]> = {
   "Waschmaschine": [
-    "Pumpt nicht ab / Wasser bleibt stehen",
-    "Schleudert nicht oder bricht ab",
-    "Wasser läuft unter dem Gerät aus",
-    "Laute Geräusche beim Schleudern (Lager/Stoßdämpfer)",
-    "Tür lässt sich nicht öffnen / verriegelt nicht",
-    "Heizt das Wasser nicht auf",
-    "Fehlercode im Display",
+    "Pumpt nicht ab / Wasser steht in der Trommel (Vor-Ort-Termin)",
+    "Schleudert nicht oder macht laute Geräusche",
+    "Ersatzteil benötigt: Laugenpumpe, Türmanschette, Heizstab oder Kohlen",
+    "Altgerät lohnt nicht mehr: Geprüfte Ersatz-Waschmaschine mit Garantie gesucht",
+    "Garantie-Service (Gerät mit schriftlicher Garantie bei Hannachi gekauft)",
   ],
   "Wäschetrockner": [
-    "Wäsche bleibt nass / heizt nicht",
-    "Programm bricht vorzeitig ab",
-    "Trommel dreht sich nicht mehr",
-    "Behälter-Warnung trotz leerem Tank",
-    "Quietscht oder klackert laut",
+    "Trocknet nicht mehr richtig / bricht Programm ab (Vor-Ort-Termin)",
+    "Behälter voll / Kondensatpumpe oder Sensor benötigt",
+    "Altgerät lohnt nicht mehr: Geprüften Ersatz-Trockner mit Garantie anfragen",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Geschirrspüler": [
-    "Geschirr bleibt schmutzig oder milchig",
-    "Wasser steht am Ende im Spülraum",
-    "Heizt nicht / Geschirr bleibt kalt & nass",
-    "Aquastop / Wasserzulauf-Fehler blinkt",
-    "Sprüharme drehen sich nicht",
-    "Gerät startet das Programm nicht",
+    "Pumpt nicht ab / Wasser steht im Spülraum (Vor-Ort-Termin)",
+    "Geschirr bleibt kalt oder wird nicht trocken (Heizpumpe / Sensor)",
+    "Ersatzteil benötigt: Heizpumpe, Ablaufpumpe, Aquastop oder Korbrollen",
+    "Altgerät lohnt nicht mehr: Geprüften Geschirrspüler (45/60 cm) mit Garantie anfragen",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Kühlschrank / Gefriergerät": [
-    "Kühlt nicht mehr ausreichend",
-    "Starke Eisbildung an der Rückwand",
-    "Kompressor läuft ununterbrochen / brummt laut",
-    "Temperaturalarm piept / blinkt",
-    "Türdichtung schließt nicht mehr richtig",
+    "Kühlt nicht mehr ausreichend / Temperatur zu warm (Vor-Ort-Termin)",
+    "Vereist stark oder Thermostat / Türdichtung schließt nicht",
+    "Altgerät lohnt nicht mehr: Geprüftes Ersatz-Kühlgerät mit Garantie gesucht",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Backofen / Herd": [
-    "Backofen wird nicht mehr heiß",
-    "Ober-/Unterhitze oder Umluft ausgefallen",
-    "Sicherung (FI-Schalter) springt beim Einschalten raus",
-    "Lüfter macht laute Geräusche",
-    "Backofentür schließt nicht richtig",
+    "Backofen wird nicht mehr richtig heiß (Umluft / Ober-/Unterhitze)",
+    "Ersatzteil benötigt: Ringheizkörper, Backofenschalter, Thermostat oder Dichtung",
+    "Altgerät lohnt nicht mehr: Geprüften Backofen / Herd mit Garantie anfragen",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Ceranfeld / Induktion": [
-    "Kochzone bleibt kalt / erkennt Topf nicht",
-    "Touch-Bedienfeld reagiert nicht",
-    "Fehlercode (z. B. E / F) blinkt",
-    "Sicherung löst beim Kochen aus",
+    "Kochzone reagiert nicht oder heizt nicht mehr",
+    "Ersatzteil nach Typenschild (E-Nr.) oder geprüftes Austausch-Kochfeld",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Dunstabzugshaube": [
-    "Motor läuft nicht mehr an",
-    "Kaum noch Saugleistung / sehr laut",
-    "Beleuchtung oder Tasten ohne Funktion",
+    "Ersatzteil benötigt: Gebläsemotor, Schalter oder Filter",
+    "Vor-Ort-Termin oder Austauschgerät anfragen",
   ],
   "Mikrowelle": [
-    "Speisen werden nicht mehr warm",
-    "Drehteller dreht sich nicht",
-    "Display dunkel oder Tasten klemmen",
+    "Drehteller, Rollenring, Glimmerplatte oder geprüftes Ersatzgerät anfragen",
+    "Garantie-Service (bei Hannachi gekauftes Gerät)",
   ],
   "Kaffeevollautomat": [
-    "Kaffee läuft nicht aus / nur tröpfchenweise",
-    "Brühgruppe klemmt oder lässt sich nicht einsetzen",
-    "Wasser sammelt sich unter der Maschine",
-    "Mahlwerk mahlt nicht oder klingt ungewöhnlich",
-    "Milchschaum-System funktioniert nicht",
+    "Ersatzteil benötigt: Brühgruppe, Dichtungssatz, Pumpe oder Drainageventil",
+    "Geprüftes Gerät / Garantie-Anfrage",
   ],
   "Elektronik / Platine": [
-    "Gerät hat keinen Strom / komplett tot",
-    "Relais klickt, aber Programm startet nicht",
-    "Schmorstelle / defektes Bauteil auf Steuerplatine",
-    "Display flackert oder zeigt wirre Zeichen",
+    "Original-Steuerplatine / Leistungsmodul per E-Nr. anfragen",
+    "Garantieabwicklung für bei uns gekaufte Geräte",
   ],
   "Anderes Gerät (Sonstiges)": [
-    "Gerät lässt sich nicht einschalten",
-    "Mechanischer Defekt / ungewöhnliches Geräusch",
-    "Heiz- oder Pumpenfunktion gestört",
-    "Ersatzteilanfrage mit Typenschild",
+    "Gerät streikt – Vor-Ort-Termin & Ersteinschätzung gewünscht",
+    "Original-Ersatzteil mit Typenschild anfragen",
+    "Geprüftes Ersatzgerät inkl. schriftlicher Garantie anfragen",
+    "Garantie-Fall für ein bei Hannachi erworbenes Gerät",
   ],
 };
 
@@ -341,44 +329,44 @@ export const diagnosticHintByDevice: Record<
   { title: string; hint: string; typicalTime: string }
 > = {
   "Waschmaschine": {
-    title: "Einschätzung aus der Werkstatt",
-    hint: "In über 80 % der Fälle liegt die Ursache an Laugenpumpe, Motorkohlen, Heizstab oder Türschloss – Standardteile, die wir meist direkt beim ersten Termin tauschen.",
-    typicalTime: "Reparatur meist in 30–60 Min. vor Ort",
+    title: "Mobiler Vor-Ort-Service · Osnabrück",
+    hint: "Wir kommen nach Terminabsprache zu Ihnen nach Hause, klären den Ersatzteilbedarf oder bieten Ihnen – falls Ihr Altgerät nicht mehr zu retten ist – ein geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie an.",
+    typicalTime: "Vor-Ort-Termin nach Vereinbarung",
   },
   "Wäschetrockner": {
-    title: "Einschätzung aus der Werkstatt",
-    hint: "Häufig sind Kondensatpumpe, Temperatursensor (NTC), Anlaufkondensator oder ein zugesetztes Wärmepumpensystem die Ursache.",
-    typicalTime: "Schnelle Diagnose vor Ort oder in der Werkstatt",
+    title: "Mobiler Vor-Ort-Service · Osnabrück",
+    hint: "Vor-Ort-Check bei Ihnen zu Hause, passende Ersatzteile (Kondensatpumpen, NTC-Sensoren, Riemen) oder geprüftes Ersatzgerät inkl. schriftlicher Garantie.",
+    typicalTime: "Termin nach Vereinbarung",
   },
   "Geschirrspüler": {
-    title: "Einschätzung aus der Werkstatt",
-    hint: "Oft lässt sich schon telefonisch klären, ob Umwälzpumpe, Heizpumpe oder Aquastop betroffen sind. Viele Fehler beheben wir sofort vor Ort.",
-    typicalTime: "Oft schon am nächsten Werktag behoben",
+    title: "Mobiler Vor-Ort-Service · Osnabrück",
+    hint: "Vor-Ort-Termin bei Ihnen zu Hause: passende Ersatzteile (Heizpumpen, Ablaufpumpen, Aquastop) oder ein geprüfter Ersatz-Geschirrspüler (45/60 cm) mit schriftlicher Garantie.",
+    typicalTime: "Inkl. schriftlicher Verkäufergarantie",
   },
   "Kühlschrank / Gefriergerät": {
-    title: "Notfallpriorität bei Kühlgeräten",
-    hint: "Kühlgeräte behandeln wir bevorzugt, damit Ihre Lebensmittel keinen Schaden nehmen. Häufig sind Thermostat, NTC-Fühler, Startrelais oder Lüfter betroffen.",
-    typicalTime: "Priorisierte Terminvergabe am selben oder nächsten Tag",
+    title: "Kühlgeräte · Schneller Vor-Ort-Termin",
+    hint: "Kurzfristige Terminabsprache bei Ihnen vor Ort, passende Thermostate, Fühler & Türdichtungen oder ein geprüftes Ersatz-Kühlgerät mit schriftlicher Verkäufergarantie.",
+    typicalTime: "Schnelle Terminvereinbarung",
   },
   "Backofen / Herd": {
-    title: "Einschätzung aus der Werkstatt",
-    hint: "Ein durchgebrannter Ringheizkörper, Thermostat oder Backofenschalter lässt sich schnell und kostengünstig ersetzen – ohne neuen Ofen.",
-    typicalTime: "Meist 30–45 Min. direkt in Ihrer Küche",
+    title: "Backöfen & Herde · Vor-Ort-Service",
+    hint: "Passende Ringheizkörper, Schalter & Dichtungen nach E-Nr. bei Ihnen vor Ort oder ein geprüftes Ersatzgerät inklusive schriftlicher Verkäufergarantie.",
+    typicalTime: "Vor-Ort-Service in Osnabrück",
   },
   "Ceranfeld / Induktion": {
-    title: "Einschätzung aus der Werkstatt",
-    hint: "Wir prüfen Leistungsmodule, Sensortasten und Anschlusswerte fachgerecht und reparieren auch auf Platinenebene.",
-    typicalTime: "Fachgerechte Starkstrom- & Elektronikprüfung",
+    title: "Kochfelder & Ersatzteile",
+    hint: "Passende Ersatzteile nach Typenschild (E-Nr.) oder Angebot für ein geprüftes Ersatzgerät mit Garantie.",
+    typicalTime: "Exakter Abgleich per E-Nr.",
   },
   "Kaffeevollautomat": {
-    title: "Werkstattservice für Kaffeeautomaten",
-    hint: "Brühgruppen-Revision, Dichtungswechsel, Drainageventil, Pumpe und Mahlwerk-Justierung in unserer Osnabrücker Werkstatt.",
-    typicalTime: "Gründliche Wartung & Reparatur in der Werkstatt",
+    title: "Ersatzteile & Zubehör",
+    hint: "Brühgruppen, O-Ring-Dichtungen, Drainageventile und Pumpen für Jura, DeLonghi, Siemens, Miele u. v. m.",
+    typicalTime: "Rückmeldung nach Termin",
   },
   "Elektronik / Platine": {
-    title: "Bauteilreparatur statt Neukauf",
-    hint: "Statt eine neue Steuerung für 250 €+ zu bestellen, reparieren wir defekte Relais, Netzteile und Triacs gezielt auf Ihrer Originalplatine.",
-    typicalTime: "Bis zu 70 % günstiger als Platinenneukauf",
+    title: "Steuerungsmodule & Verkäufergarantie",
+    hint: "Original-Steuerplatinen nach Typenschild sowie voller Garantie- & Reparaturservice für alle bei uns gekauften Geräte.",
+    typicalTime: "Passgenaue Teile-Identifikation",
   },
 };
 
@@ -744,6 +732,8 @@ export type RepairValues = {
   phone: string;
   email: string;
   photo: File | null;
+  marketplaceItemId?: string;
+  marketplaceItemTitle?: string;
 };
 
 export type RepairErrors = Partial<Record<keyof RepairValues, string>>;
@@ -1212,7 +1202,7 @@ export function getSavedInquiries(): SubmittedInquiryRecord[] {
   }
 }
 
-function generateClientReferenceId(): string {
+export function generateClientReferenceId(): string {
   if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
     const arr = new Uint32Array(1);
     window.crypto.getRandomValues(arr);
@@ -1222,9 +1212,73 @@ function generateClientReferenceId(): string {
   return `HN-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
+export type ImmediateWhatsAppHandoff = {
+  referenceId: string;
+  whatsappUrl: string;
+  mapsLocationUrl: string;
+  messageText: string;
+};
+
+/**
+ * Synchronously builds the WhatsApp URL and formatted message during the user's
+ * form submit event so the browser can immediately launch WhatsApp without popup blockers.
+ */
+export function prepareImmediateWhatsAppHandoff(
+  v: RepairValues,
+  pregeneratedReferenceId?: string
+): ImmediateWhatsAppHandoff {
+  const visitType: ServiceVisitType = v.visitType === "workshop" ? "workshop" : "home_visit";
+  const isHomeVisit = visitType === "home_visit";
+  const referenceId =
+    pregeneratedReferenceId && /^HN-\d{4}$/.test(pregeneratedReferenceId)
+      ? pregeneratedReferenceId
+      : generateClientReferenceId();
+
+  const normalizedValues: RepairValues = {
+    ...v,
+    visitType,
+    device: sanitizeSingleLine(v.device, 120),
+    customDevice: sanitizeSingleLine(v.customDevice, 120),
+    brand: sanitizeSingleLine(v.brand, 120),
+    model: sanitizeSingleLine(v.model, 120),
+    problem: sanitizeText(v.problem, 1500, true),
+    callbackTime: sanitizeSingleLine(v.callbackTime, 120) || "Jederzeit erreichbar",
+    zip: isHomeVisit ? sanitizeSingleLine(v.zip, 80) : "",
+    streetAddress: isHomeVisit ? sanitizeSingleLine(v.streetAddress, 200) : "",
+    mapsLocationUrl:
+      isHomeVisit && isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+    locationVerified: isHomeVisit ? Boolean(v.locationVerified) : false,
+    coordinates: isHomeVisit ? v.coordinates : null,
+    name: sanitizeSingleLine(v.name, 120),
+    phone: sanitizeSingleLine(v.phone, 30),
+    email: sanitizeSingleLine(v.email, 160),
+    preferredChannel: "whatsapp",
+  };
+
+  const mapsLocationUrl = isHomeVisit ? buildClientGoogleMapsLink(normalizedValues) : "";
+  const enrichedValues: RepairValues = {
+    ...normalizedValues,
+    mapsLocationUrl,
+    preferredChannel: "whatsapp",
+  };
+
+  const payload = createHannachiWhatsAppPayload(
+    toWhatsAppInput(enrichedValues, referenceId),
+    HANNACHI_WHATSAPP_PHONE
+  );
+
+  return {
+    referenceId,
+    whatsappUrl: payload.valid ? payload.whatsappUrl : "",
+    mapsLocationUrl,
+    messageText: payload.valid ? payload.message : "",
+  };
+}
+
 export async function submitRepairRequest(
   v: RepairValues,
-  honeypot = ""
+  honeypot = "",
+  pregeneratedReferenceId?: string
 ): Promise<SubmitResult> {
   const visitType: ServiceVisitType = v.visitType === "workshop" ? "workshop" : "home_visit";
   const isHomeVisit = visitType === "home_visit";
@@ -1254,7 +1308,10 @@ export async function submitRepairRequest(
     throw new Error("Bitte füllen Sie die markierten Pflichtfelder aus.");
   }
 
-  let referenceId = generateClientReferenceId();
+  let referenceId =
+    pregeneratedReferenceId && /^HN-\d{4}$/.test(pregeneratedReferenceId)
+      ? pregeneratedReferenceId
+      : generateClientReferenceId();
   const mapsLocationUrl = isHomeVisit ? buildClientGoogleMapsLink(normalizedValues) : "";
 
   // Validate & register request with hardened Express backend (/api/repair-request)
@@ -1269,6 +1326,7 @@ export async function submitRepairRequest(
       },
       signal: controller.signal,
       body: JSON.stringify({
+        clientReferenceId: referenceId,
         inquiryMode: normalizedValues.inquiryMode || "repair",
         visitType: normalizedValues.visitType,
         device: normalizedValues.device,
@@ -1287,6 +1345,8 @@ export async function submitRepairRequest(
         phone: normalizedValues.phone,
         email: normalizedValues.email || "",
         photoName: normalizedValues.photo ? sanitizeSingleLine(normalizedValues.photo.name, 180) : null,
+        marketplaceItemId: normalizedValues.marketplaceItemId || "",
+        marketplaceItemTitle: normalizedValues.marketplaceItemTitle || "",
         website: honeypot,
       }),
     });
@@ -1304,7 +1364,11 @@ export async function submitRepairRequest(
       const apiData = (await apiRes.json().catch(() => null)) as {
         referenceId?: string;
       } | null;
-      if (apiData?.referenceId && /^HN-\d{4}$/.test(apiData.referenceId)) {
+      if (
+        !pregeneratedReferenceId &&
+        apiData?.referenceId &&
+        /^HN-\d{4}$/.test(apiData.referenceId)
+      ) {
         referenceId = apiData.referenceId;
       }
     }
@@ -1375,6 +1439,54 @@ export async function submitRepairRequest(
         STORAGE_KEY,
         JSON.stringify([record, ...existing].slice(0, 10))
       );
+
+      const nowIso = new Date().toISOString();
+      const resolvedCoords = isHomeVisit
+        ? resolveCoordinatesForZip(normalizedValues.zip, normalizedValues.coordinates)
+        : { lat: 52.2647, lng: 8.0548, accuracy: 10 };
+
+      const adminTicket: AdminRepairTicket = {
+        id: referenceId,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        inquiryMode: normalizedValues.inquiryMode || "repair",
+        visitType: normalizedValues.visitType,
+        device: normalizedValues.device,
+        customDevice: normalizedValues.customDevice || "",
+        brand: normalizedValues.brand.trim() || "Unbekannt",
+        model: normalizedValues.model.trim(),
+        problem: normalizedValues.problem.trim(),
+        urgency: normalizedValues.urgency || "normal",
+        callbackTime: normalizedValues.callbackTime || "Jederzeit erreichbar",
+        zip: isHomeVisit ? normalizedValues.zip.trim() : "49082 Osnabrück (Lager / Termin)",
+        streetAddress: isHomeVisit
+          ? normalizedValues.streetAddress?.trim() || ""
+          : "Iburger Straße 5, Im Hof",
+        mapsLocationUrl:
+          mapsLocationUrl ||
+          `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`,
+        locationVerified: Boolean(normalizedValues.locationVerified),
+        coordinates: resolvedCoords,
+        name: normalizedValues.name.trim(),
+        phone: normalizedValues.phone.trim(),
+        email: normalizedValues.email.trim(),
+        photoName: normalizedValues.photo
+          ? sanitizeSingleLine(normalizedValues.photo.name, 180)
+          : null,
+        ...(normalizedValues.marketplaceItemId
+          ? { marketplaceItemId: normalizedValues.marketplaceItemId }
+          : {}),
+        ...(normalizedValues.marketplaceItemTitle
+          ? { marketplaceItemTitle: normalizedValues.marketplaceItemTitle }
+          : {}),
+        status: "new",
+        scheduledDate: "",
+        scheduledSlot: "Nach Vereinbarung",
+        technicianNotes: "",
+        invoiceNumber: `RE-${new Date().getFullYear()}-${referenceId.replace("HN-", "")}`,
+        invoiceItems: [],
+      };
+      recordClientSubmittedTicket(adminTicket);
     } catch {
       // Ignore storage quota issues
     }

@@ -15,22 +15,22 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(business.url),
-  title: { default: "Hannachi Elektrohaushaltsgeräte Service | Osnabrück", template: "%s | Hannachi Osnabrück" },
-  description: "Reparaturservice für Haushaltsgeräte in Osnabrück: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen. Persönlicher Service seit 1990.",
+  title: { default: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück", template: "%s | Hannachi Osnabrück" },
+  description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
   keywords: BASE_KEYWORDS,
   alternates: { canonical: `${business.url}/` },
   openGraph: {
     type: "website",
     locale: "de_DE",
     url: `${business.url}/`,
-    siteName: "Hannachi Elektrohaushaltsgeräte Service",
-    title: "Hannachi Elektrohaushaltsgeräte Service | Osnabrück",
-    description: "Reparaturservice für Haushaltsgeräte in Osnabrück: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen. Persönlicher Service seit 1990.",
+    siteName: "Hannachi Elektrohaushaltsgeräte & Ersatzteile",
+    title: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück",
+    description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hannachi Elektrohaushaltsgeräte Service | Osnabrück",
-    description: "Reparaturservice für Haushaltsgeräte in Osnabrück: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen. Persönlicher Service seit 1990.",
+    title: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück",
+    description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
   },
 };
 export const viewport: Viewport = { themeColor: "#0F172A" };

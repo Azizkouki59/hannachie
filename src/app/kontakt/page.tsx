@@ -57,24 +57,24 @@ export default function Kontakt({
   return (
     <>
       <PageHeader
-        title="Wir helfen Ihnen gerne weiter."
-        intro="Füllen Sie das Formular rechts aus – Ihre komplette Reparaturanfrage oder direkte Frage wird fertig vorbereitet und ausschließlich per WhatsApp an Herrn Hannachi gesendet."
+        title="Vor-Ort-Termin & persönliche Beratung."
+        intro="Nutzen Sie das Formular für einen Vor-Ort-Termin bei Ihnen zu Hause in Osnabrück & Umgebung, passende Ersatzteile nach Typenschild, ein geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie oder einen Garantie-Fall – Ihre Nachricht wird fertig für WhatsApp an Herrn Hannachi vorbereitet."
       />
       <section className="section bg-surface">
-        <div className="container-page grid gap-8 lg:gap-12 lg:grid-cols-12">
-          <aside className="min-w-0 space-y-6 lg:col-span-4">
-            <div className="card p-6 space-y-6">
-              <ContactItem icon={MessageCircle} title="Anfrage & Direkte Frage (WhatsApp)">
+        <div className="container-page grid gap-6 lg:gap-8 lg:grid-cols-12 lg:items-start">
+          <aside className="min-w-0 space-y-5 lg:col-span-4 lg:sticky lg:top-20">
+            <div className="card p-5 space-y-5">
+              <ContactItem icon={MessageCircle} title="Vor-Ort-Termin &amp; Direktanfrage">
                 <p className="text-[13px] leading-relaxed">
-                  Nutzen Sie einfach das Formular nebenan – wir bereiten Ihre Nachricht direkt für WhatsApp an Herrn Hannachi vor.
+                  Schildern Sie kurz das Problem an Ihrem Gerät oder das benötigte Ersatzteil – wir bereiten Ihre Anfrage direkt für WhatsApp an Herrn Hannachi vor.
                 </p>
               </ContactItem>
-              <ContactItem icon={Phone} title="Werkstatt-Telefon">
+              <ContactItem icon={Phone} title="Telefon &amp; WhatsApp">
                 <a href={business.phoneHref} className="font-semibold text-primary dark:text-slate-100 hover:text-accent transition-colors">
                   {business.phoneDisplay}
                 </a>
               </ContactItem>
-              <ContactItem icon={MapPin} title="Adresse">
+              <ContactItem icon={MapPin} title="Einsatzgebiet &amp; Anschrift">
                 <address className="not-italic text-[14px]">
                   {business.owner}
                   <br />
@@ -82,8 +82,11 @@ export default function Kontakt({
                   <br />
                   {business.zip} {business.city}
                 </address>
+                <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  {business.mobileServiceNotice}
+                </p>
               </ContactItem>
-              <ContactItem icon={Clock} title="Termine">
+              <ContactItem icon={Clock} title="Vor-Ort-Termine">
                 <span className="text-[14px]">{business.hours}</span>
               </ContactItem>
             </div>
@@ -93,7 +96,7 @@ export default function Kontakt({
               <div className="flex items-center justify-between border-b border-primary/8 dark:border-white/10 p-4 pb-3">
                 <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint">
                   <MapPin size={14} className="text-accent" />
-                  Standort &amp; Anfahrt
+                  Region Osnabrück
                 </span>
               </div>
               <GoogleMapsEmbed />

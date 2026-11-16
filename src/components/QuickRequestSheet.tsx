@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wrench } from "lucide-react";
+import { X, Wrench, Phone } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
 import type { InquiryMode } from "@/lib/repairRequest";
 import { triggerHapticFeedback } from "@/lib/haptics";
@@ -209,40 +209,52 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 48, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex max-h-[92dvh] sm:max-h-[90dvh] w-full max-w-2xl mx-auto flex-col rounded-t-3xl sm:rounded-3xl bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden border border-white/15"
+            className="relative z-10 flex max-h-[88dvh] sm:max-h-[90dvh] w-full max-w-2xl mx-auto flex-col rounded-t-3xl sm:rounded-3xl bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden border border-white/15"
           >
-            <div className="sticky top-0 z-20 shrink-0 bg-primary-dark text-white px-4 sm:px-6 pt-2.5 pb-3 border-b border-white/10">
-              <div className="w-10 h-1.5 bg-white/25 rounded-full mx-auto mb-2.5 sm:hidden" />
-              <div className="flex items-center justify-between gap-2.5">
+            <div className="sticky top-0 z-20 shrink-0 bg-primary-dark text-white px-3.5 sm:px-6 pt-2 pb-2.5 border-b border-white/10">
+              <div className="w-10 h-1.5 bg-white/25 rounded-full mx-auto mb-2 sm:hidden" />
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
-                    <Wrench size={17} />
+                    <Wrench size={16} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-extrabold leading-tight truncate">
                       {mode === "question"
                         ? "Direkte Frage an Herrn Hannachi"
-                        : "Komplette Reparaturanfrage"}
+                        : "Vor-Ort-Termin & Ersatzteil anfragen"}
                     </p>
                     <p className="text-[11px] text-white/65 truncate">
-                      Osnabrück &amp; ganzes Umland · Mit Google Maps Standort
+                      Mobiler Vor-Ort-Service · Osnabrück
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeQuickRequest}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                  aria-label="Fenster schließen"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <a
+                    href={business.phoneHref}
+                    onClick={() => triggerHapticFeedback(50)}
+                    aria-label={`Jetzt anrufen: ${business.phoneDisplay}`}
+                    title={`Direkt anrufen: ${business.phoneDisplay}`}
+                    className="flex h-11 min-h-[44px] min-w-[44px] px-3 items-center justify-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-xs font-extrabold text-emerald-300 hover:bg-emerald-500/25 active:scale-95 transition-all"
+                  >
+                    <Phone size={15} className="text-emerald-400 shrink-0" />
+                    <span className="hidden min-[380px]:inline">Anrufen</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={closeQuickRequest}
+                    className="flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white active:scale-95 transition-colors cursor-pointer"
+                    aria-label="Fenster schließen"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
             </div>
 
             <div
               ref={formBodyRef}
-              className="overflow-y-auto overscroll-contain p-3 sm:p-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
+              className="overflow-y-auto overflow-x-hidden overscroll-contain p-2.5 sm:p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
             >
               <RepairForm
                 key={openCount}

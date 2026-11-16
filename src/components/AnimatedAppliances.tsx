@@ -819,10 +819,10 @@ export function InteractiveApplianceShowcase({
           </div>
 
           <h3 className="mt-2 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl">
-            {activeTab === "washer" && "Waschmaschinen-Diagnose"}
-            {activeTab === "dishwasher" && "Geschirrspüler-Diagnose"}
-            {activeTab === "fridge" && "Kühlschrank- & Gefriergeräte-Diagnose"}
-            {activeTab === "oven" && "Backofen- & Herd-Diagnose"}
+            {activeTab === "washer" && "Waschmaschinen · Teile & Ersatzgeräte"}
+            {activeTab === "dishwasher" && "Geschirrspüler · Teile & Ersatzgeräte"}
+            {activeTab === "fridge" && "Kühl- & Gefriergeräte · Teile & Ersatz"}
+            {activeTab === "oven" && "Backöfen & Herde · Teile & Ersatzgeräte"}
             {activeTab === "other" && "Anderes Haushaltsgerät anfragen"}
           </h3>
 
@@ -834,7 +834,7 @@ export function InteractiveApplianceShowcase({
             <div className="mt-6 space-y-4">
               <div className="rounded-2xl border border-accent/30 bg-accent/5 dark:bg-accent/10 p-4 sm:p-5">
                 <label htmlFor="interactive-custom-device" className="block text-xs font-bold text-primary dark:text-slate-100 mb-2">
-                  Welches Gerät möchten Sie reparieren lassen?
+                  Für welches Gerät suchen Sie ein Ersatzteil oder Ersatzgerät?
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2.5">
                   <input
@@ -933,7 +933,7 @@ export function InteractiveApplianceShowcase({
                   }#anfrage`}
                   className="btn-primary w-full sm:w-auto text-center sm:whitespace-nowrap"
                 >
-                  <span>Dieses Gerät reparieren lassen</span>
+                  <span>Ersatzteil / Gerät anfragen</span>
                   <ArrowRight size={16} className="shrink-0" />
                 </Link>
               )
@@ -1019,7 +1019,7 @@ export function FloatingHeroMascot() {
           Ihr Gerät streikt?
         </span>
         <span className="block text-[11px] font-medium text-ink-muted dark:text-slate-400">
-          Herr Hannachi repariert es!
+          Ersatzteile &amp; Ersatzgeräte mit Garantie!
         </span>
         {/* Little triangle pointing down to washer */}
         <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 border-b border-r border-accent/30 bg-white dark:bg-slate-900" />

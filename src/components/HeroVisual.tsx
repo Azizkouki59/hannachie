@@ -11,8 +11,8 @@ export default function HeroVisual({
   const imageAsset = variant === "about" ? herrHannachiImage : werkstattImage;
   const alt =
     variant === "about"
-      ? "Herr Hannachi – Inhaber und Fachmann"
-      : "Herr Hannachi in seiner Werkstatt";
+      ? "Kamal Hannachi – Inhaber und Ansprechpartner in Osnabrück"
+      : "Kamal Hannachi – Elektrohaushaltsgeräte & Ersatzteile Osnabrück";
 
   return (
     <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-lg">

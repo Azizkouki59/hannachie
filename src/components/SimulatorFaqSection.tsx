@@ -50,7 +50,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Ablaufschlauch an der Rückseite auf Knicke sowie den Siphonanschluss unter dem Waschbecken auf Verstopfung prüfen.",
     ],
     proTip:
-      "Lässt sich das Pumpenrad frei drehen und das Sieb ist sauber, brummt die Pumpe aber nur leise, ist meist die Magnetpumpe verschlissen – diese tauschen wir direkt vor Ort.",
+      "Lässt sich das Pumpenrad frei drehen und das Sieb ist sauber, brummt die Pumpe aber nur leise, ist häufig eine neue Laugenpumpe (im Teileverkauf nach E-Nr.) oder der Werkskundendienst sinnvoll.",
     keywords: ["e18", "f20", "pumpt nicht", "wasser", "flusensieb", "waschmaschine"],
   },
   {
@@ -86,7 +86,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Bei E15: Der Schwimmerschalter in der Bodenwanne hat ausgelöst – Wasserhahn schließen und Gerät nicht einfach schräg kippen, da sonst Elektronikteile nass werden können.",
     ],
     proTip:
-      "Bei Fehler E15 ist häufig die Pumpentopf-Dichtung undicht. Mit einem speziellen Reparatursatz dichten wir das Gerät dauerhaft ab, ohne dass der komplette Pumpentopf getauscht werden muss.",
+      "Bei Fehler E15 ist häufig die Pumpentopf-Dichtung undicht. Anhand Ihres Typenschilds (E-Nr.) nennen wir Ihnen gerne den passenden Dichtungssatz aus unserem Ersatzteil-Sortiment (reiner Teileverkauf).",
     keywords: ["e15", "e24", "wasserhahn", "aquastop", "geschirrspüler", "spülmaschine"],
   },
   {
@@ -122,7 +122,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Klemmen Sie ein Blatt Papier in die geschlossene Türdichtung: Lässt es sich ohne Widerstand herausziehen, strömt feuchte Raumluft ein und gefriert an der Rückwand.",
     ],
     proTip:
-      "Läuft der Kompressor dauerhaft durch oder kühlt das Gerät gar nicht mehr, prüfen wir vor Ort das Thermostat, das Anlaufrelais oder den Temperaturfühler (NTC).",
+      "Läuft der Kompressor dauerhaft durch oder kühlt das Gerät nicht mehr, liefern wir Ihnen auf Wunsch das passende Thermostat- bzw. NTC-Fühler-Ersatzteil nach Typenschild oder beraten Sie zu einem geprüften Ersatzgerät mit Garantie.",
     keywords: ["kühlschrank", "wasser", "gemüsefach", "eis", "abtauen", "dichtung"],
   },
   {
@@ -140,7 +140,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Testen Sie kurz Ober-/Unterhitze im Vergleich zu Umluft: Wird Ober-/Unterhitze warm, Umluft aber nicht, ist lediglich der Ringheizkörper durchgebrannt.",
     ],
     proTip:
-      "Einen defekten Ringheizkörper für Umluft/Heißluft können wir meist in unter 30 Minuten direkt bei Ihnen vor Ort austauschen.",
+      "Passende Original-Ringheizkörper für Umluft/Heißluft liefern wir Ihnen anhand Ihrer E-Nr. im reinen Teileverkauf (Montage/Anschluss bitte nur durch einen zugelassenen Fachbetrieb).",
     keywords: ["backofen", "herd", "heizt nicht", "uhrzeit", "sicherung", "umluft", "ringheizkörper"],
   },
   {
@@ -158,25 +158,25 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Feuchtigkeitssensor-Metallstreifen im Inneren der Trommel (direkt hinter dem Türsieb) mit einem Essig-Tuch von Kalkbelägen befreien.",
     ],
     proTip:
-      "Bei Wärmepumpentrocknern führen wir in Osnabrück eine gründliche Reinigung des Pumpensumpfs und Wärmetauschers durch, damit die Trocknungszeit wieder sinkt.",
+      "Benötigen Sie für Ihren Trockner eine neue Kondensatpumpe, ein Türschloss oder ein Flusensieb? Anhand des Typenschilds (E-Nr.) liefern wir Ihnen das passende Originalteil (reiner Teileverkauf).",
     keywords: ["trockner", "behälter voll", "trocknet nicht", "wärmepumpe", "kondensator"],
   },
   {
     id: "faq-when-technician",
     category: "Backofen & Allgemein",
     device: "Waschmaschine",
-    symptomPreset: "Technischer Defekt / FI-Schutzschalter löst aus / Geräusche",
+    symptomPreset: "Ersatzteil-Anfrage / Geprüftes Ersatzgerät mit Garantie",
     question:
-      "Wann sollte ich keine eigenen Versuche mehr unternehmen und direkt Herrn Hannachi rufen?",
+      "Wann sollte ich keine eigenen Versuche mehr unternehmen und eher über ein Ersatzgerät nachdenken?",
     shortAnswer:
       "Sobald die Sicherung / der FI-Schutzschalter auslöst, es verschmort riecht, laute Mahlgeräusche auftreten oder Wasser aus dem Geräteboden austritt.",
+    proTip:
+      "Für ältere oder stärker beschädigte Geräte kann ein geprüftes Ersatzgerät aus unserem Bestand – inklusive schriftlicher Verkäufergarantie – wirtschaftlicher sein als eine Fremdreparatur.",
     steps: [
       "FI-Schutzschalter fliegt heraus: Meist liegt ein Isolationsfehler am Heizstab oder Motor vor – Gerät ausgesteckt lassen.",
-      "Lautes Rumpeln beim Schleudern oder metallisches Schleifen: Hinweis auf Trommellager, Stoßdämpfer oder einen eingezogenen Fremdkörper (z. B. BH-Bügel am Heizstab).",
-      "Elektronik-Totalausfall: Statt sofort eine teure neue Steuerung zu kaufen, prüfen wir in unserer Werkstatt, ob sich das Netzteil-IC oder Relais auf der Platine günstig reparieren lässt.",
+      "Lautes Rumpeln beim Schleudern oder metallisches Schleifen: Hinweis auf Trommellager, Stoßdämpfer oder einen eingezogenen Fremdkörper.",
+      "Elektronik-Totalausfall: Lassen Sie defekte Starkstrom- oder Elektronikkomponenten ausschließlich durch den Hersteller-Kundendienst oder einen eingetragenen Handwerksbetrieb begutachten – alternativ bieten wir Ihnen ein geprüftes Ersatzgerät mit Garantie.",
     ],
-    proTip:
-      "Vor jeder Reparatur erhalten Sie von Herrn Hannachi eine ehrliche Einschätzung, ob sich die Instandsetzung für Ihr Gerät wirtschaftlich lohnt.",
     keywords: ["fi", "kurzschluss", "platine", "lager", "laut", "techniker", "kosten"],
   },
 ];
@@ -229,10 +229,10 @@ export default function SimulatorFaqSection() {
             id="simulator-faq-heading"
             className="text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-4xl"
           >
-            Häufig gestellte Fragen vor einer Reparaturanfrage
+            Häufig gestellte Fragen zur Selbsthilfe &amp; Ersatzteilwahl
           </h2>
           <p className="mt-3 text-sm sm:text-base text-ink-muted leading-relaxed">
-            Viele typische Fehlermeldungen (wie <strong className="text-primary dark:text-slate-200">E18, E24, blinkende Uhrzeit</strong> oder blockierte Türen) lassen sich ohne Werkzeug selbst lösen. Prüfen Sie hier die häufigsten Fälle aus unserer Werkstattpraxis:
+            Viele typische Fehlermeldungen (wie <strong className="text-primary dark:text-slate-200">E18, E24, blinkende Uhrzeit</strong> oder blockierte Türen) lassen sich ohne Werkzeug selbst lösen. Prüfen Sie hier die häufigsten Fälle zur Selbsthilfe:
           </p>
         </div>
 
@@ -416,7 +416,7 @@ export default function SimulatorFaqSection() {
                               aria-hidden="true"
                             />
                             <p className="leading-relaxed">
-                              <strong className="font-bold">Werkstatt-Tipp von Herrn Hannachi:</strong>{" "}
+                              <strong className="font-bold">Hinweis von Herrn Hannachi:</strong>{" "}
                               {faq.proTip}
                             </p>
                           </div>
@@ -461,7 +461,7 @@ export default function SimulatorFaqSection() {
                                 className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-bold text-white hover:bg-accent-dark transition-colors cursor-pointer"
                               >
                                 <Wrench size={13} className="shrink-0" />
-                                <span>Nein, Reparatur anfragen →</span>
+                                <span>Nein, Ersatzteil / Beratung anfragen →</span>
                               </button>
                             </div>
                           </div>
@@ -486,7 +486,7 @@ export default function SimulatorFaqSection() {
                 Ihr Fehlercode ist nicht dabei oder die Schritte haben nicht geholfen?
               </p>
               <p className="mt-0.5 text-xs text-ink-muted">
-                Übernehmen Sie Ihre bereits geprüften Punkte direkt ins Formular – das spart Zeit bei der Diagnose.
+                Übernehmen Sie Ihre Angaben direkt ins Formular für das passende Original-Ersatzteil oder ein geprüftes Ersatzgerät.
               </p>
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function SimulatorFaqSection() {
             onClick={() =>
               openQuickRequest(
                 "Waschmaschine",
-                "FAQ & Checkliste geprüft – benötige Diagnose durch Herrn Hannachi",
+                "Selbsthilfe geprüft – Anfrage nach Ersatzteil (E-Nr.) oder Ersatzgerät mit Garantie",
                 "",
                 "repair"
               )

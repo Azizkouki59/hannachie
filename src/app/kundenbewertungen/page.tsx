@@ -31,7 +31,7 @@ export default function Kundenbewertungen() {
             </p>
           </div>
 
-          <div className="columns-1 gap-6 md:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {reviews.map((r, idx) => (
               <ReviewCard key={r.id || `${r.author}-${idx}`} review={r} />
             ))}

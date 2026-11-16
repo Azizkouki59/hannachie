@@ -23,8 +23,8 @@ export default function SimulatorPage() {
   return (
     <>
       <PageHeader
-        title="Interaktiver Fehlersimulator & Ersatzteile"
-        intro="Wählen Sie Ihr Haushaltsgerät in unserer interaktiven Technik-Simulation, klicken Sie auf das Fehlerbild oder prüfen Sie einfache Ursachen direkt vorab per Checkliste."
+        title="Interaktiver Geräte- & Ersatzteil-Assistent"
+        intro="Wählen Sie Ihr Haushaltsgerät, nutzen Sie die kostenlose Selbsthilfe-Checkliste oder ermitteln Sie gezielt das passende Original-Ersatzteil anhand Ihres Typenschilds (reiner Teileverkauf – kein Handwerksbetrieb)."
       />
 
       {/* Interactive Appliance Lab */}
@@ -71,7 +71,7 @@ export default function SimulatorPage() {
               Originalersatzteile für alle Marken
             </h2>
             <p className="mt-3 text-sm sm:text-base text-ink-muted">
-              Gängige Verschleißteile direkt ab Lager in unserer Osnabrücker Werkstatt oder innerhalb von 24–48 Stunden für Sie beschafft.
+              Gängige Verschleißteile direkt ab Osnabrücker Lager oder kurzfristig für Sie beschafft (reiner Ersatzteilverkauf nach Terminvereinbarung – kein Einbau).
             </p>
           </div>
 

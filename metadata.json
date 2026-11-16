@@ -1,6 +1,6 @@
 {
   "name": "Hannachi Elektrohaushaltsgeräte Service",
-  "description": "Reparaturservice für Haushaltsgeräte in Osnabrück: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen. Persönlicher Service seit 1990.",
-  "requestFramePermissions": [],
+  "description": "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

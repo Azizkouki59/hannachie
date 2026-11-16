@@ -52,11 +52,11 @@ const LOCAL_STORAGE_LIKED_REVIEWS_KEY = "hannachi_liked_google_reviews_v1";
 
 const FAST_REVIEW_QUICK_PHRASES = [
   "Schnelle Terminvergabe",
-  "Waschmaschine schnell repariert",
+  "Geprüftes Gerät mit Garantie erhalten",
   "Faire Preise & ehrliche Beratung",
   "Sehr freundlich & kompetent",
-  "Kostenloser Tipp am Telefon",
-  "Passendes Ersatzteil direkt auf Lager",
+  "Passendes Ersatzteil direkt gefunden",
+  "Zuverlässige Übergabe in Osnabrück",
 ];
 
 function GoogleGLogo({ className = "w-5 h-5" }: { className?: string }) {
@@ -166,7 +166,7 @@ function ReviewMarqueeCard({
   return (
     <figure
       data-review-card
-      className="card shrink-0 w-[265px] min-[400px]:w-[285px] sm:w-[350px] lg:w-[390px] flex flex-col justify-between p-3 sm:p-5 lg:p-6 bg-white dark:bg-slate-900 border border-primary/10 dark:border-white/10 hover:border-accent/40 transition-all duration-200"
+      className="card shrink-0 w-[265px] min-[400px]:w-[285px] sm:w-[340px] lg:w-[360px] flex flex-col justify-between p-4 sm:p-5 bg-white dark:bg-slate-900 border border-primary/10 dark:border-white/10 hover:border-accent/40 transition-colors duration-200"
     >
       <div>
         {/* Authentic Google Maps Reviewer Header */}
@@ -231,7 +231,7 @@ function ReviewMarqueeCard({
         </div>
 
         {/* Review Text (Original German or English Translation like Google Maps) */}
-        <blockquote className="text-xs sm:text-[13.5px] lg:text-[14px] leading-snug sm:leading-relaxed text-primary/90 dark:text-slate-200 line-clamp-4 sm:line-clamp-none">
+        <blockquote className="text-xs sm:text-[13.5px] leading-relaxed text-primary/90 dark:text-slate-200 line-clamp-4">
           {showEnglish && rev.textEn ? rev.textEn : rev.text}
         </blockquote>
 
@@ -255,12 +255,12 @@ function ReviewMarqueeCard({
 
         {/* Owner Reply from Kamal Hannachi (when present on Google Maps) */}
         {rev.ownerReply && (
-          <div className="mt-2.5 sm:mt-3.5 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-xs">
-            <p className="flex items-center gap-1.5 font-bold text-primary dark:text-slate-200 mb-0.5 sm:mb-1">
+          <div className="mt-2.5 sm:mt-3 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3 py-2 text-[11px] sm:text-xs">
+            <p className="flex items-center gap-1.5 font-bold text-primary dark:text-slate-200 mb-0.5">
               <CornerDownRight size={11} className="text-accent shrink-0" />
               <span>Antwort · Kamal Hannachi</span>
             </p>
-            <p className="text-ink-muted leading-snug sm:leading-relaxed line-clamp-2 sm:line-clamp-none">{rev.ownerReply}</p>
+            <p className="text-ink-muted leading-snug line-clamp-2">{rev.ownerReply}</p>
           </div>
         )}
       </div>
@@ -686,15 +686,15 @@ export function GoogleReviewsSection({
   return (
     <section
       id="kundenstimmen"
-      className="py-8 sm:py-16 lg:py-24 bg-surface border-b border-primary/8 dark:border-white/10 overflow-hidden"
+      className="py-10 sm:py-14 lg:py-16 bg-surface border-b border-primary/8 dark:border-white/10 overflow-hidden"
     >
       <div className="container-page">
         <FadeUp>
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6">
             <div>
-              <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-ink-muted mb-2 sm:mb-3">
+              <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-ink-muted mb-2">
                 <GoogleGLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="font-bold uppercase tracking-wider text-accent">
+                <span className="font-bold tracking-wide text-accent">
                   Google Maps · {liveRating.toFixed(1).replace(".", ",")} ★ ({liveReviewCount})
                 </span>
                 <span aria-hidden="true" className="hidden min-[380px]:inline">·</span>
@@ -703,10 +703,10 @@ export function GoogleReviewsSection({
                   Echte Kundenstimmen
                 </span>
               </div>
-              <h2 className="text-xl min-[380px]:text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-4xl">
+              <h2 className="text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
                 Das sagen unsere Kunden in Osnabrück
               </h2>
-              <p className="mt-1.5 sm:mt-2.5 text-xs sm:text-sm md:text-base text-ink-muted max-w-2xl leading-relaxed">
+              <p className="mt-2 text-xs sm:text-sm lg:text-[15px] text-ink-muted max-w-2xl leading-relaxed">
                 Durchschnittlich{" "}
                 <strong className="font-semibold text-primary dark:text-slate-100">
                   {liveRating.toFixed(1).replace(".", ",")} von 5 Sternen
@@ -720,50 +720,36 @@ export function GoogleReviewsSection({
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={openFastReviewModal}
-                aria-label="Schnellrezension für Google Maps verfassen"
-                className="group inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-accent hover:bg-accent-dark active:bg-[#0369a1] active:scale-[0.95] active:translate-y-0.5 active:shadow-inner active:ring-2 active:ring-accent-light/60 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all duration-150 active:duration-75 select-none touch-manipulation cursor-pointer"
-              >
-                <MessageSquarePlus
-                  size={15}
-                  aria-hidden="true"
-                  className="transition-transform duration-100 group-active:scale-90 group-active:-rotate-6"
-                />
-                <span>Rezension schreiben</span>
-              </button>
-
-              {showViewAllLink && (
+            {showViewAllLink && (
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
                 <Link
                   href="/kundenbewertungen"
-                  className="text-accent font-bold hover:underline inline-flex items-center gap-1 sm:gap-1.5 group text-xs sm:text-sm shrink-0"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm font-bold text-accent hover:border-accent transition-colors shrink-0 group"
                 >
-                  Alle {liveReviewCount} Rezensionen
-                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                  <span>Alle {liveReviewCount} Rezensionen ansehen</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </FadeUp>
 
         {/* Authentic Google Maps 4.8★ Summary & Star Breakdown Header */}
-        <FadeUp delay={0.05} className="mt-4 sm:mt-7">
+        <FadeUp delay={0.05} className="mt-5 sm:mt-6">
           {isInitialSync ? (
             <GoogleReviewsSummarySkeleton />
           ) : (
-          <div className="card bg-white dark:bg-slate-900 p-3.5 sm:p-6 border border-primary/10 dark:border-white/10">
-            <div className="grid gap-3.5 sm:gap-6 lg:grid-cols-12 lg:items-center">
+          <div className="card bg-white dark:bg-slate-900 p-4 sm:p-5 border border-primary/10 dark:border-white/10">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-12 lg:items-center">
               {/* Left: Business Identity & Overall 4.8 Score */}
-              <div className="lg:col-span-5 flex items-center gap-3 sm:gap-5 min-w-0">
-                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-surface dark:bg-slate-800 border border-primary/10 dark:border-white/10 flex flex-col items-center justify-center shrink-0">
-                  <GoogleGLogo className="w-5 h-5 sm:w-7 sm:h-7" />
+              <div className="lg:col-span-5 flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-surface dark:bg-slate-800 border border-primary/10 dark:border-white/10 flex flex-col items-center justify-center shrink-0">
+                  <GoogleGLogo className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                    <span className="text-xl sm:text-4xl font-extrabold text-primary dark:text-slate-100 tracking-tight tabular-nums">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-slate-100 tracking-tight tabular-nums">
                       {liveRating.toFixed(1).replace(".", ",")}
                     </span>
                     <ReviewStars rating={liveRating} size={15} />

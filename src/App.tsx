@@ -16,19 +16,19 @@ import { useLocationState } from "@/shims/next-navigation";
 import Home from "@/app/page";
 import LeistungenPage from "@/app/leistungen/page";
 import ServicePage from "@/app/leistungen/[slug]/page";
-import SimulatorPage from "@/app/simulator/page";
 import AnfragePage from "@/app/anfrage/page";
 import UeberUns from "@/app/ueber-uns/page";
 import Kundenbewertungen from "@/app/kundenbewertungen/page";
 import Kontakt from "@/app/kontakt/page";
 import Impressum from "@/app/impressum/page";
 import Datenschutz from "@/app/datenschutz/page";
+import AdminPage from "@/app/admin/page";
 import NotFound from "@/app/not-found";
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  name: "Hannachi Elektrohaushaltsgeräte Service",
+  name: "Hannachi Elektrohaushaltsgeräte & Ersatzteile",
   url: business.url,
   image: `${business.url}/images/werkstatt.jpg`,
   telephone: "+491703493494",
@@ -59,6 +59,7 @@ const jsonLd = {
 
 function getRouteOrder(path: string): number {
   if (path === "/") return 0;
+  if (path === "/marktplatz" || path === "/angebote") return 0.5;
   if (path === "/leistungen") return 1;
   if (path.startsWith("/leistungen/")) return 1.5;
   if (path === "/simulator") return 2;
@@ -68,6 +69,7 @@ function getRouteOrder(path: string): number {
   if (path === "/kontakt") return 6;
   if (path === "/impressum") return 7;
   if (path === "/datenschutz") return 8;
+  if (path === "/admin") return 8.5;
   return 9;
 }
 
@@ -137,6 +139,7 @@ export default function App() {
   const renderRoute = () => {
     try {
       if (cleanPath === "/") return <Home />;
+      if (cleanPath === "/marktplatz" || cleanPath === "/angebote") return <Home />;
       if (cleanPath === "/leistungen") return <LeistungenPage />;
       if (cleanPath.startsWith("/leistungen/")) {
         const slug = decodeURIComponent(cleanPath.slice("/leistungen/".length));
@@ -145,13 +148,14 @@ export default function App() {
         }
         return <ServicePage params={{ slug }} />;
       }
-      if (cleanPath === "/simulator") return <SimulatorPage />;
+      if (cleanPath === "/simulator") return <Home />;
       if (cleanPath === "/anfrage") return <AnfragePage searchParams={searchParamsObj} />;
       if (cleanPath === "/ueber-uns") return <UeberUns />;
       if (cleanPath === "/kundenbewertungen") return <Kundenbewertungen />;
       if (cleanPath === "/kontakt") return <Kontakt searchParams={searchParamsObj} />;
       if (cleanPath === "/impressum") return <Impressum />;
       if (cleanPath === "/datenschutz") return <Datenschutz />;
+      if (cleanPath === "/admin") return <AdminPage />;
       return <NotFound />;
     } catch {
       return <NotFound />;

@@ -69,13 +69,13 @@ export function WhatsAppButton(props: WhatsAppButtonProps) {
 
   const variantClasses: Record<WhatsAppButtonVariant, string> = {
     "hover-emerald":
-      "btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/25 cursor-pointer",
+      "btn-whatsapp-hover group inline-flex min-h-[52px] sm:min-h-[48px] items-center justify-center gap-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-5 sm:px-6 py-3.5 text-sm sm:text-[15px] font-extrabold text-white shadow-lg shadow-emerald-600/25 cursor-pointer w-full sm:w-auto",
     "hover-outline-light":
-      "btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-emerald-400/35 bg-emerald-500/15 hover:bg-emerald-500/25 hover:border-emerald-400/60 px-5 py-3 text-sm font-bold text-white backdrop-blur-xs cursor-pointer",
+      "btn-whatsapp-hover group inline-flex min-h-[52px] sm:min-h-[46px] items-center justify-center gap-2.5 rounded-2xl border border-emerald-400/35 bg-emerald-500/15 hover:bg-emerald-500/25 hover:border-emerald-400/60 px-5 sm:px-6 py-3.5 text-sm font-bold text-white backdrop-blur-xs cursor-pointer w-full sm:w-auto",
     "hover-outline":
-      "btn-whatsapp-hover group inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-500/10 hover:bg-emerald-500/18 hover:border-emerald-500/60 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-300 cursor-pointer",
+      "btn-whatsapp-hover group inline-flex min-h-[48px] sm:min-h-[44px] items-center justify-center gap-2 rounded-xl border border-emerald-500/35 bg-emerald-500/10 hover:bg-emerald-500/18 hover:border-emerald-500/60 px-4 py-3 text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-300 cursor-pointer",
     emerald:
-      "inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3 text-sm font-extrabold text-white shadow-md transition-colors cursor-pointer",
+      "inline-flex min-h-[52px] sm:min-h-[46px] items-center justify-center gap-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-5 py-3.5 text-sm font-extrabold text-white shadow-md transition-colors cursor-pointer w-full sm:w-auto",
   };
 
   const combinedClassName = `${variantClasses[variant]} ${className}`.trim();
@@ -167,11 +167,11 @@ export function SectionHeading({
 }) {
   return (
     <div className={`max-w-2xl ${className}`}>
-      <h2 className={`text-2xl font-extrabold leading-[1.12] sm:text-4xl lg:text-[44px] ${light ? "text-white" : "text-primary dark:text-slate-100"}`}>
+      <h2 className={`text-2xl font-extrabold leading-[1.15] sm:text-3xl lg:text-[34px] ${light ? "text-white" : "text-primary dark:text-slate-100"}`}>
         {title}
       </h2>
       {subtitle && (
-        <p className={`mt-3 sm:mt-4 text-base sm:text-lg leading-relaxed ${light ? "text-white/70" : "text-ink-muted"}`}>
+        <p className={`mt-2.5 sm:mt-3 text-sm sm:text-base leading-relaxed ${light ? "text-white/75" : "text-ink-muted"}`}>
           {subtitle}
         </p>
       )}
@@ -196,16 +196,16 @@ export function PageHeader({
         style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }}
       />
       <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-      <div className="container-page relative py-10 sm:py-16 lg:py-24">
+      <div className="container-page relative py-8 sm:py-11 lg:py-12">
         {readTime && (
-          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-accent-light backdrop-blur-sm">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-accent-light backdrop-blur-sm">
             <Clock3 size={14} className="shrink-0 text-accent-light" aria-hidden="true" />
             <span>{readTime}</span>
           </div>
         )}
-        <h1 className="max-w-3xl text-[28px] sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.08]">{title}</h1>
-        {intro && <p className="mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-white/70">{intro}</p>}
-        <div className="mt-6 sm:mt-10 h-1 w-16 rounded-full bg-accent" />
+        <h1 className="max-w-3xl text-2xl sm:text-3xl lg:text-[38px] font-extrabold leading-[1.14]">{title}</h1>
+        {intro && <p className="mt-2.5 sm:mt-3.5 max-w-2xl text-sm sm:text-base leading-relaxed text-white/75">{intro}</p>}
+        <div className="mt-5 sm:mt-6 h-1 w-14 rounded-full bg-accent" />
       </div>
     </section>
   );
@@ -248,11 +248,12 @@ export function ServiceCard({
           </span>
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
         <h3 className="text-lg font-bold text-primary dark:text-slate-100">{service.title}</h3>
         <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-muted">{service.short}</p>
-        <span className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-accent">
-          Mehr erfahren <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+        <span className="mt-4 inline-flex min-h-[44px] items-center justify-between rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 px-3.5 py-2 text-[13px] font-extrabold text-accent group-hover:border-accent/40 transition-colors">
+          <span>Mehr erfahren</span>
+          <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
         </span>
       </div>
     </Link>
@@ -297,13 +298,13 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
         {showEn && review.textEn ? review.textEn : review.text}
       </blockquote>
       {review.textEn && (
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-ink-faint">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-faint">
           <span>{showEn ? "Übersetzt von Google (Englisch)" : "Original (Deutsch)"}</span>
           <span>·</span>
           <button
             type="button"
             onClick={() => setShowEn((prev) => !prev)}
-            className="font-semibold text-accent hover:underline cursor-pointer"
+            className="inline-flex min-h-[44px] items-center px-1 font-semibold text-accent hover:underline cursor-pointer"
           >
             {showEn ? "Original (Deutsch) ansehen" : "Englische Übersetzung"}
           </button>

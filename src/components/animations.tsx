@@ -272,10 +272,10 @@ export function MobileQuickActions({
           type="button"
           onClick={() => openQuickRequest("Waschmaschine", "", "", "repair")}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-accent py-3 text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer"
-          aria-label={`Reparaturanfrage vorbereiten${phone ? ` (${phone})` : ""}`}
+          aria-label={`Anfrage vorbereiten${phone ? ` (${phone})` : ""}`}
         >
           <Wrench size={15} />
-          Reparaturanfrage
+          Gerät / Teil anfragen
         </button>
       </div>
     </motion.div>
@@ -378,7 +378,7 @@ const BRAND_LOGO_CATALOG: Record<string, BrandMeta> = {
   },
   Neff: {
     name: "NEFF",
-    tagline: "Einbauherd & Slide&Hide",
+    tagline: "Küchen- & Hausgeräte",
     accentColor: "#EA580C",
     monogram: "N",
     wordmarkClass: "font-sans tracking-[0.16em] font-black text-[15px]",
@@ -495,7 +495,7 @@ export function Marquee({
                 key={`${rawName}-${i}`}
                 type="button"
                 onClick={() => onSelectBrand(rawName)}
-                title={`${rawName} Reparatur anfragen`}
+                title={`${rawName} Geräte & Ersatzteile anfragen`}
                 className="group/brand inline-flex min-h-[54px] shrink-0 items-center gap-3 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-4 py-2.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-accent dark:hover:border-accent hover:shadow-md active:scale-95 cursor-pointer"
               >
                 {content}
@@ -878,9 +878,9 @@ export function FloatingSupportLauncher({
                     <Sparkles size={16} />
                   </span>
                   <span>
-                    <span className="block text-xs font-extrabold">Komplette Reparaturanfrage</span>
+                    <span className="block text-xs font-extrabold">Gerät / Ersatzteil anfragen</span>
                     <span className="block text-[11px] font-medium text-white/85">
-                      Gerät, Fehler &amp; Standort → WhatsApp
+                      Gerätekauf, Ersatzteil &amp; Garantie → WhatsApp
                     </span>
                   </span>
                 </span>

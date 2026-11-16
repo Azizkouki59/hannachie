@@ -59,7 +59,7 @@ export const serviceIcons = {
 // Hero fallback: a workbench scene, drawn to the same proportions the final PNG should use (4:5).
 export function WorkshopScene({ className }: P) {
   return (
-    <svg viewBox="0 0 480 600" className={className} role="img" aria-label="Illustration der Werkstatt von Hannachi" preserveAspectRatio="xMidYMid slice">
+    <svg viewBox="0 0 480 600" className={className} role="img" aria-label="Illustration von Hannachi Elektrohaushaltsgeräte & Ersatzteile" preserveAspectRatio="xMidYMid slice">
       <rect width="480" height="600" fill="#142B49" />
       <rect y="410" width="480" height="190" fill="#0B192B" />
       {/* pegboard */}

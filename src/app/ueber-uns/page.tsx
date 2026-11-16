@@ -19,20 +19,20 @@ export default function UeberUns() {
   return (
     <>
       <PageHeader
-        title="Persönlicher Service mit Erfahrung."
-        intro="Ein unabhängiger Fachbetrieb in Osnabrück, geführt von einem Techniker, der Ihre Geräte kennt."
+        title="Persönlicher Vor-Ort-Service seit 1990."
+        intro="Ihr direkter Ansprechpartner in Osnabrück & Umgebung für Elektrohaushaltsgeräte & Ersatzteile – mobil bei Ihnen zu Hause nach Terminvereinbarung."
       />
       <section className="section bg-white dark:bg-slate-950">
-        <div className="container-page grid items-start gap-8 lg:grid-cols-12 lg:gap-16">
-          <div className="space-y-5 text-base sm:text-lg leading-relaxed text-slate-muted dark:text-slate-300 lg:col-span-7">
+        <div className="container-page grid items-start gap-8 lg:grid-cols-12 lg:gap-10">
+          <div className="space-y-4 text-sm sm:text-base leading-relaxed text-slate-muted dark:text-slate-300 lg:col-span-7">
             <p>
-              Seit {business.founded} steht Hannachi für persönlichen Service und Erfahrung im Bereich Haushaltsgeräte. Bei uns haben Sie einen direkten Ansprechpartner und profitieren von einer individuellen Beratung.
+              Seit {business.founded} steht Hannachi in Osnabrück für ehrliche Beratung und schnelle Hilfe rund um Elektrohaushaltsgeräte &amp; Ersatzteile. Wir sind als persönlicher mobiler Vor-Ort-Service nach Terminvereinbarung direkt bei unseren Kunden zu Hause im Einsatz.
             </p>
             <p>
-              Inhaber {business.owner} ist seit mehr als {yearsOfExperience} Jahren Ihr Ansprechpartner in der Region. Sie sprechen mit dem Techniker selbst, nicht mit einer Zentrale.
+              Inhaber {business.owner} kommt persönlich zu Ihnen nach Hause in Osnabrück &amp; Umgebung: Wir klären den Ersatzteilbedarf direkt am Gerät und liefern passende Original-Ersatzteile. Sollte sich die Rettung Ihres Altgeräts wirtschaftlich nicht mehr lohnen, bieten wir Ihnen auf Wunsch ein geprüftes Ersatzgerät aus unserem Bestand an.
             </p>
             <p>
-              Bei Verschleiß und im Reparaturfall halten wir Ersatzteile von bekannten deutschen Herstellern bereit. Teile für weniger bekannte Marken fordern wir bei Bedarf umgehend für Sie an.
+              Jedes über Hannachi verkaufte Ersatzgerät wird mit einer offiziellen <strong className="font-semibold text-primary dark:text-white">schriftlichen Verkäufergarantie</strong> übergeben – inklusive vollem Garantie- und Reparaturservice für alle bei uns gekauften Geräte.
             </p>
 
             <div className="grid gap-4 pt-4 sm:grid-cols-2">
@@ -40,7 +40,7 @@ export default function UeberUns() {
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
                   <Image
                     src={werkstattImage}
-                    alt="Kamal Hannachi bei der Platinendiagnose in seiner Osnabrücker Werkstatt"
+                    alt="Kamal Hannachi – Mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile in Osnabrück"
                     fill
                     loading="lazy"
                     decoding="async"
@@ -53,10 +53,10 @@ export default function UeberUns() {
                 </div>
                 <div className="p-3.5">
                   <p className="text-xs font-extrabold text-primary dark:text-slate-100">
-                    Eigene Fachwerkstatt in Osnabrück
+                    Mobiler Vor-Ort-Service in Osnabrück
                   </p>
                   <p className="mt-0.5 text-[11px] text-ink-muted">
-                    Elektronik- &amp; Platinenprüfung an der Iburger Straße 5
+                    Direkt beim Kunden zu Hause nach Terminvereinbarung
                   </p>
                 </div>
               </div>
@@ -65,7 +65,7 @@ export default function UeberUns() {
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
                   <Image
                     src={heroRepairImage}
-                    alt="Kamal Hannachi beim Vor-Ort-Kundendienst in Osnabrück"
+                    alt="Geprüfte Ersatzgeräte mit schriftlicher Verkäufergarantie in Osnabrück"
                     fill
                     loading="lazy"
                     decoding="async"
@@ -78,10 +78,10 @@ export default function UeberUns() {
                 </div>
                 <div className="p-3.5">
                   <p className="text-xs font-extrabold text-primary dark:text-slate-100">
-                    Persönlicher Vor-Ort-Service
+                    Schriftliche Verkäufergarantie
                   </p>
                   <p className="mt-0.5 text-[11px] text-ink-muted">
-                    Direkte Diagnose &amp; Reparatur bei Ihnen zu Hause
+                    Geprüfte Ersatzgeräte inklusive vollem Garantie-Service durch uns
                   </p>
                 </div>
               </div>

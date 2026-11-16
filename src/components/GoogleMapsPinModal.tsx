@@ -17,9 +17,12 @@ import {
   Check,
   Loader2,
   MapPin,
+  Minus,
   Navigation,
+  Plus,
   X,
 } from "lucide-react";
+import { triggerHapticFeedback } from "@/lib/haptics";
 import {
   formatCoordinatesDisplay,
   osnabrueckServiceAreas,
@@ -76,23 +79,28 @@ function resolveInitialPosition(
 
 /**
  * Interactive visual map fallback with live Google Map background + clickable/draggable Red Pin
- * so the map picker always works visually even if the JS SDK key is restricted in preview.
+ * with mobile touch zoom buttons and haptic confirmation.
  */
 function InteractiveFallbackMapSurface({
   center,
   pinPos,
+  zoom,
+  onZoomChange,
   onPinMove,
 }: {
   center: LatLng;
   pinPos: LatLng;
+  zoom: number;
+  onZoomChange: (newZoom: number) => void;
   onPinMove: (lat: number, lng: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
 
-  // Span of roughly ~0.018 deg lat and ~0.028 deg lng around center
-  const latSpan = 0.016;
-  const lngSpan = 0.026;
+  // Dynamic span based on zoom level: zoom 15 is baseline (~0.016 lat, ~0.026 lng)
+  const zoomFactor = Math.pow(2, 15 - zoom);
+  const latSpan = 0.016 * zoomFactor;
+  const lngSpan = 0.026 * zoomFactor;
 
   const pinPercentX = Math.max(
     8,
@@ -118,6 +126,7 @@ function InteractiveFallbackMapSurface({
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     draggingRef.current = true;
     e.currentTarget.setPointerCapture(e.pointerId);
+    triggerHapticFeedback(40);
     updateFromClientPoint(e.clientX, e.clientY);
   };
 
@@ -136,7 +145,7 @@ function InteractiveFallbackMapSurface({
     }
   };
 
-  const embedUrl = `https://maps.google.com/maps?q=${center.lat},${center.lng}&z=15&hl=de&output=embed`;
+  const embedUrl = `https://maps.google.com/maps?q=${center.lat},${center.lng}&z=${zoom}&hl=de&output=embed`;
 
   return (
     <div
@@ -146,7 +155,7 @@ function InteractiveFallbackMapSurface({
       onPointerUp={handlePointerUp}
       role="application"
       aria-label="Interaktive Karte – tippen oder ziehen Sie den roten Pin"
-      className="relative h-[300px] sm:h-[340px] w-full overflow-hidden rounded-2xl border border-primary/15 dark:border-white/15 bg-slate-100 dark:bg-slate-800 select-none cursor-crosshair touch-none"
+      className="relative h-[230px] min-[380px]:h-[270px] sm:h-[340px] w-full overflow-hidden rounded-2xl border border-primary/15 dark:border-white/15 bg-slate-100 dark:bg-slate-800 select-none cursor-crosshair touch-none"
     >
       <iframe
         title="Google Maps Kartenansicht"
@@ -155,6 +164,42 @@ function InteractiveFallbackMapSurface({
         loading="eager"
         referrerPolicy="no-referrer-when-downgrade"
       />
+
+      {/* Floating Touch Instructions Badge */}
+      <div className="pointer-events-none absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-xl bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
+        <MapPin size={12} className="text-red-500 shrink-0" />
+        <span>Tippen zum Platzieren</span>
+      </div>
+
+      {/* Floating Touch Zoom Controls (+ / -) for mobile thumbs */}
+      <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-1.5 shadow-md">
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHapticFeedback(25);
+            onZoomChange(Math.min(18, zoom + 1));
+          }}
+          aria-label="Karte heranzoomen"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 dark:bg-slate-900/95 text-primary dark:text-slate-100 border border-primary/15 dark:border-white/15 hover:border-accent active:scale-95 transition-all shadow-xs cursor-pointer"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHapticFeedback(25);
+            onZoomChange(Math.max(12, zoom - 1));
+          }}
+          aria-label="Karte herauszoomen"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 dark:bg-slate-900/95 text-primary dark:text-slate-100 border border-primary/15 dark:border-white/15 hover:border-accent active:scale-95 transition-all shadow-xs cursor-pointer"
+        >
+          <Minus size={16} />
+        </button>
+      </div>
 
       {/* Interactive Draggable Red Pin Overlay */}
       <div
@@ -197,13 +242,17 @@ function InteractiveGoogleMapCanvas({
       <InteractiveFallbackMapSurface
         center={camera.center}
         pinPos={pinPos}
+        zoom={camera.zoom}
+        onZoomChange={(newZoom) =>
+          onCameraChange({ center: camera.center, zoom: newZoom })
+        }
         onPinMove={onPinMove}
       />
     );
   }
 
   return (
-    <div className="relative h-[300px] sm:h-[340px] w-full overflow-hidden rounded-2xl border border-primary/15 dark:border-white/15 bg-slate-100 dark:bg-slate-800">
+    <div className="relative h-[230px] min-[380px]:h-[270px] sm:h-[340px] w-full overflow-hidden rounded-2xl border border-primary/15 dark:border-white/15 bg-slate-100 dark:bg-slate-800">
       {loadingStatus === APILoadingStatus.LOADING && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-slate-100/70 dark:bg-slate-900/70 backdrop-blur-[1px]">
           <div className="inline-flex items-center gap-2 rounded-xl bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 shadow-md border border-primary/10 dark:border-white/10">
@@ -212,6 +261,44 @@ function InteractiveGoogleMapCanvas({
           </div>
         </div>
       )}
+
+      {/* Floating Touch Instructions Badge */}
+      <div className="pointer-events-none absolute top-3 left-3 z-20 inline-flex items-center gap-1.5 rounded-xl bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
+        <MapPin size={12} className="text-red-500 shrink-0" />
+        <span>Tippen oder Pin ziehen</span>
+      </div>
+
+      {/* Floating Touch Zoom Controls (+ / -) for mobile thumbs */}
+      <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-1.5 shadow-md">
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticFeedback(25);
+            onCameraChange({
+              ...camera,
+              zoom: Math.min(camera.zoom + 1, 19),
+            });
+          }}
+          aria-label="Karte heranzoomen"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 dark:bg-slate-900/95 text-primary dark:text-slate-100 border border-primary/15 dark:border-white/15 hover:border-accent active:scale-95 transition-all shadow-xs cursor-pointer"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticFeedback(25);
+            onCameraChange({
+              ...camera,
+              zoom: Math.max(camera.zoom - 1, 11),
+            });
+          }}
+          aria-label="Karte herauszoomen"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 dark:bg-slate-900/95 text-primary dark:text-slate-100 border border-primary/15 dark:border-white/15 hover:border-accent active:scale-95 transition-all shadow-xs cursor-pointer"
+        >
+          <Minus size={16} />
+        </button>
+      </div>
 
       <GoogleMap
         mapId="DEMO_MAP_ID"
@@ -222,6 +309,7 @@ function InteractiveGoogleMapCanvas({
         streetViewControl={false}
         mapTypeControl={false}
         fullscreenControl={false}
+        zoomControl={false}
         onCameraChanged={(ev: MapCameraChangedEvent) => {
           onCameraChange({
             center: ev.detail.center,
@@ -230,6 +318,7 @@ function InteractiveGoogleMapCanvas({
         }}
         onClick={(ev: MapMouseEvent) => {
           if (ev.detail.latLng) {
+            triggerHapticFeedback(40);
             onPinMove(ev.detail.latLng.lat, ev.detail.latLng.lng);
           }
         }}
@@ -243,6 +332,7 @@ function InteractiveGoogleMapCanvas({
             const lat = ev.latLng?.lat();
             const lng = ev.latLng?.lng();
             if (typeof lat === "number" && typeof lng === "number") {
+              triggerHapticFeedback(40);
               onPinMove(lat, lng);
             }
           }}
@@ -389,6 +479,7 @@ export default function GoogleMapsPinModal({
         setPinPos(next);
         setCamera({ center: next, zoom: 16 });
         setGpsLocating(false);
+        triggerHapticFeedback(50);
         void resolveCoordinatesToAddress(next.lat, next.lng, pos.coords.accuracy);
       },
       () => {
@@ -445,7 +536,7 @@ export default function GoogleMapsPinModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex max-h-[90dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 shadow-2xl"
+            className="relative z-10 flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 shadow-2xl"
           >
             {/* Clean Compact Header */}
             <div className="flex items-center justify-between gap-3 border-b border-primary/10 dark:border-white/10 bg-primary-dark px-4 sm:px-5 py-3.5 text-white">
@@ -466,14 +557,14 @@ export default function GoogleMapsPinModal({
                 type="button"
                 onClick={onClose}
                 aria-label="Kartenauswahl schließen"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto overscroll-contain p-4 space-y-3">
+            <div className="overflow-y-auto overscroll-contain p-3.5 sm:p-4 space-y-3">
               {/* Map Container with Floating GPS Button */}
               <div className="relative">
                 {hasUsableMapsKey ? (
@@ -494,15 +585,22 @@ export default function GoogleMapsPinModal({
                   <InteractiveFallbackMapSurface
                     center={camera.center}
                     pinPos={pinPos}
+                    zoom={camera.zoom}
+                    onZoomChange={(newZoom) =>
+                      setCamera((prev) => ({ ...prev, zoom: newZoom }))
+                    }
                     onPinMove={handlePinMove}
                   />
                 )}
 
                 <button
                   type="button"
-                  onClick={handleLocateMe}
+                  onClick={() => {
+                    triggerHapticFeedback(30);
+                    handleLocateMe();
+                  }}
                   disabled={gpsLocating}
-                  className=" absolute top-3 right-3 z-20 inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 px-3 py-1.5 text-xs font-extrabold text-primary dark:text-slate-100 shadow-md border border-primary/10 dark:border-white/15 hover:border-accent transition-colors disabled:opacity-60 cursor-pointer"
+                  className="absolute top-3 right-3 z-20 inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 px-3 py-1.5 text-xs font-extrabold text-primary dark:text-slate-100 shadow-md border border-primary/10 dark:border-white/15 hover:border-accent active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
                 >
                   {gpsLocating ? (
                     <Loader2 size={13} className="animate-spin text-accent" />
@@ -513,7 +611,7 @@ export default function GoogleMapsPinModal({
                 </button>
               </div>
 
-              {/* Compact Address Confirmation Inputs */}
+              {/* Compact Address Confirmation Inputs with 16px iOS zoom prevention */}
               <div className="grid gap-2.5 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 flex items-center justify-between text-[11px] font-bold text-ink-muted">
@@ -527,7 +625,7 @@ export default function GoogleMapsPinModal({
                     value={resolvedStreet}
                     onChange={(e) => setResolvedStreet(e.target.value)}
                     placeholder="z. B. Iburger Straße 5"
-                    className="w-full rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-xs sm:text-sm font-medium text-primary dark:text-slate-100 focus:border-accent focus:outline-none"
+                    className="w-full rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-[16px] sm:text-sm font-medium text-primary dark:text-slate-100 focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
@@ -539,28 +637,31 @@ export default function GoogleMapsPinModal({
                     value={resolvedZip}
                     onChange={(e) => setResolvedZip(e.target.value)}
                     placeholder="49082 Osnabrück"
-                    className="w-full rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-xs sm:text-sm font-medium text-primary dark:text-slate-100 focus:border-accent focus:outline-none"
+                    className="w-full rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-[16px] sm:text-sm font-medium text-primary dark:text-slate-100 focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-2.5 border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950/60 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            {/* Footer with full-width mobile touch confirm button */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950/60 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex min-h-[42px] items-center justify-center rounded-xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-bold text-ink-muted hover:text-primary dark:hover:text-slate-100 transition-colors cursor-pointer"
+                className="w-full sm:w-auto inline-flex min-h-[44px] items-center justify-center rounded-xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-bold text-ink-muted hover:text-primary dark:hover:text-slate-100 transition-colors cursor-pointer"
               >
                 Abbrechen
               </button>
               <button
                 type="button"
-                onClick={handleConfirmPin}
+                onClick={() => {
+                  triggerHapticFeedback(50);
+                  handleConfirmPin();
+                }}
                 data-testid="map-picker-confirm-btn"
-                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-2 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-red-600/25 transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full sm:w-auto inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-6 py-2.5 text-sm font-extrabold text-white shadow-md shadow-red-600/25 transition-all active:scale-[0.98] cursor-pointer"
               >
-                <Check size={16} strokeWidth={2.75} />
+                <Check size={18} strokeWidth={2.75} />
                 <span>OK · Standort übernehmen</span>
               </button>
             </div>

@@ -203,10 +203,10 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
       ``,
       `*Anliegen:* ${symptom}`,
       `• Gerät: ${equipmentLabel}`,
-      `• Service: ${
+      `• Abwicklung: ${
         isHomeVisit
-          ? "Vor-Ort-Einsatz (Anfahrt gewünscht)"
-          : "Werkstatt / Beratung (keine Anfahrt nötig)"
+          ? "Mobiler Vor-Ort-Termin beim Kunden (Osnabrück & Umgebung)"
+          : "Persönliche Beratung / Terminvereinbarung"
       }`,
       ``,
       `*Kontakt:* ${name} · ${phone}${email ? ` · ${email}` : ""}`,
@@ -215,8 +215,8 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
     if (hasPinOrLocation) {
       lines.push(
         ``,
-        `📍 *Standort / Google Maps Pin (Anfahrt):*`,
-        `• Adresse: ${locationText || "Siehe Karten-Pin"}${
+        `📍 *Adresse / Einsatzort:*`,
+        `• Adresse: ${locationText || "Osnabrück & Umgebung"}${
           verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
         }`,
         mapsLink
@@ -235,20 +235,20 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
 
   const lines: string[] = [
     `Guten Tag Herr Hannachi,`,
-    `neue *${isHomeVisit ? "Reparaturanfrage" : "Werkstatt-Anfrage"}*${
+    `neue *Vor-Ort- & Ersatzteil-Anfrage*${
       referenceId ? ` · *#${referenceId}*` : ""
     }`,
     ``,
-    `*Einsatzart:* ${
+    `*Abwicklung:* ${
       isHomeVisit
-        ? "Vor-Ort-Einsatz (Anfahrt gewünscht)"
-        : "Werkstatt-Service (keine Anfahrt nötig)"
+        ? "Mobiler Vor-Ort-Termin beim Kunden (Osnabrück & Umgebung)"
+        : "Telefonische Beratung / Terminvereinbarung"
     }`,
-    `*Dringlichkeit:* ${urgency}`,
+    `*Priorität:* ${urgency}`,
     ``,
-    `*Gerät & Problem:*`,
+    `*Gerät & Anliegen:*`,
     `• Gerät: ${equipmentLabel}`,
-    `• Fehlerbild: ${symptom}`,
+    `• Beschreibung / Wunsch: ${symptom}`,
     ...(photoName ? [`• Foto: ${photoName} (wird im Chat angehängt)`] : []),
     ``,
     `*Kunde:*`,

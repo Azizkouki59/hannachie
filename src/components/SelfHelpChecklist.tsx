@@ -99,7 +99,7 @@ const CHECKLIST_GROUPS: ApplianceChecklistGroup[] = [
         description:
           "Kontrollieren, ob das Ventil unter der Spüle voll geöffnet und der Zulaufschlauch knickfrei verlegt ist.",
         duration: "ca. 2 Min.",
-        hint: "Wenn das Wasserzulauf-Lämpchen blinkt, ist oft nur das Sieb im Aquastop-Anschluss zugesetzt.",
+        hint: "Wenn das Wasserzulauf-Lämpchen blinkt, ist oft nur das kleine Zulaufsieb am Aquastop-Schlauch zugesetzt.",
       },
       {
         id: "gs-salt",
@@ -256,7 +256,7 @@ export default function SelfHelpChecklist() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-accent dark:text-accent-light mb-2.5">
                 <ClipboardCheck size={13} aria-hidden="true" />
-                <span>Vorab-Checkliste · Kostenlose Ersteinschätzung</span>
+                <span>Vorab-Checkliste · Hinweise zur Selbstkontrolle</span>
               </div>
               <h2
                 id="self-help-checklist-heading"
@@ -448,11 +448,10 @@ export default function SelfHelpChecklist() {
                     </span>
                     <div>
                       <p className="text-sm font-extrabold text-emerald-800 dark:text-emerald-300">
-                        Perfekt – Problem ohne Technikereinsatz behoben!
+                        Perfekt – Ihr Gerät funktioniert wieder!
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">
-                        Schön, dass unser Kurz-Check geholfen hat. Sollte das Problem später erneut
-                        auftreten, helfen wir Ihnen jederzeit in Osnabrück weiter.
+                        Schön, dass unser Kurz-Check geholfen hat. Bei Bedarf an Original-Ersatzteilen oder einem geprüften Ersatzgerät in Osnabrück helfen wir Ihnen jederzeit weiter.
                       </p>
                     </div>
                   </div>
@@ -480,7 +479,7 @@ export default function SelfHelpChecklist() {
                     </p>
                     <p className="mt-0.5 text-xs text-ink-muted">
                       Falls der Fehler weiter besteht, übernehmen wir Ihre geprüften Schritte direkt in
-                      die Reparaturanfrage – Herr Hannachi sieht sofort, was bereits ausgeschlossen wurde.
+                      Ihre Ersatzteil- oder Beratungsanfrage – Herr Hannachi sieht sofort, was bereits ausgeschlossen wurde.
                     </p>
                   </div>
 
