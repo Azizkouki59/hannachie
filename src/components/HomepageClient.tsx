@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Phone,
   Star,
@@ -9,11 +10,7 @@ import {
   Shield,
   Award,
   MessageCircle,
-  Sparkles,
   MapPin,
-  RotateCw,
-  Snowflake,
-  Flame,
   Wrench,
   ShieldCheck,
   Zap,
@@ -32,21 +29,56 @@ import RepairForm, { type RequestTypeId } from "@/components/RepairForm";
 import type { InquiryMode } from "@/lib/repairRequest";
 import RepairJourneyTimeline from "@/components/RepairJourneyTimeline";
 import { GoogleReviewsSection } from "@/components/GoogleReviewsSection";
+import ApplianceLogo from "@/components/ApplianceLogo";
+import { HANNACHI_WHATSAPP_PHONE, getDeviceEmoji } from "@/utils/whatsapp";
 import {
   herrHannachiImage,
   werkstattHeroHdImage,
   werkstattImage,
 } from "@/data/images";
 import { usePreloadHeroImages } from "@/lib/usePreloadHeroImages";
-import { triggerHapticFeedback } from "@/lib/haptics";
+import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
+import { hapticTap, triggerHapticFeedback } from "@/lib/haptics";
+import { useMediaQuery } from "@/lib/useMediaQuery";
+import { HeroAnimatedBackdrop } from "@/components/HeroAnimatedBackdrop";
 
 const heroQuickDevices = [
-  { label: "Waschmaschine", device: "Waschmaschine", icon: RotateCw },
-  { label: "Kühlschrank", device: "Kühlschrank / Gefriergerät", icon: Snowflake },
-  { label: "Geschirrspüler", device: "Geschirrspüler", icon: Sparkles },
-  { label: "Herd / Backofen", device: "Backofen / Herd", icon: Flame },
-  { label: "Sonstiges Gerät", device: "Sonstiges", icon: Wrench },
-];
+  {
+    label: "Waschmaschine",
+    subtitle: "Front- & Toploader",
+    device: "Waschmaschine",
+    badgeClass: "bg-sky-500/20 text-sky-300 border-sky-400/30",
+    quickProblems: ["Pumpt nicht ab", "Schleudert nicht", "Heizt nicht / Fehlercode"],
+  },
+  {
+    label: "Kühlschrank",
+    subtitle: "Kühl- & Gefrierkombi",
+    device: "Kühlschrank / Gefriergerät",
+    badgeClass: "bg-cyan-500/20 text-cyan-300 border-cyan-400/30",
+    quickProblems: ["Kühlt nicht mehr", "Vereist stark", "Brummt laut / Dichtung"],
+  },
+  {
+    label: "Geschirrspüler",
+    subtitle: "Einbau & Standgerät",
+    device: "Geschirrspüler",
+    badgeClass: "bg-teal-500/20 text-teal-300 border-teal-400/30",
+    quickProblems: ["Wasser steht unten", "Spült / heizt nicht", "Zieht kein Wasser"],
+  },
+  {
+    label: "Herd / Backofen",
+    subtitle: "Backofen & Ceranfeld",
+    device: "Backofen / Herd",
+    badgeClass: "bg-amber-500/20 text-amber-300 border-amber-400/30",
+    quickProblems: ["Heizt nicht auf", "Kochfeld ohne Funktion", "Sicherung fliegt raus"],
+  },
+  {
+    label: "Sonstiges Gerät",
+    subtitle: "Trockner, Kaffee & mehr",
+    device: "Sonstiges",
+    badgeClass: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
+    quickProblems: ["Trockner trocknet nicht", "Kaffeevollautomat brüht nicht", "Mikrowelle / Kleingerät"],
+  },
+] as const;
 
 const helpPillars: Array<{
   num: string;
@@ -92,7 +124,7 @@ const helpPillars: Array<{
       "Da jedes von uns verkaufte Gerät mit einer schriftlichen Verkäufergarantie übergeben wird, übernehmen wir für alle bei Hannachi gekauften Geräte den vollen technischen Garantie- und Reparaturservice.",
     bullets: [
       "Gesetzlich & vertraglich abgesicherte Garantie-Abwicklung",
-      "Eigener Vor-Ort- & Werkstatt-Garantieservice für Hannachi-Geräte",
+      "Eigener Vor-Ort-Garantieservice für bei Hannachi gekaufte Geräte",
       "Über 35 Jahre Erfahrung in Osnabrück (seit 1990)",
     ],
     ctaLabel: "Garantie-Anfrage stellen",
@@ -101,31 +133,82 @@ const helpPillars: Array<{
   },
 ];
 
-const stats = [
-  { value: yearsOfExperience, suffix: "+ J.", label: "Erfahrung in Osnabrück seit 1990", icon: Award },
-  { value: 4, suffix: ",8 ★", label: "Verifizierte Google-Bewertung (82)", icon: Star },
-  { value: 100, suffix: " %", label: "Schriftliche Verkäufergarantie auf Ersatzgeräte", icon: Shield },
-  { value: 24, suffix: " Std.", label: "Schnelle Rückmeldung & Vor-Ort-Termin", icon: Zap },
-];
-
 export default function HomepageClient() {
+  const { place, ratingFormatted, source } = useGoogleLivePlace();
   const { isMobileViewport } = usePreloadHeroImages();
+  const prefersReducedMotion = useReducedMotion();
+  const isMdUp = useMediaQuery("(min-width: 768px)", false);
   const [selectedDevice, setSelectedDevice] = useState<string>("Waschmaschine");
+  const [customOtherDevice, setCustomOtherDevice] = useState<string>("");
   const [selectedSymptom, setSelectedSymptom] = useState<string>("");
   const [selectedBrand] = useState<string>("");
   const [inquiryMode] = useState<InquiryMode>("repair");
   const [selectedRequestType, setSelectedRequestType] = useState<RequestTypeId>("check_parts");
   const [expandedPillar, setExpandedPillar] = useState<string | null>("01");
 
+  const activeHeroDeviceObj =
+    heroQuickDevices.find((d) => d.device === selectedDevice) || heroQuickDevices[0];
+  const resolvedHeroDeviceForForm =
+    selectedDevice === "Sonstiges" && customOtherDevice.trim()
+      ? customOtherDevice.trim()
+      : selectedDevice;
+
+  const ratingInt = Math.floor(place.rating);
+  const ratingDec = place.rating.toFixed(1).split(".")[1] || "0";
+  const stats = [
+    { value: yearsOfExperience, suffix: "+ J.", label: "Erfahrung in Osnabrück seit 1990", icon: Award },
+    {
+      value: ratingInt,
+      suffix: `,${ratingDec} ★`,
+      label: `Verifizierte Google-Bewertung (${place.userRatingCount})`,
+      icon: Star,
+    },
+    { value: 100, suffix: " %", label: "Schriftliche Verkäufergarantie auf Ersatzgeräte", icon: Shield },
+    { value: 24, suffix: " Std.", label: "Schnelle Rückmeldung & Vor-Ort-Termin", icon: Zap },
+  ];
+
   const handleSelectDevice = (device: string) => {
-    triggerHapticFeedback(35);
+    hapticTap();
     setSelectedDevice(device);
     setSelectedSymptom("");
+  };
+
+  const handleToggleSymptom = (symptom: string) => {
+    hapticTap();
+    setSelectedSymptom((prev) => (prev === symptom ? "" : symptom));
+  };
+
+  const handleScrollToRequest = () => {
+    triggerHapticFeedback(35);
     const el = document.getElementById("anfrage");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
+      window.setTimeout(() => {
+        const target =
+          el.querySelector<HTMLElement>('[data-field="brand"]') ||
+          el.querySelector<HTMLElement>('[data-field="phone"]');
+        target?.focus({ preventScroll: true });
+      }, 450);
     }
   };
+
+  const whatsappDeviceLabel =
+    selectedDevice === "Sonstiges" && customOtherDevice.trim()
+      ? customOtherDevice.trim()
+      : activeHeroDeviceObj.label;
+
+  const heroWhatsAppMessage = [
+    `🔧 *Kurzanfrage (Startseite)*`,
+    `Hallo Herr Hannachi,`,
+    ``,
+    `${getDeviceEmoji(whatsappDeviceLabel)} *Gerät:* ${whatsappDeviceLabel}`,
+    ...(selectedSymptom ? [`📝 *Problem:* ${selectedSymptom}`] : []),
+    `Ich bitte um Rückmeldung für einen Vor-Ort-Termin.`,
+  ].join("\n");
+
+  const heroDirectWhatsappHref = `https://api.whatsapp.com/send?phone=${HANNACHI_WHATSAPP_PHONE}&text=${encodeURIComponent(
+    heroWhatsAppMessage
+  )}`;
 
   const handleSelectPillar = (reqType: RequestTypeId) => {
     triggerHapticFeedback(35);
@@ -146,113 +229,266 @@ export default function HomepageClient() {
       <ScrollProgressBar />
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 1: MOBILE ON-SITE HERO & 4-COLUMN KPI STRIP
+          SECTION 1: MOBILE ON-SITE HERO (CLEAR & COMPLIANT)
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-primary-dark pt-5 pb-9 sm:pt-10 sm:pb-12 lg:pt-11 lg:pb-14 border-b border-white/10">
+      <section className="relative overflow-hidden bg-primary-dark pt-3 pb-6 sm:pt-9 sm:pb-12 lg:pt-12 lg:pb-14 border-b border-white/10">
+        <HeroAnimatedBackdrop />
+
         <div className="container-page relative z-10">
-          <div className="grid gap-6 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
+          <div className="grid gap-4 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
             {/* Left Column (7 cols): Compliant Hero Positioning */}
-            <div className="flex flex-col justify-center lg:col-span-7">
+            <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
               {/* Compact Trust Eyebrow */}
-              <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm font-semibold text-accent-light">
-                <span className="inline-flex items-center gap-1.5 text-amber-400 font-extrabold">
-                  <Star size={13} className="fill-amber-400 text-amber-400 shrink-0" />
-                  <span>4,8 ★ Google (82)</span>
-                </span>
-                <span aria-hidden="true" className="text-white/35">·</span>
-                <span>Vor-Ort-Service Osnabrück</span>
-                <span aria-hidden="true" className="text-white/35">·</span>
+              <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-[13px] font-semibold text-white/75">
+                <a
+                  href="#kundenstimmen"
+                  className="inline-flex items-center gap-1.5 text-accent-light font-extrabold hover:underline"
+                >
+                  <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" aria-hidden="true" />
+                  <span className="tabular-nums">{ratingFormatted} ★ Google ({place.userRatingCount})</span>
+                </a>
+                {source === "live" && place.openNow !== null && (
+                  <>
+                    <span aria-hidden="true" className="text-white/30">·</span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 font-bold ${
+                        place.openNow ? "text-emerald-300" : "text-amber-200"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`inline-flex h-1.5 w-1.5 rounded-full shrink-0 ${
+                          place.openNow ? "bg-emerald-400" : "bg-amber-400"
+                        }`}
+                      />
+                      <span>{place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}</span>
+                    </span>
+                  </>
+                )}
+                <span aria-hidden="true" className="hidden min-[380px]:inline text-white/30">·</span>
+                <span className="hidden min-[380px]:inline">Vor-Ort Osnabrück</span>
+                <span aria-hidden="true" className="text-white/30">·</span>
                 <span>Seit {business.founded}</span>
               </div>
 
-              <h1 className="text-[25px] min-[375px]:text-[28px] sm:text-[34px] lg:text-[40px] font-extrabold leading-[1.13] tracking-tight text-white text-balance">
+              <h1 className="text-[22px] min-[375px]:text-[25px] sm:text-[34px] lg:text-[42px] font-extrabold leading-[1.13] tracking-[-0.025em] text-white text-balance">
                 Ihr mobiler Vor-Ort-Service für Elektrohaushaltsgeräte &amp; Ersatzteile in Osnabrück.
               </h1>
 
-              <p className="mt-3 max-w-[62ch] text-[13.5px] sm:text-[15px] lg:text-base leading-relaxed text-white/80">
+              <p className="mt-2 sm:mt-3 max-w-[60ch] text-[13px] sm:text-[15px] lg:text-base leading-relaxed text-white/80">
                 Ihr Hausgerät streikt? Wir kommen nach Terminabsprache{" "}
                 <strong className="text-white font-semibold">
                   direkt zu Ihnen nach Hause in Osnabrück &amp; Umgebung
                 </strong>
                 : mit passenden Original-Ersatzteilen, einem fairen Angebot für ein{" "}
                 <strong className="text-white font-semibold">
-                  geprüftes Ersatzgerät inklusive schriftlicher Verkäufergarantie
+                  geprüftes Ersatzgerät inkl. schriftlicher Garantie
                 </strong>{" "}
-                (falls sich Ihr Altgerät nicht mehr lohnt) sowie vollem Garantie-Service für alle bei uns gekauften Geräte.
+                sowie vollem Garantie-Service.
               </p>
 
-              {/* 1-Tap Appliance Quick-Select Bar (Placed right above fold on mobile for instant thumb action) */}
-              <div className="mt-4 sm:mt-6 rounded-2xl border border-white/12 bg-white/[0.05] p-3.5 sm:p-4">
-                <div className="flex items-center justify-between gap-2 mb-2.5 text-xs">
-                  <span className="font-extrabold text-white">
+              {/* App-Like 1-Tap Appliance Selector + Quick Problems + Direct Contact */}
+              <div className="mt-3.5 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.04] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-xl shadow-black/20">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-extrabold text-white min-w-0">
                     Welches Gerät bereitet Probleme?
                   </span>
-                  <span className="text-[11px] font-medium text-accent-light">
-                    1-Tipp Auswahl ↓
+                  <span className="text-[11px] font-semibold text-accent-light shrink-0">
+                    <span className="sm:hidden">Tippen &amp; senden</span>
+                    <span className="hidden sm:inline">Auswählen &amp; direkt kontaktieren</span>
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                  {heroQuickDevices.map(({ label, device, icon: Icon }, idx) => {
-                    const isSelected = selectedDevice === device;
-                    const isLastOddItem = idx === heroQuickDevices.length - 1;
+
+                {/* Mobile: Symmetric 3+2 App-Tile Grid (100% Visible on Phone) | Tablet & Desktop: 5-Column Row */}
+                <div className="grid grid-cols-6 sm:grid-cols-5 gap-1.5 sm:gap-2">
+                  {heroQuickDevices.map((item, idx) => {
+                    const isSelected = selectedDevice === item.device;
                     return (
-                      <button
-                        key={device}
+                      <motion.button
+                        key={item.device}
                         type="button"
-                        onClick={() => handleSelectDevice(device)}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
+                        transition={{ type: "spring", stiffness: 520, damping: 24 }}
+                        onClick={() => handleSelectDevice(item.device)}
                         aria-pressed={isSelected}
-                        className={`flex min-h-[46px] min-w-0 items-center justify-between sm:justify-start gap-2 rounded-xl border px-3 py-2 text-left text-xs font-extrabold transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer ${
-                          isLastOddItem ? "col-span-2 sm:col-span-1" : ""
-                        } ${
+                        className={`${
+                          idx < 3 ? "col-span-2 sm:col-span-1" : "col-span-3 sm:col-span-1"
+                        } relative overflow-hidden min-w-0 w-full flex flex-col items-center text-center justify-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl border px-1 sm:px-1.5 py-2 sm:py-3 transition-all cursor-pointer ${
                           isSelected
-                            ? "border-accent bg-accent text-white shadow-md shadow-accent/25"
-                            : "border-white/15 bg-white/[0.06] text-white/90 hover:border-accent/60 hover:bg-white/12"
+                            ? "border-accent text-white shadow-lg shadow-accent/25"
+                            : "border-white/12 bg-white/[0.05] text-white/90 hover:border-white/30 hover:bg-white/[0.1]"
                         }`}
                       >
-                        <span className="flex items-center gap-2 min-w-0">
-                          <Icon
-                            size={15}
-                            className={`shrink-0 ${
-                              isSelected ? "text-white" : "text-accent-light"
-                            }`}
+                        {isSelected && (
+                          <motion.span
+                            layoutId="hero-device-active-bg"
+                            transition={
+                              prefersReducedMotion
+                                ? { duration: 0.1 }
+                                : { type: "spring", stiffness: 420, damping: 32 }
+                            }
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-xl sm:rounded-2xl bg-accent"
                           />
-                          <span className="truncate">{label}</span>
-                        </span>
-                        {isSelected ? (
-                          <Check size={14} className="shrink-0 text-white sm:hidden" />
-                        ) : (
-                          <ArrowRight size={13} className="shrink-0 text-white/40 sm:hidden" />
                         )}
-                      </button>
+                        <AnimatePresence>
+                          {isSelected && (
+                            <motion.span
+                              initial={prefersReducedMotion ? false : { scale: 0 }}
+                              animate={{ scale: 1 }}
+                              exit={prefersReducedMotion ? undefined : { scale: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                              className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-white text-accent shadow-xs"
+                            >
+                              <Check size={9} strokeWidth={3.5} aria-hidden="true" />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                        <span
+                          className={`relative z-10 flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
+                            isSelected
+                              ? "border-white/35 bg-white/20 text-white"
+                              : item.badgeClass
+                          }`}
+                        >
+                          <ApplianceLogo device={item.device} size={21} />
+                        </span>
+                        <div className="relative z-10 w-full min-w-0">
+                          <span className="block truncate text-[10.5px] min-[375px]:text-[11px] xl:text-xs font-extrabold leading-tight tracking-[-0.01em]">
+                            {item.label}
+                          </span>
+                          <span
+                            className={`hidden xl:block truncate text-[10px] leading-tight mt-0.5 ${
+                              isSelected ? "text-white/85" : "text-white/60"
+                            }`}
+                          >
+                            {item.subtitle}
+                          </span>
+                        </div>
+                      </motion.button>
                     );
                   })}
                 </div>
+
+                {/* Optional Custom Name when "Sonstiges Gerät" is chosen */}
+                <AnimatePresence initial={false}>
+                  {selectedDevice === "Sonstiges" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <input
+                        type="text"
+                        value={customOtherDevice}
+                        onChange={(e) => setCustomOtherDevice(e.target.value)}
+                        placeholder="Welches Gerät genau? (z. B. Trockner, Kaffeevollautomat)"
+                        className="w-full min-h-[44px] rounded-xl border border-white/20 bg-slate-950/70 px-3.5 py-2 text-base sm:text-sm text-white placeholder:text-white/45 focus:border-accent focus:outline-none"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 1-Tap Quick-Symptoms Wrapped Grid */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <span className="font-semibold text-white/75">
+                      Häufiges Problem <span className="text-white/50">(optional)</span>:
+                    </span>
+                    {selectedSymptom && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSymptom("")}
+                        className="text-accent-light hover:underline font-semibold cursor-pointer shrink-0"
+                      >
+                        Zurücksetzen
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeHeroDeviceObj.quickProblems.map((problem) => {
+                      const active = selectedSymptom === problem;
+                      return (
+                        <button
+                          key={problem}
+                          type="button"
+                          onClick={() => handleToggleSymptom(problem)}
+                          aria-pressed={active}
+                          className={`inline-flex min-h-[38px] sm:min-h-[34px] max-w-full items-center gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-left leading-tight cursor-pointer ${
+                            active
+                              ? "border-emerald-400 bg-emerald-500/25 text-emerald-200 shadow-xs"
+                              : "border-white/15 bg-white/[0.05] text-white/85 hover:border-white/30 hover:text-white"
+                          }`}
+                        >
+                          {active && <Check size={12} className="text-emerald-300 shrink-0" />}
+                          <span>{problem}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* App-Style Action Dock: Primary WhatsApp + Balanced Call & Form */}
+                <div className="pt-2.5 border-t border-white/12 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2">
+                  <motion.a
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    href={heroDirectWhatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => triggerHapticFeedback(50)}
+                    data-testid="hero-direct-whatsapp-btn"
+                    className="col-span-2 sm:flex-1 sm:min-w-[200px] min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/45 bg-emerald-600/90 hover:bg-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-md shadow-emerald-950/30 transition-colors overflow-hidden"
+                  >
+                    <MessageCircle size={16} className="text-white shrink-0" aria-hidden="true" />
+                    <span className="truncate inline-flex items-center min-w-0">
+                      <span>WhatsApp ·&nbsp;</span>
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.span
+                          key={`${whatsappDeviceLabel}-${selectedSymptom}`}
+                          initial={prefersReducedMotion ? false : { y: 8, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={prefersReducedMotion ? undefined : { y: -8, opacity: 0 }}
+                          transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                          className="inline-block truncate"
+                        >
+                          {whatsappDeviceLabel}
+                          {selectedSymptom ? ` (${selectedSymptom})` : ""}
+                        </motion.span>
+                      </AnimatePresence>
+                    </span>
+                  </motion.a>
+                  <motion.a
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    href={place.phoneHref}
+                    onClick={() => triggerHapticFeedback(50)}
+                    data-testid="hero-direct-call-btn"
+                    className="min-w-0 w-full sm:w-auto sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.08] hover:bg-white/14 px-2.5 sm:px-3 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
+                  >
+                    <Phone size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{place.phoneDisplay}</span>
+                  </motion.a>
+                  <motion.button
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    type="button"
+                    onClick={handleScrollToRequest}
+                    data-testid="hero-direct-form-btn"
+                    className="min-w-0 w-full sm:w-auto sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-2.5 sm:px-4 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-md shadow-accent/25 transition-colors cursor-pointer overflow-hidden"
+                  >
+                    <span className="truncate">
+                      {selectedSymptom ? "Im Formular senden" : "Termin anfragen"}
+                    </span>
+                    <ArrowRight size={13} className="shrink-0" aria-hidden="true" />
+                  </motion.button>
+                </div>
               </div>
 
-              {/* Primary & Secondary CTAs */}
-              <div className="mt-4 sm:mt-6 grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center gap-2.5">
-                <a
-                  href="#anfrage"
-                  onClick={() => triggerHapticFeedback(40)}
-                  className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98] whitespace-nowrap"
-                >
-                  <MessageCircle size={17} className="shrink-0" />
-                  <span>Vor-Ort-Termin anfragen</span>
-                  <ArrowRight size={15} className="shrink-0" />
-                </a>
-                <a
-                  href={business.phoneHref}
-                  onClick={() => triggerHapticFeedback(50)}
-                  className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 px-5 py-3 text-xs sm:text-sm font-extrabold text-white transition-all active:scale-[0.98] whitespace-nowrap"
-                >
-                  <Phone size={16} className="shrink-0 text-emerald-400" />
-                  <span>{business.phoneDisplay}</span>
-                </a>
-              </div>
-
-              {/* Mobile Service Photography Card */}
-              <div className="mt-5 lg:hidden">
-                <div className="relative overflow-hidden rounded-2xl border border-white/15 shadow-lg">
+              {/* Mobile Service Photography Card (Tighter aspect ratio for mobile above-the-fold balance) */}
+              <div className="mt-3 lg:hidden">
+                <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-slate-900/80 shadow-xl">
                   <Image
                     src={werkstattImage}
                     alt="Kamal Hannachi – Mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile in Osnabrück"
@@ -263,18 +499,19 @@ export default function HomepageClient() {
                     placeholder="blur"
                     blurDataURL={werkstattImage.blurDataURL}
                     sizes="(max-width: 640px) 94vw, (max-width: 1023px) 92vw, 520px"
-                    className="aspect-[16/9] w-full object-cover object-center"
+                    className="aspect-[16/8.5] sm:aspect-[16/9] w-full object-cover object-center"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
-                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2 rounded-xl border border-white/15 bg-slate-950/80 px-3 py-2 text-xs text-white backdrop-blur-md">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
-                      <span className="font-bold truncate">
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                  <div className="hero-badge absolute inset-x-3 bottom-3 z-10 flex items-center justify-between gap-2 rounded-xl border border-white/20 bg-slate-950/88 px-3.5 py-2.5 backdrop-blur-md text-xs text-white shadow-lg">
+                    <span className="inline-flex items-center gap-1.5 font-bold truncate min-w-0">
+                      <MapPin size={13} className="shrink-0 text-accent-light" aria-hidden="true" />
+                      <span className="truncate">
                         Inh. {business.owner} · Vor-Ort in {business.city}
                       </span>
-                    </div>
-                    <span className="font-mono font-extrabold text-amber-400 tabular-nums shrink-0">
-                      4,8 ★ (82)
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 tabular-nums shrink-0">
+                      <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
+                      <span>{ratingFormatted} ({place.userRatingCount})</span>
                     </span>
                   </div>
                 </div>
@@ -282,8 +519,8 @@ export default function HomepageClient() {
             </div>
 
             {/* Right Column (5 cols): Desktop Real Portrait / Service Card */}
-            <div className="relative hidden lg:flex lg:flex-col lg:justify-center lg:col-span-5">
-              <div className="relative h-full min-h-[340px] overflow-hidden rounded-2xl border border-white/15">
+            <div className="relative hidden lg:flex lg:col-span-5 flex-col">
+              <div className="relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl">
                 <Image
                   src={werkstattHeroHdImage}
                   alt="Hannachi Elektrohaushaltsgeräte & Ersatzteile – Mobiler Vor-Ort-Service Osnabrück"
@@ -296,44 +533,42 @@ export default function HomepageClient() {
                   sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
                   className="object-cover object-center"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
-
-                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-end justify-between gap-4 rounded-xl border border-white/15 bg-primary-dark/90 p-3.5 backdrop-blur-md">
-                  <div>
-                    <div className="flex items-center gap-2 text-xs text-accent-light font-semibold">
-                      <span>Mobiler Vor-Ort-Service</span>
-                      <span aria-hidden="true">·</span>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
+                <div className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/20 bg-slate-950/88 px-4 py-3.5 backdrop-blur-md shadow-xl">
+                  <div className="flex items-center justify-between gap-2 text-xs text-accent-light font-bold">
+                    <span>Mobiler Vor-Ort-Service</span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin size={12} className="shrink-0" aria-hidden="true" />
                       <span>{business.city} &amp; Umgebung</span>
-                    </div>
-                    <p className="mt-0.5 text-sm font-bold text-white">
-                      Persönliche Betreuung durch Inhaber {business.owner}
-                    </p>
+                    </span>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-extrabold text-amber-400 tabular-nums">
-                      4,8 ★ Google (82)
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-white/70">
-                      Seit {business.founded}
-                    </p>
+                  <p className="mt-1 text-sm font-extrabold text-white leading-snug">
+                    Persönliche Betreuung durch Inhaber {business.owner}
+                  </p>
+                  <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between text-[11px] text-white/80">
+                    <span>Seit {business.founded} in Osnabrück · inkl. Garantie</span>
+                    <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 tabular-nums">
+                      <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
+                      <span>{ratingFormatted} Google ({place.userRatingCount})</span>
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Full-Width 4-Column Quantitative KPI Strip Below Hero Split */}
-          <StaggerContainer className="mt-6 sm:mt-8 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+          {/* Compact 4-Box KPI Strip (All 4 values visible at a glance on mobile & desktop) */}
+          <StaggerContainer className="mt-3 sm:mt-7 grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
             {stats.map(({ value, suffix, label, icon: Icon }) => (
               <StaggerItem key={label}>
-                <div className="h-full flex flex-col justify-between rounded-xl border border-white/10 bg-white/[0.04] p-3 sm:p-4">
+                <div className="h-full rounded-2xl border border-white/12 bg-white/[0.05] p-3 sm:p-4 flex flex-col justify-between min-w-0 transition-colors hover:border-white/22 hover:bg-white/[0.07]">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-base sm:text-xl lg:text-2xl font-extrabold text-white font-mono tabular-nums">
+                    <p className="text-base min-[375px]:text-lg sm:text-xl lg:text-2xl font-extrabold text-white tabular-nums">
                       <CountUp target={value} suffix={suffix} />
                     </p>
-                    <Icon size={15} className="shrink-0 text-accent-light" />
+                    <Icon size={15} className="shrink-0 text-accent-light" aria-hidden="true" />
                   </div>
-                  <p className="mt-1 text-[11px] sm:text-xs font-medium text-white/70 leading-snug">
+                  <p className="mt-1 text-[11px] sm:text-xs font-medium text-white/75 leading-snug">
                     {label}
                   </p>
                 </div>
@@ -344,7 +579,7 @@ export default function HomepageClient() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 2: 3-PILLAR VALUE PROPOSITION (COLLAPSIBLE ON MOBILE)
+          SECTION 2: COMPLIANT 3-PILLAR VALUE PROPOSITION (CLEAN MOBILE)
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="leistungen"
@@ -353,100 +588,113 @@ export default function HomepageClient() {
       >
         <div className="container-page">
           <FadeUp>
-            <div className="mx-auto max-w-3xl text-center mb-6 sm:mb-10">
-              <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-semibold text-accent mb-2">
-                <span>Mobiler Vor-Ort-Service</span>
-                <span aria-hidden="true">·</span>
-                <span>Osnabrück &amp; Umgebung</span>
-              </div>
+            <div className="max-w-3xl mx-auto text-center mb-6 sm:mb-10">
+              <p className="eyebrow">Mobiler Vor-Ort-Service · Osnabrück &amp; Umgebung</p>
               <h2
                 id="how-we-help-heading"
-                className="text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
+                className="mt-1.5 sm:mt-2 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
               >
                 So helfen wir Ihnen direkt bei Ihnen zu Hause
               </h2>
-              <p className="mt-2 text-xs sm:text-sm lg:text-[15px] text-ink-muted leading-relaxed">
+              <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm lg:text-[15px] text-ink-muted leading-relaxed">
                 {business.mobileServiceNotice}
               </p>
             </div>
           </FadeUp>
 
-          <StaggerContainer className="grid gap-3.5 sm:gap-5 md:grid-cols-3 lg:gap-6">
+          <StaggerContainer className="grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
             {helpPillars.map((pillar) => {
               const Icon = pillar.icon;
               const isExpanded = expandedPillar === pillar.num;
               return (
                 <StaggerItem key={pillar.num}>
-                  <article className="h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 p-4 sm:p-6 shadow-xs transition-all hover:border-accent/45">
+                  <article className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 p-5 sm:p-6">
                     <div>
-                      <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/12 text-accent dark:text-accent-light border border-accent/25">
-                          <Icon size={20} aria-hidden="true" />
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                          <Icon size={21} aria-hidden="true" />
                         </div>
-                        <span className="font-mono text-xs font-extrabold text-accent tabular-nums">
+                        <span className="font-mono text-2xl font-extrabold text-accent/30 tabular-nums">
                           {pillar.num}
                         </span>
                       </div>
 
-                      <h3 className="text-base sm:text-xl font-extrabold text-primary dark:text-white leading-snug">
+                      <h3 className="text-lg sm:text-xl font-extrabold text-primary dark:text-white leading-snug">
                         {pillar.title}
                       </h3>
 
-                      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-ink-muted dark:text-slate-300">
+                      <p className="mt-2 text-xs sm:text-[14px] leading-relaxed text-ink-muted">
                         {pillar.description}
                       </p>
-                    </div>
 
-                    <div>
                       {/* Mobile Collapsible Accordion Trigger (< md) */}
-                      <button
+                      <motion.button
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
                         type="button"
                         onClick={() => toggleMobilePillar(pillar.num)}
                         aria-expanded={isExpanded}
-                        className="mt-3.5 flex md:hidden min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-200 active:scale-[0.99] transition-all cursor-pointer"
+                        className="mt-3.5 flex md:hidden min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-200 transition-colors cursor-pointer"
                       >
                         <span>
                           {isExpanded ? "Vorteile ausblenden" : "Alle 3 Vorteile anzeigen"}
                         </span>
-                        <ChevronDown
-                          size={15}
-                          className={`shrink-0 text-accent transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {/* Bullet Points (Collapsible on mobile, always visible on md+) */}
-                      <ul
-                        className={`${
-                          isExpanded ? "mt-3.5 block" : "hidden"
-                        } md:mt-5 md:block space-y-2 border-t border-primary/10 dark:border-white/10 pt-3.5 sm:pt-4`}
-                      >
-                        {pillar.bullets.map((bullet) => (
-                          <li
-                            key={bullet}
-                            className="flex items-start gap-2 text-xs text-primary/90 dark:text-slate-200"
-                          >
-                            <CheckCircle2
-                              size={14}
-                              className="mt-0.5 shrink-0 text-emerald-500"
-                              aria-hidden="true"
-                            />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <div className="mt-3.5 pt-3 border-t border-primary/8 dark:border-white/8">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectPillar(pillar.requestType)}
-                          className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3.5 py-2.5 text-xs font-extrabold text-accent dark:text-accent-light hover:bg-accent hover:text-white active:scale-[0.99] transition-all cursor-pointer"
+                        <motion.span
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ type: "spring", stiffness: 360, damping: 26 }}
+                          className="shrink-0 text-accent flex items-center"
                         >
-                          <span>{pillar.ctaLabel}</span>
-                          <ArrowRight size={14} className="shrink-0" />
-                        </button>
-                      </div>
+                          <ChevronDown size={15} />
+                        </motion.span>
+                      </motion.button>
+
+                      <motion.div
+                        initial={false}
+                        animate={
+                          isMdUp || isExpanded
+                            ? { height: "auto", opacity: 1 }
+                            : { height: 0, opacity: 0 }
+                        }
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.08 }
+                            : {
+                                height: { type: "spring", stiffness: 360, damping: 32 },
+                                opacity: { duration: 0.2 },
+                              }
+                        }
+                        className="overflow-hidden md:!h-auto md:!opacity-100"
+                        aria-hidden={!isMdUp && !isExpanded}
+                      >
+                        <ul className="mt-3 md:mt-5 space-y-2 border-t border-primary/8 dark:border-white/10 pt-4">
+                          {pillar.bullets.map((bullet) => (
+                            <li
+                              key={bullet}
+                              className="flex items-start gap-2 text-xs text-primary/90 dark:text-slate-200"
+                            >
+                              <CheckCircle2
+                                size={14}
+                                className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                                aria-hidden="true"
+                              />
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    </div>
+
+                    <div className="mt-4 md:mt-6 pt-3.5 md:pt-4 border-t border-primary/8 dark:border-white/10">
+                      <motion.button
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                        type="button"
+                        onClick={() => handleSelectPillar(pillar.requestType)}
+                        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-accent/25 bg-accent/10 px-4 py-2.5 text-xs font-extrabold text-accent hover:bg-accent hover:text-white transition-colors cursor-pointer"
+                      >
+                        <span className="min-w-0 text-left leading-snug">{pillar.ctaLabel}</span>
+                        <ArrowRight size={14} className="shrink-0" />
+                      </motion.button>
                     </div>
                   </article>
                 </StaggerItem>
@@ -471,17 +719,13 @@ export default function HomepageClient() {
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="anfrage"
-        className="section relative scroll-mt-14 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
+        className="section relative scroll-mt-16 lg:scroll-mt-20 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
       >
         <div className="container-page">
           <FadeUp>
-            <div className="mx-auto max-w-3xl text-center mb-4 sm:mb-8">
-              <div className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-semibold text-accent mb-1.5 sm:mb-2">
-                <span>Mobiler Vor-Ort-Service Osnabrück</span>
-                <span aria-hidden="true">·</span>
-                <span>Schnelle Terminanfrage</span>
-              </div>
-              <h2 className="text-xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
+            <div className="max-w-3xl mx-auto text-center mb-5 sm:mb-10">
+              <p className="eyebrow">Mobiler Vor-Ort-Service Osnabrück · Schnelle Terminanfrage</p>
+              <h2 className="mt-1.5 sm:mt-2 text-xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
                 Vor-Ort-Termin, Ersatzteil oder Ersatzgerät anfragen
               </h2>
               <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm lg:text-[15px] text-ink-muted">
@@ -493,7 +737,7 @@ export default function HomepageClient() {
           <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-12 lg:items-start">
             <div className="lg:col-span-8 min-w-0 w-full max-w-full">
               <RepairForm
-                defaultDevice={selectedDevice}
+                defaultDevice={resolvedHeroDeviceForForm}
                 defaultSymptom={selectedSymptom}
                 defaultBrand={selectedBrand}
                 defaultMode={inquiryMode}
@@ -502,9 +746,9 @@ export default function HomepageClient() {
             </div>
 
             <aside className="space-y-4 sm:space-y-5 lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-20">
-              <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-primary-dark p-4 sm:p-6 text-white">
+              <div className="rounded-2xl bg-primary-dark p-4 sm:p-6 text-white shadow-xl border border-white/10">
                 <div className="flex items-center gap-3.5 sm:gap-4 pb-4 sm:pb-5 border-b border-white/10">
-                  <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl border border-white/20">
+                  <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl border-2 border-accent/40">
                     <Image
                       src={herrHannachiImage}
                       alt="Kamal Hannachi"
@@ -546,41 +790,54 @@ export default function HomepageClient() {
                 </ul>
 
                 <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-white/10 space-y-2.5 text-xs">
-                  <div className="flex items-start gap-2 text-white/85">
+                  <div className="flex items-start gap-2 text-white/80 min-w-0">
                     <MapPin size={14} className="text-accent-light shrink-0 mt-0.5" />
-                    <span>
-                      Mobiler Vor-Ort-Service in {business.city} &amp; Umgebung · {business.street}, {business.zip} {business.city}
+                    <span className="min-w-0 break-words">
+                      Mobiler Vor-Ort-Service in {business.city} &amp; Umgebung · {place.streetLine}, {place.zipCityLine}
                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-white/85">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-white/80 min-w-0">
                     <Phone size={14} className="text-accent-light shrink-0" />
-                    <a href={business.phoneHref} className="inline-flex min-h-[44px] items-center font-bold hover:underline">
-                      {business.phoneDisplay}
+                    <a href={place.phoneHref} className="inline-flex min-h-[44px] items-center font-bold hover:underline">
+                      {place.phoneDisplay}
                     </a>
-                    <span className="text-white/55">({business.hours})</span>
+                    <span className="text-white/55 break-words">({place.hoursSummary})</span>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/60 p-4 sm:p-5">
-                <p className="text-xs font-semibold text-accent">
+              <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/60 p-4 sm:p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-accent">
                   Service &amp; Erreichbarkeit
                 </p>
                 <h3 className="mt-1 text-base font-extrabold text-primary dark:text-slate-100">
                   Hannachi Osnabrück
                 </h3>
                 <dl className="mt-3 space-y-2 text-xs text-ink-muted">
-                  <div className="flex items-center justify-between gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
-                    <dt className="font-medium text-primary dark:text-slate-200">Vor-Ort-Termine</dt>
-                    <dd className="text-right">{business.hours}</dd>
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Vor-Ort-Termine</dt>
+                    <dd className="text-right min-w-0 break-words">
+                      {place.hoursSummary}
+                      {source === "live" && place.openNow !== null && (
+                        <span
+                          className={`block text-[11px] font-bold ${
+                            place.openNow
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-amber-600 dark:text-amber-300"
+                          }`}
+                        >
+                          {place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}
+                        </span>
+                      )}
+                    </dd>
                   </div>
-                  <div className="flex items-center justify-between gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
-                    <dt className="font-medium text-primary dark:text-slate-200">Einsatzgebiet</dt>
-                    <dd className="text-right">Osnabrück &amp; Umgebung</dd>
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Einsatzgebiet</dt>
+                    <dd className="text-right min-w-0">Osnabrück &amp; Umgebung</dd>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="font-medium text-primary dark:text-slate-200">Ersatzgeräte</dt>
-                    <dd className="text-right">Inkl. schriftlicher Garantie</dd>
+                  <div className="flex items-center justify-between gap-2 sm:gap-3">
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Ersatzgeräte</dt>
+                    <dd className="text-right min-w-0">Inkl. schriftlicher Garantie</dd>
                   </div>
                 </dl>
               </div>

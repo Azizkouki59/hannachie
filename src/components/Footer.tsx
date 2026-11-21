@@ -14,26 +14,28 @@ import {
 } from "lucide-react";
 import { business, services, nav } from "@/data/site";
 import { useConsent } from "@/lib/consent";
+import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 
 type LegalModalTab = "impressum" | "datenschutz" | null;
 
 export default function Footer() {
   const { openConsentManager } = useConsent();
+  const { place, source } = useGoogleLivePlace();
   const [legalModalTab, setLegalModalTab] = useState<LegalModalTab>(null);
 
   return (
     <>
-      <footer className="bg-primary-dark text-white/75 border-t border-white/10">
-        <div className="container-page grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 lg:gap-10 py-10 sm:py-12">
+      <footer className="bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <div className="container-page grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-7 lg:gap-10 py-10 sm:py-14">
           {/* Brand & Legal Positioning */}
           <div className="sm:col-span-2 md:col-span-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/20 text-accent">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/20 text-accent-light">
                 <Wrench size={18} />
               </div>
               <div>
                 <p className="text-[18px] font-extrabold tracking-wide text-white">HANNACHI</p>
-                <p className="text-[10px] font-medium text-white/55 leading-none">
+                <p className="text-[10px] font-medium text-white/60 leading-none">
                   {business.tagline}
                 </p>
               </div>
@@ -46,13 +48,46 @@ export default function Footer() {
             <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/60">
               {business.mobileServiceNotice}
             </p>
+
+            {/* Social Media Section */}
+            <div className="mt-5 pt-4 border-t border-white/10 max-w-sm">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-white/55 mb-2.5">
+                Social Media &amp; Aktuelle Einblicke
+              </p>
+              <a
+                href={business.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Hannachi Elektrohaushaltsgeräte Service auf Facebook besuchen"
+                data-testid="footer-facebook-link"
+                className="group inline-flex min-h-[44px] items-center gap-2.5 rounded-xl border border-sky-400/30 bg-[#1877F2]/15 hover:bg-[#1877F2] px-3.5 py-2 text-xs font-bold text-white transition-all shadow-sm"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1877F2] text-white group-hover:bg-white group-hover:text-[#1877F2] transition-colors">
+                  <FacebookIcon className="h-4 w-4" />
+                </span>
+                <span className="leading-tight">
+                  <span className="block font-extrabold text-white">Auf Facebook folgen</span>
+                  <span className="block text-[11px] font-medium text-sky-200 group-hover:text-white/90">
+                    @{business.facebookHandle}
+                  </span>
+                </span>
+                <ExternalLink
+                  size={13}
+                  className="ml-1 shrink-0 text-sky-300 group-hover:text-white transition-colors"
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
           </div>
 
           {/* Nav */}
           <FooterCol title="Seiten" colSpan="md:col-span-2">
             {nav.map((n) => (
               <li key={n.href}>
-                <Link href={n.href} className="hover:text-accent transition-colors">
+                <Link
+                  href={n.href}
+                  className="inline-flex min-h-[44px] sm:min-h-0 w-full items-center hover:text-accent transition-colors"
+                >
                   {n.label}
                 </Link>
               </li>
@@ -65,7 +100,7 @@ export default function Footer() {
               <li key={s.slug}>
                 <Link
                   href={`/leistungen/${s.slug}`}
-                  className="hover:text-accent transition-colors"
+                  className="inline-flex min-h-[44px] sm:min-h-0 w-full items-center hover:text-accent transition-colors"
                 >
                   {s.title}
                 </Link>
@@ -75,7 +110,9 @@ export default function Footer() {
 
           {/* Contact */}
           <div className="sm:col-span-2 md:col-span-3">
-            <h2 className="text-sm font-semibold text-white">Kontakt &amp; Einsatzgebiet</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-white/90">
+              Kontakt &amp; Einsatzgebiet
+            </h2>
             <address className="mt-4 space-y-3 text-[13px] sm:text-[14px] not-italic leading-relaxed">
               <div className="flex items-start gap-2">
                 <MapPin size={15} className="mt-0.5 shrink-0 text-accent" />
@@ -84,25 +121,51 @@ export default function Footer() {
                     Osnabrück &amp; Umgebung (Vor-Ort-Service)
                   </span>
                   <span className="block text-xs text-white/65">
-                    {business.street}, {business.zip} {business.city}
+                    {place.streetLine}, {place.zipCityLine}
                   </span>
                 </div>
               </div>
               <p className="flex items-center gap-2">
                 <Phone size={15} className="shrink-0 text-accent" />
-                <a href={business.phoneHref} className="hover:text-accent transition-colors font-semibold text-white">
-                  {business.phoneDisplay}
+                <a
+                  href={place.phoneHref}
+                  className="inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-semibold text-white tabular-nums"
+                >
+                  {place.phoneDisplay}
                 </a>
               </p>
-              <p className="flex items-start gap-2 text-white/60 text-xs">
+              <div className="flex items-start gap-2 text-white/60 text-xs">
                 <Clock size={14} className="shrink-0 text-accent/70 mt-0.5" />
-                <span>{business.hours}</span>
+                <div>
+                  <span>{place.hoursSummary}</span>
+                  {source === "live" && place.openNow !== null && (
+                    <span
+                      className={`block text-[11px] font-bold ${
+                        place.openNow ? "text-emerald-400" : "text-amber-300"
+                      }`}
+                    >
+                      {place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className="flex items-center gap-2 pt-0.5">
+                <FacebookIcon className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+                <a
+                  href={business.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[44px] sm:min-h-0 items-center gap-1 hover:text-sky-300 transition-colors font-semibold text-white/90 text-xs"
+                >
+                  <span>Facebook · Hannachi Elektroservice</span>
+                  <ExternalLink size={11} className="opacity-75" aria-hidden="true" />
+                </a>
               </p>
             </address>
           </div>
         </div>
 
-        {/* Bottom bar with clean Impressum, Datenschutzerklärung & Admin links */}
+        {/* Bottom bar with clean Impressum, Datenschutzerklärung, Social Media & Admin links */}
         <div className="border-t border-white/10">
           <div className="container-page flex flex-col gap-3 py-6 text-[13px] text-white/60 sm:flex-row sm:items-center sm:justify-between">
             <p>
@@ -110,13 +173,25 @@ export default function Footer() {
             </p>
             <ul className="flex flex-wrap items-center gap-4 sm:gap-6">
               <li>
+                <a
+                  href={business.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Hannachi Elektroservice auf Facebook"
+                  className="inline-flex min-h-[44px] sm:min-h-[36px] items-center gap-1.5 font-semibold text-white/90 hover:text-sky-300 transition-colors"
+                >
+                  <FacebookIcon className="h-3.5 w-3.5 text-sky-400" />
+                  <span>Facebook</span>
+                </a>
+              </li>
+              <li>
                 <button
                   type="button"
                   onClick={openConsentManager}
                   className="inline-flex min-h-[44px] sm:min-h-[36px] items-center gap-1.5 hover:text-white transition-colors text-left cursor-pointer"
                   aria-label="Cookie- und Datenschutzeinstellungen anpassen oder widerrufen"
                 >
-                  <Sliders size={13} className="text-accent-light" aria-hidden="true" />
+                  <Sliders size={13} className="text-sky-400" aria-hidden="true" />
                   <span>Cookie-Einstellungen</span>
                 </button>
               </li>
@@ -155,16 +230,16 @@ export default function Footer() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="footer-legal-modal-title"
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-xs"
         >
-          <div className="relative w-full max-w-2xl max-h-[88vh] flex flex-col rounded-3xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 text-primary dark:text-slate-100 shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-2xl max-h-[90dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 text-primary dark:text-slate-100 shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between gap-3 border-b border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 px-5 sm:px-6 py-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 border-b border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 px-3.5 sm:px-6 py-3">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                 <button
                   type="button"
                   onClick={() => setLegalModalTab("impressum")}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                  className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 sm:px-3.5 py-2 text-xs font-extrabold transition-all cursor-pointer ${
                     legalModalTab === "impressum"
                       ? "bg-primary dark:bg-accent text-white"
                       : "text-ink-muted hover:text-primary dark:hover:text-white"
@@ -176,21 +251,21 @@ export default function Footer() {
                 <button
                   type="button"
                   onClick={() => setLegalModalTab("datenschutz")}
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-extrabold transition-all cursor-pointer ${
+                  className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 sm:px-3.5 py-2 text-xs font-extrabold transition-all cursor-pointer ${
                     legalModalTab === "datenschutz"
                       ? "bg-primary dark:bg-accent text-white"
                       : "text-ink-muted hover:text-primary dark:hover:text-white"
                   }`}
                 >
                   <ShieldCheck size={14} />
-                  <span>Datenschutzerklärung</span>
+                  <span>Datenschutz</span>
                 </button>
               </div>
               <button
                 type="button"
                 onClick={() => setLegalModalTab(null)}
                 aria-label="Rechtliche Vorschau schließen"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white cursor-pointer"
+                className="flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -214,13 +289,13 @@ export default function Footer() {
 
                   <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 p-4 space-y-2">
                     <p>
-                      <strong>Unternehmen:</strong> {business.name} {business.tagline}
+                      <strong>Unternehmen:</strong> {place.displayName || `${business.name} ${business.tagline}`}
                       <br />
                       <strong>Inhaber:</strong> {business.owner}
                       <br />
-                      <strong>Anschrift:</strong> {business.street}, {business.zip} {business.city}, Deutschland
+                      <strong>Anschrift:</strong> {place.streetLine}, {place.zipCityLine}, Deutschland
                       <br />
-                      <strong>Telefon:</strong> {business.phoneDisplay}
+                      <strong>Telefon:</strong> {place.phoneDisplay}
                       <br />
                       <strong>E-Mail:</strong> {business.email}
                     </p>
@@ -275,11 +350,11 @@ export default function Footer() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 px-5 sm:px-6 py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 px-4 sm:px-6 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
               <Link
                 href={legalModalTab === "impressum" ? "/impressum" : "/datenschutz"}
                 onClick={() => setLegalModalTab(null)}
-                className="inline-flex items-center gap-1.5 text-xs font-extrabold text-accent hover:underline"
+                className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-extrabold text-accent hover:underline"
               >
                 <span>
                   Vollständige Seite öffnen (
@@ -290,7 +365,7 @@ export default function Footer() {
               <button
                 type="button"
                 onClick={() => setLegalModalTab(null)}
-                className="rounded-xl bg-primary dark:bg-accent px-4 py-2 text-xs font-extrabold text-white cursor-pointer"
+                className="min-h-[44px] rounded-xl bg-primary dark:bg-accent px-4 py-2 text-xs font-extrabold text-white cursor-pointer"
               >
                 Schließen
               </button>
@@ -319,20 +394,34 @@ function FooterCol({
         type="button"
         onClick={() => setOpenOnMobile((prev) => !prev)}
         aria-expanded={openOnMobile}
-        className="flex min-h-[44px] sm:min-h-0 w-full items-center justify-between text-left text-sm font-semibold text-white sm:pointer-events-none cursor-pointer sm:cursor-default"
+        className="flex min-h-[44px] sm:min-h-0 w-full items-center justify-between text-left text-xs font-bold uppercase tracking-[0.14em] text-white/90 sm:pointer-events-none cursor-pointer sm:cursor-default"
       >
         <span>{title}</span>
-        <span className="text-xs font-bold text-accent-light sm:hidden">
+        <span className="text-sm font-bold text-accent-light sm:hidden">
           {openOnMobile ? "−" : "+"}
         </span>
       </button>
       <ul
         className={`${
           openOnMobile ? "mt-2 block" : "hidden"
-        } sm:mt-4 sm:block space-y-2.5 text-[13px] pb-2 sm:pb-0`}
+        } sm:mt-4 sm:block space-y-2 text-[13px] pb-2 sm:pb-0`}
       >
         {children}
       </ul>
     </div>
   );
 }
+
+function FacebookIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+    </svg>
+  );
+}
+

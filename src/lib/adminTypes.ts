@@ -146,12 +146,12 @@ export const SIMPLE_STATUS_OPTIONS: Array<{
   {
     value: "in_progress",
     label: "In Arbeit",
-    description: "Termin vereinbart oder in Reparatur",
+    description: "Vor-Ort-Termin vereinbart oder in Bearbeitung",
   },
   {
     value: "completed",
     label: "Erledigt",
-    description: "Reparatur abgeschlossen",
+    description: "Vor-Ort-Service / Verkauf abgeschlossen",
   },
 ];
 
@@ -291,7 +291,7 @@ export function buildSingleGrossInvoiceItems(
   return [
     {
       id: "1",
-      description: description || "Überprüfung & Reparaturleistung inkl. Anfahrt",
+      description: description || "Vor-Ort-Check, Ersatzteil- oder Garantieservice inkl. Anfahrt",
       quantity: 1,
       unitPriceNet,
     },

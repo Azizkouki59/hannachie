@@ -66,6 +66,42 @@ const URGENCY_LABELS: Record<WhatsAppUrgencyLevel, string> = {
   notfall: "NOTFALL (Kühlgerät / Wasseraustritt)",
 };
 
+export function getDeviceEmoji(deviceDisplay: string): string {
+  const normalized = deviceDisplay.toLowerCase();
+  if (normalized.includes("wasch")) return "🧺";
+  if (normalized.includes("kühl") || normalized.includes("kuehl") || normalized.includes("gefrier")) {
+    return "🧊";
+  }
+  if (normalized.includes("geschirr") || normalized.includes("spül") || normalized.includes("spuel")) {
+    return "🍴";
+  }
+  if (
+    normalized.includes("ofen") ||
+    normalized.includes("herd") ||
+    normalized.includes("ceran") ||
+    normalized.includes("induktion")
+  ) {
+    return "🔥";
+  }
+  if (normalized.includes("trockner")) return "💨";
+  if (normalized.includes("kaffee") || normalized.includes("siebträger")) return "☕";
+  if (normalized.includes("mikrowelle")) return "📡";
+  if (normalized.includes("platine") || normalized.includes("elektronik")) return "🔌";
+  return "🔧";
+}
+
+function getUrgencyEmoji(urgency: WhatsAppUrgencyLevel): string {
+  switch (urgency) {
+    case "notfall":
+      return "🚨";
+    case "express":
+      return "⚡";
+    case "normal":
+    default:
+      return "📅";
+  }
+}
+
 function sanitizeLine(value?: string | null, multiline = false): string {
   return multiline
     ? sanitizeText(value, 1500, true)
@@ -109,7 +145,7 @@ function resolveMapsLink(input: WhatsAppMessageInput): string {
 }
 
 /**
- * Validates required client fields (Name, Device, Brand, Phone, Symptom)
+ * Validates required client fields (Name, Device, Custom Device, Brand, Phone, Symptom)
  * before allowing a WhatsApp message to be built for Hannachi.
  */
 export function validateWhatsAppFields(
@@ -125,20 +161,16 @@ export function validateWhatsAppFields(
   const phone = sanitizeLine(input.phone);
   const symptom = sanitizeLine(input.symptom);
 
-  if (name.length < 2) {
-    errors.name = "Bitte geben Sie Ihren vollständigen Namen ein.";
-  }
+  void name;
 
   if (device.length < 1) {
     errors.device = "Bitte wählen Sie ein Gerät aus.";
   } else if ((device.includes("Anderes") || device === "Sonstiges") && customDevice.length < 2) {
     errors.customDevice =
-      "Bitte nennen Sie uns kurz Ihr Gerät (z. B. Dampfgarer, Siebträger).";
+      "Bitte nennen Sie uns kurz Ihr Gerät (z. B. Wäschetrockner, Dampfgarer).";
   }
 
-  if (brand.length < 1) {
-    errors.brand = "Bitte wählen Sie den Hersteller / die Marke aus.";
-  }
+  void brand;
 
   const digitCount = phone.replace(/\D/g, "").length;
   if (phone.length < 6 || !/^[+()\d\s/-]{6,30}$/.test(phone) || digitCount < 6) {
@@ -156,8 +188,24 @@ export function validateWhatsAppFields(
   return errors;
 }
 
+function splitRequestTag(rawSymptom: string): { tag: string; body: string } {
+  const match = rawSymptom.match(/^\[([^\]]+)\]\s*(.*)$/s);
+  if (!match) {
+    return { tag: "", body: rawSymptom };
+  }
+  return {
+    tag: match[1].trim(),
+    body: match[2].trim() || rawSymptom,
+  };
+}
+
+function isPlaceholderName(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+  return !normalized || normalized === "interessent (osnabrück)" || normalized === "interessent";
+}
+
 /**
- * Formats validated input fields into a crisp, scan-friendly WhatsApp
+ * Formats validated input fields into a clean, scan-friendly WhatsApp
  * message for Herr Hannachi. Includes Google Maps pin & address ONLY when
  * a home visit (`visitType === "home_visit"`) is requested.
  */
@@ -173,17 +221,20 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
       : "home_visit";
 
   const isHomeVisit = visitType === "home_visit";
-  const name = sanitizeLine(input.name);
+  const rawName = sanitizeLine(input.name);
+  const customerName = isPlaceholderName(rawName) ? "" : rawName;
   const deviceDisplay = resolveDeviceDisplay(input.device, input.customDevice);
-  const brand = sanitizeLine(input.brand) || "Siehe Typenschild";
+  const deviceEmoji = getDeviceEmoji(deviceDisplay);
+  const brand = sanitizeLine(input.brand);
   const model = sanitizeLine(input.model);
   const phone = sanitizeLine(input.phone);
-  const symptom = sanitizeLine(input.symptom, true);
+  const rawSymptom = sanitizeLine(input.symptom, true);
+  const { tag: requestTag, body: cleanSymptom } = splitRequestTag(rawSymptom);
   const email = sanitizeLine(input.email);
   const referenceId = sanitizeLine(input.referenceId);
   const photoName = sanitizeLine(input.photoName);
 
-  const equipmentLabel = `${deviceDisplay} · ${brand}${model ? ` (${model})` : ""}`;
+  const equipmentSummary = `${deviceDisplay}${brand ? ` · ${brand}` : ""}${model ? ` (${model})` : ""}`;
 
   const locationText = isHomeVisit
     ? [sanitizeLine(input.streetAddress), sanitizeLine(input.location)].filter(Boolean).join(", ")
@@ -196,77 +247,71 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
       ? `${input.coordinates.lat.toFixed(5)}°, ${input.coordinates.lng.toFixed(5)}°`
       : "";
 
+  const contactLine = customerName
+    ? `📞 *Kontakt:* ${phone} (${customerName})`
+    : `📞 *Kontakt:* ${phone}`;
+
   if (mode === "question") {
     const lines: string[] = [
-      `Guten Tag Herr Hannachi,`,
-      `kurze *Anfrage*${referenceId ? ` · *#${referenceId}*` : ""}:`,
+      `💬 *Kurze Frage*${referenceId ? ` (#${referenceId})` : ""}`,
+      `Hallo Herr Hannachi,`,
       ``,
-      `*Anliegen:* ${symptom}`,
-      `• Gerät: ${equipmentLabel}`,
-      `• Abwicklung: ${
-        isHomeVisit
-          ? "Mobiler Vor-Ort-Termin beim Kunden (Osnabrück & Umgebung)"
-          : "Persönliche Beratung / Terminvereinbarung"
-      }`,
+      `${deviceEmoji} *Gerät:* ${equipmentSummary}`,
+      `❓ *Frage:* ${cleanSymptom}`,
       ``,
-      `*Kontakt:* ${name} · ${phone}${email ? ` · ${email}` : ""}`,
+      contactLine,
+      ...(email ? [`📧 *E-Mail:* ${email}`] : []),
     ];
 
     if (hasPinOrLocation) {
       lines.push(
-        ``,
-        `📍 *Adresse / Einsatzort:*`,
-        `• Adresse: ${locationText || "Osnabrück & Umgebung"}${
+        `📍 *Ort:* ${locationText || "Osnabrück & Umgebung"}${
           verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
         }`,
-        mapsLink
+        `Maps: ${mapsLink}`
       );
     }
 
     if (photoName) {
-      lines.push(``, `📷 *Foto:* ${photoName} (wird im Chat mitgesendet)`);
+      lines.push(`📷 *Foto:* ${photoName} (folgt im Chat)`);
     }
 
     return lines.join("\n");
   }
 
-  const urgency = URGENCY_LABELS[input.urgency || "normal"];
-  const callbackTime = sanitizeLine(input.callbackTime) || "Jederzeit erreichbar";
+  const urgencyKey: WhatsAppUrgencyLevel = input.urgency || "normal";
+  const callbackTime = sanitizeLine(input.callbackTime);
+  const hasCustomCallback =
+    Boolean(callbackTime) && callbackTime.toLowerCase() !== "jederzeit erreichbar";
+
+  const headerTitle = requestTag ? `🔧 *${requestTag}*` : `🔧 *Neue Service-Anfrage*`;
 
   const lines: string[] = [
-    `Guten Tag Herr Hannachi,`,
-    `neue *Vor-Ort- & Ersatzteil-Anfrage*${
-      referenceId ? ` · *#${referenceId}*` : ""
-    }`,
+    `${headerTitle}${referenceId ? ` (#${referenceId})` : ""}`,
+    `Hallo Herr Hannachi,`,
     ``,
-    `*Abwicklung:* ${
-      isHomeVisit
-        ? "Mobiler Vor-Ort-Termin beim Kunden (Osnabrück & Umgebung)"
-        : "Telefonische Beratung / Terminvereinbarung"
-    }`,
-    `*Priorität:* ${urgency}`,
+    `${deviceEmoji} *Gerät:* ${equipmentSummary}`,
+    `📝 *Anliegen:* ${cleanSymptom}`,
+    ...(urgencyKey !== "normal"
+      ? [`${getUrgencyEmoji(urgencyKey)} *Priorität:* ${URGENCY_LABELS[urgencyKey]}`]
+      : []),
     ``,
-    `*Gerät & Anliegen:*`,
-    `• Gerät: ${equipmentLabel}`,
-    `• Beschreibung / Wunsch: ${symptom}`,
-    ...(photoName ? [`• Foto: ${photoName} (wird im Chat angehängt)`] : []),
-    ``,
-    `*Kunde:*`,
-    `• Name: ${name}`,
-    `• Telefon: ${phone}`,
-    `• Erreichbar: ${callbackTime}`,
-    ...(email ? [`• E-Mail: ${email}`] : []),
+    contactLine,
+    ...(hasCustomCallback ? [`⏰ *Erreichbar:* ${callbackTime}`] : []),
+    ...(email ? [`📧 *E-Mail:* ${email}`] : []),
   ];
 
   if (hasPinOrLocation) {
     lines.push(
-      ``,
-      `📍 *Einsatzort & Google Maps Pin (Anfahrt):*`,
-      `• Adresse: ${locationText || "Siehe Karten-Pin"}${
-        verifiedCoordsTag ? ` · Pin: ${verifiedCoordsTag}` : ""
+      `📍 *Ort:* ${locationText || "Siehe Karten-Pin"}${
+        verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
       }`,
-      mapsLink
+      `Maps: ${mapsLink}`
     );
+  }
+
+  if (photoName) {
+    lines.push(`📷 *Foto:* ${photoName} (folgt im Chat)`);
   }
 
   return lines.join("\n");
@@ -295,7 +340,9 @@ export function createHannachiWhatsAppPayload(
 
   const message = formatHannachiWhatsAppMessage(input);
   const cleanTarget = targetPhone.replace(/\D/g, "") || HANNACHI_WHATSAPP_PHONE;
-  const whatsappUrl = `https://wa.me/${cleanTarget}?text=${encodeURIComponent(message)}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanTarget}&text=${encodeURIComponent(
+    message
+  )}`;
 
   return {
     valid: true,

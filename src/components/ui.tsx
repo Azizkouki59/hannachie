@@ -1,6 +1,5 @@
 "use client";
 import {
-  useEffect,
   useState,
   type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
@@ -12,6 +11,7 @@ import type { Review, Service } from "@/data/site";
 import { serviceIcons } from "./Illustrations";
 import { ApplianceGraphic } from "./AnimatedAppliances";
 import { ServiceCardSkeleton } from "./Skeletons";
+import { HeroAnimatedBackdrop } from "./HeroAnimatedBackdrop";
 
 export type WhatsAppButtonVariant =
   | "hover-emerald"
@@ -189,23 +189,25 @@ export function PageHeader({
   readTime?: string;
 }) {
   return (
-    <section className="relative overflow-hidden bg-hero-gradient text-white">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }}
-      />
-      <div aria-hidden className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-      <div className="container-page relative py-8 sm:py-11 lg:py-12">
+    <section className="relative overflow-hidden bg-hero-gradient text-white border-b border-white/10">
+      <HeroAnimatedBackdrop />
+
+      <div className="container-page relative z-10 py-9 sm:py-14 lg:py-16">
         {readTime && (
-          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-accent-light backdrop-blur-sm">
-            <Clock3 size={14} className="shrink-0 text-accent-light" aria-hidden="true" />
+          <div className="mb-2.5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-light">
+            <Clock3 size={13} className="shrink-0" aria-hidden="true" />
             <span>{readTime}</span>
           </div>
         )}
-        <h1 className="max-w-3xl text-2xl sm:text-3xl lg:text-[38px] font-extrabold leading-[1.14]">{title}</h1>
-        {intro && <p className="mt-2.5 sm:mt-3.5 max-w-2xl text-sm sm:text-base leading-relaxed text-white/75">{intro}</p>}
-        <div className="mt-5 sm:mt-6 h-1 w-14 rounded-full bg-accent" />
+        <h1 className="max-w-3xl text-2xl min-[375px]:text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight">
+          {title}
+        </h1>
+        {intro && (
+          <p className="mt-3 sm:mt-4 max-w-2xl text-sm sm:text-base lg:text-lg leading-relaxed text-white/80">
+            {intro}
+          </p>
+        )}
+        <div className="mt-6 sm:mt-7 h-[2px] w-14 bg-gradient-to-r from-accent to-accent-light rounded-full" />
       </div>
     </section>
   );
@@ -218,14 +220,7 @@ export function ServiceCard({
   service: Service;
   loading?: boolean;
 }) {
-  const [isHydrating, setIsHydrating] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsHydrating(false), 180);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading || isHydrating) {
+  if (loading) {
     return <ServiceCardSkeleton />;
   }
 
@@ -235,23 +230,22 @@ export function ServiceCard({
       href={`/leistungen/${service.slug}`}
       className="card group flex flex-col overflow-hidden bg-white dark:bg-slate-900"
     >
-      <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-slate-900 via-primary-dark to-slate-950 p-3 overflow-hidden border-b border-primary/10 dark:border-white/10">
-        {/* Subtle radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.18)_0%,transparent_70%)] pointer-events-none" />
+      <div className="relative flex aspect-[4/3] items-center justify-center bg-navy dark:bg-slate-950 p-4 overflow-hidden border-b border-primary/8 dark:border-white/10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(14,165,233,0.14),transparent_70%)] opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+        />
         <div className="relative z-10 scale-95 transition-transform duration-300 group-hover:scale-105">
           <ApplianceGraphic slug={service.slug} size="sm" />
         </div>
-        <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-20">
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs backdrop-blur-md border border-white/10">
-            <Icon className="h-3.5 w-3.5 text-accent" />
-            {service.title}
-          </span>
-        </div>
       </div>
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <h3 className="text-lg font-bold text-primary dark:text-slate-100">{service.title}</h3>
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
+          <h3 className="text-lg font-bold text-primary dark:text-slate-100">{service.title}</h3>
+        </div>
         <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-muted">{service.short}</p>
-        <span className="mt-4 inline-flex min-h-[44px] items-center justify-between rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 px-3.5 py-2 text-[13px] font-extrabold text-accent group-hover:border-accent/40 transition-colors">
+        <span className="mt-4 inline-flex min-h-[44px] items-center justify-between rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 px-3.5 py-2 text-[13px] font-bold text-accent group-hover:border-accent/40 transition-colors">
           <span>Mehr erfahren</span>
           <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
         </span>
@@ -264,15 +258,30 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
   const starCount = review.rating ?? 5;
   const [showEn, setShowEn] = useState(false);
 
+  const cardAriaLabel = [
+    `Google-Bewertung von ${review.author}`,
+    review.localGuide || undefined,
+    `${starCount} von 5 Sternen`,
+    review.relativeTime || undefined,
+    review.serviceTag || undefined,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
-    <figure className="card flex h-full flex-col p-5 sm:p-6">
+    <figure
+      role="article"
+      aria-label={cardAriaLabel}
+      className="card flex h-full flex-col p-5 sm:p-6"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex gap-0.5" aria-label={`${starCount} von 5 Sternen`}>
+          <div className="flex gap-0.5" role="img" aria-label={`${starCount} von 5 Sternen`}>
             {[1, 2, 3, 4, 5].map((i) => (
               <Star
                 key={i}
                 size={14}
+                aria-hidden="true"
                 className={
                   i <= starCount
                     ? "fill-[#fbbc04] text-[#fbbc04]"
@@ -294,7 +303,7 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
         )}
       </div>
       <blockquote className={`flex-1 leading-relaxed text-primary dark:text-slate-100 ${large ? "text-base sm:text-lg" : "text-[15px]"}`}>
-        <Quote size={18} className="mb-2 text-accent/40" aria-hidden />
+        <Quote size={18} className="mb-2 text-accent/40" aria-hidden="true" />
         {showEn && review.textEn ? review.textEn : review.text}
       </blockquote>
       {review.textEn && (
@@ -303,6 +312,8 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
           <span>·</span>
           <button
             type="button"
+            aria-pressed={showEn}
+            aria-label={`Sprache der Bewertung von ${review.author} umschalten`}
             onClick={() => setShowEn((prev) => !prev)}
             className="inline-flex min-h-[44px] items-center px-1 font-semibold text-accent hover:underline cursor-pointer"
           >
@@ -311,8 +322,11 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
         </div>
       )}
       {review.ownerReply && (
-        <div className="mt-4 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3.5 py-2.5 text-xs">
-          <p className="font-bold text-primary dark:text-slate-200 mb-0.5">
+        <div
+          aria-label="Antwort vom Inhaber Kamal Hannachi"
+          className="mt-4 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3.5 py-2.5 text-xs"
+        >
+          <p className="font-bold text-primary dark:text-slate-100 mb-0.5">
             Antwort vom Inhaber · Kamal Hannachi
           </p>
           <p className="text-ink-muted leading-relaxed">{review.ownerReply}</p>

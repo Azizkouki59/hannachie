@@ -2,11 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --mobile-dock-height: 4rem;
+}
+
 @layer base {
-  html { scroll-behavior: smooth; }
-  body { @apply bg-surface text-primary antialiased; }
+  html {
+    scroll-behavior: smooth;
+    touch-action: manipulation;
+  }
+  @media (max-width: 1023px) {
+    html {
+      scroll-padding-bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom) + 1rem);
+    }
+  }
+  body {
+    @apply bg-surface text-primary antialiased;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
   h1, h2, h3 { @apply tracking-tight; text-wrap: balance; }
   p { text-wrap: pretty; }
+  button, a, [role="button"], input, select, textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
   :focus-visible { @apply outline-2 outline-offset-2 outline-accent outline; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -15,19 +35,21 @@
 }
 
 @layer components {
-  .container-page { @apply mx-auto w-full max-w-page px-5 sm:px-8; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-[15px] font-semibold transition-all duration-200; }
+  .container-page { @apply mx-auto w-full max-w-page px-4 sm:px-8; }
+  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold transition-all duration-200; }
   .btn-primary { @apply btn bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-[0_4px_20px_rgba(14,165,233,.4)] hover:-translate-y-px active:translate-y-0; }
   .btn-ghost { @apply btn border border-primary/20 text-primary hover:border-accent hover:text-accent; }
   .btn-ghost-light { @apply btn border border-white/25 text-white hover:border-white/60 hover:bg-white/10; }
-  .section { @apply py-20 sm:py-28; }
+  .section { @apply py-14 sm:py-24; }
 
   /* Premium card */
   .card {
     @apply rounded-2xl border border-primary/10 bg-white shadow-card transition-all duration-300;
   }
-  .card:hover {
-    @apply -translate-y-1 shadow-card-hover border-accent/20;
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      @apply -translate-y-1 shadow-card-hover border-accent/20;
+    }
   }
 
   /* Pill badge */
@@ -74,20 +96,19 @@
 .float     { animation: float 6s ease-in-out infinite; }
 .orb-drift { animation: orb-drift 14s ease-in-out infinite; }
 .orb-drift-reverse { animation: orb-drift-reverse 18s ease-in-out infinite; }
-.animate-live-ping { animation: live-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+.animate-live-ping { animation: live-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
 
 /* Hero badge sheen effect */
 .hero-badge {
   isolation: isolate;
-  position: relative;
   overflow: hidden;
 }
 .hero-badge::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.45) 50%, transparent 80%);
-  animation: badge-sheen 4.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  background: linear-gradient(100deg, transparent 26%, rgba(56, 189, 248, 0.09) 50%, transparent 74%);
+  animation: badge-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   pointer-events: none;
   transform: translateX(-120%);
 }

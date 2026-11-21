@@ -126,9 +126,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/kundenbewertungen") {
     return {
-      title: "Kundenbewertungen (82 Google-Rezensionen) | Hannachi Osnabrück",
+      title: "Kundenbewertungen auf Google Maps | Hannachi Osnabrück",
       description:
-        "Alle 82 verifizierten Google Maps Kundenstimmen aus Osnabrück zu Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
+        "Verifizierte Google Maps Kundenstimmen und Live-Bewertungen aus Osnabrück für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
       robots: "index,follow",
       index: true,
       follow: true,

@@ -3,14 +3,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useReducedMotion } from "framer-motion";
 import {
   Star,
   CheckCircle2,
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Pause,
-  Play,
   MapPin,
   MessageSquarePlus,
   CornerDownRight,
@@ -23,6 +22,9 @@ import {
   Check,
   Sparkles,
   Languages,
+  Clock,
+  Phone,
+  RefreshCw,
 } from "lucide-react";
 import { business } from "@/data/site";
 import {
@@ -31,6 +33,7 @@ import {
   type DetailedGoogleReview,
   type GoogleMapsTopicKey,
 } from "@/data/googleReviews82";
+import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { triggerHapticFeedback } from "@/lib/haptics";
 import {
   GoogleReviewCardSkeleton,
@@ -42,6 +45,13 @@ import { FadeUp } from "./animations";
 
 interface GoogleReviewItem extends DetailedGoogleReview {
   authorUri?: string;
+  authorPhotoUri?: string;
+  publishTime?: string;
+  originalText?: string;
+  originalLanguage?: string;
+  textLanguage?: string;
+  googleMapsUri?: string;
+  flagContentUri?: string;
   isLiveFromApi?: boolean;
 }
 
@@ -101,6 +111,87 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+const TOPIC_MATCHERS: Array<{ key: GoogleMapsTopicKey; pattern: RegExp }> = [
+  {
+    key: "waschmaschinenreparatur",
+    pattern: /waschmaschine|trommel|schleuder|lauge|abpump|flusensieb/i,
+  },
+  {
+    key: "schnelle_terminvergabe",
+    pattern: /termin|nächsten tag|sofort|heute|morgen|kurzfristig/i,
+  },
+  {
+    key: "schnelle_hilfe",
+    pattern: /schnell.*hilfe|geholfen|notfall|gerettet|sofort/i,
+  },
+  {
+    key: "ersatzteile",
+    pattern: /ersatzteil|dichtung|pumpe|heizstab|riemen|türgriff|schalter|lager|teil/i,
+  },
+  {
+    key: "schnelle_problemloesung",
+    pattern: /problem|fehler|ursache|behoben|läuft wieder|funktioniert wieder/i,
+  },
+  {
+    key: "telefonische_beratung",
+    pattern: /telefon|anruf|rückruf|whatsapp/i,
+  },
+  {
+    key: "ehrliche_beratung",
+    pattern: /ehrlich|fair|beratung|beraten|empfehlung|transparen/i,
+  },
+  {
+    key: "schnelle_reparatur",
+    pattern: /reparatur|repariert|instand/i,
+  },
+  {
+    key: "kompetente_reparatur",
+    pattern: /kompetent|fachmann|profi|meister|erfahrung|sauber/i,
+  },
+  {
+    key: "schnelle_abwicklung",
+    pattern: /abwicklung|unkompliziert|reibungslos|pünktlich|zuverlässig/i,
+  },
+];
+
+function inferReviewTopics(text: string): GoogleMapsTopicKey[] {
+  if (!text) return [];
+  const tags: GoogleMapsTopicKey[] = [];
+  for (const { key, pattern } of TOPIC_MATCHERS) {
+    if (pattern.test(text)) {
+      tags.push(key);
+    }
+  }
+  return tags;
+}
+
+function normalizeReviewKey(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function getReviewTimestampMs(rev: GoogleReviewItem): number {
+  if (rev.publishTime) {
+    const parsed = Date.parse(rev.publishTime);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  const rel = (rev.relativeTime || "").toLowerCase();
+  if (!rel) return 0;
+  const now = Date.now();
+  if (rel.includes("gerade eben") || rel.includes("just now")) return now;
+  if (rel.includes("gestern") || rel.includes("yesterday")) return now - 86_400_000;
+
+  const numMatch = rel.match(/(\d+)/);
+  const count = numMatch ? Number.parseInt(numMatch[1], 10) : 1;
+
+  if (/minute/.test(rel)) return now - count * 60_000;
+  if (/stunde|hour/.test(rel)) return now - count * 3_600_000;
+  if (/tag|day/.test(rel)) return now - count * 86_400_000;
+  if (/woche|week/.test(rel)) return now - count * 7 * 86_400_000;
+  if (/monat|month/.test(rel)) return now - count * 30 * 86_400_000;
+  if (/jahr|year/.test(rel)) return now - count * 365 * 86_400_000;
+  return 0;
+}
+
 function ReviewStars({
   rating,
   size = 15,
@@ -112,6 +203,7 @@ function ReviewStars({
   return (
     <div
       className="flex items-center gap-0.5"
+      role="img"
       aria-label={`${rating} von 5 Sternen`}
     >
       {[1, 2, 3, 4, 5].map((i) => {
@@ -120,6 +212,7 @@ function ReviewStars({
           <Star
             key={i}
             size={size}
+            aria-hidden="true"
             className={
               filled
                 ? "fill-[#fbbc04] text-[#fbbc04]"
@@ -138,18 +231,49 @@ function ReviewMarqueeCard({
   livePlaceUri,
   isLiked,
   onToggleLike,
+  isDecorativeClone = false,
 }: {
   rev: GoogleReviewItem;
   colorIndex: number;
   livePlaceUri: string;
   isLiked: boolean;
   onToggleLike: (id: string) => void;
+  isDecorativeClone?: boolean;
 }) {
   const avatarColor = AVATAR_COLORS[colorIndex % AVATAR_COLORS.length];
-  const [showEnglish, setShowEnglish] = useState(false);
+  const [showAltTranslation, setShowAltTranslation] = useState(false);
   const [sharedCopied, setSharedCopied] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  const hasOriginalAlt = Boolean(
+    rev.originalText &&
+      rev.originalText.trim() &&
+      rev.originalText.trim() !== rev.text.trim()
+  );
+  const hasTranslationToggle = Boolean(rev.textEn || hasOriginalAlt);
+  const displayedBody =
+    showAltTranslation && hasOriginalAlt
+      ? rev.originalText!
+      : showAltTranslation && rev.textEn
+      ? rev.textEn
+      : rev.text;
 
   const likeTotal = (rev.likesCount ?? 0) + (isLiked ? 1 : 0);
+  const reviewDeepLink = rev.googleMapsUri || rev.authorUri || livePlaceUri;
+  const authorRole = rev.localGuide
+    ? rev.localGuide
+    : rev.isLiveFromApi
+    ? "Verifizierte Google-Rezension"
+    : "Google-Nutzer";
+  const cardAriaLabel = [
+    `Google-Bewertung von ${rev.author}`,
+    authorRole,
+    `${rev.rating} von 5 Sternen`,
+    rev.relativeTime || undefined,
+    rev.serviceTag && !rev.isLiveFromApi ? rev.serviceTag : undefined,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const handleShare = async () => {
     triggerHapticFeedback(50);
@@ -166,17 +290,30 @@ function ReviewMarqueeCard({
   return (
     <figure
       data-review-card
-      className="card shrink-0 w-[265px] min-[400px]:w-[285px] sm:w-[340px] lg:w-[360px] flex flex-col justify-between p-4 sm:p-5 bg-white dark:bg-slate-900 border border-primary/10 dark:border-white/10 hover:border-accent/40 transition-colors duration-200"
+      role="article"
+      aria-label={cardAriaLabel}
+      aria-hidden={isDecorativeClone || undefined}
+      className="card shrink-0 w-[clamp(264px,78vw,356px)] flex flex-col justify-between p-4 sm:p-5 bg-white dark:bg-slate-900 border border-primary/10 dark:border-white/10 hover:border-accent/40 transition-colors duration-200"
     >
       <div>
         {/* Authentic Google Maps Reviewer Header */}
         <div className="flex items-start justify-between gap-2.5 sm:gap-3 mb-2 sm:mb-3">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div
-              className={`relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full ${avatarColor} text-[11px] sm:text-xs font-bold text-white shadow-xs`}
+              className={`relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ${avatarColor} text-[11px] sm:text-xs font-bold text-white shadow-xs`}
               aria-hidden="true"
             >
-              {getInitials(rev.author)}
+              {rev.authorPhotoUri && !avatarError ? (
+                <img
+                  src={rev.authorPhotoUri}
+                  alt={rev.author}
+                  referrerPolicy="no-referrer"
+                  onError={() => setAvatarError(true)}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                getInitials(rev.author)
+              )}
               {rev.localGuide && (
                 <span
                   title={rev.localGuide}
@@ -188,24 +325,40 @@ function ReviewMarqueeCard({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-xs sm:text-sm font-bold text-primary dark:text-slate-100 truncate">
-                  {rev.author}
-                </p>
+                {rev.authorUri ? (
+                  <a
+                    href={rev.authorUri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={isDecorativeClone ? -1 : undefined}
+                    aria-label={`Google-Profil von ${rev.author} öffnen`}
+                    className="text-xs sm:text-sm font-bold text-primary dark:text-slate-100 hover:text-accent truncate transition-colors"
+                  >
+                    {rev.author}
+                  </a>
+                ) : (
+                  <p className="text-xs sm:text-sm font-bold text-primary dark:text-slate-100 truncate">
+                    {rev.author}
+                  </p>
+                )}
               </div>
               <p className="text-[10px] sm:text-[11px] text-ink-faint truncate">
                 {rev.localGuide
                   ? `${rev.localGuide}`
+                  : rev.isLiveFromApi
+                  ? "Verifizierte Google-Rezension"
                   : "Google-Nutzer · Rezension"}
               </p>
             </div>
           </div>
 
           <a
-            href={rev.authorUri || livePlaceUri}
+            href={reviewDeepLink}
             target="_blank"
             rel="noopener noreferrer"
+            tabIndex={isDecorativeClone ? -1 : undefined}
             title="Auf Google Maps ansehen"
-            aria-label={`Rezension von ${rev.author} auf Google Maps ansehen`}
+            aria-label={`Rezension von ${rev.author} (${rev.rating} von 5 Sternen) auf Google Maps ansehen`}
             className="p-1 sm:p-1.5 rounded-lg bg-surface dark:bg-slate-800 hover:bg-primary/5 border border-primary/8 dark:border-white/10 transition-colors shrink-0"
           >
             <GoogleGLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -223,41 +376,59 @@ function ReviewMarqueeCard({
               </span>
             )}
           </div>
-          {rev.serviceTag && (
+          {rev.serviceTag && !rev.isLiveFromApi && (
             <span className="text-[10px] sm:text-[11px] font-semibold text-ink-muted">
               {rev.serviceTag}
             </span>
           )}
         </div>
 
-        {/* Review Text (Original German or English Translation like Google Maps) */}
-        <blockquote className="text-xs sm:text-[13.5px] leading-relaxed text-primary/90 dark:text-slate-200 line-clamp-4">
-          {showEnglish && rev.textEn ? rev.textEn : rev.text}
+        {/* Review Text */}
+        <blockquote className="text-xs sm:text-[13.5px] leading-relaxed text-primary/90 dark:text-slate-200 line-clamp-5">
+          {displayedBody || "Bewertung ohne Textkommentar."}
         </blockquote>
 
-        {/* Bilingual Google Translate Toggle when English translation is available */}
-        {rev.textEn && (
+        {/* Bilingual / Original Language Toggle */}
+        {hasTranslationToggle && (
           <div className="mt-1.5 sm:mt-2 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-ink-faint">
             <Languages size={11} className="text-accent shrink-0" />
             <span>
-              {showEnglish ? "Übersetzt von Google" : "Original (DE)"}
+              {hasOriginalAlt
+                ? showAltTranslation
+                  ? `Original (${(rev.originalLanguage || "").toUpperCase()})`
+                  : "Übersetzt von Google (DE)"
+                : showAltTranslation
+                ? "Übersetzt von Google"
+                : "Original (DE)"}
             </span>
             <span>·</span>
             <button
               type="button"
-              onClick={() => setShowEnglish((prev) => !prev)}
-              className="font-semibold text-accent hover:underline cursor-pointer"
+              tabIndex={isDecorativeClone ? -1 : undefined}
+              aria-pressed={showAltTranslation}
+              aria-label={`Sprache der Bewertung von ${rev.author} umschalten`}
+              onClick={() => setShowAltTranslation((prev) => !prev)}
+              className="inline-flex min-h-[36px] items-center px-1.5 -mx-1.5 rounded-md font-semibold text-accent hover:underline cursor-pointer"
             >
-              {showEnglish ? "Original ansehen" : "Englisch"}
+              {hasOriginalAlt
+                ? showAltTranslation
+                  ? "Übersetzung (DE)"
+                  : "Original ansehen"
+                : showAltTranslation
+                ? "Original ansehen"
+                : "Englisch"}
             </button>
           </div>
         )}
 
-        {/* Owner Reply from Kamal Hannachi (when present on Google Maps) */}
+        {/* Owner Reply from Kamal Hannachi (when present) */}
         {rev.ownerReply && (
-          <div className="mt-2.5 sm:mt-3 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3 py-2 text-[11px] sm:text-xs">
+          <div
+            aria-label="Antwort vom Inhaber Kamal Hannachi"
+            className="mt-2.5 sm:mt-3 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3 py-2 text-[11px] sm:text-xs"
+          >
             <p className="flex items-center gap-1.5 font-bold text-primary dark:text-slate-200 mb-0.5">
-              <CornerDownRight size={11} className="text-accent shrink-0" />
+              <CornerDownRight size={11} aria-hidden="true" className="text-accent shrink-0" />
               <span>Antwort · Kamal Hannachi</span>
             </p>
             <p className="text-ink-muted leading-snug line-clamp-2">{rev.ownerReply}</p>
@@ -266,13 +437,14 @@ function ReviewMarqueeCard({
       </div>
 
       {/* Google Maps Card Footer: Like ("Hilfreich"), Share ("Teilen"), & Direct Maps Link */}
-      <figcaption className="mt-2.5 sm:mt-4 flex items-center justify-between gap-2 pt-2 sm:pt-3 border-t border-primary/8 dark:border-white/10 text-[10.5px] sm:text-[11px]">
-        <div className="flex items-center gap-3">
+      <figcaption className="mt-2 sm:mt-3.5 flex items-center justify-between gap-2 pt-1.5 sm:pt-2.5 border-t border-primary/8 dark:border-white/10 text-[10.5px] sm:text-[11px]">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
+            tabIndex={isDecorativeClone ? -1 : undefined}
             onClick={() => onToggleLike(rev.id)}
             aria-label={`Rezension von ${rev.author} als hilfreich markieren (${likeTotal})`}
-            className={`inline-flex items-center gap-1.5 font-semibold transition-colors cursor-pointer ${
+            className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-1.5 -ml-1.5 font-semibold transition-colors cursor-pointer ${
               isLiked
                 ? "text-accent"
                 : "text-ink-muted hover:text-primary dark:hover:text-slate-200"
@@ -285,9 +457,10 @@ function ReviewMarqueeCard({
 
           <button
             type="button"
+            tabIndex={isDecorativeClone ? -1 : undefined}
             onClick={handleShare}
             aria-label={`Rezension von ${rev.author} kopieren und teilen`}
-            className="inline-flex items-center gap-1 font-semibold text-ink-muted hover:text-primary dark:hover:text-slate-200 transition-colors cursor-pointer"
+            className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-1.5 font-semibold text-ink-muted hover:text-primary dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             {sharedCopied ? (
               <>
@@ -304,11 +477,12 @@ function ReviewMarqueeCard({
         </div>
 
         <a
-          href={rev.authorUri || livePlaceUri}
+          href={rev.googleMapsUri || livePlaceUri}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Alle Bewertungen auf Google Maps öffnen"
-          className="inline-flex items-center gap-1 text-ink-faint hover:text-accent font-semibold transition-colors shrink-0"
+          tabIndex={isDecorativeClone ? -1 : undefined}
+          aria-label={`Bewertung von ${rev.author} auf Google Maps öffnen`}
+          className="inline-flex min-h-[36px] items-center gap-1 rounded-lg px-1.5 -mr-1.5 text-ink-faint hover:text-accent font-semibold transition-colors shrink-0"
         >
           <span>Google Maps</span>
           <ExternalLink size={11} aria-hidden="true" />
@@ -325,21 +499,32 @@ interface GoogleReviewsSectionProps {
 export function GoogleReviewsSection({
   showViewAllLink = true,
 }: GoogleReviewsSectionProps) {
+  const prefersReducedMotion = useReducedMotion();
   const row1Ref = useRef<HTMLDivElement | null>(null);
-  const row2Ref = useRef<HTMLDivElement | null>(null);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const scrollPosRef = useRef<number>(0);
+  const halfWidthRef = useRef<number>(0);
+  const resumeTimerRef = useRef<number | null>(null);
   const [isHoveredOrTouched, setIsHoveredOrTouched] = useState(false);
 
   // Google Maps Topic Filter, Search & Sort State
   const [selectedTopic, setSelectedTopic] = useState<"all" | GoogleMapsTopicKey>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("relevant");
 
-  // Free, Zero-Billing Google Maps URIs & Live Map Preview Toggle
+  const {
+    place,
+    isLoading: isPlaceLoading,
+    isRefreshing,
+    source,
+    ratingFormatted,
+    refresh,
+  } = useGoogleLivePlace();
+
+  // Live Google Maps URIs & Live Map Preview Toggle
   const [showFreeLiveMap, setShowFreeLiveMap] = useState(false);
-  const livePlaceUri = business.mapsReviewsUrl || business.mapsUrl;
-  const liveWriteReviewUri = business.mapsWriteReviewUrl;
+  const [showAllHours, setShowAllHours] = useState(false);
+  const livePlaceUri = place.reviewsUri || place.googleMapsUri || business.mapsReviewsUrl;
+  const liveWriteReviewUri = place.writeAReviewUri || business.mapsWriteReviewUrl;
 
   // Fast Review ("Rezension schreiben") Modal State
   const [isFastReviewOpen, setIsFastReviewOpen] = useState(false);
@@ -375,23 +560,94 @@ export function GoogleReviewsSection({
     setIsFastReviewOpen(true);
   };
 
-  // Liked review IDs
+  // Liked review IDs & user-submitted local drafts
   const [likedIds, setLikedIds] = useState<Record<string, boolean>>({});
-  const [isInitialSync, setIsInitialSync] = useState<boolean>(true);
+  const [userDraftReviews, setUserDraftReviews] = useState<GoogleReviewItem[]>([]);
   const [isFilteringSync, setIsFilteringSync] = useState<boolean>(false);
   const syncTimerRef = useRef<number | null>(null);
 
-  const initialReviews: GoogleReviewItem[] = useMemo(
+  const fallbackReviews: GoogleReviewItem[] = useMemo(
     () =>
       googleReviews82.map((rev) => ({
         ...rev,
+        authorPhotoUri: rev.authorPhotoUri,
         authorUri: business.mapsReviewsUrl || business.mapsUrl,
       })),
     []
   );
 
-  const [reviewItems, setReviewItems] =
-    useState<GoogleReviewItem[]>(initialReviews);
+  const liveApiReviews: GoogleReviewItem[] = useMemo(() => {
+    if (source !== "live" || place.reviews.length === 0) return [];
+    return place.reviews.map((rev) => {
+      const combinedText = `${rev.text || ""} ${rev.originalText || ""}`.trim();
+      return {
+        id: rev.id,
+        author: rev.author,
+        authorUri: rev.authorUri || livePlaceUri,
+        authorPhotoUri: rev.authorPhotoUri,
+        rating: rev.rating,
+        text: rev.text,
+        originalText: rev.originalText,
+        originalLanguage: rev.originalLanguage,
+        textLanguage: rev.textLanguage,
+        relativeTime: rev.relativeTime || "Auf Google Maps",
+        publishTime: rev.publishTime,
+        googleMapsUri: rev.googleMapsUri || livePlaceUri,
+        flagContentUri: rev.flagContentUri,
+        serviceTag: "Google Maps",
+        category: "waschmaschine",
+        topicTags: inferReviewTopics(combinedText),
+        verified: true,
+        isLiveFromApi: true,
+      };
+    });
+  }, [source, place.reviews, livePlaceUri]);
+
+  const hasLiveReviews = source === "live" && liveApiReviews.length > 0;
+
+  const reviewItems: GoogleReviewItem[] = useMemo(() => {
+    let base: GoogleReviewItem[];
+    if (hasLiveReviews) {
+      const liveAuthors = new Set(
+        liveApiReviews.map((r) => normalizeReviewKey(r.author))
+      );
+      const liveTextPrefixes = new Set(
+        liveApiReviews
+          .map((r) => normalizeReviewKey(r.text).slice(0, 48))
+          .filter((t) => t.length >= 16)
+      );
+      const remainingArchive = fallbackReviews.filter((rev) => {
+        if (liveAuthors.has(normalizeReviewKey(rev.author))) return false;
+        const prefix = normalizeReviewKey(rev.text).slice(0, 48);
+        if (prefix.length >= 16 && liveTextPrefixes.has(prefix)) return false;
+        return true;
+      });
+      base = [...liveApiReviews, ...remainingArchive];
+    } else {
+      base = fallbackReviews;
+    }
+
+    if (userDraftReviews.length === 0) return base;
+    const existingIds = new Set(base.map((r) => r.id));
+    const uniqueDrafts = userDraftReviews.filter((r) => !existingIds.has(r.id));
+    return [...uniqueDrafts, ...base];
+  }, [hasLiveReviews, liveApiReviews, fallbackReviews, userDraftReviews]);
+
+  const dynamicTopicChips = useMemo(() => {
+    const counts = new Map<GoogleMapsTopicKey, number>();
+    for (const item of reviewItems) {
+      const tags = item.topicTags && item.topicTags.length > 0
+        ? item.topicTags
+        : inferReviewTopics(`${item.text} ${item.originalText || ""}`);
+      for (const tag of tags) {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      }
+    }
+    return GOOGLE_MAPS_TOPIC_CHIPS.map((chip) => ({
+      ...chip,
+      liveCount: counts.get(chip.id) ?? 0,
+    })).filter((chip) => chip.liveCount > 0);
+  }, [reviewItems]);
 
   const triggerSubtleSyncSkeleton = (durationMs = 150) => {
     if (syncTimerRef.current) {
@@ -404,7 +660,7 @@ export function GoogleReviewsSection({
     }, durationMs);
   };
 
-  // Hydrate user-submitted fast reviews and likes from localStorage with subtle initial sync skeleton
+  // Hydrate user-submitted fast reviews and likes from localStorage
   useEffect(() => {
     try {
       const savedLikes = window.localStorage.getItem(LOCAL_STORAGE_LIKED_REVIEWS_KEY);
@@ -429,30 +685,21 @@ export function GoogleReviewsSection({
           (r) => r && typeof r.id === "string" && typeof r.text === "string" && typeof r.author === "string"
         );
         if (sanitizedReviews.length > 0) {
-          setReviewItems((prev) => {
-            const existingIds = new Set(prev.map((r) => r.id));
-            const uniqueNew = sanitizedReviews.filter((r) => !existingIds.has(r.id));
-            return [...uniqueNew, ...prev];
-          });
+          setUserDraftReviews(sanitizedReviews);
         }
       }
     } catch {
       // Ignore localStorage errors
     }
 
-    const initialTimer = window.setTimeout(() => {
-      setIsInitialSync(false);
-    }, 260);
-
     return () => {
-      window.clearTimeout(initialTimer);
       if (syncTimerRef.current) {
         window.clearTimeout(syncTimerRef.current);
       }
     };
   }, []);
 
-  const isSyncingReviews = isInitialSync || isFilteringSync;
+  const isSyncingReviews = isPlaceLoading || isFilteringSync;
 
   const handleToggleLike = (id: string) => {
     triggerHapticFeedback(50);
@@ -467,10 +714,9 @@ export function GoogleReviewsSection({
     });
   };
 
-  // Compute star breakdown counts (5★ down to 1★) and live average rating dynamically
+  // Live Google Place aggregate rating & total review count
   const { starDistribution, liveRating, liveReviewCount } = useMemo(() => {
     const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    let sum = 0;
     for (const item of reviewItems) {
       const r = Math.max(1, Math.min(5, Math.round(item.rating))) as
         | 1
@@ -479,23 +725,26 @@ export function GoogleReviewsSection({
         | 4
         | 5;
       counts[r] += 1;
-      sum += r;
     }
-    const total = reviewItems.length || 82;
-    const avg = reviewItems.length > 0 ? Number((sum / total).toFixed(1)) : 4.8;
     return {
       starDistribution: counts,
-      liveRating: avg,
-      liveReviewCount: total,
+      liveRating: place.rating,
+      liveReviewCount: place.userRatingCount,
     };
-  }, [reviewItems]);
+  }, [reviewItems, place.rating, place.userRatingCount]);
 
-  // Filter & Sort Reviews based on Google Maps Topic Chips, Search Query, and Sort Option
+  // Filter & Sort Reviews based on Topic Chip, Search Query, and Sort Option
   const filteredReviews = useMemo(() => {
     let list = [...reviewItems];
 
     if (selectedTopic !== "all") {
-      list = list.filter((item) => item.topicTags?.includes(selectedTopic));
+      list = list.filter((item) => {
+        const tags =
+          item.topicTags && item.topicTags.length > 0
+            ? item.topicTags
+            : inferReviewTopics(`${item.text} ${item.originalText || ""}`);
+        return tags.includes(selectedTopic);
+      });
     }
 
     const q = searchQuery.trim().toLowerCase();
@@ -504,99 +753,195 @@ export function GoogleReviewsSection({
         (item) =>
           item.author.toLowerCase().includes(q) ||
           item.text.toLowerCase().includes(q) ||
+          (item.originalText && item.originalText.toLowerCase().includes(q)) ||
           (item.textEn && item.textEn.toLowerCase().includes(q)) ||
           item.serviceTag.toLowerCase().includes(q)
       );
     }
 
     if (sortBy === "newest") {
-      list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+      list.sort((a, b) => getReviewTimestampMs(b) - getReviewTimestampMs(a));
     } else if (sortBy === "highest") {
-      list.sort((a, b) => b.rating - a.rating);
+      list.sort(
+        (a, b) =>
+          b.rating - a.rating ||
+          getReviewTimestampMs(b) - getReviewTimestampMs(a)
+      );
     } else if (sortBy === "lowest") {
-      list.sort((a, b) => a.rating - b.rating);
+      list.sort(
+        (a, b) =>
+          a.rating - b.rating ||
+          getReviewTimestampMs(b) - getReviewTimestampMs(a)
+      );
     }
 
     return list;
   }, [reviewItems, selectedTopic, searchQuery, sortBy]);
 
-  // Split filtered reviews evenly across Row 1 and Row 2
-  const { row1Reviews, row2Reviews } = useMemo(() => {
-    const midpoint = Math.ceil(filteredReviews.length / 2);
-    return {
-      row1Reviews: filteredReviews.slice(0, midpoint),
-      row2Reviews: filteredReviews.slice(midpoint),
-    };
+  // Build a seamless loop base wide enough for any screen size (phones to 4K monitors)
+  const shouldLoop = filteredReviews.length > 1;
+  const loopBase = useMemo(() => {
+    if (filteredReviews.length <= 1) return filteredReviews;
+    if (filteredReviews.length >= 6) return filteredReviews;
+    const repeated: GoogleReviewItem[] = [];
+    while (repeated.length < 6) {
+      repeated.push(...filteredReviews);
+    }
+    return repeated;
   }, [filteredReviews]);
 
-  useEffect(() => {
-    const r2 = row2Ref.current;
-    if (r2 && r2.scrollLeft === 0 && r2.scrollWidth > r2.clientWidth) {
-      r2.scrollLeft = Math.floor((r2.scrollWidth - r2.clientWidth) / 2);
+  const carouselItems = useMemo(() => {
+    if (!shouldLoop) return loopBase;
+    return [...loopBase, ...loopBase];
+  }, [shouldLoop, loopBase]);
+
+  // Pause continuous scroll briefly when the user swipes, scrolls, or taps arrows
+  const pauseAutoBriefly = (durationMs = 4500) => {
+    setIsHoveredOrTouched(true);
+    if (resumeTimerRef.current) {
+      window.clearTimeout(resumeTimerRef.current);
     }
-  }, [selectedTopic, row2Reviews.length]);
+    resumeTimerRef.current = window.setTimeout(() => {
+      setIsHoveredOrTouched(false);
+      resumeTimerRef.current = null;
+    }, durationMs);
+  };
 
   useEffect(() => {
-    if (!isAutoScrolling || isHoveredOrTouched) return;
+    return () => {
+      if (resumeTimerRef.current) {
+        window.clearTimeout(resumeTimerRef.current);
+      }
+    };
+  }, []);
 
-    let animationFrameId: number;
-    let dir1 = 1;
-    let dir2 = -1;
-    let frac1 = 0;
-    let frac2 = 0;
+  // Reset scroll position cleanly when filters/sort change
+  useEffect(() => {
+    scrollPosRef.current = 0;
+    const container = row1Ref.current;
+    if (container) {
+      container.scrollTo({ left: 0, behavior: "auto" });
+    }
+  }, [selectedTopic, sortBy, searchQuery]);
 
-    const step = () => {
-      const r1 = row1Ref.current;
-      const r2 = row2Ref.current;
+  // Measure exact pixel distance of one full loop set whenever layout/viewport resizes
+  useEffect(() => {
+    if (isSyncingReviews || !shouldLoop) {
+      halfWidthRef.current = 0;
+      return;
+    }
+    const container = row1Ref.current;
+    if (!container) return;
 
-      if (r1 && r1.scrollWidth > r1.clientWidth) {
-        frac1 += 0.65 * dir1;
-        if (Math.abs(frac1) >= 1) {
-          const delta = Math.trunc(frac1);
-          frac1 -= delta;
-          r1.scrollLeft += delta;
-          const max1 = r1.scrollWidth - r1.clientWidth;
-          if (r1.scrollLeft >= max1 - 2) {
-            dir1 = -1;
-          } else if (r1.scrollLeft <= 2) {
-            dir1 = 1;
-          }
+    const measureHalfWidth = () => {
+      const cards = container.querySelectorAll<HTMLElement>("[data-review-card]");
+      if (cards.length > loopBase.length && loopBase.length > 0) {
+        const firstLeft = cards[0].getBoundingClientRect().left;
+        const secondSetLeft = cards[loopBase.length].getBoundingClientRect().left;
+        const exactHalf = secondSetLeft - firstLeft;
+        if (exactHalf > 0) {
+          halfWidthRef.current = exactHalf;
+          return;
         }
       }
-
-      if (r2 && r2.scrollWidth > r2.clientWidth) {
-        frac2 += 0.55 * dir2;
-        if (Math.abs(frac2) >= 1) {
-          const delta = Math.trunc(frac2);
-          frac2 -= delta;
-          r2.scrollLeft += delta;
-          const max2 = r2.scrollWidth - r2.clientWidth;
-          if (r2.scrollLeft <= 2) {
-            dir2 = 1;
-          } else if (r2.scrollLeft >= max2 - 2) {
-            dir2 = -1;
-          }
-        }
-      }
-
-      animationFrameId = window.requestAnimationFrame(step);
+      halfWidthRef.current = container.scrollWidth / 2;
     };
 
-    animationFrameId = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(animationFrameId);
-  }, [isAutoScrolling, isHoveredOrTouched, selectedTopic]);
+    measureHalfWidth();
 
-  const scrollBothRowsByCard = (direction: "prev" | "next") => {
-    triggerHapticFeedback(50);
-    const r1 = row1Ref.current;
-    const r2 = row2Ref.current;
-    const delta = direction === "next" ? 395 : -395;
-
-    if (r1) {
-      r1.scrollBy({ left: delta, behavior: "smooth" });
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measureHalfWidth);
+      return () => window.removeEventListener("resize", measureHalfWidth);
     }
-    if (r2) {
-      r2.scrollBy({ left: -delta, behavior: "smooth" });
+
+    const observer = new ResizeObserver(measureHalfWidth);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isSyncingReviews, shouldLoop, loopBase.length, carouselItems.length]);
+
+  // Measure rendered card + gap width for prev/next arrow stepping
+  const getCarouselStepSize = (container: HTMLDivElement): number => {
+    const firstCard = container.querySelector<HTMLElement>("[data-review-card]");
+    if (!firstCard) return Math.max(264, container.clientWidth * 0.78);
+    const styles = window.getComputedStyle(container);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "12") || 12;
+    return firstCard.getBoundingClientRect().width + gap;
+  };
+
+  // Simple, calm, continuous requestAnimationFrame horizontal scroll
+  useEffect(() => {
+    if (
+      isHoveredOrTouched ||
+      prefersReducedMotion ||
+      isFastReviewOpen ||
+      isSyncingReviews ||
+      !shouldLoop
+    ) {
+      return;
+    }
+
+    const container = row1Ref.current;
+    if (!container) return;
+
+    let rafId = 0;
+    let lastTime = performance.now();
+
+    // Sync float accumulator cleanly from current scroll position (preserving manual swipes)
+    const halfStart = halfWidthRef.current;
+    let currentPos = container.scrollLeft;
+    if (halfStart > 0 && currentPos >= halfStart) {
+      currentPos = currentPos % halfStart;
+      container.scrollLeft = currentPos;
+    }
+    scrollPosRef.current = currentPos;
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, Math.max(0, (now - lastTime) / 1000));
+      lastTime = now;
+
+      const halfWidth = halfWidthRef.current;
+      if (halfWidth > 0) {
+        const speedPxPerSec = window.innerWidth < 640 ? 36 : 44;
+        scrollPosRef.current += speedPxPerSec * dt;
+        if (scrollPosRef.current >= halfWidth) {
+          scrollPosRef.current -= halfWidth;
+        }
+        container.scrollLeft = scrollPosRef.current;
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [
+    isHoveredOrTouched,
+    prefersReducedMotion,
+    isFastReviewOpen,
+    isSyncingReviews,
+    shouldLoop,
+  ]);
+
+  const scrollRowByCard = (direction: "prev" | "next") => {
+    triggerHapticFeedback(50);
+    pauseAutoBriefly(4500);
+    const container = row1Ref.current;
+    if (!container) return;
+
+    const step = getCarouselStepSize(container);
+    const halfWidth = halfWidthRef.current || container.scrollWidth / 2;
+    const behavior = prefersReducedMotion ? "auto" : "smooth";
+
+    if (direction === "next") {
+      if (shouldLoop && halfWidth > 0 && container.scrollLeft >= halfWidth - 10) {
+        container.scrollTo({ left: container.scrollLeft - halfWidth, behavior: "auto" });
+      }
+      container.scrollBy({ left: step, behavior });
+    } else {
+      if (shouldLoop && halfWidth > 0 && container.scrollLeft <= step) {
+        container.scrollTo({ left: container.scrollLeft + halfWidth, behavior: "auto" });
+      }
+      container.scrollBy({ left: -step, behavior });
     }
   };
 
@@ -648,7 +993,7 @@ export function GoogleReviewsSection({
       setCopiedToClipboard(false);
     }
 
-    setReviewItems((prev) => [newReview, ...prev]);
+    setUserDraftReviews((prev) => [newReview, ...prev]);
 
     try {
       const existingRaw = window.localStorage.getItem(LOCAL_STORAGE_USER_REVIEWS_KEY);
@@ -686,7 +1031,7 @@ export function GoogleReviewsSection({
   return (
     <section
       id="kundenstimmen"
-      className="py-10 sm:py-14 lg:py-16 bg-surface border-b border-primary/8 dark:border-white/10 overflow-hidden"
+      className="py-10 sm:py-16 lg:py-20 bg-surface border-b border-primary/8 dark:border-white/10 overflow-hidden"
     >
       <div className="container-page">
         <FadeUp>
@@ -695,28 +1040,39 @@ export function GoogleReviewsSection({
               <div className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-ink-muted mb-2">
                 <GoogleGLogo className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span className="font-bold tracking-wide text-accent">
-                  Google Maps · {liveRating.toFixed(1).replace(".", ",")} ★ ({liveReviewCount})
+                  Google Maps · {ratingFormatted} ★ ({liveReviewCount})
                 </span>
                 <span aria-hidden="true" className="hidden min-[380px]:inline">·</span>
                 <span className="hidden min-[380px]:inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Echte Kundenstimmen
+                  {source === "live" ? "Live-Daten von Google Places" : "Echte Kundenstimmen"}
                 </span>
+                {source === "live" && (
+                  <button
+                    type="button"
+                    onClick={() => void refresh(true)}
+                    disabled={isRefreshing}
+                    aria-label="Google-Daten live aktualisieren"
+                    className="inline-flex items-center gap-1 rounded-md border border-primary/10 dark:border-white/15 bg-white dark:bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-ink-muted hover:text-accent transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw size={10} className={isRefreshing ? "animate-spin" : ""} aria-hidden="true" />
+                    <span>{isRefreshing ? "Lädt…" : "Aktualisieren"}</span>
+                  </button>
+                )}
               </div>
               <h2 className="text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
-                Das sagen unsere Kunden in Osnabrück
+                Das sagen unsere Kunden in {business.city}
               </h2>
               <p className="mt-2 text-xs sm:text-sm lg:text-[15px] text-ink-muted max-w-2xl leading-relaxed">
                 Durchschnittlich{" "}
                 <strong className="font-semibold text-primary dark:text-slate-100">
-                  {liveRating.toFixed(1).replace(".", ",")} von 5 Sternen
+                  {ratingFormatted} von 5 Sternen
                 </strong>{" "}
                 aus{" "}
                 <strong className="font-semibold text-primary dark:text-slate-100">
-                  {liveReviewCount} echten Google-Maps-Bewertungen
+                  {liveReviewCount} Google-Maps-Bewertungen
                 </strong>{" "}
-                für {business.name} {business.tagline} ({business.street},{" "}
-                {business.zip} {business.city}).
+                für {place.displayName} ({place.shortFormattedAddress}).
               </p>
             </div>
 
@@ -734,14 +1090,14 @@ export function GoogleReviewsSection({
           </div>
         </FadeUp>
 
-        {/* Authentic Google Maps 4.8★ Summary & Star Breakdown Header */}
+        {/* Live Google Maps Summary & Place Details Header */}
         <FadeUp delay={0.05} className="mt-5 sm:mt-6">
-          {isInitialSync ? (
+          {isPlaceLoading ? (
             <GoogleReviewsSummarySkeleton />
           ) : (
           <div className="card bg-white dark:bg-slate-900 p-4 sm:p-5 border border-primary/10 dark:border-white/10">
             <div className="grid gap-4 sm:gap-6 lg:grid-cols-12 lg:items-center">
-              {/* Left: Business Identity & Overall 4.8 Score */}
+              {/* Left: Live Business Identity & Score */}
               <div className="lg:col-span-5 flex items-center gap-3 sm:gap-4 min-w-0">
                 <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-surface dark:bg-slate-800 border border-primary/10 dark:border-white/10 flex flex-col items-center justify-center shrink-0">
                   <GoogleGLogo className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -750,7 +1106,7 @@ export function GoogleReviewsSection({
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                     <span className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-slate-100 tracking-tight tabular-nums">
-                      {liveRating.toFixed(1).replace(".", ",")}
+                      {ratingFormatted}
                     </span>
                     <ReviewStars rating={liveRating} size={15} />
                     <span className="text-[11px] sm:text-xs font-bold text-ink-muted tabular-nums">
@@ -759,19 +1115,18 @@ export function GoogleReviewsSection({
                   </div>
 
                   <p className="text-[11px] sm:text-sm font-bold text-primary dark:text-slate-200 mt-0.5 sm:mt-1 break-words">
-                    {business.name} {business.tagline}
+                    {place.displayName}
                   </p>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-ink-muted mt-0.5">
                     <span className="inline-flex items-center gap-1">
                       <MapPin size={12} className="text-accent shrink-0" />
-                      <span>
-                        {business.street}, {business.zip} {business.city}
-                      </span>
+                      <span>{place.shortFormattedAddress}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowFreeLiveMap((prev) => !prev)}
-                      className="text-accent font-semibold hover:underline cursor-pointer"
+                      aria-expanded={showFreeLiveMap}
+                      className="inline-flex min-h-[36px] sm:min-h-0 items-center px-1.5 -mx-1.5 py-1 rounded-md text-accent font-semibold hover:underline cursor-pointer touch-manipulation"
                     >
                       {showFreeLiveMap ? "Karte ausblenden" : "Live-Karte zeigen"}
                     </button>
@@ -779,52 +1134,112 @@ export function GoogleReviewsSection({
                 </div>
               </div>
 
-              {/* Center: Authentic Google Maps 5-Star to 1-Star Histogram */}
+              {/* Center: Live Google Opening Hours / Contact Status (when live) OR Star Histogram (fallback) */}
               <div
-                className="lg:col-span-4 space-y-1 sm:space-y-1.5 border-y lg:border-y-0 lg:border-x border-primary/8 dark:border-white/10 py-2.5 sm:py-4 lg:py-0 lg:px-6"
-                aria-label="Sterneverteilung auf Google Maps"
+                className="lg:col-span-4 space-y-1.5 border-y lg:border-y-0 lg:border-x border-primary/8 dark:border-white/10 py-2.5 sm:py-4 lg:py-0 lg:px-6"
+                aria-label={source === "live" ? "Live Google-Standortdaten" : "Sterneverteilung auf Google Maps"}
               >
-                {([5, 4, 3, 2, 1] as const).map((starLevel) => {
-                  const count = starDistribution[starLevel];
-                  const pct =
-                    reviewItems.length > 0
-                      ? Math.round((count / reviewItems.length) * 100)
-                      : 0;
-                  return (
-                    <div
-                      key={starLevel}
-                      className="flex items-center gap-2 sm:gap-2.5 text-[11px] sm:text-xs"
-                    >
-                      <span className="w-3 font-bold text-primary dark:text-slate-200 tabular-nums text-right">
-                        {starLevel}
-                      </span>
-                      <Star
-                        size={10}
-                        className="fill-[#fbbc04] text-[#fbbc04] shrink-0"
-                      />
-                      <div className="h-1.5 sm:h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                        <div
-                          className="h-full rounded-full bg-[#fbbc04] transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="w-6 sm:w-7 text-right text-[10px] sm:text-[11px] font-semibold text-ink-faint tabular-nums">
-                        {count}
-                      </span>
+                {source === "live" ? (
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      {place.openNow !== null ? (
+                        <span
+                          className={`inline-flex items-center gap-1.5 font-extrabold ${
+                            place.openNow
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-amber-700 dark:text-amber-300"
+                          }`}
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              place.openNow ? "bg-emerald-500" : "bg-amber-500"
+                            }`}
+                          />
+                          {place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}
+                        </span>
+                      ) : (
+                        <span className="font-bold text-primary dark:text-slate-200">
+                          Google Maps Profil
+                        </span>
+                      )}
+                      <a
+                        href={place.phoneHref}
+                        className="inline-flex items-center gap-1 font-bold text-accent hover:underline tabular-nums"
+                      >
+                        <Phone size={11} aria-hidden="true" />
+                        <span>{place.phoneDisplay}</span>
+                      </a>
                     </div>
-                  );
-                })}
+
+                    {place.todayHours && (
+                      <p className="flex items-start gap-1.5 text-[11px] sm:text-xs text-ink-muted">
+                        <Clock size={12} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
+                        <span>{place.todayHours}</span>
+                      </p>
+                    )}
+
+                    {place.weekdayDescriptions.length > 0 && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setShowAllHours((prev) => !prev)}
+                          className="text-[11px] font-semibold text-accent hover:underline cursor-pointer"
+                        >
+                          {showAllHours ? "Öffnungszeiten ausblenden" : "Alle Öffnungszeiten (Mo–So)"}
+                        </button>
+                        {showAllHours && (
+                          <ul className="mt-1.5 space-y-0.5 text-[11px] text-ink-muted border-t border-primary/8 dark:border-white/10 pt-1.5">
+                            {place.weekdayDescriptions.map((line) => (
+                              <li key={line}>{line}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  ([5, 4, 3, 2, 1] as const).map((starLevel) => {
+                    const count = starDistribution[starLevel];
+                    const pct =
+                      reviewItems.length > 0
+                        ? Math.round((count / reviewItems.length) * 100)
+                        : 0;
+                    return (
+                      <div
+                        key={starLevel}
+                        className="flex items-center gap-2 sm:gap-2.5 text-[11px] sm:text-xs"
+                      >
+                        <span className="w-3 font-bold text-primary dark:text-slate-200 tabular-nums text-right">
+                          {starLevel}
+                        </span>
+                        <Star
+                          size={10}
+                          className="fill-[#fbbc04] text-[#fbbc04] shrink-0"
+                        />
+                        <div className="h-1.5 sm:h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                          <div
+                            className="h-full rounded-full bg-[#fbbc04] transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-6 sm:w-7 text-right text-[10px] sm:text-[11px] font-semibold text-ink-faint tabular-nums">
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* Right: Fast Review Modal Trigger + Direct Google Maps Link */}
-              <div className="lg:col-span-3 grid grid-cols-2 sm:flex sm:flex-row lg:flex-col gap-2 sm:gap-2.5">
+              <div className="lg:col-span-3 grid grid-cols-1 min-[360px]:grid-cols-2 sm:flex sm:flex-row lg:flex-col gap-2 sm:gap-2.5">
                 <button
                   type="button"
                   onClick={openFastReviewModal}
                   aria-haspopup="dialog"
                   aria-expanded={isFastReviewOpen}
                   aria-label="Schnellrezension für Google Maps verfassen"
-                  className="group flex-1 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] active:bg-[#0d3c84] active:scale-[0.95] active:translate-y-0.5 active:shadow-inner active:ring-2 active:ring-[#8ab4f8]/70 text-white text-[11px] sm:text-xs font-bold transition-all duration-150 active:duration-75 shadow-sm select-none touch-manipulation cursor-pointer whitespace-nowrap"
+                  className="group flex-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-[#1a73e8] hover:bg-[#1557b0] active:bg-[#0d3c84] active:scale-[0.95] active:translate-y-0.5 active:shadow-inner active:ring-2 active:ring-[#8ab4f8]/70 text-white text-xs font-bold transition-all duration-150 active:duration-75 shadow-sm select-none touch-manipulation cursor-pointer whitespace-nowrap"
                 >
                   <MessageSquarePlus
                     size={13}
@@ -838,7 +1253,7 @@ export function GoogleReviewsSection({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Hannachi auf Google Maps ansehen"
-                  className="flex-1 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg bg-surface dark:bg-slate-800 hover:bg-primary/5 text-primary dark:text-slate-100 border border-primary/12 dark:border-white/15 text-[11px] sm:text-xs font-bold transition-colors whitespace-nowrap"
+                  className="flex-1 inline-flex min-h-[44px] items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-lg bg-surface dark:bg-slate-800 hover:bg-primary/5 text-primary dark:text-slate-100 border border-primary/12 dark:border-white/15 text-xs font-bold transition-colors whitespace-nowrap"
                 >
                   <GoogleGLogo className="w-3.5 h-3.5 shrink-0" />
                   <span>Google Maps</span>
@@ -849,10 +1264,12 @@ export function GoogleReviewsSection({
 
             {/* DSGVO Two-Click Consent-Guarded Google Maps Drawer */}
             {showFreeLiveMap && (
-              <div className="mt-5 pt-5 border-t border-primary/8 dark:border-white/10">
+              <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-primary/8 dark:border-white/10">
                 <div className="overflow-hidden rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800">
                   <GoogleMapsEmbed
-                    className="relative h-64 sm:h-72 w-full"
+                    showModeToggle
+                    defaultViewMode="pin"
+                    className="relative h-[240px] min-[380px]:h-[270px] sm:h-[300px] lg:h-[330px] w-full"
                     title="Hannachi Elektrohaushaltsgeräte Service auf Google Maps"
                   />
                 </div>
@@ -862,50 +1279,39 @@ export function GoogleReviewsSection({
           )}
         </FadeUp>
 
-        {/* Authentic Google Maps Search, Sort & 10 Keyword Topic Filter Chips */}
+        {/* Simple, Unified Search, Sort, Playback & Topic Filter Toolbar */}
         <div className="mt-4 sm:mt-6 space-y-2.5 sm:space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-            {/* Search & Sort Controls (Matching Google Maps Reviews Toolbar) */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-[200px]">
-              {isSearchOpen ? (
-                <div className="relative flex items-center flex-1 max-w-sm">
-                  <Search
-                    size={13}
-                    className="absolute left-2.5 text-ink-faint pointer-events-none"
-                  />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="In 82 Google-Rezensionen suchen..."
-                    className="w-full rounded-lg border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-900 pl-8 pr-8 py-1 sm:py-1.5 text-[11px] sm:text-xs text-primary dark:text-slate-100 focus:border-accent focus:outline-none"
-                    autoFocus
-                  />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            {/* Selector 1: Direct Inline Search & Clean Sort Control */}
+            <div className="flex items-center gap-2 flex-1 min-w-0 w-full sm:max-w-lg">
+              <div className="relative flex items-center flex-1 min-w-0">
+                <Search
+                  size={14}
+                  aria-hidden="true"
+                  className="absolute left-3 text-ink-faint pointer-events-none"
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rezensionen durchsuchen…"
+                  aria-label="Google-Rezensionen durchsuchen"
+                  className="w-full min-h-[44px] sm:min-h-[38px] rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 pl-8.5 pr-9 py-1.5 text-base sm:text-xs text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none transition-colors shadow-2xs"
+                />
+                {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setIsSearchOpen(false);
-                    }}
-                    aria-label="Suche schließen"
-                    className="absolute right-2.5 text-ink-faint hover:text-primary dark:hover:text-white cursor-pointer"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Suche leeren"
+                    className="absolute right-1 flex h-9 w-9 items-center justify-center rounded-lg text-ink-faint hover:text-primary dark:hover:text-white cursor-pointer"
                   >
-                    <X size={13} />
+                    <X size={14} />
                   </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsSearchOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
-                >
-                  <Search size={12} className="text-ink-muted" />
-                  <span>Suchen</span>
-                </button>
-              )}
+                )}
+              </div>
 
-              <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs">
-                <ArrowUpDown size={12} className="text-ink-muted shrink-0" />
+              <div className="inline-flex min-h-[44px] sm:min-h-[38px] items-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 sm:px-3 py-1.5 text-xs shrink-0 shadow-2xs">
+                <ArrowUpDown size={13} className="text-ink-muted shrink-0" aria-hidden="true" />
                 <label htmlFor="google-reviews-sort" className="sr-only">
                   Sortieren nach
                 </label>
@@ -916,135 +1322,119 @@ export function GoogleReviewsSection({
                     setSortBy(e.target.value as SortOption);
                     triggerSubtleSyncSkeleton(150);
                   }}
-                  className="bg-transparent font-semibold text-primary dark:text-slate-200 focus:outline-none cursor-pointer"
+                  className="bg-transparent font-semibold text-primary dark:text-slate-200 focus:outline-none cursor-pointer pr-0.5"
                 >
                   <option value="relevant">Relevanteste</option>
                   <option value="newest">Neueste</option>
-                  <option value="highest">Höchste</option>
+                  <option value="highest">Beste (5★)</option>
                   <option value="lowest">Niedrigste</option>
                 </select>
               </div>
             </div>
 
-            {/* Marquee Controls */}
-            <div className="flex flex-wrap items-center justify-between md:justify-end gap-1.5 sm:gap-2 shrink-0">
-              <span className="text-[11px] sm:text-xs font-semibold text-ink-faint tabular-nums md:mr-1">
-                {filteredReviews.length}/{reviewItems.length}
+            {/* Selector 2: Clean Count & Segmented Playback/Step Controls */}
+            <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto shrink-0">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-muted tabular-nums">
+                {hasLiveReviews && (
+                  <span
+                    className="h-2 w-2 rounded-full bg-emerald-500 shrink-0"
+                    title="Mit Live-Google-Daten verbunden"
+                  />
+                )}
+                <span>
+                  {filteredReviews.length === reviewItems.length
+                    ? `${reviewItems.length} Bewertungen`
+                    : `${filteredReviews.length} von ${reviewItems.length}`}
+                </span>
               </span>
 
-              <div className="flex items-center gap-1.5">
+              <div className="inline-flex items-center rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 shadow-2xs overflow-hidden divide-x divide-primary/10 dark:divide-white/10">
                 <button
                   type="button"
-                  onClick={() => setIsAutoScrolling((prev) => !prev)}
-                  className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-primary/5 text-primary dark:text-slate-200 border border-primary/12 dark:border-white/15 text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-                  aria-label={
-                    isAutoScrolling
-                      ? "Zwei-Reihen-Ticker pausieren"
-                      : "Zwei-Reihen-Ticker starten"
-                  }
+                  onClick={() => scrollRowByCard("prev")}
+                  aria-label="Vorherige Bewertung"
+                  className="w-11 h-11 sm:w-9 sm:h-[38px] hover:bg-primary/5 text-primary dark:text-slate-100 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
-                  {isAutoScrolling ? (
-                    <>
-                      <Pause size={12} className="text-ink-muted shrink-0" />
-                      <span>Läuft</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play size={12} className="text-accent shrink-0" />
-                      <span>Start</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => scrollBothRowsByCard("prev")}
-                  aria-label="Zurück scrollen"
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white dark:bg-slate-900 hover:bg-primary/5 text-primary dark:text-slate-100 border border-primary/12 dark:border-white/15 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
-                >
-                  <ChevronLeft size={15} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => scrollBothRowsByCard("next")}
-                  aria-label="Weiter scrollen"
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white dark:bg-slate-900 hover:bg-primary/5 text-primary dark:text-slate-100 border border-primary/12 dark:border-white/15 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
+                  onClick={() => scrollRowByCard("next")}
+                  aria-label="Nächste Bewertung"
+                  className="w-11 h-11 sm:w-9 sm:h-[38px] hover:bg-primary/5 text-primary dark:text-slate-100 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
-                  <ChevronRight size={15} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Exact Google Maps Keyword Topic Filter Chips from Hannachi Listing */}
-          <div
-            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            role="tablist"
-            aria-label="Google-Maps-Themenfilter"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={selectedTopic === "all"}
-              onClick={() => {
-                triggerHapticFeedback(50);
-                setSelectedTopic("all");
-                triggerSubtleSyncSkeleton(150);
-              }}
-              className={`shrink-0 inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer border whitespace-nowrap ${
-                selectedTopic === "all"
-                  ? "bg-primary text-white border-primary shadow-xs"
-                  : "bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-slate-100 border-primary/10 dark:border-white/10"
-              }`}
+          {/* Selector 3: Dynamic Topic Filter Chips (Works with Live & Archived Reviews) */}
+          {dynamicTopicChips.length > 0 && (
+            <div
+              className="flex items-center md:flex-wrap gap-1.5 overflow-x-auto no-scrollbar touch-pan-x overscroll-x-contain scroll-px-4 -mx-4 px-4 sm:mx-0 sm:px-0 pb-1"
+              role="tablist"
+              aria-label="Google-Maps-Themenfilter"
             >
-              <span>Alle</span>
-              <span className="tabular-nums opacity-75">{reviewItems.length}</span>
-            </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={selectedTopic === "all"}
+                onClick={() => {
+                  triggerHapticFeedback(50);
+                  setSelectedTopic("all");
+                  triggerSubtleSyncSkeleton(150);
+                }}
+                className={`shrink-0 inline-flex min-h-[38px] sm:min-h-[34px] items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.97] cursor-pointer border whitespace-nowrap ${
+                  selectedTopic === "all"
+                    ? "bg-primary text-white border-primary shadow-xs"
+                    : "bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-slate-100 border-primary/10 dark:border-white/10"
+                }`}
+              >
+                <span>Alle</span>
+                <span className="tabular-nums opacity-70">{reviewItems.length}</span>
+              </button>
 
-            {GOOGLE_MAPS_TOPIC_CHIPS.map((chip) => {
-              const isActive = selectedTopic === chip.id;
-              return (
-                <button
-                  key={chip.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => {
-                    triggerHapticFeedback(50);
-                    setSelectedTopic((prev) =>
-                      prev === chip.id ? "all" : chip.id
-                    );
-                    triggerSubtleSyncSkeleton(150);
-                  }}
-                  className={`shrink-0 inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer border whitespace-nowrap ${
-                    isActive
-                      ? "bg-primary text-white border-primary shadow-xs"
-                      : "bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-slate-100 border-primary/10 dark:border-white/10"
-                  }`}
-                >
-                  <span>{chip.label}</span>
-                  <span className="tabular-nums opacity-70">{chip.count}</span>
-                </button>
-              );
-            })}
-          </div>
+              {dynamicTopicChips.map((chip) => {
+                const isActive = selectedTopic === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      triggerHapticFeedback(50);
+                      setSelectedTopic((prev) =>
+                        prev === chip.id ? "all" : chip.id
+                      );
+                      triggerSubtleSyncSkeleton(150);
+                    }}
+                    className={`shrink-0 inline-flex min-h-[38px] sm:min-h-[34px] items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.97] cursor-pointer border whitespace-nowrap ${
+                      isActive
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-slate-100 border-primary/10 dark:border-white/10"
+                    }`}
+                  >
+                    <span>{chip.label}</span>
+                    <span className="tabular-nums opacity-65">{chip.liveCount}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Continuous Two-Row Scrolling Marquee Track (All 82 Reviews) */}
+        {/* Unified, Responsive Single-Row Google Reviews Carousel */}
         {isSyncingReviews ? (
           <div
-            className="relative mt-4 sm:mt-6 space-y-3 sm:space-y-5"
+            className="relative mt-4 sm:mt-6"
             aria-busy="true"
             aria-label="Google-Bewertungen werden synchronisiert"
           >
-            <div className="flex gap-3 sm:gap-5 overflow-hidden pb-1.5 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex gap-3 sm:gap-4 overflow-hidden pb-1.5 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0">
               {[0, 1, 2, 3].map((idx) => (
                 <GoogleReviewCardSkeleton key={`sk-row1-${idx}`} index={idx} />
-              ))}
-            </div>
-            <div className="flex gap-3 sm:gap-5 overflow-hidden pb-1.5 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-              {[0, 1, 2, 3].map((idx) => (
-                <GoogleReviewCardSkeleton key={`sk-row2-${idx}`} index={idx + 1} />
               ))}
             </div>
           </div>
@@ -1061,56 +1451,60 @@ export function GoogleReviewsSection({
               }}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white cursor-pointer"
             >
-              Alle {reviewItems.length} Rezensionen anzeigen
+              Alle Rezensionen anzeigen
             </button>
           </div>
         ) : (
           <div
-            className="relative mt-4 sm:mt-6 space-y-3 sm:space-y-5"
+            className="relative mt-4 sm:mt-6 space-y-3"
             onMouseEnter={() => setIsHoveredOrTouched(true)}
             onMouseLeave={() => setIsHoveredOrTouched(false)}
-            onTouchStart={() => setIsHoveredOrTouched(true)}
-            onTouchEnd={() => {
-              window.setTimeout(() => setIsHoveredOrTouched(false), 3500);
+            onFocus={() => setIsHoveredOrTouched(true)}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                setIsHoveredOrTouched(false);
+              }
             }}
+            onTouchStart={() => pauseAutoBriefly(4500)}
+            onWheel={() => pauseAutoBriefly(3500)}
           >
-            {/* Row 1 */}
             <div
               ref={row1Ref}
-              className="flex gap-3 sm:gap-5 overflow-x-auto pb-1.5 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto no-scrollbar touch-pan-x overscroll-x-contain py-3.5 -my-2 -mx-4 px-4 sm:mx-0 sm:px-2 sm:mask-fade-edges"
               role="region"
-              aria-label="Google-Kundenbewertungen Reihe 1"
+              aria-label="Google-Kundenbewertungen"
             >
-              {row1Reviews.map((rev, idx) => (
+              {carouselItems.map((rev, idx) => (
                 <ReviewMarqueeCard
-                  key={rev.id}
+                  key={`${rev.id}-${idx}`}
                   rev={rev}
                   colorIndex={idx}
                   livePlaceUri={livePlaceUri}
                   isLiked={Boolean(likedIds[rev.id])}
                   onToggleLike={handleToggleLike}
+                  isDecorativeClone={shouldLoop && idx >= loopBase.length}
                 />
               ))}
             </div>
 
-            {/* Row 2 (scrolling in counter-direction) */}
-            {row2Reviews.length > 0 && (
-              <div
-                ref={row2Ref}
-                className="flex gap-3 sm:gap-5 overflow-x-auto pb-1.5 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                role="region"
-                aria-label="Google-Kundenbewertungen Reihe 2"
-              >
-                {row2Reviews.map((rev, idx) => (
-                  <ReviewMarqueeCard
-                    key={rev.id}
-                    rev={rev}
-                    colorIndex={idx + 3}
-                    livePlaceUri={livePlaceUri}
-                    isLiked={Boolean(likedIds[rev.id])}
-                    onToggleLike={handleToggleLike}
-                  />
-                ))}
+            {hasLiveReviews && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs text-ink-muted">
+                <span>
+                  Live-Auszüge über Google Places API · Insgesamt{" "}
+                  <strong className="text-primary dark:text-white tabular-nums">
+                    {liveReviewCount} Bewertungen ({ratingFormatted} ★)
+                  </strong>{" "}
+                  auf Google Maps.
+                </span>
+                <a
+                  href={livePlaceUri}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-bold text-accent hover:underline shrink-0"
+                >
+                  <span>Alle {liveReviewCount} auf Google Maps öffnen</span>
+                  <ExternalLink size={12} aria-hidden="true" />
+                </a>
               </div>
             )}
           </div>
@@ -1130,14 +1524,14 @@ export function GoogleReviewsSection({
                 setIsFastReviewOpen(false);
               }
             }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-3 sm:p-4 backdrop-blur-xs overflow-y-auto"
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4 backdrop-blur-xs"
             role="dialog"
             aria-modal="true"
             aria-labelledby="fast-google-review-title"
           >
-            <div className="relative my-auto w-full max-w-lg rounded-2xl border border-white/15 bg-[#202124] text-white shadow-2xl overflow-hidden">
+            <div className="relative w-full max-w-lg max-h-[90dvh] flex flex-col rounded-t-3xl sm:rounded-2xl border border-white/15 bg-[#202124] text-white shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 sm:px-5 py-3.5">
               <div className="flex items-center gap-2.5 min-w-0">
                 <GoogleGLogo className="w-5 h-5 shrink-0" />
                 <h3
@@ -1151,14 +1545,15 @@ export function GoogleReviewsSection({
                 type="button"
                 onClick={() => setIsFastReviewOpen(false)}
                 aria-label="Dialog schließen"
-                className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                className="flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
+            <div className="overflow-y-auto overscroll-contain">
 
             {fastReviewSubmitted ? (
-              <div className="p-5 sm:p-6 space-y-4">
+              <div className="p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
                 <div className="flex items-start gap-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-4">
                   <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
                   <div className="space-y-1">
@@ -1199,7 +1594,7 @@ export function GoogleReviewsSection({
                         // ignore
                       }
                     }}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 px-4 py-2.5 text-xs font-semibold text-white transition-colors cursor-pointer"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 px-4 py-2.5 text-xs font-semibold text-white transition-colors cursor-pointer"
                   >
                     {copiedToClipboard ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                     <span>{copiedToClipboard ? "Text kopiert ✓" : "Text kopieren"}</span>
@@ -1210,7 +1605,7 @@ export function GoogleReviewsSection({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsFastReviewOpen(false)}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] px-5 py-2.5 text-xs font-extrabold text-[#202124] transition-colors"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] px-5 py-2.5 text-xs font-extrabold text-[#202124] transition-colors"
                   >
                     <GoogleGLogo className="w-4 h-4" />
                     <span>Auf Google Maps öffnen &amp; veröffentlichen</span>
@@ -1219,20 +1614,20 @@ export function GoogleReviewsSection({
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleFastReviewSubmit} className="p-5 sm:p-6 space-y-4">
+              <form onSubmit={handleFastReviewSubmit} className="p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
                 {/* User Identity Row (Matches Google Maps "Posting publicly across Google") */}
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center justify-between gap-2.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00897b] text-sm font-bold text-white">
                       {getInitials(draftAuthor || "Kunde Osnabrück")}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <input
                         type="text"
                         value={draftAuthor}
                         onChange={(e) => setDraftAuthor(e.target.value)}
                         placeholder="Ihr Name (optional, z. B. Thomas M.)"
-                        className="w-full bg-transparent text-sm font-bold text-white placeholder:text-white/60 focus:outline-none border-b border-transparent focus:border-[#8ab4f8]"
+                        className="w-full bg-transparent text-base sm:text-sm font-bold text-white placeholder:text-white/60 focus:outline-none border-b border-transparent focus:border-[#8ab4f8]"
                       />
                       <p className="text-[11px] text-white/60">
                         Öffentlich auf Google bewerten · {business.city}
@@ -1243,8 +1638,8 @@ export function GoogleReviewsSection({
                   <select
                     value={draftService}
                     onChange={(e) => setDraftService(e.target.value)}
-                    aria-label="Repariertes Gerät"
-                    className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none"
+                    aria-label="Gerätebereich auswählen"
+                    className="min-h-[44px] sm:min-h-0 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none shrink-0"
                   >
                     <option value="Waschmaschine" className="text-slate-900">Waschmaschine</option>
                     <option value="Geschirrspüler" className="text-slate-900">Geschirrspüler</option>
@@ -1323,7 +1718,7 @@ export function GoogleReviewsSection({
                     value={draftText}
                     onChange={(e) => setDraftText(e.target.value)}
                     placeholder="Teilen Sie Ihre eigenen Erfahrungen mit diesem Ort (z. B. Gerät, Schnelligkeit, Preis-Leistung)..."
-                    className="w-full rounded-xl border border-white/25 bg-transparent p-3.5 text-sm text-white placeholder:text-white/50 focus:border-[#8ab4f8] focus:outline-none"
+                    className="w-full rounded-xl border border-white/25 bg-transparent p-3.5 text-base sm:text-sm text-white placeholder:text-white/50 focus:border-[#8ab4f8] focus:outline-none"
                   />
                 </div>
 
@@ -1333,23 +1728,23 @@ export function GoogleReviewsSection({
                     href={liveWriteReviewUri}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-[#8ab4f8] hover:underline"
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 text-xs font-semibold text-[#8ab4f8] hover:underline"
                   >
                     <span>Direkt zu Google Maps</span>
                     <ExternalLink size={12} />
                   </a>
 
-                  <div className="flex items-center justify-end gap-2.5">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => setIsFastReviewOpen(false)}
-                      className="rounded-lg border border-white/20 px-4 py-2 text-xs font-bold text-[#8ab4f8] hover:bg-white/5 transition-colors cursor-pointer"
+                      className="min-h-[44px] rounded-lg border border-white/20 px-4 py-2 text-xs font-bold text-[#8ab4f8] hover:bg-white/5 transition-colors cursor-pointer"
                     >
                       Abbrechen
                     </button>
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] px-5 py-2 text-xs font-extrabold text-[#202124] transition-colors cursor-pointer shadow-sm"
+                      className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] px-4 sm:px-5 py-2 text-xs font-extrabold text-[#202124] transition-colors cursor-pointer shadow-sm"
                     >
                       <span>Absenden &amp; weiter zu Google</span>
                     </button>
@@ -1357,6 +1752,7 @@ export function GoogleReviewsSection({
                 </div>
               </form>
             )}
+            </div>
           </div>
         </div>,
           document.body

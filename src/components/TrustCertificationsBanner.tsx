@@ -44,16 +44,16 @@ export default function TrustCertificationsBanner() {
       className="border-y border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-900/90 py-6 sm:py-8"
     >
       <div className="container-page">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
           {CERTIFICATIONS.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.title}
-                className="flex items-start gap-3 rounded-2xl border border-primary/8 dark:border-white/10 bg-white dark:bg-slate-950 p-3.5 sm:p-4 shadow-2xs"
+                className="flex flex-col min-[460px]:flex-row items-start gap-2.5 sm:gap-3 rounded-2xl border border-primary/8 dark:border-white/10 bg-white dark:bg-slate-950 p-3 sm:p-4 shadow-2xs last:min-[360px]:col-span-2 lg:last:col-span-1"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                  <Icon size={19} aria-hidden="true" />
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Icon size={18} aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
                   <span className="block font-mono text-[10px] font-extrabold uppercase tracking-wider text-accent">

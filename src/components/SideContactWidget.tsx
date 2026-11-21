@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Phone,
   MessageCircle,
@@ -27,46 +27,6 @@ import {
   REPAIR_DRAFT_EVENT,
   type RepairDraft,
 } from "@/lib/repairRequest";
-
-const PROMPT_DISMISSED_STORAGE_KEY = "hannachi-contact-prompt-dismissed";
-const PROMPT_DELAY_MS = 1200;
-
-const promptContainerVariants: Variants = {
-  hidden: { opacity: 0, x: 24, scale: 0.94 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 360,
-      damping: 24,
-      mass: 0.8,
-      staggerChildren: 0.06,
-      delayChildren: 0.04,
-    },
-  },
-  exit: {
-    opacity: 0,
-    x: 18,
-    scale: 0.95,
-    transition: { duration: 0.16, ease: "easeIn" },
-  },
-};
-
-const promptItemVariants: Variants = {
-  hidden: { opacity: 0, x: 12, scale: 0.96 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 380,
-      damping: 26,
-    },
-  },
-};
 
 export interface SideContactWidgetProps {
   phone?: string;
@@ -92,15 +52,6 @@ export default function SideContactWidget({
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedDraft, setSavedDraft] = useState<RepairDraft | null>(() => loadRepairDraft());
-  const [isPromptDismissed, setIsPromptDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem(PROMPT_DISMISSED_STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
-  const [isPromptVisible, setIsPromptVisible] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -120,16 +71,6 @@ export default function SideContactWidget({
     serviceNotice?.active && serviceNotice.message.trim().length > 0
   );
 
-  const persistPromptDismissed = () => {
-    setIsPromptDismissed(true);
-    setIsPromptVisible(false);
-    try {
-      window.sessionStorage.setItem(PROMPT_DISMISSED_STORAGE_KEY, "true");
-    } catch {
-      // Ignore storage access errors in restricted frames
-    }
-  };
-
   useEffect(() => {
     return () => {
       if (copyTimerRef.current) {
@@ -137,19 +78,6 @@ export default function SideContactWidget({
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (isPromptDismissed || open) {
-      setIsPromptVisible(false);
-      return undefined;
-    }
-
-    const timer = setTimeout(() => {
-      setIsPromptVisible(true);
-    }, PROMPT_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [isPromptDismissed, open]);
 
   useEffect(() => {
     const onToggleEvent = () => {
@@ -262,21 +190,6 @@ export default function SideContactWidget({
     setSavedDraft(null);
   };
 
-  const handlePromptClick = () => {
-    if (savedDraft) {
-      handleResumeDraft();
-      return;
-    }
-    triggerHapticFeedback(50);
-    setOpen(true);
-  };
-
-  const handlePromptDismiss = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    triggerHapticFeedback(50);
-    persistPromptDismissed();
-  };
-
   return (
     <>
       {/* Mobile Backdrop when Contact Panel is opened from the Top-Right Circular Button */}
@@ -289,7 +202,7 @@ export default function SideContactWidget({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 top-12 z-40 bg-black/45 backdrop-blur-[1px] lg:hidden"
+            className="fixed inset-0 top-[52px] z-40 bg-black/45 backdrop-blur-[1px] lg:hidden"
             aria-hidden="true"
           />
         )}
@@ -298,9 +211,9 @@ export default function SideContactWidget({
       <aside
         ref={containerRef}
         aria-label="Direktkontakt Hannachi"
-        className="fixed bottom-[max(0.875rem,env(safe-area-inset-bottom))] right-3.5 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end pointer-events-none"
+        className="fixed bottom-4 right-4 xl:bottom-6 xl:right-6 z-50 hidden lg:flex flex-col items-end pointer-events-none"
       >
-        {/* Expanded Contact Card (Opens above bottom-right Contact button on Phone & Laptop) */}
+        {/* Expanded Contact Card (Opens above bottom-right Contact button on Desktop) */}
         <AnimatePresence>
           {open && (
             <motion.div
@@ -311,18 +224,18 @@ export default function SideContactWidget({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto origin-bottom-right relative mb-3 w-[min(calc(100vw-1.5rem),21.5rem)] sm:w-[22.5rem] max-h-[calc(100dvh-6.5rem)] sm:max-h-[calc(100dvh-7rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-white/15 bg-primary-dark/98 dark:bg-slate-900/98 p-4 sm:p-5 text-white shadow-[0_24px_60px_rgba(2,6,23,0.65)] backdrop-blur-2xl"
+              className="pointer-events-auto origin-bottom-right relative mb-3 w-[min(calc(100vw-2rem),22.5rem)] max-h-[calc(100dvh-6.75rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-white/15 bg-primary-dark/98 dark:bg-slate-900/98 p-4 sm:p-5 text-white shadow-[0_24px_60px_rgba(2,6,23,0.7)] backdrop-blur-2xl"
             >
-              {/* Subtle matching sky-blue glass sheen inside card */}
+              {/* Soft Sky-Blue Sheen inside Expanded Panel */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-sky-500/20 blur-2xl"
+                className="pointer-events-none absolute -top-20 -right-20 h-44 w-44 rounded-full bg-sky-500/20 blur-2xl"
               />
 
               {/* Header with Hannachi portrait */}
               <div className="relative flex items-center justify-between gap-3 border-b border-white/10 pb-3.5">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-sky-300/40 bg-slate-800">
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-sky-400/50 bg-slate-800 shadow-inner">
                     <Image
                       src={herrHannachiImage}
                       alt={business.owner}
@@ -340,7 +253,7 @@ export default function SideContactWidget({
                     <h2 className="text-sm font-extrabold tracking-tight text-white truncate">
                       {business.owner}
                     </h2>
-                    <p className="mt-0.5 text-xs text-sky-200/80 truncate">
+                    <p className="mt-0.5 text-xs text-white/65 truncate">
                       Mobiler Vor-Ort-Service · {business.city}
                     </p>
                   </div>
@@ -352,7 +265,7 @@ export default function SideContactWidget({
                     setOpen(false);
                   }}
                   aria-label="Kontaktmenü schließen"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/75 hover:bg-white/10 hover:text-white active:scale-95 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-light"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white active:scale-95 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 >
                   <X size={18} aria-hidden="true" />
                 </button>
@@ -421,17 +334,17 @@ export default function SideContactWidget({
                     setOpen(false);
                     openQuickRequest("Waschmaschine", "", "", "repair");
                   }}
-                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl bg-sky-600 px-3.5 py-3 text-xs font-bold text-white shadow-md hover:bg-sky-500 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl bg-accent px-3.5 py-3 text-xs font-bold text-white shadow-sm hover:bg-accent-dark active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 >
                   <span className="flex items-center gap-2 min-w-0">
-                    <Wrench size={16} className="shrink-0 text-sky-200" aria-hidden="true" />
+                    <Wrench size={16} className="shrink-0 text-sky-100" aria-hidden="true" />
                     <span className="truncate leading-tight text-left">
                       {savedDraft
                         ? "Anfrage im Formular fortsetzen"
                         : "Vor-Ort-Termin & Ersatzteil anfragen"}
                     </span>
                   </span>
-                  <ArrowRight size={15} className="shrink-0 text-sky-200" aria-hidden="true" />
+                  <ArrowRight size={15} className="shrink-0 text-sky-100" aria-hidden="true" />
                 </button>
 
                 {/* 2. Direct WhatsApp Chat Link */}
@@ -443,7 +356,7 @@ export default function SideContactWidget({
                     triggerHapticFeedback(50);
                     setOpen(false);
                   }}
-                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl border border-emerald-500/40 bg-emerald-600/20 px-3.5 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl border border-emerald-400/35 bg-emerald-600/20 px-3.5 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   <span className="flex items-center gap-2 min-w-0">
                     <MessageCircle size={16} className="shrink-0 text-emerald-400" aria-hidden="true" />
@@ -454,15 +367,34 @@ export default function SideContactWidget({
                   <ExternalLink size={14} className="shrink-0 opacity-80" aria-hidden="true" />
                 </a>
 
+                {/* 2b. Schedule Visit with Google Calendar */}
+                <Link
+                  href="/kontakt#kalender-termin"
+                  onClick={() => {
+                    triggerHapticFeedback(50);
+                    setOpen(false);
+                  }}
+                  data-testid="contact-widget-gcal-link"
+                  className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 px-3.5 py-2.5 text-xs font-bold text-sky-100 hover:bg-sky-500/25 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <Clock size={15} className="shrink-0 text-sky-300" aria-hidden="true" />
+                    <span className="truncate leading-tight text-left">
+                      Besuch im Google Kalender planen
+                    </span>
+                  </span>
+                  <ArrowRight size={14} className="shrink-0 text-sky-300" aria-hidden="true" />
+                </Link>
+
                 {/* 3. Direct Phone Call + Copy */}
                 <div className="flex items-center gap-2 pt-0.5">
                   <a
                     href={phoneHref}
                     onClick={() => triggerHapticFeedback(50)}
-                    className="flex min-h-[48px] flex-1 min-w-0 items-center justify-between gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white hover:bg-white/10 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+                    className="flex min-h-[48px] flex-1 min-w-0 items-center justify-between gap-2 rounded-xl border border-white/12 bg-white/5 px-3 py-2 text-xs font-bold text-white hover:bg-white/10 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                   >
                     <span className="flex items-center gap-2 min-w-0 tabular-nums">
-                      <Phone size={15} className="text-sky-300 shrink-0" aria-hidden="true" />
+                      <Phone size={15} className="text-sky-400 shrink-0" aria-hidden="true" />
                       <span className="truncate">{phone}</span>
                     </span>
                     <span className="hidden min-[360px]:inline text-[11px] font-semibold text-white/60 shrink-0">
@@ -474,7 +406,7 @@ export default function SideContactWidget({
                     onClick={handleCopyPhone}
                     aria-label="Telefonnummer kopieren"
                     title="Telefonnummer kopieren"
-                    className="flex min-h-[48px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 text-[11px] font-semibold text-white/85 hover:bg-white/15 hover:text-white active:scale-95 transition-all cursor-pointer"
+                    className="flex min-h-[48px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/5 px-3 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white active:scale-95 transition-all cursor-pointer"
                   >
                     {copied ? (
                       <>
@@ -491,16 +423,16 @@ export default function SideContactWidget({
                 </div>
 
                 {/* 4. Mobile Service Area Info */}
-                <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs">
+                <div className="flex min-h-[44px] items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs">
                   <Link
                     href="/kontakt"
                     onClick={() => {
                       triggerHapticFeedback(50);
                       setOpen(false);
                     }}
-                    className="flex min-h-[40px] items-center gap-2 min-w-0 text-white/90 hover:text-white py-1"
+                    className="flex min-h-[40px] items-center gap-2 min-w-0 text-white/80 hover:text-white py-1"
                   >
-                    <MapPin size={15} className="text-sky-300 shrink-0" aria-hidden="true" />
+                    <MapPin size={15} className="text-sky-400 shrink-0" aria-hidden="true" />
                     <span className="truncate font-medium">
                       Osnabrück &amp; Umgebung · Vor-Ort-Service
                     </span>
@@ -511,7 +443,7 @@ export default function SideContactWidget({
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(50)}
                     aria-label={`Standort ${address} auf Google Maps`}
-                    className="inline-flex min-h-[40px] shrink-0 items-center gap-1 px-2 text-[11px] font-semibold text-sky-300 hover:underline"
+                    className="inline-flex min-h-[40px] shrink-0 items-center gap-1 px-2 text-[11px] font-semibold text-sky-400 hover:underline"
                   >
                     <span>Maps</span>
                     <ExternalLink size={11} aria-hidden="true" />
@@ -519,10 +451,42 @@ export default function SideContactWidget({
                 </div>
               </div>
 
-              {/* Clean Footer Row (Opening Hours Only — No Duplicate Links) */}
-              <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between gap-2 text-[11px] text-white/65">
+              {/* Social Media Section (Facebook) */}
+              <div className="mt-2.5 pt-2.5 border-t border-white/10">
+                <div className="w-full min-w-0">
+                  <a
+                    href={business.facebookUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => triggerHapticFeedback(50)}
+                    data-testid="contact-widget-facebook-link"
+                    aria-label="Hannachi Elektroservice auf Facebook besuchen"
+                    className="group flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2.5 rounded-xl border border-[#1877F2]/40 bg-[#1877F2]/15 hover:bg-[#1877F2] px-3 py-2 text-xs font-bold text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  >
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1877F2] text-white group-hover:bg-white group-hover:text-[#1877F2] transition-colors">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        >
+                          <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+                        </svg>
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-left">
+                        Facebook · <span className="font-medium text-sky-200 group-hover:text-white">@{business.facebookHandle}</span>
+                      </span>
+                    </span>
+                    <ExternalLink size={13} className="shrink-0 opacity-80" aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Clean Footer Row (Opening Hours) */}
+              <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between gap-2 text-[11px] text-white/60">
                 <span className="inline-flex items-center gap-1.5 min-w-0 truncate">
-                  <Clock size={12} className="text-sky-300 shrink-0" aria-hidden="true" />
+                  <Clock size={12} className="text-sky-400 shrink-0" aria-hidden="true" />
                   <span className="truncate">{hours}</span>
                 </span>
               </div>
@@ -530,176 +494,51 @@ export default function SideContactWidget({
           )}
         </AnimatePresence>
 
-        {/* Bottom-Right Trigger Row: Compact Prompt Pill + Circular Contact Button (Visible on Both Phone & Laptop) */}
-        <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
-          <AnimatePresence>
-            {isPromptVisible && !open && !isPromptDismissed && (
-              <motion.div
-                key="contact-prompt-bubble"
-                variants={promptContainerVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="group/card relative flex items-center gap-1.5 sm:gap-2 max-w-[calc(100vw-5.5rem)] sm:max-w-[330px] rounded-full sm:rounded-2xl border border-white/15 bg-slate-900/95 pl-2 sm:pl-3 pr-1.5 sm:pr-2 py-1.5 sm:py-2 text-white shadow-[0_20px_48px_rgba(2,6,23,0.6),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl transition-colors hover:border-sky-400/45"
-              >
-                <button
-                  type="button"
-                  onClick={handlePromptClick}
-                  className="group flex min-h-[44px] flex-1 items-center gap-2 sm:gap-2.5 min-w-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 rounded-full sm:rounded-xl pl-0.5 pr-1"
-                >
-                  <motion.div
-                    variants={promptItemVariants}
-                    className="relative shrink-0"
-                  >
-                    <div className="relative h-9 w-9 sm:h-10 sm:w-10 overflow-hidden rounded-full border border-sky-300/50 bg-slate-800 shadow-xs">
-                      <Image
-                        src={herrHannachiImage}
-                        alt="Kamal Hannachi"
-                        fill
-                        loading="lazy"
-                        decoding="async"
-                        fetchPriority="low"
-                        placeholder="blur"
-                        blurDataURL={herrHannachiImage.blurDataURL}
-                        sizes="40px"
-                        className="object-cover object-top"
-                      />
-                    </div>
-                    <span
-                      aria-hidden="true"
-                      className=" absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center"
-                    >
-                      <span className="animate-live-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400" />
-                    </span>
-                  </motion.div>
-
-                  <div className="min-w-0 flex-1">
-                    <motion.p
-                      variants={promptItemVariants}
-                      className="text-[10px] sm:text-[11px] font-medium text-slate-300 truncate leading-tight"
-                    >
-                      {savedDraft ? `Pausiert · ${draftStepLabel}` : "Vor-Ort-Service · Osnabrück"}
-                    </motion.p>
-                    <motion.div
-                      variants={promptItemVariants}
-                      className="mt-0.5 flex items-center gap-1 text-xs sm:text-[13px] font-extrabold text-white group-hover:text-sky-300 transition-colors max-w-full"
-                    >
-                      <span className="truncate">
-                        {savedDraft ? "Anfrage fortsetzen" : "Direktkontakt & WhatsApp"}
-                      </span>
-                      <ArrowRight
-                        size={12}
-                        className="shrink-0 text-sky-400 transition-transform group-hover:translate-x-0.5"
-                        aria-hidden="true"
-                      />
-                    </motion.div>
-                  </div>
-                </button>
-
-                <motion.button
-                  variants={promptItemVariants}
-                  type="button"
-                  onClick={handlePromptDismiss}
-                  aria-label="Hinweis ausblenden"
-                  title="Hinweis ausblenden"
-                  className="flex h-9 w-9 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full sm:rounded-xl border border-white/10 bg-white/[0.05] text-white/65 hover:bg-white/15 hover:text-white active:scale-95 transition-colors cursor-pointer"
-                >
-                  <X size={13} aria-hidden="true" />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Single Circular Contact Button with Full Visual Effects (56px on Mobile, 62px on Desktop) */}
-          <div className="contact-widget-trigger-wrap relative flex items-center justify-center shrink-0">
-            {!open && (
-              <>
-                {/* Dynamic drifting frosted sky-blue aura */}
-                <span
-                  aria-hidden="true"
-                  className="contact-frosted-aura pointer-events-none absolute -inset-3.5 sm:-inset-4 rounded-full blur-xl"
-                />
-                {/* Soft inner ambient glow */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -inset-2 rounded-full bg-sky-400/30 blur-md"
-                />
-                {/* Dual expanding breathing rings */}
-                <span
-                  aria-hidden="true"
-                  className="contact-breathing-ring-1 pointer-events-none absolute -inset-1.5 rounded-full border-2 border-sky-400/65 shadow-[0_0_18px_rgba(56,189,248,0.5)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="contact-breathing-ring-2 pointer-events-none absolute -inset-2.5 rounded-full border border-sky-300/45"
-                />
-              </>
-            )}
-
-            <div className={!open ? "contact-button-floating relative" : "relative"}>
-              <motion.button
-                type="button"
-                data-contact-widget-trigger="true"
-                onClick={handleToggleOpen}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.94 }}
-                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                aria-expanded={open}
-                aria-controls="side-contact-panel"
-                aria-label={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
-                title={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
-                className={`relative flex h-14 w-14 sm:h-[62px] sm:w-[62px] flex-col items-center justify-center overflow-hidden rounded-full border border-white/30 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 ${
-                  open
-                    ? "bg-slate-900 text-white hover:bg-slate-800 shadow-[0_14px_34px_rgba(2,6,23,0.55)]"
-                    : "bg-gradient-to-br from-sky-400 via-sky-500 to-blue-700 text-white hover:from-sky-400 hover:to-sky-600 shadow-[0_14px_36px_rgba(14,165,233,0.55),inset_0_1px_1px_rgba(255,255,255,0.45)] hover:shadow-[0_18px_44px_rgba(14,165,233,0.7)]"
-                }`}
-              >
-                {/* Specular diagonal light sweep across the circular button */}
-                {!open && (
-                  <span
-                    aria-hidden="true"
-                    className="contact-light-sweep pointer-events-none absolute inset-y-0 -left-1/2 w-3/4 z-0"
-                  />
-                )}
-
-                {open ? (
-                  <>
-                    <X size={21} strokeWidth={2.5} aria-hidden="true" className="relative z-10" />
-                    <span className="relative z-10 mt-0.5 text-[10px] font-bold uppercase tracking-wider leading-none">
-                      Zu
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Phone size={20} strokeWidth={2.4} aria-hidden="true" className="relative z-10 drop-shadow-xs" />
-                    <span className="relative z-10 mt-1 text-[10px] font-extrabold uppercase tracking-wider leading-none drop-shadow-xs">
-                      Kontakt
-                    </span>
-                  </>
-                )}
-              </motion.button>
-
-              {/* Live emerald pulse dot on top-right of the button */}
-              {!open && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute top-0.5 right-0.5 z-20 flex h-3.5 w-3.5 items-center justify-center"
-                >
-                  <span className="animate-live-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
-                </span>
+        {/* Bottom-Right Calm Contact Launcher (Desktop) */}
+        <div className="flex items-center pointer-events-auto">
+          <div className="relative flex items-center justify-center shrink-0">
+            <motion.button
+              type="button"
+              data-contact-widget-trigger="true"
+              onClick={handleToggleOpen}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              aria-expanded={open}
+              aria-controls="side-contact-panel"
+              aria-label={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
+              title={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
+              className={`relative flex h-14 w-14 flex-col items-center justify-center rounded-full border transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/50 ${
+                open
+                  ? "border-white/20 bg-slate-900 text-white hover:bg-slate-800 shadow-[0_12px_28px_rgba(2,6,23,0.45)]"
+                  : "border-sky-300/40 bg-gradient-to-br from-accent to-accent-dark text-white hover:border-sky-200/70 shadow-[0_12px_28px_rgba(2,6,23,0.34),0_6px_18px_rgba(2,132,199,0.32)] hover:shadow-[0_16px_34px_rgba(2,6,23,0.4),0_8px_22px_rgba(14,165,233,0.42)]"
+              }`}
+            >
+              {open ? (
+                <>
+                  <X size={19} strokeWidth={2.2} aria-hidden="true" />
+                  <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
+                    Zu
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Phone size={18} strokeWidth={2.2} aria-hidden="true" />
+                  <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
+                    Kontakt
+                  </span>
+                </>
               )}
+            </motion.button>
 
-              {!open && savedDraft && draftShortBadge && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -top-1.5 -left-1.5 z-20 rounded-full border border-white/90 bg-emerald-500 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white shadow-md"
-                >
-                  {draftShortBadge}
-                </span>
-              )}
-            </div>
+            {!open && savedDraft && draftShortBadge && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-1.5 -left-1.5 z-20 rounded-md border border-white/80 bg-emerald-600 px-1.5 py-0.5 text-[9.5px] font-extrabold leading-none text-white shadow-sm"
+              >
+                {draftShortBadge}
+              </span>
+            )}
           </div>
         </div>
       </aside>

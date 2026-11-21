@@ -65,7 +65,7 @@ const repairIntakeSchema = z
     visitType: z.enum(["home_visit", "workshop"]).default("home_visit"),
     device: z.string().trim().min(1).max(120),
     customDevice: z.string().trim().max(120).optional().default(""),
-    brand: z.string().trim().min(1).max(120),
+    brand: z.string().trim().max(120).optional().default(""),
     model: z.string().trim().max(120).optional().default(""),
     problem: z.string().trim().min(4).max(1500),
     urgency: z.enum(["normal", "express", "notfall"]).default("normal"),
@@ -75,7 +75,7 @@ const repairIntakeSchema = z
     mapsLocationUrl: z.string().trim().max(500).optional().default(""),
     locationVerified: z.boolean().optional().default(false),
     coordinates: coordinatesSchema,
-    name: z.string().trim().min(2).max(120),
+    name: z.string().trim().max(120).optional().default(""),
     phone: z
       .string()
       .trim()
@@ -128,16 +128,16 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' https://maps.googleapis.com",
+    "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://hannachi.de https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com",
-    "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com",
+    "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://places.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://accounts.google.com",
     "worker-src 'self' blob:",
-    "frame-src https://maps.google.com https://www.google.com",
+    "frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://*.firebaseapp.com",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self' https://wa.me",
+    "form-action 'self' https://wa.me https://api.whatsapp.com",
   ].join("; "),
 };
 

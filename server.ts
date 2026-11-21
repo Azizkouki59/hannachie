@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { type NextFunction, type Request, type Response } from "express";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -309,7 +310,7 @@ const repairIntakeSchema = z
     visitType: z.enum(["home_visit", "workshop"]).default("home_visit"),
     device: z.string().trim().min(1).max(120),
     customDevice: z.string().trim().max(120).optional().default(""),
-    brand: z.string().trim().min(1).max(120),
+    brand: z.string().trim().max(120).optional().default(""),
     model: z.string().trim().max(120).optional().default(""),
     problem: z.string().trim().min(4).max(1500),
     urgency: z.enum(["normal", "express", "notfall"]).default("normal"),
@@ -319,7 +320,7 @@ const repairIntakeSchema = z
     mapsLocationUrl: z.string().trim().max(500).optional().default(""),
     locationVerified: z.boolean().optional().default(false),
     coordinates: coordinatesSchema,
-    name: z.string().trim().min(2).max(120),
+    name: z.string().trim().max(120).optional().default(""),
     phone: z
       .string()
       .trim()
@@ -380,11 +381,11 @@ function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) 
   }
 
   const scriptSrc = isProd
-    ? "script-src 'self' https://maps.googleapis.com"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com";
+    ? "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com";
   const connectSrc = isProd
-    ? "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com"
-    : "connect-src 'self' ws: wss: https://nominatim.openstreetmap.org https://maps.googleapis.com https://maps.gstatic.com";
+    ? "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://places.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://accounts.google.com"
+    : "connect-src 'self' ws: wss: https://nominatim.openstreetmap.org https://maps.googleapis.com https://places.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://accounts.google.com";
 
   // Tailored CSP allowing self-hosted assets/fonts, interactive Google Maps JS API & vector workers
   // (only loaded on demand when user opens the pin picker), OpenStreetMap reverse geocoding, and WhatsApp handoff.
@@ -399,10 +400,10 @@ function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) 
       "img-src 'self' data: blob: https://hannachi.de https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com",
       connectSrc,
       "worker-src 'self' blob:",
-      "frame-src https://maps.google.com https://www.google.com",
+      "frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://*.firebaseapp.com",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://wa.me",
+      "form-action 'self' https://wa.me https://api.whatsapp.com",
     ].join("; ")
   );
 
@@ -562,6 +563,340 @@ async function createApp() {
     });
   });
 
+  // ── Live Google Places API (New) Proxy & Transient In-Memory Cache ─────────
+  const DEFAULT_HANNACHI_PLACE_ID = "ChIJ_RB_R7_luUcRHnvjhljngB8";
+  const GOOGLE_PLACE_CACHE_TTL_MS = 10 * 60 * 1000;
+  const GOOGLE_PLACE_REFRESH_COOLDOWN_MS = 15 * 1000;
+  const googlePlaceMemoryCache = new Map<
+    string,
+    { expiresAt: number; fetchedAtMs: number; payload: Record<string, unknown> }
+  >();
+
+  app.get("/api/google-place", async (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+
+    const requestedPlaceId =
+      typeof req.query.placeId === "string" ? req.query.placeId.trim() : "";
+    const placeId = /^[A-Za-z0-9_-]{10,120}$/.test(requestedPlaceId)
+      ? requestedPlaceId
+      : DEFAULT_HANNACHI_PLACE_ID;
+    const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
+
+    const cached = googlePlaceMemoryCache.get(placeId);
+    const now = Date.now();
+    if (
+      cached &&
+      (!forceRefresh || now - cached.fetchedAtMs < GOOGLE_PLACE_REFRESH_COOLDOWN_MS) &&
+      now < cached.expiresAt
+    ) {
+      res.status(200).json({ ...cached.payload, cached: true });
+      return;
+    }
+
+    const apiKey = (
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.VITE_GOOGLE_MAPS_API_KEY ||
+      ""
+    ).trim();
+
+    if (!apiKey || apiKey.startsWith("MY_GOOGLE_MAPS")) {
+      res.status(200).json({
+        ok: false,
+        source: "fallback",
+        reason: "missing_api_key",
+        quotaExceeded: false,
+        place: null,
+      });
+      return;
+    }
+
+    const fieldMask = [
+      "id",
+      "displayName",
+      "formattedAddress",
+      "shortFormattedAddress",
+      "location",
+      "nationalPhoneNumber",
+      "internationalPhoneNumber",
+      "regularOpeningHours",
+      "currentOpeningHours",
+      "businessStatus",
+      "rating",
+      "userRatingCount",
+      "reviews",
+      "googleMapsUri",
+      "googleMapsLinks",
+    ].join(",");
+
+    const apiUrl = new URL(
+      `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`
+    );
+    apiUrl.searchParams.set("languageCode", "de");
+    apiUrl.searchParams.set("regionCode", "DE");
+
+    try {
+      const apiRes = await fetch(apiUrl.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": fieldMask,
+          "X-Goog-Maps-Solution-ID": "gmp_mcp_codeassist_v1_aistudio",
+        },
+      });
+
+      const rawJson = (await apiRes.json().catch(() => null)) as Record<
+        string,
+        unknown
+      > | null;
+
+      if (!apiRes.ok || !rawJson) {
+        const errObj = (rawJson?.error || {}) as Record<string, unknown>;
+        const quotaExceeded =
+          apiRes.status === 429 || errObj?.status === "RESOURCE_EXHAUSTED";
+        res.status(quotaExceeded ? 429 : 200).json({
+          ok: false,
+          source: "fallback",
+          reason: `upstream_${apiRes.status}`,
+          quotaExceeded,
+          error:
+            typeof errObj?.message === "string"
+              ? errObj.message
+              : `Places API error (${apiRes.status})`,
+          place: cached ? cached.payload.place : null,
+        });
+        return;
+      }
+
+      const displayNameObj = rawJson.displayName as
+        | { text?: string }
+        | undefined;
+      const locObj = rawJson.location as
+        | { latitude?: number; longitude?: number }
+        | undefined;
+      const currentHours = rawJson.currentOpeningHours as
+        | { openNow?: boolean; weekdayDescriptions?: string[] }
+        | undefined;
+      const regularHours = rawJson.regularOpeningHours as
+        | { openNow?: boolean; weekdayDescriptions?: string[] }
+        | undefined;
+      const mapsLinks = rawJson.googleMapsLinks as
+        | {
+            placeUri?: string;
+            reviewsUri?: string;
+            writeAReviewUri?: string;
+            directionsUri?: string;
+            photosUri?: string;
+          }
+        | undefined;
+      const rawReviews = Array.isArray(rawJson.reviews) ? rawJson.reviews : [];
+
+      let normalizedReviews = rawReviews.map((entry, idx) => {
+        const r = (entry && typeof entry === "object" ? entry : {}) as Record<
+          string,
+          unknown
+        >;
+        const attr = (r.authorAttribution || {}) as Record<string, unknown>;
+        const textObj = (r.text || {}) as Record<string, unknown>;
+        const origObj = (r.originalText || {}) as Record<string, unknown>;
+        return {
+          id:
+            typeof r.name === "string" && r.name
+              ? r.name
+              : `live-google-review-${idx + 1}`,
+          author:
+            typeof attr.displayName === "string" && attr.displayName
+              ? attr.displayName
+              : "Google-Nutzer",
+          authorUri: typeof attr.uri === "string" ? attr.uri : "",
+          authorPhotoUri: typeof attr.photoUri === "string" ? attr.photoUri : "",
+          rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
+          text:
+            typeof textObj.text === "string" && textObj.text.trim()
+              ? textObj.text.trim()
+              : typeof origObj.text === "string"
+              ? origObj.text.trim()
+              : "",
+          textLanguage:
+            typeof textObj.languageCode === "string" ? textObj.languageCode : "",
+          originalText:
+            typeof origObj.text === "string" ? origObj.text.trim() : "",
+          originalLanguage:
+            typeof origObj.languageCode === "string"
+              ? origObj.languageCode
+              : "",
+          relativeTime:
+            typeof r.relativePublishTimeDescription === "string"
+              ? r.relativePublishTimeDescription
+              : "",
+          publishTime:
+            typeof r.publishTime === "string" ? r.publishTime : "",
+          googleMapsUri:
+            typeof r.googleMapsUri === "string" ? r.googleMapsUri : "",
+          flagContentUri:
+            typeof r.flagContentUri === "string" ? r.flagContentUri : "",
+          isLiveFromApi: true,
+        };
+      });
+
+      // If Places v1 omitted reviews (common in some regions/configs), try Legacy Place Details
+      if (normalizedReviews.length === 0) {
+        try {
+          const legacyUrl = new URL(
+            "https://maps.googleapis.com/maps/api/place/details/json"
+          );
+          legacyUrl.searchParams.set("place_id", placeId);
+          legacyUrl.searchParams.set("fields", "reviews");
+          legacyUrl.searchParams.set("language", "de");
+          legacyUrl.searchParams.set("key", apiKey);
+
+          const legacyRes = await fetch(legacyUrl.toString());
+          const legacyJson = (await legacyRes.json().catch(() => null)) as {
+            status?: string;
+            result?: {
+              reviews?: Array<{
+                author_name?: string;
+                author_url?: string;
+                profile_photo_url?: string;
+                rating?: number;
+                text?: string;
+                language?: string;
+                relative_time_description?: string;
+                time?: number;
+              }>;
+            };
+          } | null;
+
+          if (
+            legacyRes.ok &&
+            legacyJson?.status === "OK" &&
+            Array.isArray(legacyJson.result?.reviews)
+          ) {
+            normalizedReviews = legacyJson.result.reviews.map((r, idx) => ({
+              id: `legacy-google-review-${idx + 1}-${r.time || idx}`,
+              author:
+                typeof r.author_name === "string" && r.author_name.trim()
+                  ? r.author_name.trim()
+                  : "Google-Nutzer",
+              authorUri: typeof r.author_url === "string" ? r.author_url : "",
+              authorPhotoUri:
+                typeof r.profile_photo_url === "string"
+                  ? r.profile_photo_url
+                  : "",
+              rating: Math.max(1, Math.min(5, Number(r.rating) || 5)),
+              text: typeof r.text === "string" ? r.text.trim() : "",
+              textLanguage: typeof r.language === "string" ? r.language : "de",
+              originalText: "",
+              originalLanguage: "",
+              relativeTime:
+                typeof r.relative_time_description === "string"
+                  ? r.relative_time_description
+                  : "",
+              publishTime:
+                typeof r.time === "number"
+                  ? new Date(r.time * 1000).toISOString()
+                  : "",
+              googleMapsUri:
+                typeof r.author_url === "string" ? r.author_url : "",
+              flagContentUri: "",
+              isLiveFromApi: true,
+            }));
+          }
+        } catch {
+          // Ignore legacy fallback failure
+        }
+      }
+
+      const weekdayDescriptions = Array.isArray(
+        currentHours?.weekdayDescriptions
+      )
+        ? currentHours.weekdayDescriptions
+        : Array.isArray(regularHours?.weekdayDescriptions)
+        ? regularHours.weekdayDescriptions
+        : [];
+
+      const openNow =
+        typeof currentHours?.openNow === "boolean"
+          ? currentHours.openNow
+          : typeof regularHours?.openNow === "boolean"
+          ? regularHours.openNow
+          : null;
+
+      const payload = {
+        ok: true,
+        source: "live",
+        quotaExceeded: false,
+        fetchedAt: new Date().toISOString(),
+        cached: false,
+        place: {
+          placeId: typeof rawJson.id === "string" ? rawJson.id : placeId,
+          displayName: displayNameObj?.text || "",
+          formattedAddress:
+            typeof rawJson.formattedAddress === "string"
+              ? rawJson.formattedAddress
+              : "",
+          shortFormattedAddress:
+            typeof rawJson.shortFormattedAddress === "string"
+              ? rawJson.shortFormattedAddress
+              : "",
+          coordinates:
+            typeof locObj?.latitude === "number" &&
+            typeof locObj?.longitude === "number"
+              ? { lat: locObj.latitude, lng: locObj.longitude }
+              : null,
+          nationalPhoneNumber:
+            typeof rawJson.nationalPhoneNumber === "string"
+              ? rawJson.nationalPhoneNumber
+              : "",
+          internationalPhoneNumber:
+            typeof rawJson.internationalPhoneNumber === "string"
+              ? rawJson.internationalPhoneNumber
+              : "",
+          businessStatus:
+            typeof rawJson.businessStatus === "string"
+              ? rawJson.businessStatus
+              : "",
+          openNow,
+          weekdayDescriptions,
+          rating: typeof rawJson.rating === "number" ? rawJson.rating : null,
+          userRatingCount:
+            typeof rawJson.userRatingCount === "number"
+              ? rawJson.userRatingCount
+              : null,
+          googleMapsUri:
+            typeof rawJson.googleMapsUri === "string"
+              ? rawJson.googleMapsUri
+              : mapsLinks?.placeUri || "",
+          googleMapsLinks: {
+            placeUri: mapsLinks?.placeUri || "",
+            reviewsUri: mapsLinks?.reviewsUri || "",
+            writeAReviewUri: mapsLinks?.writeAReviewUri || "",
+            directionsUri: mapsLinks?.directionsUri || "",
+            photosUri: mapsLinks?.photosUri || "",
+          },
+          reviews: normalizedReviews,
+        },
+      };
+
+      googlePlaceMemoryCache.set(placeId, {
+        expiresAt: now + GOOGLE_PLACE_CACHE_TTL_MS,
+        fetchedAtMs: now,
+        payload,
+      });
+
+      res.status(200).json(payload);
+    } catch (err) {
+      res.status(200).json({
+        ok: false,
+        source: "fallback",
+        reason: "network_error",
+        quotaExceeded: false,
+        error: err instanceof Error ? err.message : "Failed to fetch live Google place data",
+        place: cached ? cached.payload.place : null,
+      });
+    }
+  });
+
   // ── Validated Repair & Question Intake Endpoint ────────────────────────────
   app.post("/api/repair-request", (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-store");
@@ -668,7 +1003,7 @@ async function createApp() {
       visitType: parsed.data.visitType,
       device: parsed.data.device,
       customDevice: parsed.data.customDevice || "",
-      brand: parsed.data.brand,
+      brand: parsed.data.brand || "Nach Rücksprache",
       model: parsed.data.model || "",
       problem: parsed.data.problem,
       urgency: parsed.data.urgency,
@@ -682,7 +1017,7 @@ async function createApp() {
         `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`,
       locationVerified: Boolean(parsed.data.locationVerified),
       coordinates: resolvedCoords,
-      name: parsed.data.name,
+      name: parsed.data.name || "Interessent (Osnabrück)",
       phone: parsed.data.phone,
       email: parsed.data.email || "",
       photoName: parsed.data.photoName || null,

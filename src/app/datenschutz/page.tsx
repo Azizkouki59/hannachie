@@ -34,7 +34,7 @@ export default function Datenschutz() {
           </div>
 
           {/* 1. Verantwortliche Stelle */}
-          <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8 space-y-3 shadow-sm">
+          <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8 space-y-3">
             <div className="flex items-center gap-2 text-accent">
               <ShieldCheck size={20} aria-hidden="true" />
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
@@ -86,7 +86,7 @@ export default function Datenschutz() {
           </div>
 
           {/* 3. Lokale Schriftarten */}
-          <div className="space-y-3 rounded-2xl border border-sky-400/20 bg-sky-500/5 dark:bg-sky-500/10 p-5 sm:p-6">
+          <div className="card space-y-3 rounded-2xl border border-sky-400/20 bg-sky-500/5 dark:bg-sky-500/10 p-5 sm:p-6">
             <div className="flex items-center gap-2 text-sky-500 dark:text-sky-400">
               <Lock size={18} aria-hidden="true" />
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
@@ -143,7 +143,7 @@ export default function Datenschutz() {
           </div>
 
           {/* 7. Ihre Rechte */}
-          <div className="space-y-4 rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
+          <div className="card space-y-4 rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8">
             <div className="flex items-center gap-2 text-accent">
               <Eye size={20} aria-hidden="true" />
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">

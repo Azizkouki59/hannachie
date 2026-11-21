@@ -1,3 +1,5 @@
+"use client";
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -11,11 +13,13 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/ui";
 import { business } from "@/data/site";
+import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { buildRouteMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildRouteMetadata("/impressum");
 
 export default function Impressum() {
+  const { place } = useGoogleLivePlace();
   return (
     <>
       <PageHeader
@@ -42,7 +46,7 @@ export default function Impressum() {
           </div>
 
           {/* 1. Unternehmensangaben & Kontakt */}
-          <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8 space-y-5 shadow-sm">
+          <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-6 sm:p-8 space-y-5">
             <div className="flex items-center gap-2 text-accent">
               <Building2 size={20} aria-hidden="true" />
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
@@ -56,7 +60,7 @@ export default function Impressum() {
                   Unternehmen &amp; Inhaber
                 </p>
                 <p className="font-extrabold text-base sm:text-lg text-primary dark:text-white">
-                  {business.name} {business.tagline}
+                  {place.displayName || `${business.name} ${business.tagline}`}
                 </p>
                 <p className="text-ink-muted dark:text-slate-300">
                   Inhaber:{" "}
@@ -71,14 +75,14 @@ export default function Impressum() {
 
               <div className="space-y-1.5">
                 <p className="text-xs font-bold uppercase tracking-wider text-ink-faint">
-                  Anschrift in Osnabrück
+                  Anschrift in {business.city}
                 </p>
                 <address className="not-italic text-ink-muted dark:text-slate-300 flex items-start gap-2">
                   <MapPin size={16} className="text-accent shrink-0 mt-1" aria-hidden="true" />
                   <span>
-                    {business.street}
+                    {place.streetLine}
                     <br />
-                    {business.zip} {business.city}
+                    {place.zipCityLine}
                     <br />
                     Deutschland
                   </span>
@@ -94,13 +98,13 @@ export default function Impressum() {
                     Telefon &amp; WhatsApp
                   </span>
                   <a
-                    href={business.phoneHref}
+                    href={place.phoneHref}
                     className="font-bold text-primary dark:text-white hover:text-accent transition-colors"
                   >
-                    {business.phoneDisplay}
+                    {place.phoneDisplay}
                   </a>
                   <span className="block text-xs text-ink-muted dark:text-slate-400">
-                    {business.hours}
+                    {place.hoursSummary}
                   </span>
                 </div>
               </div>
@@ -123,7 +127,7 @@ export default function Impressum() {
           </div>
 
           {/* 2. Leistungen & Verkäufergarantie */}
-          <div className="space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] dark:bg-emerald-500/[0.1] p-6 sm:p-7">
+          <div className="card space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] dark:bg-emerald-500/[0.1] p-6 sm:p-7">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
               <ShieldCheck size={20} aria-hidden="true" />
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
@@ -152,7 +156,7 @@ export default function Impressum() {
             <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
               {business.owner}
               <br />
-              {business.street}, {business.zip} {business.city}, Deutschland
+              {place.streetLine}, {place.zipCityLine}, Deutschland
             </p>
           </div>
 

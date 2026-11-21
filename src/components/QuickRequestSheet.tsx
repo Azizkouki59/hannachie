@@ -9,11 +9,19 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+  type PanInfo,
+} from "framer-motion";
 import { X, Wrench, Phone } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
 import type { InquiryMode } from "@/lib/repairRequest";
-import { triggerHapticFeedback } from "@/lib/haptics";
+import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
 import { business } from "@/data/site";
 
 type QuickRequestContextType = {
@@ -47,6 +55,11 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
   const [brand, setBrand] = useState("");
   const [mode, setMode] = useState<InquiryMode>("repair");
   const [mounted, setMounted] = useState(false);
+  const [isDraggingSheet, setIsDraggingSheet] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const dragControls = useDragControls();
+  const dragY = useMotionValue(0);
+  const backdropFade = useTransform(dragY, [0, 280], [1, 0.18]);
   const formBodyRef = useRef<HTMLDivElement>(null);
   const mobileScrollTimerRef = useRef<number | null>(null);
   const mobileRetryTimerRef = useRef<number | null>(null);
@@ -113,6 +126,8 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
       setSymptom(normalizedSymptom);
       setBrand(normalizedBrand);
       setMode(normalizedMode);
+      dragY.set(0);
+      setIsDraggingSheet(false);
       setOpenCount((prev) => prev + 1);
       setIsOpen(true);
       triggerHapticFeedback(50);
@@ -130,14 +145,26 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
         }
       }
     },
-    [scrollToFirstFieldOnMobile]
+    [dragY, scrollToFirstFieldOnMobile]
   );
 
   const closeQuickRequest = useCallback(() => {
     if (mobileScrollTimerRef.current) window.clearTimeout(mobileScrollTimerRef.current);
     if (mobileRetryTimerRef.current) window.clearTimeout(mobileRetryTimerRef.current);
+    setIsDraggingSheet(false);
     setIsOpen(false);
   }, []);
+
+  const handleSheetDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      setIsDraggingSheet(false);
+      if (info.offset.y > 105 || info.velocity.y > 460) {
+        hapticDismiss();
+        closeQuickRequest();
+      }
+    },
+    [closeQuickRequest]
+  );
 
   const contextValue = useMemo(
     () => ({ isOpen, openQuickRequest, closeQuickRequest }),
@@ -145,12 +172,10 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
   );
 
   useEffect(() => {
-    if (!isOpen) {
-      document.body.style.overflow = "";
-      return;
-    }
+    if (!isOpen) return undefined;
 
-    document.body.style.overflow = "hidden";
+    const prevHtmlOverflowY = document.documentElement.style.overflowY;
+    document.documentElement.style.overflowY = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -177,7 +202,7 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
     const timer = window.setTimeout(() => focusFirstField(0), 230);
 
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflowY = prevHtmlOverflowY;
       window.removeEventListener("keydown", handleKeyDown);
       window.clearTimeout(timer);
       window.clearTimeout(retryTimer);
@@ -192,27 +217,70 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
           data-testid="quick-request-portal-root"
         >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={closeQuickRequest}
-            className="fixed inset-0 bg-black/65 backdrop-blur-sm"
+            style={prefersReducedMotion ? undefined : { opacity: backdropFade }}
+            className="fixed inset-0"
             aria-hidden="true"
-          />
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeQuickRequest}
+              className="h-full w-full bg-black/65 backdrop-blur-sm touch-none overscroll-none"
+            />
+          </motion.div>
 
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-label="Schnellanfrage stellen"
-            initial={{ y: 48, opacity: 0, scale: 0.98 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 48, opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex max-h-[88dvh] sm:max-h-[90dvh] w-full max-w-2xl mx-auto flex-col rounded-t-3xl sm:rounded-3xl bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden border border-white/15"
+            style={prefersReducedMotion ? undefined : { y: dragY }}
+            drag={prefersReducedMotion ? false : "y"}
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.04, bottom: 0.95 }}
+            onDragStart={() => setIsDraggingSheet(true)}
+            onDragEnd={handleSheetDragEnd}
+            initial={
+              prefersReducedMotion
+                ? { opacity: 0 }
+                : { y: 64, opacity: 0, scale: 0.985 }
+            }
+            animate={
+              prefersReducedMotion
+                ? { opacity: 1 }
+                : { y: 0, opacity: 1, scale: 1 }
+            }
+            exit={
+              prefersReducedMotion
+                ? { opacity: 0 }
+                : { y: 80, opacity: 0, scale: 0.985 }
+            }
+            transition={
+              prefersReducedMotion
+                ? { duration: 0.12 }
+                : { type: "spring", stiffness: 390, damping: 34, mass: 0.85 }
+            }
+            className="relative z-10 flex max-h-[88dvh] sm:max-h-[90dvh] w-full max-w-2xl mx-auto flex-col rounded-t-3xl sm:rounded-3xl bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden border border-white/15 will-change-transform"
           >
-            <div className="sticky top-0 z-20 shrink-0 bg-primary-dark text-white px-3.5 sm:px-6 pt-2 pb-2.5 border-b border-white/10">
-              <div className="w-10 h-1.5 bg-white/25 rounded-full mx-auto mb-2 sm:hidden" />
+            <div
+              onPointerDown={(e) => {
+                if (!prefersReducedMotion) {
+                  dragControls.start(e);
+                }
+              }}
+              className="sticky top-0 z-20 shrink-0 bg-primary-dark text-white px-3.5 sm:px-6 pt-2 pb-2.5 border-b border-white/10 touch-none sm:touch-auto select-none cursor-grab active:cursor-grabbing sm:cursor-default"
+            >
+              <motion.div
+                animate={{
+                  width: isDraggingSheet ? 52 : 40,
+                  opacity: isDraggingSheet ? 0.55 : 0.25,
+                }}
+                transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                className="h-1.5 bg-white rounded-full mx-auto mb-2 sm:hidden"
+              />
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
@@ -229,25 +297,32 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <a
+                <div
+                  className="flex items-center gap-1.5 shrink-0"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <motion.a
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 26 }}
                     href={business.phoneHref}
                     onClick={() => triggerHapticFeedback(50)}
                     aria-label={`Jetzt anrufen: ${business.phoneDisplay}`}
                     title={`Direkt anrufen: ${business.phoneDisplay}`}
-                    className="flex h-11 min-h-[44px] min-w-[44px] px-3 items-center justify-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-xs font-extrabold text-emerald-300 hover:bg-emerald-500/25 active:scale-95 transition-all"
+                    className="flex h-11 min-h-[44px] min-w-[44px] px-3 items-center justify-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-xs font-extrabold text-emerald-300 hover:bg-emerald-500/25 transition-colors"
                   >
                     <Phone size={15} className="text-emerald-400 shrink-0" />
                     <span className="hidden min-[380px]:inline">Anrufen</span>
-                  </a>
-                  <button
+                  </motion.a>
+                  <motion.button
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 26 }}
                     type="button"
                     onClick={closeQuickRequest}
-                    className="flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white active:scale-95 transition-colors cursor-pointer"
+                    className="flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                     aria-label="Fenster schließen"
                   >
                     <X size={18} />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>

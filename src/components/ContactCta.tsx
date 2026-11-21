@@ -55,7 +55,7 @@ export default function ContactCta() {
           <button
             type="button"
             onClick={() => openQuickRequest("Waschmaschine", "", "", "repair")}
-            className="group inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-accent px-4 sm:px-5 py-3 text-center text-xs sm:text-sm font-bold text-white shadow-sm transition-colors duration-150 hover:bg-accent-dark cursor-pointer"
+            className="group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-accent px-4 sm:px-5 py-3 text-center text-xs sm:text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-accent-dark hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
           >
             <Wrench size={16} className="shrink-0" />
             <span className="flex-1 sm:flex-initial">Vor-Ort-Termin &amp; Ersatzteil anfragen</span>
@@ -65,7 +65,7 @@ export default function ContactCta() {
             type="button"
             onClick={() => openQuickRequest("Waschmaschine", "", "", "question")}
             data-variant="hover-emerald"
-            className="btn-whatsapp-hover group inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 sm:px-5 py-3 text-center text-xs sm:text-sm font-bold text-white shadow-sm transition-colors duration-150 hover:bg-emerald-700 cursor-pointer"
+            className="btn-whatsapp-hover group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 sm:px-5 py-3 text-center text-xs sm:text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-emerald-700 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
           >
             <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
               <MessageCircle size={16} />
@@ -73,10 +73,13 @@ export default function ContactCta() {
             <span className="flex-1 sm:flex-initial">Direkte Frage für WhatsApp ausfüllen</span>
             <ArrowRight size={15} className="shrink-0 sm:ml-auto transition-transform group-hover:translate-x-0.5" />
           </button>
-          <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-center text-xs text-white/70">
+          <a
+            href={business.phoneHref}
+            className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-accent-light/40 px-3.5 py-2.5 text-center text-xs font-semibold text-white/85 transition-colors"
+          >
             <Phone size={13} className="text-accent-light shrink-0" />
-            <span>Telefon: {business.phoneDisplay} · {business.city} &amp; Umgebung (Vor-Ort-Termine)</span>
-          </div>
+            <span>Direkt anrufen: <strong className="text-white tabular-nums">{business.phoneDisplay}</strong> · {business.city} &amp; Umgebung</span>
+          </a>
         </div>
       </div>
     </section>

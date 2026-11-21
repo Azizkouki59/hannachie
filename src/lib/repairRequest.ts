@@ -402,7 +402,7 @@ const photoSchema = z
 const step1ObjectSchema = z.object({
   device: z.string().trim().min(1, "Bitte wählen Sie ein Gerät aus."),
   customDevice: z.string().optional(),
-  brand: z.string().trim().min(1, "Bitte wählen Sie den Hersteller / die Marke aus."),
+  brand: z.string().trim().optional().default(""),
   model: z.string().optional(),
 });
 
@@ -433,10 +433,7 @@ export const step2Schema = z.object({
 
 const step3ObjectSchema = z.object({
   visitType: z.enum(["home_visit", "workshop"]).default("home_visit"),
-  name: z
-    .string()
-    .trim()
-    .min(2, "Bitte geben Sie Ihren Namen ein."),
+  name: z.string().trim().optional().default(""),
   phone: z
     .string()
     .trim()
@@ -481,10 +478,7 @@ export const quickQuestionSchema = z
       .trim()
       .min(4, "Bitte geben Sie Ihre Frage oder Ihr Anliegen kurz ein."),
     zip: z.string().trim().optional().default(""),
-    name: z
-      .string()
-      .trim()
-      .min(2, "Bitte geben Sie Ihren Namen ein."),
+    name: z.string().trim().optional().default(""),
     phone: z
       .string()
       .trim()
@@ -496,7 +490,7 @@ export const quickQuestionSchema = z
         "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
       ),
     device: z.string().trim().min(1, "Bitte wählen Sie ein Gerät aus."),
-    brand: z.string().trim().min(1, "Bitte wählen Sie den Hersteller / die Marke aus."),
+    brand: z.string().trim().optional().default(""),
     streetAddress: z.string().optional(),
     mapsLocationUrl: z.string().optional(),
     email: z

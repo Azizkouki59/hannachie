@@ -36,6 +36,8 @@ export const business = {
   email: "contact@hannachi.de",
   taxNote: "Alle Konditionen werden transparent vorab mit Ihnen abgestimmt.",
   url: "https://hannachi.de",
+  facebookUrl: "https://www.facebook.com/hannachi.elektroservice",
+  facebookHandle: "hannachi.elektroservice",
   placeId: "ChIJ_RB_R7_luUcRHnvjhljngB8",
   mapsUrl:
     "https://www.google.com/maps/place/Hannachi+Elektrohaushaltsger%C3%A4te+Service/@52.2902275,8.0207428,17z/data=!3m1!4b1!4m6!3m5!1s0x47b9e5bf477f10fd:0x1f80e75886e37b1e!8m2!3d52.2902275!4d8.0207428!16s%2Fg%2F1tfhfj72",
@@ -60,115 +62,6 @@ export const business = {
 export const yearsOfExperience = new Date().getFullYear() - business.founded;
 
 export const brands = ["Miele", "Bosch", "Siemens", "AEG", "Bauknecht"];
-
-export type CatalogCategory = "appliances" | "parts";
-
-export type CatalogOffer = {
-  id: string;
-  title: string;
-  brand: string;
-  category: CatalogCategory;
-  deviceType: string;
-  conditionBadge: "Geprüft & Aufbereitet" | "Neu · Originalteil";
-  warrantyBadge: "Inkl. schriftlicher Garantie";
-  specs: string[];
-  priceLabel: "Preis auf Anfrage";
-  availability: string;
-  inquiryPreset: string;
-};
-
-export const catalogOffers: CatalogOffer[] = [
-  {
-    id: "demo-washing-miele-w1",
-    title: "Miele W1 Waschmaschine (Frontlader · 8 kg)",
-    brand: "Miele",
-    category: "appliances",
-    deviceType: "Waschmaschine",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    specs: [
-      "8 kg Schontrommel · 1.400 U/min · Energieeffizienzklasse A",
-      "Vor Verkauf gereinigt, funktionsgeprüft & Verschleißteile kontrolliert",
-      "Watercontrol-System (Aquastop) & leiser ProfiEco-Antrieb",
-      "Übergabe nach Termin inkl. schriftlicher Verkäufergarantie",
-    ],
-    priceLabel: "Preis auf Anfrage",
-    availability: "Sofort verfügbar in Osnabrück",
-    inquiryPreset: "Anfrage / Reservierung: Miele W1 Waschmaschine (Geprüft & Aufbereitet, inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-dishwasher-bosch-serie6",
-    title: "Bosch Serie 6 Unterbau-Geschirrspüler (60 cm)",
-    brand: "Bosch",
-    category: "appliances",
-    deviceType: "Geschirrspüler",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    specs: [
-      "60 cm Standardbreite · 14 Maßgedecke · VarioSchublade",
-      "PerfectDry Zeolith-Trocknung & EcoSilence Drive (42 dB)",
-      "Dichtheits-, Heiz- & Pumpentest im eigenen Lager dokumentiert",
-      "Inkl. schriftlicher Verkäufergarantie bei Übergabe",
-    ],
-    priceLabel: "Preis auf Anfrage",
-    availability: "Sofort verfügbar in Osnabrück",
-    inquiryPreset: "Anfrage / Reservierung: Bosch Serie 6 Geschirrspüler 60 cm (Geprüft & Aufbereitet, inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-cooling-liebherr-nofrost",
-    title: "Liebherr CNef 4315 NoFrost Kühl-Gefrierkombination",
-    brand: "Liebherr",
-    category: "appliances",
-    deviceType: "Kühlschrank / Gefriergerät",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    specs: [
-      "321 Liter Nutzinhalt · NoFrost-Abtauautomatik · Edelstahl",
-      "Kühlkreislauf, Thermostat & Türdichtungen im 24h-Test geprüft",
-      "Hygienisch aufbereitet, geruchsfrei & sofort einsatzbereit",
-      "Schriftliche Verkäufergarantie ab Übergabe",
-    ],
-    priceLabel: "Preis auf Anfrage",
-    availability: "Sofort verfügbar in Osnabrück",
-    inquiryPreset: "Anfrage / Reservierung: Liebherr CNef 4315 NoFrost Kühl-Gefrierkombination (Geprüft & Aufbereitet, inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-oven-siemens-iq500",
-    title: "Siemens iQ500 Backofen (71 L · 3D Heißluft plus · 230 V)",
-    brand: "Siemens",
-    category: "appliances",
-    deviceType: "Backofen / Herd",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    specs: [
-      "71 Liter Garraum · 3D-Heißluft Plus · Autark (230 V Schuko)",
-      "Ringheizkörper, Thermostat & Isolationskontrolle vor Verkauf",
-      "Inkl. Backblech, Kombirost & LCD-Display",
-      "Mit schriftlicher Verkäufergarantie aus unserem Fachhandel",
-    ],
-    priceLabel: "Preis auf Anfrage",
-    availability: "Sofort verfügbar in Osnabrück",
-    inquiryPreset: "Anfrage / Reservierung: Siemens iQ500 Backofen (Geprüft & Aufbereitet, inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-part-bsh-miele-oem",
-    title: "Original Heizpumpen, Laugenpumpen & Heizelemente (Bosch · Miele · Siemens · AEG)",
-    brand: "Bosch",
-    category: "parts",
-    deviceType: "Geschirrspüler",
-    conditionBadge: "Neu · Originalteil",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    specs: [
-      "Fabrikneue Original-Ersatzteile in Erstausrüsterqualität",
-      "Exakte Passgenauigkeit durch Abgleich mit Ihrem Typenschild (E-Nr. / PNC)",
-      "Pumpen, Heizkörper, Türmanschetten, Thermostate & Dichtungen",
-      "Vor-Ort-Ersatzteil-Service nach Terminvereinbarung",
-    ],
-    priceLabel: "Preis auf Anfrage",
-    availability: "Auf Anfrage lieferbar",
-    inquiryPreset: "Ersatzteil-Anfrage: Original-Ersatzteil nach Typenschild (E-Nr. / PNC)",
-  },
-];
 
 export type Service = {
   slug: "waschmaschinen" | "geschirrspueler" | "kuehlschraenke" | "backoefen";
@@ -233,6 +126,10 @@ export const services: Service[] = [
     ],
     approach:
       "Bei Kühlgeräten vergeben wir besonders kurzfristige Vor-Ort-Termine in Osnabrück & Umgebung – einfach per WhatsApp oder Telefon melden.",
+    customerNote: {
+      quote: "Sehr zuverlässig, kompetent und preiswert. Sehr zu empfehlen.",
+      author: "Myra Bonnici",
+    },
   },
   {
     slug: "backoefen",

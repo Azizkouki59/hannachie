@@ -75,7 +75,7 @@ export default function ServiceNoticeBanner({
               type="button"
               onClick={() => setDismissed(true)}
               aria-label="Service-Hinweis schließen"
-              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-amber-800/75 dark:text-amber-200/75 hover:bg-amber-500/15 hover:text-amber-950 dark:hover:text-white transition-colors cursor-pointer"
+              className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0 shrink-0 items-center justify-center rounded-xl text-amber-800/75 dark:text-amber-200/75 hover:bg-amber-500/15 hover:text-amber-950 dark:hover:text-white active:scale-95 transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>

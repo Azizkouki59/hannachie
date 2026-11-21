@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "HN-4999",
+    "createdAt": "2026-11-17T12:56:10.419Z",
+    "updatedAt": "2026-11-17T12:56:10.419Z",
+    "inquiryMode": "repair",
+    "visitType": "home_visit",
+    "device": "Waschmaschine",
+    "customDevice": "",
+    "brand": "Nach Rücksprache",
+    "model": "",
+    "problem": "[Vor-Ort-Check / Ersatzteil] Pumpt nicht ab / Wasser steht",
+    "urgency": "normal",
+    "callbackTime": "Jederzeit erreichbar",
+    "zip": "49082 Osnabrück",
+    "streetAddress": "",
+    "mapsLocationUrl": "https://www.google.com/maps?q=52.2647,8.0548",
+    "locationVerified": false,
+    "coordinates": {
+      "lat": 52.2647,
+      "lng": 8.0548,
+      "accuracy": 40
+    },
+    "name": "Interessent (Osnabrück)",
+    "phone": "0170 1234567",
+    "email": "",
+    "photoName": null,
+    "status": "new",
+    "scheduledDate": "",
+    "scheduledSlot": "Nach Vereinbarung",
+    "technicianNotes": "",
+    "invoiceNumber": "RE-2026-4999",
+    "invoiceItems": []
+  }
+]

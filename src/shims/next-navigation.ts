@@ -36,6 +36,44 @@ export function navigateTo(href: string) {
   }
 }
 
+export function updateUrlSearchParams(
+  updates: Record<string, string | null | undefined>,
+  options?: { replace?: boolean }
+) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const params = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null || value === undefined || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+
+    const search = params.toString();
+    const nextSearch = search ? `?${search}` : "";
+    const currentUrl =
+      (window.location.pathname || "/") +
+      window.location.search +
+      window.location.hash;
+    const nextUrl =
+      (window.location.pathname || "/") + nextSearch + window.location.hash;
+
+    if (nextUrl === currentUrl) return;
+
+    if (options?.replace) {
+      window.history.replaceState({}, "", nextUrl);
+    } else {
+      window.history.pushState({}, "", nextUrl);
+    }
+    notify();
+  } catch {
+    // Ignore malformed URL updates
+  }
+}
+
 export function useLocationState() {
   const [loc, setLoc] = useState(() => ({
     pathname: typeof window !== "undefined" ? window.location.pathname || "/" : "/",

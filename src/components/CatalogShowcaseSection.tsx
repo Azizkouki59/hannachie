@@ -9,7 +9,23 @@ import {
   ArrowRight,
   SlidersHorizontal,
 } from "lucide-react";
-import { business, type CatalogOffer } from "@/data/site";
+import { business } from "@/data/site";
+
+export type CatalogCategory = "appliances" | "parts";
+
+export type CatalogOffer = {
+  id: string;
+  title: string;
+  brand: string;
+  category: CatalogCategory;
+  deviceType: string;
+  conditionBadge: "Geprüft & Aufbereitet" | "Neu · Originalteil";
+  warrantyBadge: "Inkl. schriftlicher Garantie";
+  specs: string[];
+  priceLabel: "Preis auf Anfrage";
+  availability: string;
+  inquiryPreset: string;
+};
 import {
   isMarketplaceItemSold,
   loadLocalMarketplaceItems,

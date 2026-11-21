@@ -1050,3 +1050,100 @@ export function FloatingSupportLauncher({
   );
 }
 
+/**
+ * Observes `.card` elements across all routes and triggers a smooth
+ * viewport fade-in (`data-card-reveal="pending" -> "visible" -> "done"`).
+ */
+export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const prefersReduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (prefersReduced || typeof IntersectionObserver === "undefined") {
+      return undefined;
+    }
+
+    const activeTimers = new Set<number>();
+
+    const revealCard = (card: HTMLElement, delayMs = 0) => {
+      if (card.dataset.cardReveal === "visible" || card.dataset.cardReveal === "done") {
+        return;
+      }
+      if (delayMs > 0) {
+        card.style.transitionDelay = `${delayMs}ms`;
+      }
+      card.dataset.cardReveal = "visible";
+
+      const timer = window.setTimeout(() => {
+        activeTimers.delete(timer);
+        card.style.transitionDelay = "";
+        card.dataset.cardReveal = "done";
+      }, 620 + delayMs);
+      activeTimers.add(timer);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let batchIdx = 0;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const card = entry.target as HTMLElement;
+          observer.unobserve(card);
+          revealCard(card, Math.min(batchIdx * 55, 220));
+          batchIdx += 1;
+        }
+      },
+      {
+        threshold: 0.08,
+        rootMargin: "0px 0px -24px 0px",
+      }
+    );
+
+    const registerCards = () => {
+      const root = document.getElementById("main") || document.body;
+      const cards = root.querySelectorAll<HTMLElement>(".card");
+      const viewportCutoff = window.innerHeight * 0.94;
+
+      cards.forEach((card) => {
+        if (card.dataset.cardReveal) return;
+        // Keep loading skeletons and continuous horizontal marquee cards visible immediately
+        if (card.classList.contains("animate-pulse") || card.hasAttribute("data-review-card")) {
+          card.dataset.cardReveal = "done";
+          return;
+        }
+
+        const rect = card.getBoundingClientRect();
+        if (rect.top <= viewportCutoff) {
+          card.dataset.cardReveal = "done";
+          return;
+        }
+
+        card.dataset.cardReveal = "pending";
+        observer.observe(card);
+      });
+    };
+
+    const rafId = window.requestAnimationFrame(registerCards);
+    const settleTimer = window.setTimeout(registerCards, 260);
+    activeTimers.add(settleTimer);
+
+    const mainEl = document.getElementById("main") || document.body;
+    const mutationObserver = new MutationObserver(() => {
+      registerCards();
+    });
+    mutationObserver.observe(mainEl, { childList: true, subtree: true });
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      activeTimers.forEach((t) => window.clearTimeout(t));
+      activeTimers.clear();
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [routeKey]);
+
+  return null;
+}
+
+

@@ -883,7 +883,7 @@ export default function AdminMarketplaceManager({
             value={inventorySearch}
             onChange={(e) => setInventorySearch(e.target.value)}
             placeholder="Artikel, Marke oder E-Nr. suchen…"
-            className="w-full sm:w-64 min-h-[38px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 focus:border-sky-500 focus:outline-none"
+            className="w-full sm:w-64 min-h-[44px] sm:min-h-[38px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 sm:py-1.5 text-base sm:text-xs text-slate-900 dark:text-slate-100 focus:border-sky-500 focus:outline-none"
           />
         </div>
       )}
@@ -1087,30 +1087,32 @@ export default function AdminMarketplaceManager({
           className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs"
         >
           <div className="w-full max-w-2xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4 bg-slate-50 dark:bg-slate-950 shrink-0">
-              <div>
-                <h3 className="text-base font-extrabold">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-50 dark:bg-slate-950 shrink-0">
+              <div className="min-w-0">
+                <h3 className="text-base font-extrabold truncate">
                   {form.id
                     ? "Angebot & Fotogalerie bearbeiten"
                     : "Neues Gerät oder Ersatzteil einstellen"}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Mehrere Fotos direkt hochladen, Typenschild markieren &amp; Titelbild festlegen
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  Fotos hochladen, Typenschild markieren &amp; Titelbild festlegen
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                aria-label="Schließen"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer shrink-0"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <form
               onSubmit={handleSaveItem}
-              className="overflow-y-auto p-5 space-y-5 text-xs"
+              className="flex flex-col flex-1 min-h-0 text-xs"
             >
+              <div className="overflow-y-auto p-4 sm:p-5 space-y-5 flex-1">
               {/* ── QUICK-START PRESETS BAR ── */}
               {!form.id && (
                 <div className="rounded-xl border border-sky-500/25 bg-sky-500/[0.06] p-3.5 space-y-2">
@@ -1306,32 +1308,35 @@ export default function AdminMarketplaceManager({
                                   </button>
                                 )}
 
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
                                     onClick={() => handleMovePhoto(idx, -1)}
                                     title="Nach vorne verschieben"
-                                    className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:border-sky-500 cursor-pointer"
+                                    aria-label="Nach vorne verschieben"
+                                    className="flex min-h-[36px] min-w-[36px] sm:min-h-[28px] sm:min-w-[28px] items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:border-sky-500 cursor-pointer"
                                   >
-                                    <ArrowLeft size={12} />
+                                    <ArrowLeft size={14} />
                                   </button>
                                   <button
                                     type="button"
                                     disabled={idx === form.photos.length - 1}
                                     onClick={() => handleMovePhoto(idx, 1)}
                                     title="Nach hinten verschieben"
-                                    className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:border-sky-500 cursor-pointer"
+                                    aria-label="Nach hinten verschieben"
+                                    className="flex min-h-[36px] min-w-[36px] sm:min-h-[28px] sm:min-w-[28px] items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 hover:border-sky-500 cursor-pointer"
                                   >
-                                    <ArrowRight size={12} />
+                                    <ArrowRight size={14} />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => void handleDeletePhoto(photo)}
                                     title="Foto entfernen"
-                                    className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-red-500 hover:text-red-600 cursor-pointer"
+                                    aria-label="Foto entfernen"
+                                    className="flex min-h-[36px] min-w-[36px] sm:min-h-[28px] sm:min-w-[28px] items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-red-500 hover:text-red-600 cursor-pointer"
                                   >
-                                    <Trash2 size={12} />
+                                    <Trash2 size={14} />
                                   </button>
                                 </div>
                               </div>
@@ -1343,7 +1348,7 @@ export default function AdminMarketplaceManager({
                                   handleUpdatePhotoLabel(photo.id, e.target.value)
                                 }
                                 placeholder="Bildbeschriftung (z. B. Typenschild)"
-                                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1 text-[11px] font-semibold focus:border-sky-500 focus:outline-none"
+                                className="w-full min-h-[38px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-base sm:text-[11px] font-semibold focus:border-sky-500 focus:outline-none"
                               />
                             </div>
                           </div>
@@ -1394,7 +1399,7 @@ export default function AdminMarketplaceManager({
                           nextCat === "spare_parts" ? "new_part" : "refurbished",
                       }));
                     }}
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-semibold"
+                    className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-semibold"
                   >
                     <option value="washing_drying">Waschmaschinen &amp; Trockner</option>
                     <option value="cooling">Kühl- &amp; Gefriergeräte</option>
@@ -1416,7 +1421,7 @@ export default function AdminMarketplaceManager({
                         conditionType: e.target.value as "refurbished" | "new_part",
                       }))
                     }
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-semibold"
+                    className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-semibold"
                   >
                     <option value="refurbished">Geprüft &amp; Aufbereitet (Inkl. Garantie)</option>
                     <option value="new_part">Neu · Originalteil</option>
@@ -1436,7 +1441,7 @@ export default function AdminMarketplaceManager({
                       setForm((prev) => ({ ...prev, brand: e.target.value }))
                     }
                     placeholder="z. B. Miele, Bosch, Siemens, Liebherr"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2"
+                    className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                     required
                   />
                 </div>
@@ -1452,7 +1457,7 @@ export default function AdminMarketplaceManager({
                       setForm((prev) => ({ ...prev, skuOrEnr: e.target.value }))
                     }
                     placeholder="z. B. E-Nr. WDB030WCS oder 00651956"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2"
+                    className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                   />
                 </div>
               </div>
@@ -1468,7 +1473,7 @@ export default function AdminMarketplaceManager({
                     setForm((prev) => ({ ...prev, title: e.target.value }))
                   }
                   placeholder="z. B. Original BSH Heizpumpe 00651956 oder Miele W1 Waschmaschine"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-semibold"
+                  className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-semibold"
                   required
                 />
               </div>
@@ -1484,7 +1489,7 @@ export default function AdminMarketplaceManager({
                     setForm((prev) => ({ ...prev, shortSpecs: e.target.value }))
                   }
                   placeholder="z. B. 8 kg Fassungsvermögen · 1400 U/min · Energieeffizienzklasse A"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2"
+                  className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                 />
               </div>
 
@@ -1499,7 +1504,7 @@ export default function AdminMarketplaceManager({
                     setForm((prev) => ({ ...prev, bullet1: e.target.value }))
                   }
                   placeholder="Merkmal 1"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5"
+                  className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                 />
                 <input
                   type="text"
@@ -1508,7 +1513,7 @@ export default function AdminMarketplaceManager({
                     setForm((prev) => ({ ...prev, bullet2: e.target.value }))
                   }
                   placeholder="Merkmal 2"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5"
+                  className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                 />
                 <input
                   type="text"
@@ -1517,7 +1522,7 @@ export default function AdminMarketplaceManager({
                     setForm((prev) => ({ ...prev, bullet3: e.target.value }))
                   }
                   placeholder="Merkmal 3"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5"
+                  className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                 />
               </div>
 
@@ -1527,12 +1532,13 @@ export default function AdminMarketplaceManager({
                   <span>Standard aktiv: „Preis auf Anfrage“ + Schriftliche Garantie</span>
                 </span>
               </div>
+              </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="shrink-0 px-4 sm:px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 font-bold cursor-pointer"
+                  className="min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 font-bold cursor-pointer"
                 >
                   Abbrechen
                 </button>
@@ -1540,7 +1546,7 @@ export default function AdminMarketplaceManager({
                   type="submit"
                   disabled={isSaving || Boolean(uploadProgress)}
                   data-testid="admin-save-marketplace-item-btn"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 font-extrabold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
+                  className="min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 font-extrabold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
                 >
                   <Check size={14} />
                   <span>{isSaving ? "Speichert..." : "Im Marktplatz speichern"}</span>
@@ -1559,8 +1565,8 @@ export default function AdminMarketplaceManager({
           aria-label="Artikel als verkauft markieren"
           className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs"
         >
-          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-4 bg-slate-50 dark:bg-slate-950">
+          <div className="w-full max-w-md max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-50 dark:bg-slate-950 shrink-0">
               <div className="min-w-0">
                 <h3 className="text-base font-extrabold truncate">
                   Verkauf bestätigen
@@ -1572,16 +1578,18 @@ export default function AdminMarketplaceManager({
               <button
                 type="button"
                 onClick={() => setSoldModal(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 cursor-pointer shrink-0"
+                aria-label="Schließen"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 cursor-pointer shrink-0"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <form
               onSubmit={(e) => void handleConfirmSoldModal(e)}
-              className="p-5 space-y-4 text-xs"
+              className="flex flex-col flex-1 min-h-0 text-xs"
             >
+              <div className="overflow-y-auto p-4 sm:p-5 space-y-4 flex-1">
               <label className="flex items-start gap-2.5 rounded-xl border border-emerald-500/35 bg-emerald-500/[0.07] p-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -1618,7 +1626,7 @@ export default function AdminMarketplaceManager({
                           setSoldModal({ ...soldModal, buyerName: e.target.value })
                         }
                         placeholder="z. B. Frau Meyer (Barkauf)"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2"
+                        className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs"
                       />
                     </div>
                     <div>
@@ -1632,7 +1640,7 @@ export default function AdminMarketplaceManager({
                           setSoldModal({ ...soldModal, buyerPhone: e.target.value })
                         }
                         placeholder="z. B. 0170 ..."
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-mono"
+                        className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -1653,7 +1661,7 @@ export default function AdminMarketplaceManager({
                           })
                         }
                         placeholder="z. B. 349"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-mono font-bold"
+                        className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-mono font-bold"
                       />
                     </div>
                     <div>
@@ -1668,7 +1676,7 @@ export default function AdminMarketplaceManager({
                             warrantyMonths: Number(e.target.value) || 0,
                           })
                         }
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 font-semibold"
+                        className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-semibold"
                       >
                         <option value={12}>12 Monate Garantie</option>
                         <option value={24}>24 Monate Garantie</option>
@@ -1679,12 +1687,13 @@ export default function AdminMarketplaceManager({
                   </div>
                 </div>
               )}
+              </div>
 
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="shrink-0 px-4 sm:px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSoldModal(null)}
-                  className="min-h-[42px] rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 font-bold cursor-pointer"
+                  className="min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 font-bold cursor-pointer"
                 >
                   Abbrechen
                 </button>
@@ -1692,7 +1701,7 @@ export default function AdminMarketplaceManager({
                   type="submit"
                   disabled={savingSoldModal}
                   data-testid="confirm-marketplace-sold-submit-btn"
-                  className="min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 font-extrabold text-white hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
+                  className="min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 font-extrabold text-white hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
                 >
                   {soldModal.createTicket ? <FileText size={14} /> : <Check size={14} />}
                   <span>

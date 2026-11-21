@@ -244,9 +244,9 @@ export const WHATSAPP_TEMPLATE_OPTIONS: {
   },
   {
     id: "price_estimate",
-    label: "Preis / Kostenvoranschlag senden",
+    label: "Preis / Einschätzung senden",
     shortLabel: "Preis senden",
-    shortDesc: "Übermittelt den eingetragenen Gesamtpreis oder Diagnose-Info",
+    shortDesc: "Übermittelt den eingetragenen Gesamtpreis oder die Ersteinschätzung",
   },
   {
     id: "question",
@@ -258,7 +258,7 @@ export const WHATSAPP_TEMPLATE_OPTIONS: {
     id: "sold_thanks",
     label: "Abschluss & Garantiebestätigung",
     shortLabel: "Abschluss & Garantie",
-    shortDesc: "Bestätigung nach Reparatur oder Gerätekauf inkl. Garantie",
+    shortDesc: "Bestätigung nach Vor-Ort-Service oder Gerätekauf inkl. Garantie",
   },
 ];
 
@@ -308,7 +308,7 @@ export function buildAdminWhatsAppReplyUrl(
   } else if (templateKind === "price_estimate") {
     statusText = priceText
       ? `zu Ihrem Auftrag (*${ticket.id}*, *${ticket.brand} ${deviceName}*) beträgt der vereinbarte Gesamtbetrag *${priceText} inkl. MwSt.*${ticket.technicianNotes ? ` (${ticket.technicianNotes.trim()})` : ""}. Bitte geben Sie uns kurz Bescheid.`
-      : `zu Ihrem Auftrag (*${ticket.id}*, *${ticket.brand} ${deviceName}*) möchten wir kurz die Diagnose und den Kostenvoranschlag mit Ihnen abstimmen. Wann sind Sie kurz erreichbar?`;
+      : `zu Ihrem Auftrag (*${ticket.id}*, *${ticket.brand} ${deviceName}*) möchten wir kurz die Ersteinschätzung und die passenden Optionen mit Ihnen abstimmen. Wann sind Sie kurz erreichbar?`;
   } else if (templateKind === "question") {
     statusText = `zu Ihrem Auftrag (*${ticket.id}*) haben wir noch eine kurze Rückfrage zu Ihrem *${ticket.brand} ${deviceName}*: Könnten Sie uns bitte ein kurzes Foto vom *Typenschild (E-Nr. / PNC)* hier in WhatsApp senden?`;
   } else if (templateKind === "pickup_ready") {
@@ -318,7 +318,7 @@ export function buildAdminWhatsAppReplyUrl(
     statusText =
       comp?.outcome === "sold"
         ? `vielen Dank für Ihren Kauf (*${ticket.id}*) bei Hannachi Osnabrück! Ihr *${ticket.brand} ${deviceName}* wurde geprüft übergeben${gMonths > 0 ? ` inklusive *${gMonths} Monaten schriftlicher Verkäufergarantie*` : ""}${priceText ? ` (Gesamtbetrag: *${priceText}*)` : ""}.`
-        : `vielen Dank für Ihren Auftrag (*${ticket.id}*). Die Reparatur Ihres *${ticket.brand} ${deviceName}* wurde erfolgreich abgeschlossen und geprüft${gMonths > 0 ? ` (inkl. *${gMonths} Monaten Garantie*)` : ""}${priceText ? ` · Betrag: *${priceText}*` : ""}.`;
+        : `vielen Dank für Ihren Auftrag (*${ticket.id}*). Der Vor-Ort- bzw. Garantieservice für Ihr *${ticket.brand} ${deviceName}* wurde erfolgreich abgeschlossen${gMonths > 0 ? ` (inkl. *${gMonths} Monaten Hannachi Garantie*)` : ""}${priceText ? ` · Betrag: *${priceText}*` : ""}.`;
   } else {
     statusText =
       simpleStatus === "in_progress" && formattedDate
@@ -326,9 +326,9 @@ export function buildAdminWhatsAppReplyUrl(
         : simpleStatus === "completed" && comp?.outcome === "sold"
         ? `vielen Dank für Ihren Kauf (*${ticket.id}*). Ihr Artikel (*${ticket.brand} ${deviceName}*) wurde übergeben${comp.warrantyMonths > 0 ? ` inkl. ${comp.warrantyMonths} Monate schriftlicher Verkäufergarantie` : ""}.`
         : simpleStatus === "completed" && comp?.outcome === "repaired"
-        ? `die Reparatur Ihres Geräts (*${ticket.brand} ${deviceName}*, Auftrag *${ticket.id}*) ist erfolgreich abgeschlossen und geprüft.`
+        ? `der Vor-Ort-Service / Garantie-Termin für Ihr Gerät (*${ticket.brand} ${deviceName}*, Auftrag *${ticket.id}*) ist erfolgreich abgeschlossen.`
         : simpleStatus === "completed"
-        ? `vielen Dank für Ihren Auftrag (*${ticket.id}*). Die Reparatur Ihres Geräts (*${ticket.brand} ${deviceName}*) ist abgeschlossen.`
+        ? `vielen Dank für Ihren Auftrag (*${ticket.id}*). Ihr Anliegen zu (*${ticket.brand} ${deviceName}*) ist abgeschlossen.`
         : formattedDate
         ? `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu Ihrem *${ticket.brand} ${deviceName}*. Passt Ihnen ein Vor-Ort-Termin am *${formattedDate}*${slotText}?`
         : `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu Ihrem *${ticket.brand} ${deviceName}*. Wann passt Ihnen ein kurzer Vor-Ort-Termin?`;
@@ -355,7 +355,7 @@ export function buildAdminWhatsAppReplyUrl(
     `Tel.: 0170 3493494`,
   ].join("\n");
 
-  return `https://wa.me/${intlPhone}?text=${encodeURIComponent(message)}`;
+  return `https://api.whatsapp.com/send?phone=${intlPhone}&text=${encodeURIComponent(message)}`;
 }
 
 function escapeCsvCell(value: unknown): string {
@@ -403,7 +403,7 @@ export function exportTicketsToCsv(tickets: AdminRepairTicket[]): void {
       t.completionDetails?.outcome === "sold"
         ? "Verkauft"
         : t.completionDetails?.outcome === "repaired"
-        ? "Repariert"
+        ? "Vor-Ort-/Garantieservice"
         : "";
 
     return [
@@ -460,11 +460,11 @@ function getTicketDocMeta(docType: TicketExportType) {
     };
   }
   return {
-    title: "AUFTRAGS- & KUNDENDIENSTBELEG",
-    notesHeading: "ANLIEGEN / DURCHGEFÜHRTE ARBEITEN & NOTIZEN",
+    title: "AUFTRAGS- & SERVICEBELEG",
+    notesHeading: "ANLIEGEN / VOR-ORT-SERVICE & NOTIZEN",
     footerNote:
-      "Geprüft und dokumentiert durch Hannachi Elektrohaushaltsgeräte Service · Mobiler Vor-Ort-Kundendienst Osnabrück & Umgebung. Vielen Dank für Ihr Vertrauen!",
-    sigLeft: "Datum / Unterschrift Kundendienst Hannachi",
+      "Geprüft und dokumentiert durch Hannachi Elektrohaushaltsgeräte Service · An- & Verkauf sowie mobiler Vor-Ort-Service nach Terminvereinbarung in Osnabrück & Umgebung.",
+    sigLeft: "Datum / Unterschrift Hannachi Service",
     sigRight: "Datum / Unterschrift Kunde",
   };
 }
@@ -506,7 +506,7 @@ export function formatTicketTextSummary(
   if (t.completionDetails) {
     const c = t.completionDetails;
     lines.push(
-      `Abschlussart: ${c.outcome === "sold" ? "Verkauft (Gerät / Ersatzteil)" : "Repariert & geprüft"}`
+      `Abschlussart: ${c.outcome === "sold" ? "Verkauft (Gerät / Ersatzteil)" : "Vor-Ort- / Garantieservice abgeschlossen"}`
     );
     if (c.workOrSaleSummary) {
       lines.push(`Abschluss-Details: ${c.workOrSaleSummary}`);
@@ -722,7 +722,7 @@ export async function renderTicketToPngBlob(
     y += 14;
     ctx.fillStyle = "#047857";
     ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-    const badgeLine = `ABGESCHLOSSEN (${t.completionDetails.outcome === "sold" ? "VERKAUFT" : "REPARIERT"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}`;
+    const badgeLine = `ABGESCHLOSSEN (${t.completionDetails.outcome === "sold" ? "VERKAUFT" : "SERVICE / GARANTIE"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}`;
     ctx.fillText(badgeLine, margin, y);
     y += 30;
   }
@@ -733,7 +733,7 @@ export async function renderTicketToPngBlob(
     ctx.fillText(
       t.completionDetails?.outcome === "sold"
         ? "Verkaufs- & Übergabedetails:"
-        : "Durchgeführte Arbeit / Notiz:",
+        : "Vor-Ort-Service / Notiz:",
       margin,
       y
     );
@@ -955,12 +955,12 @@ export function downloadPrintableReceiptsHtml(
             <p><strong>Kundenangabe:</strong> ${escapeHtml(t.problem)}</p>
             ${
               t.completionDetails
-                ? `<p><strong>Status:</strong> Abgeschlossen (${t.completionDetails.outcome === "sold" ? "Verkauft" : "Repariert"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}</p>`
+                ? `<p><strong>Status:</strong> Abgeschlossen (${t.completionDetails.outcome === "sold" ? "Verkauft" : "Vor-Ort-/Garantieservice"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}</p>`
                 : ""
             }
             ${
               t.completionDetails?.workOrSaleSummary || t.technicianNotes
-                ? `<p><strong>${t.completionDetails?.outcome === "sold" ? "Verkaufs- & Übergabedetails" : "Durchgeführte Arbeit / Notiz"}:</strong> ${escapeHtml(t.completionDetails?.workOrSaleSummary || t.technicianNotes)}</p>`
+                ? `<p><strong>${t.completionDetails?.outcome === "sold" ? "Verkaufs- & Übergabedetails" : "Vor-Ort-Service / Notiz"}:</strong> ${escapeHtml(t.completionDetails?.workOrSaleSummary || t.technicianNotes)}</p>`
                 : ""
             }
             ${

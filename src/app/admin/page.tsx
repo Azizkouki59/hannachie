@@ -88,6 +88,7 @@ import {
 } from "@/data/marketplaceItems";
 import AdminMarketplaceManager from "@/components/AdminMarketplaceManager";
 import AdminBrandCardStudio from "@/components/AdminBrandCardStudio";
+import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
 
 interface TicketDraftFields {
   grossPriceInput: string;
@@ -185,8 +186,9 @@ export default function AdminPage() {
   const [orderForm, setOrderForm] = useState<OrderFormState>(EMPTY_ORDER_FORM);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
-  // Inline "Details" expansion per ticket article
+  // Inline "Details" and mobile "Termin / Preis / Notiz" expansion per ticket article
   const [expandedDetailsIds, setExpandedDetailsIds] = useState<Record<string, boolean>>({});
+  const [expandedScheduleIds, setExpandedScheduleIds] = useState<Record<string, boolean>>({});
 
   // Confirm Sold ("Verkauft") or Repaired ("Repariert") Modal
   const [completionModal, setCompletionModal] = useState<{
@@ -475,7 +477,7 @@ export default function AdminPage() {
 
     const description =
       draft.noteInput.trim() ||
-      `Überprüfung & Reparatur (${ticket.brand} ${deviceName})`;
+      `Vor-Ort-Check & Service (${ticket.brand} ${deviceName})`;
 
     const nextItems = buildSingleGrossInvoiceItems(grossVal, description);
 
@@ -549,7 +551,7 @@ export default function AdminPage() {
     const grossVal = Number.isFinite(parsedGross) && parsedGross > 0 ? parsedGross : 0;
     const description =
       orderForm.technicianNotes.trim() ||
-      `Reparaturleistung & Service (${orderForm.brand} ${orderForm.device})`;
+      `Vor-Ort-Service / Ersatzteil (${orderForm.brand} ${orderForm.device})`;
     const nextInvoiceItems = buildSingleGrossInvoiceItems(grossVal, description);
 
     // 1. Editing an existing ticket
@@ -692,7 +694,7 @@ export default function AdminPage() {
         : ticket.device;
       const description =
         draft.noteInput.trim() ||
-        `Überprüfung & Reparatur (${ticket.brand} ${deviceName})`;
+        `Vor-Ort-Check & Service (${ticket.brand} ${deviceName})`;
       return {
         ...ticket,
         technicianNotes: draft.noteInput.trim(),
@@ -717,6 +719,13 @@ export default function AdminPage() {
 
   const toggleDetailsForTicket = (ticketId: string) => {
     setExpandedDetailsIds((prev) => ({
+      ...prev,
+      [ticketId]: !prev[ticketId],
+    }));
+  };
+
+  const toggleScheduleForTicket = (ticketId: string) => {
+    setExpandedScheduleIds((prev) => ({
       ...prev,
       [ticketId]: !prev[ticketId],
     }));
@@ -760,17 +769,17 @@ export default function AdminPage() {
       }
     } else {
       if (dl.includes("wasch")) {
-        baseTemplate = `Fachgerechte Diagnose & Reparatur an ${subject}${modelStr}: Ablauf/Pumpe, Heizung & Elektronik geprüft, abschließender Probelauf inkl. Schleudern ohne Fehler bestanden.`;
+        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Ablauf, Pumpe & Anschlüsse geprüft, Probelauf vor Ort ohne Fehler abgeschlossen.`;
       } else if (dl.includes("trockner")) {
-        baseTemplate = `Wartung & Instandsetzung an ${subject}${modelStr}: Kondensatablauf & Wärmetauscher gereinigt, Heizleistung und Funktionsprüfung bestanden.`;
+        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Kondensatablauf, Siebe & Heizfunktion geprüft, Funktionscheck vor Ort bestanden.`;
       } else if (dl.includes("spül") || dl.includes("geschirr")) {
-        baseTemplate = `Instandsetzung an ${subject}${modelStr}: Zulauf/Aquastop, Heizpumpe & Elektronik geprüft, Spül- und Trocknungsgang erfolgreich abgenommen.`;
+        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Zulauf, Aquastop & Heizprogramm vor Ort geprüft und erfolgreich abgenommen.`;
       } else if (dl.includes("kühl") || dl.includes("gefrier")) {
-        baseTemplate = `Kältetechnische Überprüfung & Reparatur an ${subject}${modelStr}: Thermostat, Verdichter & Türdichtung geprüft, Kühltemperatur stabil.`;
+        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Temperaturregelung & Türdichtung vor Ort geprüft, Kühlfunktion stabil.`;
       } else if (dl.includes("ofen") || dl.includes("herd") || dl.includes("koch")) {
-        baseTemplate = `Elektro-Instandsetzung an ${subject}${modelStr}: Heizelemente, Temperaturregler & Schutzschaltung geprüft, VDE-Sicherheitsprüfung bestanden.`;
+        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Heizkreise, Regler & Anschlüsse geprüft, Sicherheits- und Funktionscheck bestanden.`;
       } else {
-        baseTemplate = `Fachgerechte Überprüfung & Reparatur an ${subject}${modelStr}: Fehlerursache behoben, abschließende Funktions- & Sicherheitsprüfung bestanden.`;
+        baseTemplate = `Mobiler Vor-Ort-Service / Garantieleistung an ${subject}${modelStr}: Gerät vor Ort geprüft, passendes Ersatzteil / Garantielösung umgesetzt und getestet.`;
       }
     }
 
@@ -851,7 +860,7 @@ export default function AdminPage() {
       workOrSaleSummary.trim() ||
       (outcome === "sold"
         ? `Verkauft & übergeben (${ticket.brand} ${deviceLabel})`
-        : `Repariert & geprüft (${ticket.brand} ${deviceLabel})`);
+        : `Vor-Ort- / Garantieservice abgeschlossen (${ticket.brand} ${deviceLabel})`);
 
     const completionDetails: TicketCompletionDetails = {
       outcome,
@@ -919,7 +928,7 @@ export default function AdminPage() {
         ? linkedMpItem
           ? `Als Verkauft bestätigt · Marktplatz-Artikel „${linkedMpItem.title}“ abgeschlossen`
           : `Als Verkauft bestätigt & auf Website gespeichert (${ticket.id})`
-        : `Als Repariert bestätigt & auf Website gespeichert (${ticket.id})`,
+        : `Als Service / Garantie bestätigt & gespeichert (${ticket.id})`,
       ticket
     );
 
@@ -1291,19 +1300,30 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-background text-ink">
       {/* Screen-Only Workspace (Hidden when printing receipt) */}
-      <div className="print:hidden pb-28">
-        {/* Top Bar following the 3-Zone Contract */}
+      <div className="print:hidden pb-28 md:pb-24">
+        {/* Compact Top Bar: Mobile 56px thumb-app header | Desktop 3-Zone bar */}
         <header className="sticky top-0 z-30 bg-surface/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-primary/10 dark:border-white/10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 sm:gap-6">
-            {/* Zone 1: Single-line Brand Title */}
-            <Link
-              href="/admin"
-              className="font-serif text-lg sm:text-xl font-bold text-ink tracking-tight whitespace-nowrap shrink-0"
-            >
-              Hannachi Auftragsbuch
-            </Link>
+          <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-6">
+            {/* Zone 1: Back link on mobile + Single-line Brand Title */}
+            <div className="flex items-center gap-2 min-w-0">
+              <Link
+                href="/"
+                title="Zurück zur Website"
+                aria-label="Zurück zur Website"
+                className="md:hidden min-h-[44px] min-w-[44px] -ml-1.5 inline-flex items-center justify-center rounded-lg text-ink-muted hover:text-ink hover:bg-primary/5 dark:hover:bg-white/5 transition-colors shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/admin"
+                className="font-serif text-base sm:text-xl font-bold text-ink tracking-tight whitespace-nowrap truncate"
+              >
+                <span className="sm:hidden">Auftragsbuch</span>
+                <span className="hidden sm:inline">Hannachi Auftragsbuch</span>
+              </Link>
+            </div>
 
-            {/* Zone 2: Concise Navigation Links */}
+            {/* Zone 2: Concise Navigation Links (Desktop) */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-ink-muted">
               <Link
                 href="/"
@@ -1345,23 +1365,37 @@ export default function AdminPage() {
               )}
             </nav>
 
-            {/* Zone 3: Primary Action + Logout */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Zone 3: Quick Refresh (mobile) + Primary Action + Logout */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  void fetchTickets(token);
+                  showToast("Auftragsliste aktualisiert");
+                }}
+                title="Aufträge aktualisieren"
+                aria-label="Aufträge aktualisieren"
+                className="md:hidden min-h-[44px] min-w-[44px] rounded-lg border border-primary/15 dark:border-white/15 text-ink-muted hover:text-ink transition-colors inline-flex items-center justify-center cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingTickets ? "animate-spin" : ""}`} />
+              </button>
               <button
                 type="button"
                 onClick={openNewOrderModal}
-                className="min-h-[44px] px-3.5 sm:px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
-                Neuer Auftrag
+                <span className="sm:hidden">Neu</span>
+                <span className="hidden sm:inline">Neuer Auftrag</span>
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
                 title="Abmelden"
-                className="min-h-[44px] px-3 py-2 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink-muted hover:text-ink transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                aria-label="Abmelden"
+                className="min-h-[44px] min-w-[44px] sm:min-w-0 px-2.5 sm:px-3 py-2 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink-muted hover:text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">Abmelden</span>
               </button>
             </div>
@@ -1370,109 +1404,72 @@ export default function AdminPage() {
 
         {/* Save Feedback Toast */}
         {saveToast && (
-          <div className="fixed top-20 right-5 z-50 bg-primary text-white px-4 py-2.5 rounded-lg shadow-lg border border-white/15 flex items-center gap-2 text-xs font-semibold">
+          <div className="fixed top-16 inset-x-3 sm:inset-x-auto sm:top-20 sm:right-5 mx-auto sm:mx-0 max-w-sm z-50 bg-primary text-white px-4 py-2.5 rounded-xl shadow-lg border border-white/15 flex items-center gap-2 text-xs font-semibold">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{saveToast}</span>
+            <span className="truncate">{saveToast}</span>
           </div>
         )}
 
-        <main className="max-w-6xl mx-auto px-3.5 sm:px-6 pt-4 sm:pt-7 space-y-5">
-          {/* Pro 4-Tab Workspace Switcher (Phone-First Segmented Navigation) */}
+        <main className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-7 space-y-3.5 sm:space-y-5">
+          {/* Responsive 4-Tab Workspace Navigation: Mobile Fixed Bottom Tab Bar | Desktop Top Segmented Tabs */}
           <nav
             aria-label="Admin Bereiche"
-            className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-1 shadow-xs"
+            className="fixed bottom-0 inset-x-0 z-40 border-t border-primary/15 dark:border-white/15 bg-surface/95 dark:bg-slate-900/95 backdrop-blur-md px-1.5 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] grid grid-cols-4 gap-1 shadow-[0_-6px_24px_rgba(15,23,42,0.12)] md:static md:rounded-xl md:border md:p-1 md:shadow-xs"
           >
             <button
               type="button"
               onClick={() => setActiveTab("orders")}
-              className={`min-h-[44px] rounded-lg px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer tabular-nums ${
+              className={`min-h-[48px] md:min-h-[44px] rounded-lg px-1 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold transition-colors flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 cursor-pointer tabular-nums ${
                 activeTab === "orders"
                   ? "bg-primary text-white dark:bg-accent dark:text-white shadow-xs"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Aufträge ({counts.all})</span>
+              <Wrench className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-full">
+                Aufträge <span className="hidden sm:inline">({counts.all})</span>
+                <span className="sm:hidden opacity-85">({counts.all})</span>
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("schedule")}
-              className={`min-h-[44px] rounded-lg px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer tabular-nums ${
+              className={`min-h-[48px] md:min-h-[44px] rounded-lg px-1 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold transition-colors flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 cursor-pointer tabular-nums ${
                 activeTab === "schedule"
                   ? "bg-primary text-white dark:bg-accent dark:text-white shadow-xs"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Termine ({scheduledTickets.length})</span>
+              <CalendarDays className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-full">Termine ({scheduledTickets.length})</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("marketplace")}
-              className={`min-h-[44px] rounded-lg px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`min-h-[48px] md:min-h-[44px] rounded-lg px-1 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold transition-colors flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 cursor-pointer ${
                 activeTab === "marketplace"
                   ? "bg-primary text-white dark:bg-accent dark:text-white shadow-xs"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Marktplatz</span>
+              <Package className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-full">Marktplatz</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("branding")}
               data-testid="admin-tab-branding-btn"
-              className={`min-h-[44px] rounded-lg px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`min-h-[48px] md:min-h-[44px] rounded-lg px-1 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold transition-colors flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 cursor-pointer ${
                 activeTab === "branding"
                   ? "bg-primary text-white dark:bg-accent dark:text-white shadow-xs"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="truncate">Visitenkarte &amp; Logo</span>
+              <QrCode className="w-4 h-4 shrink-0" />
+              <span className="md:hidden truncate max-w-full">Karte</span>
+              <span className="hidden md:inline truncate">Visitenkarte &amp; Logo</span>
             </button>
           </nav>
-
-          {/* Mobile Quick Utility Row (visible on screens < md) */}
-          <div className="flex md:hidden flex-wrap items-center justify-between gap-2 pb-1">
-            <div className="flex items-center gap-3 text-xs font-semibold text-ink-muted">
-              <Link href="/" className="hover:text-ink underline">
-                Website
-              </Link>
-              <span>·</span>
-              <Link href="/#anfrage" className="hover:text-ink underline">
-                Formular
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  void fetchTickets(token);
-                  showToast("Auftragsliste aktualisiert");
-                }}
-                className="min-h-[36px] px-2.5 py-1.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? "animate-spin" : ""}`} />
-                Aktualisieren
-              </button>
-              {tickets.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    exportTicketsToCsv(
-                      filteredTickets.map((t) => resolveTicketWithDraft(t))
-                    );
-                    showToast("CSV Datei heruntergeladen");
-                  }}
-                  className="min-h-[36px] px-2.5 py-1.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  CSV
-                </button>
-              )}
-            </div>
-          </div>
 
           {activeTab === "branding" ? (
             <AdminBrandCardStudio onToast={showToast} />
@@ -1498,6 +1495,13 @@ export default function AdminPage() {
             />
           ) : activeTab === "schedule" ? (
             <section aria-label="Tagesplan und Termine" className="space-y-5">
+              {/* Google Calendar Live Integration & 1-Click Sync */}
+              <GoogleCalendarScheduler
+                mode="admin"
+                scheduledTickets={scheduledTickets}
+                onToast={showToast}
+              />
+
               <div className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-extrabold text-ink">
@@ -1746,26 +1750,27 @@ export default function AdminPage() {
           ) : (
             <>
 
-          {/* Simple 3-Status Overview Strip (Clickable to filter) */}
-          <section aria-label="Auftragsübersicht" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Compact 3-Column Mobile / Desktop Status Overview Strip (Clickable to filter) */}
+          <section aria-label="Auftragsübersicht" className="grid grid-cols-3 gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => setStatusFilter(statusFilter === "new" ? "all" : "new")}
-              className={`text-left p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "new"
-                  ? "bg-sky-500/10 border-sky-500/50"
+                  ? "bg-sky-500/12 border-sky-500 ring-1 ring-sky-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-sky-500/40"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-sky-800 dark:text-sky-300">
-                  1. Neu eingegangen
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
+                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-sky-800 dark:text-sky-300 truncate">
+                  <span className="sm:hidden">1. Neu</span>
+                  <span className="hidden sm:inline">1. Neu eingegangen</span>
                 </span>
-                <span className="text-2xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
+                <span className="text-xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
                   {counts.new}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-ink-muted">
+              <p className="hidden sm:block mt-1 text-xs text-ink-muted">
                 Offene Anfragen zum Anrufen oder Terminieren
               </p>
             </button>
@@ -1775,22 +1780,23 @@ export default function AdminPage() {
               onClick={() =>
                 setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")
               }
-              className={`text-left p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "in_progress"
-                  ? "bg-amber-500/12 border-amber-500/50"
+                  ? "bg-amber-500/14 border-amber-500 ring-1 ring-amber-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-amber-500/40"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-amber-900 dark:text-amber-300">
-                  2. In Arbeit / Terminiert
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
+                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-amber-900 dark:text-amber-300 truncate">
+                  <span className="sm:hidden">2. Arbeit</span>
+                  <span className="hidden sm:inline">2. In Arbeit / Terminiert</span>
                 </span>
-                <span className="text-2xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
+                <span className="text-xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
                   {counts.in_progress}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-ink-muted">
-                Termin vereinbart oder aktuell in Reparatur
+              <p className="hidden sm:block mt-1 text-xs text-ink-muted">
+                Vor-Ort-Termin vereinbart oder in Bearbeitung
               </p>
             </button>
 
@@ -1799,56 +1805,89 @@ export default function AdminPage() {
               onClick={() =>
                 setStatusFilter(statusFilter === "completed" ? "all" : "completed")
               }
-              className={`text-left p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "completed"
-                  ? "bg-emerald-500/10 border-emerald-500/50"
+                  ? "bg-emerald-500/12 border-emerald-500 ring-1 ring-emerald-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-emerald-500/40"
               }`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                  3. Erledigt
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
+                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+                  <span className="sm:hidden">3. Erledigt</span>
+                  <span className="hidden sm:inline">3. Erledigt</span>
                 </span>
-                <span className="text-2xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
+                <span className="text-xl sm:text-3xl font-mono font-bold text-ink tabular-nums">
                   {counts.completed}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-ink-muted">
-                Abgeschlossene Reparaturen & Belege
+              <p className="hidden sm:block mt-1 text-xs text-ink-muted">
+                Abgeschlossene Vor-Ort-Aufträge &amp; Verkäufe
               </p>
             </button>
           </section>
 
-          {/* Simple 1-Row Filter, Select-All, Sort & Search Bar */}
-          <section className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-3.5 sm:p-4 space-y-3">
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Select All Checkbox Button (visible when tickets exist) */}
-                {filteredTickets.length > 0 && (
+          {/* Compact Filter, Select-All, Sort & Search Bar */}
+          <section className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
+              {/* Top filter utilities row */}
+              <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2">
+                <div className="flex items-center gap-2">
+                  {/* Select All Checkbox Button (visible when tickets exist) */}
+                  {filteredTickets.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllFiltered}
+                      className={`min-h-[42px] sm:min-h-[40px] px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
+                        allFilteredSelected
+                          ? "bg-accent/15 border-accent text-ink"
+                          : "bg-background dark:bg-slate-950 border-primary/15 dark:border-white/15 text-ink-muted hover:text-ink"
+                      }`}
+                    >
+                      {allFilteredSelected ? (
+                        <CheckSquare className="w-4 h-4 text-accent shrink-0" />
+                      ) : (
+                        <Square className="w-4 h-4 shrink-0" />
+                      )}
+                      <span>
+                        {allFilteredSelected
+                          ? "Auswahl aufheben"
+                          : `Alle (${filteredTickets.length})`}
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Mobile status reset chip when a status filter is active */}
+                  {statusFilter !== "all" && (
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter("all")}
+                      className="sm:hidden min-h-[42px] px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer tabular-nums"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Alle ({counts.all})</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Mobile quick CSV download */}
+                {tickets.length > 0 && (
                   <button
                     type="button"
-                    onClick={toggleSelectAllFiltered}
-                    className={`min-h-[40px] px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
-                      allFilteredSelected
-                        ? "bg-accent/15 border-accent text-ink"
-                        : "bg-background dark:bg-slate-950 border-primary/15 dark:border-white/15 text-ink-muted hover:text-ink"
-                    }`}
+                    onClick={() => {
+                      exportTicketsToCsv(
+                        filteredTickets.map((t) => resolveTicketWithDraft(t))
+                      );
+                      showToast("CSV Datei heruntergeladen");
+                    }}
+                    className="md:hidden min-h-[42px] px-3 py-1.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink inline-flex items-center gap-1.5 cursor-pointer"
                   >
-                    {allFilteredSelected ? (
-                      <CheckSquare className="w-4 h-4 text-accent shrink-0" />
-                    ) : (
-                      <Square className="w-4 h-4 shrink-0" />
-                    )}
-                    <span>
-                      {allFilteredSelected
-                        ? "Auswahl aufheben"
-                        : `Alle (${filteredTickets.length})`}
-                    </span>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>CSV</span>
                   </button>
                 )}
 
-                {/* Segmented Status Filter */}
-                <div className="flex items-center gap-1 p-1 bg-background dark:bg-slate-950 rounded-lg border border-primary/10 dark:border-white/10 overflow-x-auto no-scrollbar max-w-full">
+                {/* Segmented Status Filter (Desktop/Tablet — KPI cards above already act as 1-tap filters on phone) */}
+                <div className="hidden sm:flex items-center gap-1 p-1 bg-background dark:bg-slate-950 rounded-lg border border-primary/10 dark:border-white/10 overflow-x-auto no-scrollbar max-w-full">
                   <button
                     type="button"
                     onClick={() => setStatusFilter("all")}
@@ -1904,7 +1943,7 @@ export default function AdminPage() {
                     setSortBy(e.target.value as "newest" | "urgency" | "scheduled")
                   }
                   aria-label="Aufträge sortieren"
-                  className="min-h-[40px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-xs font-bold text-ink focus:outline-none focus:border-accent shrink-0"
+                  className="min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-xs font-bold text-ink focus:outline-none focus:border-accent shrink-0"
                 >
                   <option value="newest">Neueste zuerst</option>
                   <option value="urgency">Nach Dringlichkeit</option>
@@ -1918,13 +1957,13 @@ export default function AdminPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Suche: Name, Tel, Nr., Gerät…"
-                    className="w-full min-h-[40px] pl-10 pr-8 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-accent"
+                    className="w-full min-h-[44px] sm:min-h-[40px] pl-10 pr-10 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-accent"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink cursor-pointer"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[38px] min-w-[38px] inline-flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer"
                       aria-label="Suche löschen"
                     >
                       <X className="w-4 h-4" />
@@ -1936,17 +1975,17 @@ export default function AdminPage() {
 
             {/* Scope Filter Row: Reparatur vs Marktplatz / Verkauf vs Vor-Ort vs Lieferung */}
             {tickets.length > 0 && (
-              <div className="pt-2.5 border-t border-primary/8 dark:border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <div className="pt-2 border-t border-primary/8 dark:border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 <span className="text-[11px] font-bold text-ink-muted mr-1 shrink-0">
                   Bereich:
                 </span>
                 {(
                   [
-                    { id: "all" as const, label: "Alle Bereiche", count: counts.all },
-                    { id: "repair" as const, label: "Reparatur", count: counts.repair },
-                    { id: "marketplace" as const, label: "Marktplatz / Verkauf", count: counts.marketplace },
-                    { id: "home_visit" as const, label: "Vor-Ort-Kundendienst", count: counts.home_visit },
-                    { id: "workshop" as const, label: "Lieferung & Übergabe", count: counts.workshop },
+                    { id: "all" as const, label: "Alle", desktopLabel: "Alle Bereiche", count: counts.all },
+                    { id: "repair" as const, label: "Service", desktopLabel: "Service & Ersatzteile", count: counts.repair },
+                    { id: "marketplace" as const, label: "Marktplatz", desktopLabel: "Marktplatz / Verkauf", count: counts.marketplace },
+                    { id: "home_visit" as const, label: "Vor-Ort", desktopLabel: "Vor-Ort-Kundendienst", count: counts.home_visit },
+                    { id: "workshop" as const, label: "Übergabe", desktopLabel: "Lieferung & Übergabe", count: counts.workshop },
                   ]
                 ).map((sc) => {
                   const active = scopeFilter === sc.id;
@@ -1961,7 +2000,8 @@ export default function AdminPage() {
                           : "bg-background dark:bg-slate-950 border border-primary/10 dark:border-white/10 text-ink-muted hover:text-ink"
                       }`}
                     >
-                      {sc.label} ({sc.count})
+                      <span className="sm:hidden">{sc.label} ({sc.count})</span>
+                      <span className="hidden sm:inline">{sc.desktopLabel} ({sc.count})</span>
                     </button>
                   );
                 })}
@@ -1979,7 +2019,7 @@ export default function AdminPage() {
                 Noch keine Kundenanfragen vorhanden
               </h2>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">
-                Dieses Auftragsbuch enthält <strong>keine Musterdaten</strong>. Sobald ein Kunde auf Ihrer Website das Reparaturformular absendet, erscheint die Anfrage automatisch hier. Sie können auch jederzeit einen telefonischen Auftrag eintragen.
+                Dieses Auftragsbuch enthält <strong>keine Musterdaten</strong>. Sobald ein Kunde auf Ihrer Website das Anfrageformular absendet, erscheint die Anfrage automatisch hier. Sie können auch jederzeit einen telefonischen Auftrag eintragen.
               </p>
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
@@ -2043,10 +2083,22 @@ export default function AdminPage() {
                 const linkedTitle =
                   comp?.marketplaceItemTitle || ticket.marketplaceItemTitle;
 
+                const isScheduleOpen = Boolean(expandedScheduleIds[ticket.id]);
+                const formattedShortDate = ticket.scheduledDate
+                  ? ticket.scheduledDate === getTodayIsoDate(0)
+                    ? "Heute"
+                    : ticket.scheduledDate === getTodayIsoDate(1)
+                    ? "Morgen"
+                    : new Date(`${ticket.scheduledDate}T12:00:00`).toLocaleDateString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      })
+                  : null;
+
                 return (
                   <article
                     key={ticket.id}
-                    className={`bg-surface dark:bg-slate-900 border rounded-xl p-5 sm:p-6 shadow-xs transition-colors ${
+                    className={`bg-surface dark:bg-slate-900 border rounded-xl p-3.5 sm:p-6 shadow-xs transition-colors ${
                       isSelected
                         ? "border-accent ring-1 ring-accent/40 bg-accent/[0.02]"
                         : isCompleted
@@ -2056,8 +2108,8 @@ export default function AdminPage() {
                   >
                     {/* Completed Confirmation Banner (visible when article turned to Completed) */}
                     {isCompleted && (
-                      <div className="mb-4 -mx-1 px-3.5 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-2.5">
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <div className="mb-3.5 sm:mb-4 sm:-mx-1 px-3 sm:px-3.5 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
                           <span className="inline-flex items-center gap-1.5 font-extrabold text-emerald-800 dark:text-emerald-300">
                             <BadgeCheck className="w-4 h-4 shrink-0" />
                             <span>
@@ -2065,25 +2117,23 @@ export default function AdminPage() {
                               {comp?.outcome === "sold"
                                 ? "VERKAUFT"
                                 : comp?.outcome === "repaired"
-                                ? "REPARIERT"
+                                ? "SERVICE"
                                 : "ERLEDIGT"}
                             </span>
                           </span>
-                          <span aria-hidden="true" className="text-emerald-600/50">
-                            ·
-                          </span>
-                          <span className="font-semibold text-emerald-700 dark:text-emerald-300/90">
-                            Auf Website gespeichert
-                            {comp?.confirmedAt
-                              ? ` (${new Date(comp.confirmedAt).toLocaleString("de-DE", {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })})`
-                              : ""}
-                          </span>
+                          {comp?.confirmedAt && (
+                            <span className="hidden sm:inline font-semibold text-emerald-700 dark:text-emerald-300/90">
+                              · Gespeichert (
+                              {new Date(comp.confirmedAt).toLocaleString("de-DE", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                              )
+                            </span>
+                          )}
                           {comp?.warrantyMonths ? (
                             <span className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[11px]">
                               {comp.warrantyMonths} Mon. Garantie
@@ -2095,10 +2145,10 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => toggleDetailsForTicket(ticket.id)}
                           data-testid={`ticket-completed-details-btn-${ticket.id}`}
-                          className="min-h-[34px] px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="min-h-[38px] px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
                         >
                           <Eye className="w-3.5 h-3.5 shrink-0" />
-                          <span>{isDetailsOpen ? "Details schließen" : "Details anzeigen"}</span>
+                          <span>{isDetailsOpen ? "Details schließen" : "Details"}</span>
                           {isDetailsOpen ? (
                             <ChevronUp className="w-3.5 h-3.5" />
                           ) : (
@@ -2107,13 +2157,14 @@ export default function AdminPage() {
                         </button>
                       </div>
                     )}
+
                     {/* 1. Card Header: Selection Checkbox + Customer Name, Phone, Meta + 1-Click 3-Status Switcher */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-primary/10 dark:border-white/10">
-                      <div className="flex items-start gap-3.5">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-3.5 sm:pb-4 border-b border-primary/10 dark:border-white/10">
+                      <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                         {/* Selection Checkbox for Bulk Actions */}
                         <label
                           htmlFor={`select-${ticket.id}`}
-                          className="mt-0.5 inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-lg border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 hover:border-accent cursor-pointer shrink-0 transition-colors"
+                          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] rounded-lg border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 hover:border-accent cursor-pointer shrink-0 transition-colors"
                           title="Auftrag für Sammelaktion auswählen"
                         >
                           <input
@@ -2126,25 +2177,21 @@ export default function AdminPage() {
                           />
                         </label>
 
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted font-mono tabular-nums">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-ink-muted font-mono tabular-nums">
                             <span className="font-bold text-ink">{ticket.id}</span>
                             <span aria-hidden="true">·</span>
                             <span>
-                              Eingang:{" "}
                               {new Date(ticket.createdAt).toLocaleString("de-DE", {
                                 day: "2-digit",
                                 month: "2-digit",
-                                year: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
                             </span>
                             <span aria-hidden="true">·</span>
                             <span>
-                              {ticket.visitType === "home_visit"
-                                ? "Vor-Ort-Kundendienst"
-                                : "Lieferung & Übergabe"}
+                              {ticket.visitType === "home_visit" ? "Vor-Ort" : "Übergabe"}
                             </span>
                             {ticket.urgency !== "normal" && (
                               <>
@@ -2156,8 +2203,8 @@ export default function AdminPage() {
                             )}
                           </div>
 
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <h2 className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
+                          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                            <h2 className="text-lg sm:text-2xl font-bold text-ink tracking-tight truncate">
                               {ticket.name}
                             </h2>
                             {phoneKey && (
@@ -2165,65 +2212,67 @@ export default function AdminPage() {
                                 type="button"
                                 onClick={() => setCustomerHistoryPhone(phoneKey)}
                                 data-testid={`customer-history-btn-${ticket.id}`}
-                                className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer"
+                                className="min-h-[32px] inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer shrink-0"
                                 title="Alle bisherigen Aufträge dieses Kunden anzeigen"
                               >
                                 <History className="w-3.5 h-3.5 shrink-0" />
                                 <span>
                                   {customerOrderCount > 1
-                                    ? `Kundenhistorie (${customerOrderCount})`
+                                    ? `Historie (${customerOrderCount})`
                                     : "Kundenakte"}
                                 </span>
                               </button>
                             )}
                           </div>
 
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-muted">
-                            <span className="font-mono font-semibold text-ink tabular-nums inline-flex items-center gap-1.5">
-                              Tel.: {ticket.phone}
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs sm:text-sm text-ink-muted">
+                            <span className="inline-flex items-center gap-1 font-mono font-semibold text-ink tabular-nums">
+                              <a
+                                href={`tel:${cleanTel}`}
+                                className="hover:text-accent underline decoration-accent/40 underline-offset-2"
+                              >
+                                {ticket.phone}
+                              </a>
                               <button
                                 type="button"
                                 onClick={() =>
                                   void handleCopyText(ticket.phone, "Telefonnummer")
                                 }
                                 title="Telefonnummer kopieren"
-                                className="p-1 rounded hover:bg-primary/10 dark:hover:bg-white/10 text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                                aria-label="Telefonnummer kopieren"
+                                className="min-h-[34px] min-w-[34px] inline-flex items-center justify-center rounded hover:bg-primary/10 dark:hover:bg-white/10 text-ink-muted hover:text-ink transition-colors cursor-pointer"
                               >
                                 <Copy className="w-3.5 h-3.5" />
                               </button>
                             </span>
                             {ticket.visitType === "home_visit" && (
-                              <>
-                                <span aria-hidden="true">·</span>
-                                <span>
-                                  {[ticket.streetAddress, ticket.zip]
-                                    .filter(Boolean)
-                                    .join(", ") || "Osnabrück"}
-                                </span>
-                              </>
+                              <span className="truncate max-w-full">
+                                {[ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
+                                  .filter(Boolean)
+                                  .join(", ") || "Osnabrück"}
+                              </span>
                             )}
                             {ticket.callbackTime && (
-                              <>
-                                <span aria-hidden="true">·</span>
-                                <span>Rückruf: {ticket.callbackTime}</span>
-                              </>
+                              <span className="hidden sm:inline">
+                                · Rückruf: {ticket.callbackTime}
+                              </span>
                             )}
                           </div>
 
                           {linkedTitle && (
-                            <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-primary dark:text-accent-light">
+                            <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-primary dark:text-accent-light">
                               <ShoppingBag className="w-3.5 h-3.5 text-accent shrink-0" />
                               <span className="truncate">
-                                Marktplatz-Artikel: {linkedTitle}
+                                Artikel: {linkedTitle}
                               </span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* 3-Button Status Switcher (Neu | In Arbeit | Erledigt) */}
-                      <div className="flex flex-col sm:items-end gap-1.5 shrink-0 w-full lg:w-auto">
-                        <span className="text-xs font-semibold text-ink-muted">
+                      {/* 3-Button Status Switcher (Neu | Arbeit | Erledigt) */}
+                      <div className="flex flex-col sm:items-end gap-1 shrink-0 w-full lg:w-auto">
+                        <span className="hidden sm:inline text-xs font-semibold text-ink-muted">
                           Status mit 1 Klick ändern:
                         </span>
                         <div className="grid grid-cols-3 w-full lg:w-auto items-center p-1 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 gap-1">
@@ -2252,14 +2301,17 @@ export default function AdminPage() {
                                     ticket
                                   );
                                 }}
-                                className={`min-h-[40px] px-2.5 sm:px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center justify-center gap-1 ${
+                                className={`min-h-[44px] sm:min-h-[40px] px-2 sm:px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center justify-center gap-1 ${
                                   active
                                     ? activeClass
                                     : "text-ink-muted hover:text-ink"
                                 }`}
                               >
                                 {active && <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
-                                <span>{opt.label}</span>
+                                <span className="sm:hidden">
+                                  {opt.value === "in_progress" ? "Arbeit" : opt.label}
+                                </span>
+                                <span className="hidden sm:inline">{opt.label}</span>
                               </button>
                             );
                           })}
@@ -2268,12 +2320,12 @@ export default function AdminPage() {
                     </div>
 
                     {/* 2. Appliance & Customer Problem Summary */}
-                    <div className="py-4 border-b border-primary/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                    <div className="py-3 sm:py-4 border-b border-primary/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-4 items-start">
                       <div className="md:col-span-4">
-                        <div className="text-xs font-semibold text-ink-muted">
-                          Gerät & Hersteller
+                        <div className="text-[11px] sm:text-xs font-semibold text-ink-muted">
+                          Gerät &amp; Hersteller
                         </div>
-                        <div className="mt-0.5 text-base font-bold text-ink">
+                        <div className="mt-0.5 text-sm sm:text-base font-bold text-ink">
                           {ticket.brand} · {deviceLabel}
                         </div>
                         {ticket.model && (
@@ -2284,8 +2336,8 @@ export default function AdminPage() {
                       </div>
 
                       <div className="md:col-span-8">
-                        <div className="text-xs font-semibold text-ink-muted">
-                          Fehlerbeschreibung / Kundenanliegen
+                        <div className="text-[11px] sm:text-xs font-semibold text-ink-muted">
+                          Kundenanliegen
                         </div>
                         <p className="mt-0.5 text-sm sm:text-base text-ink leading-relaxed">
                           {ticket.problem}
@@ -2293,8 +2345,93 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* 3. Inline Everyday Tools: Appointment Date & Time + Price (€) & Note + Save Button */}
-                    <div className="py-4 border-b border-primary/10 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end">
+                    {/* 3. Mobile Compact Summary Bar + Collapsible Schedule/Price/Note Editor (Always Open on >= sm) */}
+                    <div className="sm:hidden py-2.5 border-b border-primary/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-bold tabular-nums ${
+                            formattedShortDate
+                              ? "bg-amber-500/12 text-amber-900 dark:text-amber-300"
+                              : "bg-background dark:bg-slate-950 text-ink-muted border border-primary/10 dark:border-white/10"
+                          }`}
+                        >
+                          <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
+                          <span>
+                            {formattedShortDate
+                              ? `${formattedShortDate}${
+                                  ticket.scheduledSlot &&
+                                  ticket.scheduledSlot !== "Nach Vereinbarung"
+                                    ? ` · ${ticket.scheduledSlot}`
+                                    : ""
+                                }`
+                              : "Kein Termin"}
+                          </span>
+                        </span>
+                        {totals.grossTotal > 0 && (
+                          <span className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-mono font-extrabold tabular-nums">
+                            {formatEuro(totals.grossTotal)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void updateTicket(
+                              ticket.id,
+                              {
+                                scheduledDate: getTodayIsoDate(0),
+                                status: simpleStatus === "new" ? "in_progress" : ticket.status,
+                              },
+                              "Termin auf Heute gesetzt"
+                            )
+                          }
+                          className="min-h-[36px] px-2.5 py-1 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer"
+                        >
+                          Heute
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void updateTicket(
+                              ticket.id,
+                              {
+                                scheduledDate: getTodayIsoDate(1),
+                                status: simpleStatus === "new" ? "in_progress" : ticket.status,
+                              },
+                              "Termin auf Morgen gesetzt"
+                            )
+                          }
+                          className="min-h-[36px] px-2.5 py-1 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer"
+                        >
+                          Morgen
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleScheduleForTicket(ticket.id)}
+                          aria-expanded={isScheduleOpen}
+                          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-xs font-bold inline-flex items-center gap-1 cursor-pointer ${
+                            isScheduleOpen || isDirty
+                              ? "border-accent bg-accent/15 text-ink"
+                              : "border-primary/15 dark:border-white/15 text-ink-muted"
+                          }`}
+                        >
+                          <span>Termin &amp; €</span>
+                          {isScheduleOpen ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`${
+                        isScheduleOpen ? "grid" : "hidden sm:grid"
+                      } py-3.5 sm:py-4 border-b border-primary/10 dark:border-white/10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end`}
+                    >
                       {/* Appointment Date Picker + Quick Today/Tomorrow */}
                       <div className="lg:col-span-3">
                         <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -2321,7 +2458,7 @@ export default function AdminPage() {
                                   "Termin auf Heute gesetzt"
                                 )
                               }
-                              className="px-2 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
+                              className="min-h-[30px] px-2.5 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
                             >
                               Heute
                             </button>
@@ -2340,7 +2477,7 @@ export default function AdminPage() {
                                   "Termin auf Morgen gesetzt"
                                 )
                               }
-                              className="px-2 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
+                              className="min-h-[30px] px-2.5 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
                             >
                               Morgen
                             </button>
@@ -2363,7 +2500,7 @@ export default function AdminPage() {
                               "Termin-Datum gespeichert"
                             )
                           }
-                          className="w-full min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono text-ink tabular-nums focus:outline-none focus:border-accent"
+                          className="w-full min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono text-ink tabular-nums focus:outline-none focus:border-accent"
                         />
                       </div>
 
@@ -2386,7 +2523,7 @@ export default function AdminPage() {
                               "Uhrzeit gespeichert"
                             )
                           }
-                          className="w-full min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink focus:outline-none focus:border-accent"
+                          className="w-full min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink focus:outline-none focus:border-accent"
                         >
                           {ADMIN_TIME_SLOTS.map((slot) => (
                             <option key={slot} value={slot}>
@@ -2427,7 +2564,7 @@ export default function AdminPage() {
                               }
                             }}
                             placeholder="z. B. 89"
-                            className="w-full min-h-[42px] pl-3 pr-7 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono font-bold text-ink tabular-nums focus:outline-none focus:border-accent"
+                            className="w-full min-h-[44px] sm:min-h-[42px] pl-3 pr-7 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono font-bold text-ink tabular-nums focus:outline-none focus:border-accent"
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-ink-muted pointer-events-none">
                             €
@@ -2464,13 +2601,13 @@ export default function AdminPage() {
                                 handleSavePriceAndNote(ticket, true);
                               }
                             }}
-                            placeholder="z. B. Pumpe gereinigt, Ersatzteil…"
-                            className="w-full min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink focus:outline-none focus:border-accent"
+                            placeholder="z. B. Pumpe gereinigt…"
+                            className="w-full min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink focus:outline-none focus:border-accent"
                           />
                           <button
                             type="button"
                             onClick={() => handleSavePriceAndNote(ticket, true)}
-                            className={`min-h-[42px] px-3 py-2 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                            className={`min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                               isDirty
                                 ? "bg-accent hover:bg-accent-hover text-primary shadow-xs"
                                 : "border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 text-ink-muted hover:text-ink"
@@ -2478,49 +2615,51 @@ export default function AdminPage() {
                             title="Preis und Notiz speichern"
                           >
                             <Save className="w-3.5 h-3.5" />
-                            <span>{isDirty ? "Speichern" : "Gespeichert"}</span>
+                            <span>{isDirty ? "Speichern" : "OK"}</span>
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    {/* 4. Bottom 1-Click Everyday Actions + 1-Tap WhatsApp Reply Strip + Sold/Repaired Confirmation */}
-                    <div className="pt-4 flex flex-col gap-3">
+                    {/* 4. Bottom 1-Click Everyday Actions + WhatsApp + Sold/Repaired Confirmation */}
+                    <div className="pt-3 sm:pt-4 flex flex-col gap-2.5 sm:gap-3">
                       {!isCompleted && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/25">
+                        <div className="grid grid-cols-2 gap-2 p-2 sm:p-2.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/25">
                           <button
                             type="button"
                             onClick={() => openCompletionModal(ticket, "sold")}
                             data-testid={`confirm-sold-btn-${ticket.id}`}
-                            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <ShoppingBag className="w-4 h-4 text-accent shrink-0" />
-                            <span>Als verkauft bestätigen</span>
+                            <span className="sm:hidden">Verkauft</span>
+                            <span className="hidden sm:inline">Als verkauft bestätigen</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => openCompletionModal(ticket, "repaired")}
                             data-testid={`confirm-repaired-btn-${ticket.id}`}
-                            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <Wrench className="w-4 h-4 shrink-0" />
-                            <span>Als repariert bestätigen</span>
+                            <span className="sm:hidden">Service fertig</span>
+                            <span className="hidden sm:inline">Vor-Ort-Service bestätigen</span>
                           </button>
                         </div>
                       )}
 
-                      {/* 1-Tap WhatsApp Quick Reply Strip (Direct 1-Tap Templates for Smartphone & Laptop) */}
-                      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-2.5 space-y-2">
+                      {/* 1-Tap WhatsApp Quick Reply Strip (Desktop >= sm — Mobile uses the clean WhatsApp + Vorlage bottom sheet button below) */}
+                      <div className="hidden sm:block rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-2.5 space-y-2">
                         <div className="flex items-center justify-between gap-2 px-1">
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
                             <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                             <span>1-Klick WhatsApp-Antwort an {ticket.name}</span>
                           </span>
-                          <span className="text-[11px] font-mono text-ink-muted hidden sm:inline">
+                          <span className="text-[11px] font-mono text-ink-muted">
                             Direktversand mit Auftragsdaten
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
                           {WHATSAPP_TEMPLATE_OPTIONS.map((tpl) => (
                             <a
                               key={tpl.id}
@@ -2537,24 +2676,24 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-2.5">
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
                           {/* 1-Click Call */}
                           <a
                             href={`tel:${cleanTel}`}
-                            className="min-h-[44px] px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                           >
                             <Phone className="w-4 h-4 text-accent shrink-0" />
                             <span>Anrufen</span>
                           </a>
 
-                          {/* 1-Click Auto WhatsApp Reply + Dropdown */}
+                          {/* 1-Click Auto WhatsApp Reply + Mobile-Safe Bottom Sheet / Desktop Popover */}
                           <div className="relative inline-flex items-stretch">
                             <a
                               href={whatsappHref}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="min-h-[44px] flex-1 px-3 sm:px-3.5 py-2 rounded-l-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                              className="min-h-[44px] flex-1 px-2.5 sm:px-3.5 py-2 rounded-l-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                             >
                               <MessageCircle className="w-4 h-4 shrink-0" />
                               <span>WhatsApp</span>
@@ -2569,49 +2708,57 @@ export default function AdminPage() {
                               aria-label="WhatsApp-Vorlage wählen"
                               aria-expanded={openWaMenuId === ticket.id}
                               data-testid={`whatsapp-template-toggle-${ticket.id}`}
-                              className="min-h-[44px] px-2.5 rounded-r-lg bg-emerald-700 hover:bg-emerald-800 border-l border-emerald-500/40 text-white inline-flex items-center justify-center cursor-pointer"
+                              className="min-h-[44px] min-w-[40px] px-2.5 rounded-r-lg bg-emerald-700 hover:bg-emerald-800 border-l border-emerald-500/40 text-white inline-flex items-center justify-center cursor-pointer"
                               title="Fertige WhatsApp-Textvorlage wählen"
                             >
                               <ChevronDown className="w-4 h-4" />
                             </button>
 
                             {openWaMenuId === ticket.id && (
-                              <div
-                                role="menu"
-                                className="absolute left-0 bottom-full mb-1.5 z-30 w-72 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 shadow-xl p-1.5 space-y-1"
-                              >
-                                <div className="px-2.5 py-1 flex items-center justify-between text-[11px] font-bold text-ink-muted border-b border-primary/8 dark:border-white/10">
-                                  <span>Schnellantwort per WhatsApp</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setOpenWaMenuId(null)}
-                                    className="hover:text-ink cursor-pointer"
-                                    aria-label="Menü schließen"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
+                              <>
+                                {/* Mobile tap-away backdrop */}
+                                <div
+                                  className="sm:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px]"
+                                  onClick={() => setOpenWaMenuId(null)}
+                                  aria-hidden="true"
+                                />
+                                <div
+                                  role="menu"
+                                  className="fixed inset-x-3 bottom-[76px] z-50 sm:inset-x-auto sm:absolute sm:left-0 sm:bottom-full sm:mb-1.5 sm:z-30 sm:w-72 rounded-2xl sm:rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 shadow-2xl sm:shadow-xl p-2 sm:p-1.5 space-y-1"
+                                >
+                                  <div className="px-2.5 py-1.5 sm:py-1 flex items-center justify-between text-xs sm:text-[11px] font-bold text-ink-muted border-b border-primary/8 dark:border-white/10">
+                                    <span>WhatsApp-Vorlage an {ticket.name}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setOpenWaMenuId(null)}
+                                      className="min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center hover:text-ink cursor-pointer"
+                                      aria-label="Menü schließen"
+                                    >
+                                      <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                    </button>
+                                  </div>
+                                  {WHATSAPP_TEMPLATE_OPTIONS.map((tpl) => (
+                                    <a
+                                      key={tpl.id}
+                                      href={buildAdminWhatsAppReplyUrl(
+                                        resolvedForTotals,
+                                        tpl.id
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => setOpenWaMenuId(null)}
+                                      className="block rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+                                    >
+                                      <div className="text-sm sm:text-xs font-extrabold text-ink">
+                                        {tpl.label}
+                                      </div>
+                                      <div className="text-xs sm:text-[11px] text-ink-muted">
+                                        {tpl.shortDesc}
+                                      </div>
+                                    </a>
+                                  ))}
                                 </div>
-                                {WHATSAPP_TEMPLATE_OPTIONS.map((tpl) => (
-                                  <a
-                                    key={tpl.id}
-                                    href={buildAdminWhatsAppReplyUrl(
-                                      resolvedForTotals,
-                                      tpl.id
-                                    )}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => setOpenWaMenuId(null)}
-                                    className="block rounded-lg px-2.5 py-2 hover:bg-emerald-500/10 transition-colors"
-                                  >
-                                    <div className="text-xs font-extrabold text-ink">
-                                      {tpl.label}
-                                    </div>
-                                    <div className="text-[11px] text-ink-muted">
-                                      {tpl.shortDesc}
-                                    </div>
-                                  </a>
-                                ))}
-                              </div>
+                              </>
                             )}
                           </div>
 
@@ -2631,7 +2778,7 @@ export default function AdminPage() {
                               className="col-span-2 sm:col-span-1 min-h-[44px] px-3.5 py-2 rounded-lg border border-primary/15 dark:border-white/15 hover:bg-primary/5 text-xs sm:text-sm font-semibold text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                             >
                               <MapPin className="w-4 h-4 text-accent shrink-0" />
-                              <span>Karte / Route</span>
+                              <span>Route starten</span>
                             </a>
                           )}
                         </div>
@@ -2643,7 +2790,7 @@ export default function AdminPage() {
                             onClick={() => toggleDetailsForTicket(ticket.id)}
                             data-testid={`ticket-details-btn-${ticket.id}`}
                             aria-expanded={isDetailsOpen}
-                            className={`min-h-[44px] px-3.5 py-2 rounded-lg border text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                            className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg border text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                               isDetailsOpen
                                 ? "border-emerald-600 bg-emerald-600 text-white"
                                 : "border-primary/20 dark:border-white/20 bg-background dark:bg-slate-950 text-ink hover:border-accent"
@@ -2663,12 +2810,13 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleOpenPrintPreview(ticket)}
                             data-testid={`export-ticket-btn-${ticket.id}`}
-                            className="min-h-[44px] px-4 py-2 rounded-lg border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                            className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                           >
                             <FileText className="w-4 h-4 text-accent shrink-0" />
-                            <span>Ticket exportieren</span>
+                            <span className="sm:hidden">Beleg / PDF</span>
+                            <span className="hidden sm:inline">Ticket exportieren</span>
                             {totals.grossTotal > 0 && (
-                              <span className="font-mono text-xs opacity-80 tabular-nums">
+                              <span className="hidden sm:inline font-mono text-xs opacity-80 tabular-nums">
                                 ({formatEuro(totals.grossTotal)})
                               </span>
                             )}
@@ -2694,14 +2842,14 @@ export default function AdminPage() {
                               <button
                                 type="button"
                                 onClick={() => void handleDeleteTicket(ticket.id)}
-                                className="px-2.5 py-1 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
+                                className="min-h-[34px] px-2.5 py-1 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
                               >
                                 Ja
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1 rounded text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
+                                className="min-h-[34px] px-2 py-1 rounded text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
                               >
                                 Nein
                               </button>
@@ -2748,7 +2896,7 @@ export default function AdminPage() {
                                   ? comp?.outcome === "sold"
                                     ? "Abgeschlossen · Verkauft"
                                     : comp?.outcome === "repaired"
-                                    ? "Abgeschlossen · Repariert"
+                                    ? "Abgeschlossen · Vor-Ort- / Garantieservice"
                                     : "Abgeschlossen (Erledigt)"
                                   : simpleStatus === "in_progress"
                                   ? "In Arbeit / Terminiert"
@@ -2853,8 +3001,8 @@ export default function AdminPage() {
                               <Pencil className="w-3.5 h-3.5" />
                               <span>
                                 {isCompleted
-                                  ? "Abschluss (Verkauft / Repariert) bearbeiten"
-                                  : "Jetzt als Verkauft oder Repariert abschließen"}
+                                  ? "Abschluss (Verkauft / Service) bearbeiten"
+                                  : "Jetzt als Verkauft oder Service abschließen"}
                               </span>
                             </button>
 
@@ -2883,37 +3031,39 @@ export default function AdminPage() {
           )}
         </main>
 
-        {/* ── FLOATING BULK ACTION BAR (Appears when 1+ tickets are selected) ── */}
+        {/* ── FLOATING BULK ACTION BAR (Hovers cleanly above mobile bottom tab bar) ── */}
         {selectedTicketIds.length > 0 && (
           <div
             role="region"
             aria-label="Sammelaktionen für ausgewählte Aufträge"
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-4xl bg-primary text-white rounded-xl px-4 py-3 shadow-2xl border border-white/15 flex flex-wrap items-center justify-between gap-3"
+            className="fixed bottom-[76px] md:bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-4xl bg-primary text-white rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-2xl border border-white/15 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2 sm:gap-3"
           >
             {/* Left: Selected Count & Clear Selection */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-md bg-accent text-primary font-mono font-bold text-xs tabular-nums">
-                {selectedTicketIds.length}
-              </span>
-              <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
-                {selectedTicketIds.length === 1
-                  ? "Auftrag ausgewählt"
-                  : "Aufträge ausgewählt"}
-              </span>
+            <div className="flex items-center justify-between sm:justify-start gap-2.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center min-w-[26px] h-6 sm:min-w-[28px] sm:h-7 px-2 rounded-md bg-accent text-primary font-mono font-bold text-xs tabular-nums">
+                  {selectedTicketIds.length}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
+                  {selectedTicketIds.length === 1
+                    ? "Auftrag ausgewählt"
+                    : "Aufträge ausgewählt"}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => {
                   setSelectedTicketIds([]);
                   setConfirmBulkDelete(false);
                 }}
-                className="text-xs text-white/75 hover:text-white underline ml-1 whitespace-nowrap cursor-pointer"
+                className="min-h-[32px] px-2 text-xs text-white/80 hover:text-white underline whitespace-nowrap cursor-pointer"
               >
-                Auswahl aufheben
+                Aufheben
               </button>
             </div>
 
             {/* Right: Mass Status Update + Bulk PDF Export + Bulk CSV + Bulk Delete */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <div className="flex items-center gap-1 bg-white/10 p-1 rounded-lg">
                 <span className="text-[11px] font-medium text-white/80 px-2 hidden sm:inline whitespace-nowrap">
                   Status setzen:
@@ -2921,21 +3071,21 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => void handleBulkStatusUpdate("new")}
-                  className="px-2.5 py-1.5 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="min-h-[34px] px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   Neu
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleBulkStatusUpdate("in_progress")}
-                  className="px-2.5 py-1.5 rounded-md bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="min-h-[34px] px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  In Arbeit
+                  Arbeit
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleBulkStatusUpdate("completed")}
-                  className="px-2.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="min-h-[34px] px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   Erledigt
                 </button>
@@ -2944,19 +3094,22 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleBulkPdfExport}
-                className="min-h-[36px] px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />
-                Sammel-PDF / Drucken ({selectedTicketIds.length})
+                <span className="sm:hidden">PDF ({selectedTicketIds.length})</span>
+                <span className="hidden sm:inline">
+                  Sammel-PDF / Drucken ({selectedTicketIds.length})
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={handleBulkCsvExport}
-                className="min-h-[36px] px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                className="min-h-[38px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                CSV
+                <span>CSV</span>
               </button>
 
               {confirmBulkDelete ? (
@@ -2967,14 +3120,14 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => void handleBulkDelete()}
-                    className="px-2 py-0.5 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-500 cursor-pointer"
+                    className="min-h-[30px] px-2 py-0.5 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-500 cursor-pointer"
                   >
                     Ja
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmBulkDelete(false)}
-                    className="px-1.5 py-0.5 text-xs text-white/80 hover:text-white cursor-pointer"
+                    className="min-h-[30px] px-1.5 py-0.5 text-xs text-white/80 hover:text-white cursor-pointer"
                   >
                     Nein
                   </button>
@@ -2984,7 +3137,8 @@ export default function AdminPage() {
                   type="button"
                   onClick={() => setConfirmBulkDelete(true)}
                   title="Ausgewählte Aufträge löschen"
-                  className="min-h-[36px] px-2.5 py-1.5 rounded-lg border border-white/15 hover:bg-red-600/80 text-white/80 hover:text-white text-xs font-semibold transition-colors inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
+                  aria-label="Ausgewählte Aufträge löschen"
+                  className="min-h-[38px] min-w-[38px] px-2.5 py-1.5 rounded-lg border border-white/15 hover:bg-red-600/80 text-white/80 hover:text-white text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -2993,32 +3147,33 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal: "+ Neuer Auftrag" / "Auftrag bearbeiten" (Mobile-Safe Scrollable Sheet) */}
+        {/* Modal: "+ Neuer Auftrag" / "Auftrag bearbeiten" (Mobile-Safe Sticky Footer Sheet) */}
         {isOrderModalOpen && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 rounded-t-2xl sm:rounded-xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-xl overflow-hidden">
-              <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-primary/10 dark:border-white/10 shrink-0 bg-surface dark:bg-slate-900">
-                <div>
-                  <h2 className="font-serif text-lg sm:text-xl font-bold text-ink">
+              <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-primary/10 dark:border-white/10 shrink-0 bg-surface dark:bg-slate-900">
+                <div className="min-w-0">
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-ink truncate">
                     {orderForm.editingTicketId
                       ? `Auftrag ${orderForm.editingTicketId} bearbeiten`
                       : "Neuen Auftrag eintragen"}
                   </h2>
-                  <p className="text-xs text-ink-muted mt-0.5">
-                    Telefonische Kundenanfrage, Vor-Ort-Termin oder Geräte-Bestellung
+                  <p className="text-xs text-ink-muted mt-0.5 truncate">
+                    Telefonanfrage, Vor-Ort-Termin oder Geräte-Bestellung
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsOrderModalOpen(false)}
-                  className="p-2 rounded-lg text-ink-muted hover:text-ink cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-ink-muted hover:text-ink cursor-pointer shrink-0"
                   aria-label="Schließen"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={(e) => void handleSaveOrderModal(e)} className="overflow-y-auto p-5 space-y-4">
+              <form onSubmit={(e) => void handleSaveOrderModal(e)} className="flex flex-col flex-1 min-h-0">
+                <div className="overflow-y-auto p-4 sm:p-5 space-y-4 flex-1">
                 {/* Service Type & Urgency Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -3031,7 +3186,7 @@ export default function AdminPage() {
                         onClick={() =>
                           setOrderForm({ ...orderForm, visitType: "home_visit" })
                         }
-                        className={`min-h-[38px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
                           orderForm.visitType === "home_visit"
                             ? "bg-primary text-white dark:bg-white dark:text-slate-900"
                             : "text-ink-muted hover:text-ink"
@@ -3044,7 +3199,7 @@ export default function AdminPage() {
                         onClick={() =>
                           setOrderForm({ ...orderForm, visitType: "workshop" })
                         }
-                        className={`min-h-[38px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
                           orderForm.visitType === "workshop"
                             ? "bg-primary text-white dark:bg-white dark:text-slate-900"
                             : "text-ink-muted hover:text-ink"
@@ -3065,7 +3220,7 @@ export default function AdminPage() {
                           key={urg}
                           type="button"
                           onClick={() => setOrderForm({ ...orderForm, urgency: urg })}
-                          className={`py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                          className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
                             orderForm.urgency === urg
                               ? urg === "notfall"
                                 ? "bg-red-600 text-white"
@@ -3095,7 +3250,7 @@ export default function AdminPage() {
                         setOrderForm({ ...orderForm, name: e.target.value })
                       }
                       placeholder="z. B. Frau Meyer"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     />
                   </div>
                   <div>
@@ -3110,7 +3265,7 @@ export default function AdminPage() {
                         setOrderForm({ ...orderForm, phone: e.target.value })
                       }
                       placeholder="z. B. 0541 123456"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono text-ink"
                     />
                   </div>
                 </div>
@@ -3125,7 +3280,7 @@ export default function AdminPage() {
                       onChange={(e) =>
                         setOrderForm({ ...orderForm, device: e.target.value })
                       }
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     >
                       {deviceTypes.map((d) => (
                         <option key={d} value={d}>
@@ -3143,7 +3298,7 @@ export default function AdminPage() {
                       onChange={(e) =>
                         setOrderForm({ ...orderForm, brand: e.target.value })
                       }
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     >
                       {popularBrands.map((b) => (
                         <option key={b} value={b}>
@@ -3163,7 +3318,7 @@ export default function AdminPage() {
                         setOrderForm({ ...orderForm, model: e.target.value })
                       }
                       placeholder="z. B. W1 / Serie 6"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     />
                   </div>
                 </div>
@@ -3179,7 +3334,7 @@ export default function AdminPage() {
                       setOrderForm({ ...orderForm, problem: e.target.value })
                     }
                     placeholder="z. B. Pumpt nicht ab, Fehler F11"
-                    className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                    className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                   />
                 </div>
 
@@ -3194,7 +3349,7 @@ export default function AdminPage() {
                         onChange={(e) =>
                           setOrderForm({ ...orderForm, zip: e.target.value })
                         }
-                        className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                        className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                       >
                         {osnabrueckServiceAreas.map((area) => (
                           <option key={area.value} value={area.value}>
@@ -3205,7 +3360,7 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-ink mb-1">
-                        Straße & Hausnummer
+                        Straße &amp; Hausnummer
                       </label>
                       <input
                         type="text"
@@ -3217,7 +3372,7 @@ export default function AdminPage() {
                           })
                         }
                         placeholder="z. B. Iburger Str. 20"
-                        className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                        className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                       />
                     </div>
                   </div>
@@ -3237,7 +3392,7 @@ export default function AdminPage() {
                           scheduledDate: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono text-ink"
                     />
                   </div>
                   <div>
@@ -3252,7 +3407,7 @@ export default function AdminPage() {
                           scheduledSlot: e.target.value as AdminTimeSlot,
                         })
                       }
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     >
                       {ADMIN_TIME_SLOTS.map((s) => (
                         <option key={s} value={s}>
@@ -3273,7 +3428,7 @@ export default function AdminPage() {
                         setOrderForm({ ...orderForm, totalGross: e.target.value })
                       }
                       placeholder="z. B. 89"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono text-ink"
                     />
                   </div>
                 </div>
@@ -3292,21 +3447,22 @@ export default function AdminPage() {
                       })
                     }
                     placeholder="z. B. Laugenpumpe gereinigt, Ersatzteil eingebaut…"
-                    className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                    className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                   />
                 </div>
+                </div>
 
-                <div className="pt-3 border-t border-primary/10 dark:border-white/10 flex items-center justify-end gap-2.5">
+                <div className="shrink-0 px-4 sm:px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 flex items-center justify-end gap-2.5">
                   <button
                     type="button"
                     onClick={() => setIsOrderModalOpen(false)}
-                    className="px-4 py-2.5 rounded-lg text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
+                    className="min-h-[44px] px-4 py-2.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
                   >
                     Abbrechen
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-sm cursor-pointer"
+                    className="min-h-[44px] flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-sm cursor-pointer"
                   >
                     {orderForm.editingTicketId
                       ? "Änderungen speichern"
@@ -3318,28 +3474,28 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Modal: Confirm Sold ("Verkauft") or Repaired ("Repariert") & Save on Website */}
+        {/* Modal: Confirm Sold ("Verkauft") or Service ("Service / Garantie") & Save on Website */}
         {completionModal && (
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Auftrag als verkauft oder repariert bestätigen"
+            aria-label="Auftrag als verkauft oder Service bestätigen"
             className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
           >
             <div className="bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 rounded-t-2xl sm:rounded-xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-primary/10 dark:border-white/10 shrink-0 bg-surface dark:bg-slate-900">
-                <div>
-                  <h2 className="font-serif text-lg sm:text-xl font-bold text-ink">
+              <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-primary/10 dark:border-white/10 shrink-0 bg-surface dark:bg-slate-900">
+                <div className="min-w-0">
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-ink truncate">
                     Abschluss bestätigen ({completionModal.ticket.id})
                   </h2>
-                  <p className="text-xs text-ink-muted mt-0.5">
-                    Wird dauerhaft auf der Website gespeichert &amp; schließt den Auftrag ab.
+                  <p className="text-xs text-ink-muted mt-0.5 truncate">
+                    Dauerhaft gespeichert &amp; schließt den Auftrag ab.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setCompletionModal(null)}
-                  className="p-2 rounded-lg text-ink-muted hover:text-ink cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-ink-muted hover:text-ink cursor-pointer shrink-0"
                   aria-label="Schließen"
                 >
                   <X className="w-5 h-5" />
@@ -3348,8 +3504,9 @@ export default function AdminPage() {
 
               <form
                 onSubmit={(e) => void handleConfirmCompletion(e)}
-                className="overflow-y-auto p-5 space-y-4"
+                className="flex flex-col flex-1 min-h-0"
               >
+                <div className="overflow-y-auto p-4 sm:p-5 space-y-4 flex-1">
                 {/* Outcome Picker: Sold vs Repaired */}
                 <div>
                   <label className="block text-xs font-bold text-ink mb-2">
@@ -3433,7 +3590,7 @@ export default function AdminPage() {
                     >
                       <div className="flex items-center gap-2 font-extrabold text-sm">
                         <Wrench className="w-4 h-4 shrink-0" />
-                        <span>Kundenstück repariert</span>
+                        <span>Vor-Ort- / Garantieservice</span>
                       </div>
                       <p
                         className={`mt-1 text-xs ${
@@ -3442,7 +3599,7 @@ export default function AdminPage() {
                             : "text-ink-muted"
                         }`}
                       >
-                        Instandsetzung &amp; Funktionsprüfung erfolgreich abgeschlossen
+                        Vor-Ort-Check, Ersatzteil oder Hannachi-Garantieleistung abgeschlossen
                       </p>
                     </button>
                   </div>
@@ -3476,7 +3633,7 @@ export default function AdminPage() {
                             : null
                         );
                       }}
-                      className="w-full min-h-[40px] px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink focus:outline-none focus:border-accent"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-base sm:text-xs font-semibold text-ink focus:outline-none focus:border-accent"
                     >
                       <option value="">
                         — Kein Marktplatz-Artikel (nur Auftragsbeleg) —
@@ -3501,7 +3658,7 @@ export default function AdminPage() {
                     <label className="block text-xs font-semibold text-ink">
                       {completionModal.outcome === "sold"
                         ? "Verkaufter Artikel & Übergabe-Details *"
-                        : "Durchgeführte Reparatur & Prüfergebnis *"}
+                        : "Vor-Ort-Service / Garantie-Details *"}
                     </label>
                     <button
                       type="button"
@@ -3520,7 +3677,7 @@ export default function AdminPage() {
                             : null
                         )
                       }
-                      className="text-[11px] font-bold text-accent-hover dark:text-accent hover:underline cursor-pointer"
+                      className="text-xs font-bold text-accent-hover dark:text-accent hover:underline cursor-pointer"
                     >
                       Vorlage neu einfügen
                     </button>
@@ -3539,9 +3696,9 @@ export default function AdminPage() {
                     placeholder={
                       completionModal.outcome === "sold"
                         ? "z. B. Miele W1 übergeben, Probelauf vor Ort, inkl. 12 Monate Garantie"
-                        : "z. B. Laugenpumpe erneuert, Dichtung geprüft, Probelauf ohne Fehler"
+                        : "z. B. Vor-Ort-Check durchgeführt, Original-Ersatzteil übergeben, Probelauf ohne Fehler"
                     }
-                    className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink focus:outline-none focus:border-accent"
+                    className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink focus:outline-none focus:border-accent"
                   />
                   {/* 1-Tap Quick Append Phrases to minimize typing */}
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -3578,7 +3735,7 @@ export default function AdminPage() {
                             };
                           })
                         }
-                        className="px-2 py-1 rounded-md border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 hover:border-accent text-[11px] font-semibold text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                        className="min-h-[34px] px-2.5 py-1 rounded-md border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 hover:border-accent text-xs font-semibold text-ink-muted hover:text-ink transition-colors cursor-pointer"
                       >
                         + {phrase}
                       </button>
@@ -3601,7 +3758,7 @@ export default function AdminPage() {
                         })
                       }
                       placeholder="z. B. E-Nr. WDB030WCS / Pumpe 00651956"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono text-ink"
                     />
                   </div>
                   <div>
@@ -3619,7 +3776,7 @@ export default function AdminPage() {
                         })
                       }
                       placeholder="z. B. 149"
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm font-mono font-bold text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm font-mono font-bold text-ink"
                     />
                   </div>
                 </div>
@@ -3649,7 +3806,7 @@ export default function AdminPage() {
                             : null
                         );
                       }}
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     >
                       <option value={12}>12 Monate schriftliche Garantie</option>
                       <option value={24}>24 Monate Garantie / Gewährleistung</option>
@@ -3670,12 +3827,13 @@ export default function AdminPage() {
                           confirmedBy: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-sm text-ink"
+                      className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                     />
                   </div>
                 </div>
+                </div>
 
-                <div className="pt-3 border-t border-primary/10 dark:border-white/10 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2.5">
+                <div className="shrink-0 px-4 sm:px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 flex items-center justify-end gap-2.5">
                   <button
                     type="button"
                     onClick={() => setCompletionModal(null)}
@@ -3687,13 +3845,13 @@ export default function AdminPage() {
                     type="submit"
                     disabled={savingCompletion}
                     data-testid="confirm-completion-save-btn"
-                    className="min-h-[44px] px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="min-h-[44px] flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
                     <BadgeCheck className="w-4 h-4 shrink-0" />
                     <span>
                       {savingCompletion
                         ? "Wird gespeichert…"
-                        : "Auf Website speichern & Abschließen"}
+                        : "Speichern & Abschließen"}
                     </span>
                   </button>
                 </div>
@@ -3721,12 +3879,12 @@ export default function AdminPage() {
               className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
             >
               <div className="bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 rounded-t-2xl sm:rounded-xl max-w-2xl w-full max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-primary/10 dark:border-white/10 shrink-0">
-                  <div>
+                <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-primary/10 dark:border-white/10 shrink-0">
+                  <div className="min-w-0">
                     <div className="text-[11px] font-bold text-accent uppercase tracking-wide">
                       Kundenakte &amp; Auftragsverlauf
                     </div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-ink mt-0.5">
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-ink mt-0.5 truncate">
                       {primaryTicket?.name || "Kunde"} ·{" "}
                       <span className="font-mono text-sm text-ink-muted">
                         {primaryTicket?.phone || customerHistoryPhone}
@@ -3736,14 +3894,14 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setCustomerHistoryPhone(null)}
-                    className="p-2 rounded-lg text-ink-muted hover:text-ink cursor-pointer"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-ink-muted hover:text-ink cursor-pointer shrink-0"
                     aria-label="Schließen"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="overflow-y-auto p-5 space-y-4">
+                <div className="overflow-y-auto p-4 sm:p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4">
                   {/* Customer Summary Stats */}
                   <div className="grid grid-cols-3 gap-2.5 rounded-xl border border-primary/10 dark:border-white/10 bg-background dark:bg-slate-950 p-3.5 text-center">
                     <div>
@@ -4154,7 +4312,7 @@ export default function AdminPage() {
                         Bestätigter Abschluss (
                         {printTicket.completionDetails.outcome === "sold"
                           ? "Verkauft"
-                          : "Repariert"}
+                          : "Vor-Ort- / Garantieservice"}
                         ):
                       </strong>{" "}
                       {printTicket.completionDetails.workOrSaleSummary}
