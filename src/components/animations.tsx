@@ -323,6 +323,13 @@ export function Spatial3DPhoto({
           style={prefersReduced ? undefined : { y: imgY }}
           className="absolute -inset-4 will-change-transform"
         >
+          <motion.div
+            initial={prefersReduced ? false : { scale: 1.14 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 1.25, ease: smooth }}
+            className="h-full w-full"
+          >
           <img
             src={src}
             alt={alt}
@@ -332,6 +339,21 @@ export function Spatial3DPhoto({
             onError={() => setImgFailed(true)}
             className="h-full w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
           />
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Premium curtain wipe that uncovers the photo once it scrolls into view */}
+      {!prefersReduced && (
+        <motion.div
+          aria-hidden="true"
+          initial={{ y: "0%" }}
+          whileInView={{ y: "-101%" }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.95, ease: [0.76, 0, 0.24, 1] }}
+          className="pointer-events-none absolute inset-0 z-[8] bg-primary-dark"
+        >
+          <span className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-sky-400 via-sky-300 to-emerald-400" />
         </motion.div>
       )}
 
@@ -1559,3 +1581,109 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
 }
 
 
+
+/* ── Premium masked word reveal ────────────────────────────────────────────
+   Each word slides up from behind an invisible mask. Transform + opacity only
+   (GPU-composited), plays once, and renders plain text for reduced motion. */
+type RevealSegment = { text: string; className?: string };
+
+export function RevealText({
+  segments,
+  trigger = "inView",
+  delay = 0,
+  stagger = 0.045,
+}: {
+  /** Text pieces; each piece may carry its own className (e.g. a gradient). */
+  segments: RevealSegment[];
+  /** "mount" plays on load (hero), "inView" when scrolled into view. */
+  trigger?: "mount" | "inView";
+  delay?: number;
+  stagger?: number;
+}) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) {
+    return (
+      <>
+        {segments.map((seg, i) => (
+          <span key={i} className={seg.className}>
+            {seg.text}
+          </span>
+        ))}
+      </>
+    );
+  }
+
+  let wordIndex = 0;
+  const playProps =
+    trigger === "mount"
+      ? { animate: "shown" as const }
+      : { whileInView: "shown" as const, viewport: { once: true, amount: 0.6 } };
+
+  return (
+    <motion.span initial="hidden" {...playProps} className="inline">
+      {segments.map((seg, segIdx) =>
+        seg.text.split(/(\s+)/).map((word, i) => {
+          if (!word) return null;
+          if (/^\s+$/.test(word)) return <span key={`${segIdx}-${i}`}> </span>;
+          const idx = wordIndex++;
+          return (
+            <span
+              key={`${segIdx}-${i}`}
+              className="inline-block overflow-hidden align-bottom pb-[0.08em] -mb-[0.08em]"
+            >
+              <motion.span
+                className={`inline-block will-change-transform ${seg.className ?? ""}`}
+                variants={{
+                  hidden: { y: "105%", opacity: 0 },
+                  shown: {
+                    y: "0%",
+                    opacity: 1,
+                    transition: { duration: 0.72, delay: delay + idx * stagger, ease: smooth },
+                    transitionEnd: { willChange: "auto" },
+                  },
+                }}
+              >
+                {word}
+              </motion.span>
+            </span>
+          );
+        })
+      )}
+    </motion.span>
+  );
+}
+
+/* ── Oversized footer wordmark that rises letter by letter ── */
+export function WordmarkReveal({
+  text,
+  className = "",
+  letterClassName = "",
+}: {
+  text: string;
+  className?: string;
+  letterClassName?: string;
+}) {
+  const prefersReduced = useReducedMotion();
+  return (
+    <motion.p
+      aria-hidden="true"
+      initial={prefersReduced ? false : "hidden"}
+      whileInView="shown"
+      viewport={{ once: true, amount: 0.4 }}
+      className={`select-none overflow-hidden leading-[0.82] ${className}`}
+    >
+      {text.split("").map((ch, i) => (
+        <motion.span
+          key={i}
+          className={`inline-block ${letterClassName}`}
+          variants={{
+            hidden: { y: "100%" },
+            shown: { y: "0%", transition: { duration: 0.9, delay: i * 0.05, ease: smooth } },
+          }}
+        >
+          {ch}
+        </motion.span>
+      ))}
+    </motion.p>
+  );
+}

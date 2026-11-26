@@ -34,6 +34,7 @@ import {
   ScrollProgressBar,
   Spatial3DCard,
   Spatial3DPhoto,
+  RevealText,
   BrandLogoTicker,
 } from "@/components/animations";
 import { business, yearsOfExperience } from "@/data/site";
@@ -391,21 +392,20 @@ export default function HomepageClient() {
               </div>
 
               <div className="overflow-hidden pb-1">
-                <motion.h1
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 22 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.58,
-                    delay: 0.06,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="text-[24px] min-[375px]:text-[27px] sm:text-[36px] lg:text-[42px] font-extrabold leading-[1.14] tracking-[-0.025em] text-white text-balance"
-                >
-                  Ihr Hausgeräte-Spezialist{" "}
-                  <span className="bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent">
-                    für Beratung &amp; Original-Ersatzteile
-                  </span>
-                </motion.h1>
+                <h1 className="text-[24px] min-[375px]:text-[27px] sm:text-[36px] lg:text-[42px] font-extrabold leading-[1.14] tracking-[-0.025em] text-white text-balance">
+                  <RevealText
+                    trigger="mount"
+                    delay={0.05}
+                    segments={[
+                      { text: "Ihr Hausgeräte-Spezialist " },
+                      {
+                        text: "für Beratung & Original-Ersatzteile",
+                        className:
+                          "bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent",
+                      },
+                    ]}
+                  />
+                </h1>
               </div>
 
               <motion.p
@@ -932,7 +932,7 @@ export default function HomepageClient() {
                 id="how-we-help-heading"
                 className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
               >
-                Beratung, Originalteile &amp; Geräte
+                <RevealText segments={[{ text: "Beratung, Originalteile & Geräte" }]} />
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
                 {business.mobileServiceNotice}
@@ -1057,7 +1057,7 @@ export default function HomepageClient() {
             <div className="max-w-2xl mx-auto text-center mb-5 sm:mb-9">
               <p className="eyebrow">Direktkontakt · Termine nach Vereinbarung</p>
               <h2 className="mt-1.5 text-xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
-                Direkt per WhatsApp anfragen
+                <RevealText segments={[{ text: "Direkt per WhatsApp anfragen" }]} />
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
                 Gerät &amp; Anliegen antippen – Nachricht öffnet direkt im Chat.

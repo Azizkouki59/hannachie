@@ -1,4 +1,5 @@
 "use client";
+import { WordmarkReveal } from "@/components/animations";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -154,6 +155,15 @@ export default function Footer() {
               </p>
             </address>
           </div>
+        </div>
+
+        {/* Oversized signature wordmark */}
+        <div className="container-page overflow-hidden">
+          <WordmarkReveal
+            text="HANNACHI"
+            className="pt-2 text-center font-extrabold tracking-[-0.04em] text-[17vw] lg:text-[12.5rem]"
+            letterClassName="bg-gradient-to-b from-white/[0.18] to-white/[0.02] bg-clip-text text-transparent"
+          />
         </div>
 
         {/* Bottom bar with clean standard legal links */}

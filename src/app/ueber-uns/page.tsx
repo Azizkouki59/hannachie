@@ -16,7 +16,7 @@ import {
 import ContactCta from "@/components/ContactCta";
 import { HeroAnimatedBackdrop } from "@/components/HeroAnimatedBackdrop";
 import { AboutPrecisionStudio3D } from "@/components/AboutPrecisionStudio3D";
-import { FadeUp, Spatial3DCard } from "@/components/animations";
+import { FadeUp, Spatial3DCard, RevealText } from "@/components/animations";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { herrHannachiImage, showroomImage } from "@/data/images";
 import { brands, business, sparePartsBrands, yearsOfExperience } from "@/data/site";
@@ -133,7 +133,18 @@ export default function UeberUns() {
                 </div>
 
                 <h1 className="text-[clamp(2.15rem,4.2vw,3.65rem)] font-extrabold leading-[1.07] tracking-tight text-white text-balance max-w-2xl">
-                  {yearsOfExperience} Jahre Persönlichkeit, Erfahrung &amp; Präzision.
+                  <RevealText
+                    trigger="mount"
+                    delay={0.1}
+                    segments={[
+                      { text: `${yearsOfExperience} Jahre ` },
+                      {
+                        text: "Persönlichkeit, Erfahrung & Präzision.",
+                        className:
+                          "bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent",
+                      },
+                    ]}
+                  />
                 </h1>
 
                 <p className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300">

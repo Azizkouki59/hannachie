@@ -19,7 +19,7 @@ import {
   getApplianceMeta,
   type ExplorerApplianceId,
 } from "@/components/explorer3d/types";
-import { FadeUp } from "@/components/animations";
+import { FadeUp, RevealText } from "@/components/animations";
 import { buildWhatsAppDirectUrl } from "@/utils/whatsapp";
 import { hapticTap, triggerHapticFeedback } from "@/lib/haptics";
 
@@ -158,7 +158,7 @@ export default function SparePartsExplorer3D({
                 id="explorer-3d-heading"
                 className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
               >
-                Gesuchtes Ersatzteil im 3D-Modell antippen
+                <RevealText segments={[{ text: "Gesuchtes Ersatzteil im 3D-Modell antippen" }]} />
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
                 Explosionsansicht öffnen, Bauteil wählen und direkt passend zur E-Nr. bei{" "}

@@ -13,7 +13,7 @@ import { serviceIcons } from "./Illustrations";
 import { ApplianceGraphic } from "./AnimatedAppliances";
 import { ServiceCardSkeleton } from "./Skeletons";
 import { HeroAnimatedBackdrop } from "./HeroAnimatedBackdrop";
-import { Spatial3DCard } from "./animations";
+import { Spatial3DCard, RevealText } from "./animations";
 
 export type WhatsAppButtonVariant =
   | "hover-emerald"
@@ -208,14 +208,9 @@ export function PageHeader({
           </motion.div>
         )}
         <div className="overflow-hidden pb-0.5">
-          <motion.h1
-            initial={prefersReduced ? false : { opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.56, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-3xl text-2xl min-[375px]:text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight"
-          >
-            {title}
-          </motion.h1>
+          <h1 className="max-w-3xl text-2xl min-[375px]:text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight">
+            <RevealText trigger="mount" delay={0.04} segments={[{ text: title }]} />
+          </h1>
         </div>
         {intro && (
           <motion.p

@@ -7,7 +7,7 @@ import {
   MessageSquareText,
   PackageSearch,
 } from "lucide-react";
-import { FadeUp, StaggerContainer, StaggerItem, Spatial3DCard } from "@/components/animations";
+import { FadeUp, StaggerContainer, StaggerItem, Spatial3DCard, RevealText } from "@/components/animations";
 import { SectionAmbientMesh } from "@/components/HeroAnimatedBackdrop";
 import type { RequestTypeId } from "@/components/RepairForm";
 import { business, yearsOfExperience } from "@/data/site";
@@ -107,7 +107,7 @@ export default function HowWeWorkSection({
               id="how-we-work-heading"
               className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] tracking-tight text-balance"
             >
-              In 3 Schritten zur Lösung
+              <RevealText segments={[{ text: "In 3 Schritten zur Lösung" }]} />
             </h2>
           </div>
         </FadeUp>
