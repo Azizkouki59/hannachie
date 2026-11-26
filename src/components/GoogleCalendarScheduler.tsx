@@ -69,7 +69,7 @@ type PendingMutation =
 export function OfficialGoogleSignInButton({
   onClick,
   disabled,
-  label = "Sign in with Google",
+  label = "Mit Google anmelden",
 }: {
   onClick: () => void;
   disabled?: boolean;
@@ -451,11 +451,11 @@ export default function GoogleCalendarScheduler({
         }`}
       >
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
               <span>Google Calendar Integration</span>
               {mode === "customer" && (
                 <span
@@ -502,7 +502,7 @@ export default function GoogleCalendarScheduler({
             <OfficialGoogleSignInButton
               onClick={() => void handleLogin()}
               disabled={isLoggingIn}
-              label={isLoggingIn ? "Verbinde…" : "Sign in with Google"}
+              label={isLoggingIn ? "Verbinde…" : "Mit Google anmelden"}
             />
           ) : (
             <div className="flex flex-wrap items-center gap-2">
@@ -570,7 +570,7 @@ export default function GoogleCalendarScheduler({
               href={successBanner.htmlLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[38px] items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shrink-0"
+              className="inline-flex min-h-[38px] items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shrink-0"
             >
               <span>Im Google Kalender öffnen</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -594,13 +594,6 @@ export default function GoogleCalendarScheduler({
               .
             </p>
           </div>
-          <div className="shrink-0">
-            <OfficialGoogleSignInButton
-              onClick={() => void handleLogin()}
-              disabled={isLoggingIn}
-              label={isLoggingIn ? "Verbinde…" : "Sign in with Google"}
-            />
-          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -610,7 +603,7 @@ export default function GoogleCalendarScheduler({
               <div className="rounded-xl border border-sky-500/30 bg-sky-500/[0.05] p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="text-xs sm:text-sm font-extrabold text-ink flex items-center gap-1.5">
-                    <CalendarPlus className="w-4 h-4 text-sky-600" />
+                    <CalendarPlus className="w-4 h-4 text-sky-700" />
                     <span>
                       Terminierte Aufträge mit 1 Klick in Google Kalender übertragen ({scheduledTickets.length})
                     </span>
@@ -637,7 +630,7 @@ export default function GoogleCalendarScheduler({
                           disabled={isSyncing}
                           onClick={() => void handleSyncAdminTicketToCalendar(t)}
                           data-testid={`sync-ticket-gcal-btn-${t.id}`}
-                          className="min-h-[38px] px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-60"
+                          className="min-h-[38px] px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-60"
                         >
                           <CalendarPlus className="w-3.5 h-3.5" />
                           <span>
@@ -831,7 +824,7 @@ export default function GoogleCalendarScheduler({
                 type="submit"
                 disabled={submitting}
                 data-testid="submit-google-calendar-visit-btn"
-                className="w-full min-h-[46px] px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
+                className="w-full min-h-[46px] px-4 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-extrabold text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
               >
                 <CalendarPlus className="w-4 h-4 shrink-0" />
                 <span>
@@ -951,7 +944,7 @@ export default function GoogleCalendarScheduler({
                                   newSlot: rescheduleSlot,
                                 })
                               }
-                              className="min-h-[34px] px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold cursor-pointer"
+                              className="min-h-[34px] px-3 py-1 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-extrabold cursor-pointer"
                             >
                               Zeitänderung prüfen…
                             </button>

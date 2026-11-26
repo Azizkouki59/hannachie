@@ -1617,7 +1617,7 @@ export default function AdminPage() {
                                   <span
                                     className={`px-2 py-0.5 rounded font-bold ${
                                       isToday
-                                        ? "bg-emerald-600 text-white"
+                                        ? "bg-emerald-700 text-white"
                                         : isTomorrow
                                         ? "bg-amber-600 text-white"
                                         : "bg-primary/10 dark:bg-white/10 text-ink"
@@ -1632,7 +1632,7 @@ export default function AdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => openCompletionModal(t)}
-                                  className="min-h-[44px] px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                                  className="min-h-[44px] px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                   <span>Abschließen</span>
@@ -1670,7 +1670,7 @@ export default function AdminPage() {
                                   href={buildAdminWhatsAppReplyUrl(resolved, "appointment")}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
+                                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
                                 >
                                   <MessageCircle className="w-3.5 h-3.5" />
                                   <span>Termin bestätigen</span>
@@ -1925,7 +1925,7 @@ export default function AdminPage() {
                     onClick={() => setStatusFilter("new")}
                     className={`min-h-[36px] px-3 py-1.5 rounded-md text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
                       statusFilter === "new"
-                        ? "bg-sky-600 text-white shadow-xs"
+                        ? "bg-sky-700 text-white shadow-xs"
                         : "text-ink-muted hover:text-ink"
                     }`}
                   >
@@ -1947,7 +1947,7 @@ export default function AdminPage() {
                     onClick={() => setStatusFilter("completed")}
                     className={`min-h-[36px] px-3 py-1.5 rounded-md text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
                       statusFilter === "completed"
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-emerald-700 text-white shadow-xs"
                         : "text-ink-muted hover:text-ink"
                     }`}
                   >
@@ -2017,7 +2017,7 @@ export default function AdminPage() {
                       onClick={() => setScopeFilter(sc.id)}
                       className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
                         active
-                          ? "bg-accent text-primary shadow-xs"
+                          ? "bg-accent text-white shadow-xs"
                           : "bg-background dark:bg-slate-950 border border-primary/10 dark:border-white/10 text-ink-muted hover:text-ink"
                       }`}
                     >
@@ -2156,7 +2156,7 @@ export default function AdminPage() {
                             </span>
                           )}
                           {comp?.warrantyMonths ? (
-                            <span className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-emerald-700 text-white font-bold text-[11px]">
                               {comp.warrantyMonths} Mon. Garantie
                             </span>
                           ) : null}
@@ -2166,7 +2166,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => toggleDetailsForTicket(ticket.id)}
                           data-testid={`ticket-completed-details-btn-${ticket.id}`}
-                          className="min-h-[38px] px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="min-h-[38px] px-3 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
                         >
                           <Eye className="w-3.5 h-3.5 shrink-0" />
                           <span>{isDetailsOpen ? "Details schließen" : "Details"}</span>
@@ -2301,10 +2301,10 @@ export default function AdminPage() {
                             const active = simpleStatus === opt.value;
                             const activeClass =
                               opt.value === "new"
-                                ? "bg-sky-600 text-white shadow-xs"
+                                ? "bg-sky-700 text-white shadow-xs"
                                 : opt.value === "in_progress"
                                 ? "bg-amber-600 text-white shadow-xs"
-                                : "bg-emerald-600 text-white shadow-xs";
+                                : "bg-emerald-700 text-white shadow-xs";
 
                             return (
                               <button
@@ -2660,7 +2660,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => openCompletionModal(ticket, "repaired")}
                             data-testid={`confirm-repaired-btn-${ticket.id}`}
-                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
+                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <Wrench className="w-4 h-4 shrink-0" />
                             <span className="sm:hidden">Übergabe fertig</span>
@@ -2714,7 +2714,7 @@ export default function AdminPage() {
                               href={whatsappHref}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="min-h-[44px] flex-1 px-2.5 sm:px-3.5 py-2 rounded-l-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                              className="min-h-[44px] flex-1 px-2.5 sm:px-3.5 py-2 rounded-l-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                             >
                               <MessageCircle className="w-4 h-4 shrink-0" />
                               <span>WhatsApp</span>
@@ -2813,7 +2813,7 @@ export default function AdminPage() {
                             aria-expanded={isDetailsOpen}
                             className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg border text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                               isDetailsOpen
-                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                ? "border-emerald-600 bg-emerald-700 text-white"
                                 : "border-primary/20 dark:border-white/20 bg-background dark:bg-slate-950 text-ink hover:border-accent"
                             }`}
                           >
@@ -2831,7 +2831,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleOpenPrintPreview(ticket)}
                             data-testid={`export-ticket-btn-${ticket.id}`}
-                            className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                            className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg border border-accent/45 bg-accent/12 hover:bg-accent hover:text-white text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                           >
                             <FileText className="w-4 h-4 text-accent shrink-0" />
                             <span className="sm:hidden">Beleg / PDF</span>
@@ -3062,7 +3062,7 @@ export default function AdminPage() {
             {/* Left: Selected Count & Clear Selection */}
             <div className="flex items-center justify-between sm:justify-start gap-2.5">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center min-w-[26px] h-6 sm:min-w-[28px] sm:h-7 px-2 rounded-md bg-accent text-primary font-mono font-bold text-xs tabular-nums">
+                <span className="inline-flex items-center justify-center min-w-[26px] h-6 sm:min-w-[28px] sm:h-7 px-2 rounded-md bg-accent text-white font-mono font-bold text-xs tabular-nums">
                   {selectedTicketIds.length}
                 </span>
                 <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
@@ -3092,7 +3092,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => void handleBulkStatusUpdate("new")}
-                  className="min-h-[34px] px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="min-h-[34px] px-2.5 py-1 rounded-md bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   Neu
                 </button>
@@ -3605,7 +3605,7 @@ export default function AdminPage() {
                       }
                       className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                         completionModal.outcome === "repaired"
-                          ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                          ? "border-emerald-600 bg-emerald-700 text-white shadow-sm"
                           : "border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 text-ink hover:border-emerald-500"
                       }`}
                     >
@@ -3866,7 +3866,7 @@ export default function AdminPage() {
                     type="submit"
                     disabled={savingCompletion}
                     data-testid="confirm-completion-save-btn"
-                    className="min-h-[44px] flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="min-h-[44px] flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
                     <BadgeCheck className="w-4 h-4 shrink-0" />
                     <span>
@@ -3980,10 +3980,10 @@ export default function AdminPage() {
                               <span
                                 className={`px-2 py-0.5 rounded font-sans font-bold text-[11px] ${
                                   st === "completed"
-                                    ? "bg-emerald-600 text-white"
+                                    ? "bg-emerald-700 text-white"
                                     : st === "in_progress"
                                     ? "bg-amber-600 text-white"
-                                    : "bg-sky-600 text-white"
+                                    : "bg-sky-700 text-white"
                                 }`}
                               >
                                 {st === "completed"
@@ -4100,7 +4100,7 @@ export default function AdminPage() {
                   onClick={() => setTicketDocType("warranty_sale")}
                   className={`min-h-[36px] px-2.5 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
                     ticketDocType === "warranty_sale"
-                      ? "bg-accent text-primary shadow-xs"
+                      ? "bg-accent text-white shadow-xs"
                       : "text-white/80 hover:text-white"
                   }`}
                 >
@@ -4161,7 +4161,7 @@ export default function AdminPage() {
                         );
                       }}
                       data-testid="share-ticket-mobile-btn"
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                     >
                       <Share2 className="w-4 h-4 shrink-0" />
                       <span>Teilen (Handy)</span>
@@ -4174,7 +4174,7 @@ export default function AdminPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4 shrink-0" />
                       <span>Per WhatsApp senden</span>

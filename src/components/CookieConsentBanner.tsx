@@ -274,7 +274,7 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         acceptAll();
                       }}
-                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-800 transition-colors cursor-pointer"
                     >
                       <Check size={14} aria-hidden="true" />
                       <span>Alle akzeptieren</span>
@@ -311,7 +311,7 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         acceptAll();
                       }}
-                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-800 transition-colors cursor-pointer"
                     >
                       <Check size={14} aria-hidden="true" />
                       <span>Alle akzeptieren</span>

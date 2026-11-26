@@ -722,7 +722,7 @@ export default function AdminMarketplaceManager({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 py-4 bg-slate-50/70 dark:bg-slate-950/60">
         <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-700 dark:text-sky-400">
             <Package size={20} />
           </div>
           <div className="min-w-0">
@@ -735,7 +735,7 @@ export default function AdminMarketplaceManager({
                 href="/marktplatz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+                className="font-bold text-sky-700 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
               >
                 <span>/marktplatz</span>
                 <ExternalLink size={11} />
@@ -750,7 +750,7 @@ export default function AdminMarketplaceManager({
             type="button"
             onClick={openCreateModal}
             data-testid="admin-add-marketplace-item-btn"
-            className="col-span-2 sm:col-span-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-sky-500 cursor-pointer whitespace-nowrap"
+            className="col-span-2 sm:col-span-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-sky-800 cursor-pointer whitespace-nowrap"
           >
             <Plus size={15} />
             <span>Neuer Artikel + Fotos</span>
@@ -806,7 +806,7 @@ export default function AdminMarketplaceManager({
                 onClick={() => setInventoryCat(cat.id)}
                 className={`min-h-[36px] px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer ${
                   inventoryCat === cat.id
-                    ? "bg-sky-600 text-white"
+                    ? "bg-sky-700 text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                 }`}
               >
@@ -886,7 +886,7 @@ export default function AdminMarketplaceManager({
                       <span aria-hidden="true" className="text-slate-400">
                         ·
                       </span>
-                      <span className="font-semibold text-sky-600 dark:text-sky-400">
+                      <span className="font-semibold text-sky-700 dark:text-sky-400">
                         {item.categoryLabel}
                       </span>
                       {isSold && (
@@ -924,7 +924,7 @@ export default function AdminMarketplaceManager({
                       }
                       className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
                         isAvailable
-                          ? "bg-emerald-600 text-white shadow-xs"
+                          ? "bg-emerald-700 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
@@ -953,7 +953,7 @@ export default function AdminMarketplaceManager({
                       data-testid={`mp-mark-sold-btn-${item.id}`}
                       className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
                         isSold
-                          ? "bg-slate-900 dark:bg-sky-600 text-white shadow-xs"
+                          ? "bg-slate-900 dark:bg-sky-700 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
@@ -1054,7 +1054,7 @@ export default function AdminMarketplaceManager({
               {!form.id && (
                 <div className="rounded-xl border border-sky-500/25 bg-sky-500/[0.06] p-3.5 space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-900 dark:text-white">
-                    <Sparkles size={14} className="text-sky-600 dark:text-sky-400" />
+                    <Sparkles size={14} className="text-sky-700 dark:text-sky-400" />
                     <span>1-Klick Schnellvorlage für neuen Artikel:</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -1077,7 +1077,7 @@ export default function AdminMarketplaceManager({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <ImageIcon size={15} className="text-sky-600 dark:text-sky-400" />
+                      <ImageIcon size={15} className="text-sky-700 dark:text-sky-400" />
                       <span>Produktfotos &amp; Typenschild-Galerie</span>
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1092,7 +1092,7 @@ export default function AdminMarketplaceManager({
                       onClick={() => fileInputRef.current?.click()}
                       disabled={Boolean(uploadProgress) || form.photos.length >= MAX_PHOTOS_PER_ITEM}
                       data-testid="admin-select-photos-btn"
-                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-extrabold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl bg-sky-700 px-3 py-1.5 text-xs font-extrabold text-white hover:bg-sky-800 disabled:opacity-50 cursor-pointer whitespace-nowrap"
                     >
                       <Upload size={13} />
                       <span>Fotos auswählen</span>
@@ -1105,7 +1105,7 @@ export default function AdminMarketplaceManager({
                       data-testid="admin-camera-photo-btn"
                       className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-sky-500 disabled:opacity-50 cursor-pointer whitespace-nowrap"
                     >
-                      <Camera size={13} className="text-sky-600 dark:text-sky-400" />
+                      <Camera size={13} className="text-sky-700 dark:text-sky-400" />
                       <span>Kamera öffnen</span>
                     </button>
                   </div>
@@ -1169,7 +1169,7 @@ export default function AdminMarketplaceManager({
                 >
                   {uploadProgress ? (
                     <div className="space-y-2 py-1">
-                      <p className="text-xs font-extrabold text-sky-600 dark:text-sky-400">
+                      <p className="text-xs font-extrabold text-sky-700 dark:text-sky-400">
                         {uploadProgress.statusText}
                       </p>
                       <div className="mx-auto h-2 w-56 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
@@ -1230,7 +1230,7 @@ export default function AdminMarketplaceManager({
                             <div className="min-w-0 flex-1 flex flex-col justify-between">
                               <div className="flex items-center justify-between gap-1">
                                 {isPrimary ? (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-sky-600 dark:text-sky-400">
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-sky-700 dark:text-sky-400">
                                     <Star size={12} className="fill-current" />
                                     <span>Titelbild</span>
                                   </span>
@@ -1301,7 +1301,7 @@ export default function AdminMarketplaceManager({
                                 }
                                 className={`rounded-md px-2 py-0.5 text-[10px] font-bold transition-colors cursor-pointer ${
                                   photo.label === preset
-                                    ? "bg-sky-600 text-white"
+                                    ? "bg-sky-700 text-white"
                                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                                 }`}
                               >
@@ -1483,7 +1483,7 @@ export default function AdminMarketplaceManager({
                   type="submit"
                   disabled={isSaving || Boolean(uploadProgress)}
                   data-testid="admin-save-marketplace-item-btn"
-                  className="min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 font-extrabold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
+                  className="min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 font-extrabold text-white hover:bg-sky-800 disabled:opacity-50 cursor-pointer"
                 >
                   <Check size={14} />
                   <span>{isSaving ? "Speichert..." : "Im Marktplatz speichern"}</span>

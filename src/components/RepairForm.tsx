@@ -1305,7 +1305,7 @@ export default function RepairForm({
                 >
                   <span>Telefon (optional)</span>
                   {isPhoneValid && (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
                       <CheckCircle2 size={12} />
                       <span>OK</span>
                     </span>
@@ -1376,7 +1376,7 @@ export default function RepairForm({
                 >
                   <span>PLZ / Ort</span>
                   {isZipReady && (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
                       <CheckCircle2 size={12} />
                       <span>Aktiv</span>
                     </span>

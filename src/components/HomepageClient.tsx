@@ -485,7 +485,7 @@ export default function HomepageClient() {
                                 : { type: "spring", stiffness: 380, damping: 32, mass: 0.8 }
                             }
                             aria-hidden="true"
-                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-500 to-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
+                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-600 to-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
                           >
                             {/* Magic UI-inspired animated hairline border beam on active device pill */}
                             {!prefersReducedMotion && (
@@ -644,7 +644,7 @@ export default function HomepageClient() {
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-whatsapp-btn"
-                    className="btn-shimmer-beam hero-cta-specular col-span-2 sm:col-span-6 min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/50 bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-[0_10px_24px_-8px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors"
+                    className="btn-shimmer-beam hero-cta-specular col-span-2 sm:col-span-6 min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/50 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-[0_10px_24px_-8px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors"
                   >
                     <MessageCircle size={16} className="text-white shrink-0" aria-hidden="true" />
                     <span className="truncate inline-flex items-center min-w-0">
@@ -683,7 +683,7 @@ export default function HomepageClient() {
                     type="button"
                     onClick={handleScrollToRequest}
                     data-testid="hero-direct-form-btn"
-                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
+                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
                   >
                     <span className="truncate">
                       {selectedSymptom ? "Formular" : "Termin"}
