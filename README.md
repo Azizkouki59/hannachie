@@ -8,7 +8,6 @@
 [![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2F7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Three.js](https://img.shields.io/badge/Three.js-WebGL_3D-0F2A4A?logo=threedotjs&logoColor=white)](https://threejs.org/)
 [![Cloudflare Workers](https://img.shields.io/badge/Deploy-Node_%2F_Cloudflare_Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 
 [Website](https://hannachi.de) · [Features](#-key-features) · [Architecture](#-project-structure) · [Getting Started](#-getting-started) · [Deployment](#-deployment)
@@ -19,47 +18,30 @@
 
 ## Overview
 
-`hannachi.de` is a fast, mobile-first web application built for **Hannachi Elektrohaushaltsgeräte & Ersatzteile** (Owner: **Kamal Hannachi**, Osnabrück, Germany). It combines personal consultation, original spare-parts lookup by rating-plate number (`E-Nr.` / `PNC`), selected brand appliances on request, and a 100% self-hosted interactive **3D Spare-Parts Explorer** — engineered with strict German legal (`§ 5 DDG`, `§ 14 GewO`, `§ 479 BGB`, `ElektroG`) and GDPR (`DSGVO`) compliance.
+`hannachi.de` is a fast, mobile-first web application built for **Hannachi Elektrohaushaltsgeräte & Ersatzteile** (Owner: **Kamal Hannachi**, Osnabrück, Germany). It combines personal consultation, original spare-parts lookup by rating-plate number (`E-Nr.` / `PNC`), selected brand appliances on request — engineered with strict German legal (`§ 5 DDG`, `§ 14 GewO`, `§ 479 BGB`, `ElektroG`) and GDPR (`DSGVO`) compliance.
 
 ---
 
-## ✨ Key Features
+## ✨ Public website (`src/site/`)
 
-- **Interactive 3D Spare-Parts Explorer (`#3d-explorer`)**
-  - Procedural Three.js cutaway models for **4 core appliances** (*Waschmaschine*, *Geschirrspüler*, *Backofen & Herd*, *Kühlschrank*), each with **5 clickable spare parts** (`01`–`05`), dashed engineering leader lines, and live explosion slider (`0%–100%`).
-  - **100% self-hosted & GDPR-safe**: zero external CDNs, `.glb` downloads, or remote HDRI requests — procedural PBR materials, brushed steel textures, `RoomEnvironment`, and custom dual-theme GLSL studio cyclorama.
-  - **Mobile-first ergonomics**: compact mobile canvas height (`330px`), `touch-action: pan-y` custom horizontal orbit controller (never traps vertical page scroll), collision-free mobile part chip strip, lazy WebGL loading, automatic offscreen `rAF` pausing, software-WebGL fence pacing, and full GPU resource disposal.
-- **Direct Inquiry & WhatsApp Console**
-  - Instant appliance & topic selector on the homepage synced directly with the 3D Explorer and `#anfrage` inquiry form.
-  - Live formatted WhatsApp message builder, QR code handoff on desktop, and direct pre-filled part requests (`Teil anfragen` & `Per WhatsApp`).
-- **Studio-Grade Motion & Dual Theme**
-  - Smooth Light & Dark mode (`#0F2A4A` navy, `#0284C7` cerulean, `#10B981` emerald) with synchronized 3D lighting calibration.
-  - Calibrated desktop CSS 3D micro-tilt, cursor radial spotlights, viewport count-up metrics, infinite brand marquee, and full `prefers-reduced-motion` support.
-- **Verified Customer Reviews & Local SEO**
-  - Displays all **82 Google Maps reviews (4.8 ★)** with topic filters, pauseable desktop ticker, and structured `LocalBusiness` JSON-LD schema.
-- **Single-Source German Legal & GDPR Architecture**
-  - Centralized business, address, email, tax/W-IdNr., warranty (`§ 479 BGB`), and `ElektroG` config in `src/data/site.ts`.
-  - Clean customer-facing marketing pages paired with full statutory compliance on `/impressum` and `/datenschutz`, explicit cookie consent management, and GDPR WhatsApp notices.
+- **Mobile-first, calm German "Fachhandel" design** – large type (17–18 px body), 48–56 px tap targets, sticky call/WhatsApp bar on phones, light theme only.
+- **Compliant wording** – positioned as trade (§ 14 GewO): Ersatzteile nach E-Nr., geprüfte Markengeräte mit Verkäufergarantie, Ankauf, Beratung. No advertising of repair, installation or electrical connection work.
+- **No tracking, no cookies, no third-party embeds** on public pages → no cookie banner needed. Google Maps / WhatsApp are plain links.
+- **Inquiry form without backend** – composes a WhatsApp message or e-mail (`mailto:`) the customer sends themselves, so no inquiry can get lost.
+- All copy lives in `src/site/content.ts` (rating, reviews selection, FAQ, offers); business & legal data in `src/data/site.ts`.
 
----
-
-## 🧭 Application Routes
+## 🧭 Routes
 
 | Route | Description |
 | :--- | :--- |
-| `/` | Homepage: Hero inquiry console, Brand Marquee, **3D Spare-Parts Explorer**, 3-Pillar Services, Process flow, Google Reviews, and Direct Inquiry (`#anfrage`) |
-| `/leistungen` (`/geraete`) | Complete catalog of supported appliances & original spare-parts categories |
-| `/leistungen/:slug` | Dedicated category pages (`waschmaschinen`, `geschirrspueler`, `kuehlschraenke`, `backoefen`) |
-| `/marktplatz` (`/angebote`) | Selected brand appliances available on request |
-| `/kundenbewertungen` | Full 82-review Google Maps showcase with filters |
-| `/ueber-uns` | Owner story (since 1990), guiding principles, and 3D precision showcase |
-| `/kontakt` | Contact channels, appointment info, and consent-gated map |
-| `/anfrage` | Standalone quick inquiry form |
-| `/impressum` | Statutory legal notice (`§ 5 DDG`, `§ 14 GewO / HwO`, `§ 479 BGB`, `ElektroG`) |
-| `/datenschutz` | Full GDPR (`DSGVO`) privacy policy & WhatsApp/Maps disclosures |
-| `/admin` | Protected administration console |
-
----
+| `/` | Home: hero, offers, 3-step E-Nr. guide, reviews, brands, about, FAQ, contact |
+| `/leistungen` | Sortiment overview |
+| `/leistungen/:slug` | `waschmaschinen`, `geschirrspueler`, `kuehlschraenke`, `backoefen` |
+| `/ueber-uns` | About the owner |
+| `/kundenbewertungen` | Google review excerpts |
+| `/kontakt` (`/anfrage`) | Contact data + inquiry form |
+| `/impressum`, `/datenschutz` | Legal pages |
+| `/admin` | Owner console (lazy-loaded, needs the Node server – not available on the Cloudflare Worker) |
 
 ## 🛠️ Tech Stack
 
@@ -67,7 +49,6 @@
 | :--- | :--- |
 | **Frontend** | React 19, TypeScript, Vite 8 |
 | **Styling & Motion** | Tailwind CSS v4 (`@tailwindcss/vite`), Motion (`motion` / `framer-motion`), Lucide Icons |
-| **3D Graphics** | Three.js (`RoomEnvironment`, procedural PBR geometries, custom GLSL shaders) |
 | **Backend / Edge** | Express (`server.ts`) for Node.js & Cloudflare Workers (`worker.ts` + `wrangler.jsonc`) |
 | **Validation & Data** | Zod, Firebase SDK, Google Maps React (`@vis.gl/react-google-maps`) |
 
@@ -76,37 +57,18 @@
 ## 📁 Project Structure
 
 ```text
-.
-├── index.html                        # HTML entry point & synced SEO/OpenGraph metadata
-├── server.ts                         # Express server (dev Vite middleware + production server)
-├── worker.ts                         # Cloudflare Worker entry point (/api/* + SPA assets)
-├── wrangler.jsonc                    # Cloudflare Workers deployment configuration
-├── src/
-│   ├── App.tsx                       # Client router, layout shell, JSON-LD & providers
-│   ├── app/                          # Page modules (Home, Leistungen, Über uns, Kontakt, Legal, Admin)
-│   ├── components/
-│   │   ├── HomepageClient.tsx        # Homepage orchestration (Hero ↔ 3D Explorer ↔ Form)
-│   │   ├── SparePartsExplorer3D.tsx  # Flagship 3D Explorer section, controls & GDPR action bar
-│   │   ├── explorer3d/               # Modular Three.js engine & 4 procedural cutaway builders
-│   │   │   ├── Explorer3DCanvas.tsx  # WebGL viewport, touch-safe orbit, raycast & pins
-│   │   │   ├── studioCore.ts         # Materials, brushed steel texture, GLSL cyclorama
-│   │   │   ├── buildWasher.ts        # Procedural washing machine assembly
-│   │   │   ├── buildDishwasher.ts    # Procedural dishwasher assembly
-│   │   │   ├── buildOven.ts          # Procedural oven & induction cooktop assembly
-│   │   │   ├── buildFridge.ts        # Procedural fridge-freezer assembly
-│   │   │   └── types.ts              # Spare-part catalog & appliance resolution helpers
-│   │   ├── RepairForm.tsx            # Streamlined inquiry & WhatsApp message generator
-│   │   ├── GoogleReviewsSection.tsx  # Interactive Google Maps reviews showcase
-│   │   └── animations.tsx            # Motion primitives, Spatial3DCard, CountUp, Marquee
-│   ├── data/
-│   │   ├── site.ts                   # Single source of truth for business & legal config
-│   │   └── googleReviews82.ts        # Structured customer reviews dataset
-│   ├── lib/                          # Consent, SEO sync, haptics, Google Place live helpers
-│   └── utils/                        # WhatsApp URL builders & formatting helpers
-└── public/                           # Static self-hosted images & brand assets
+src/
+├── App.tsx            # Router, page chrome, JSON-LD
+├── site/              # Public website (design system, pages, copy)
+│   ├── content.ts     # All customer-facing copy & data
+│   ├── ui.tsx         # Buttons, sections, picture, rating badge
+│   ├── Chrome.tsx     # Header, mobile menu, mobile action bar, footer
+│   └── pages/         # Home, Sortiment, Über uns, Bewertungen, Kontakt, Legal
+├── app/admin/         # Owner console (lazy-loaded)
+├── data/site.ts       # Business, legal & catalog data (single source of truth)
+└── server/            # Edge API (Cloudflare Worker)
+public/images/site/    # Optimised WebP images used by the public site
 ```
-
----
 
 ## 🚀 Getting Started
 
