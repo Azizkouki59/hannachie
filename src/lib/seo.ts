@@ -11,9 +11,9 @@ export type RouteSeoConfig = {
   canonicalUrl: string;
 };
 
-const BASE_TITLE = "Hannachi – Hausgeräte & Ersatzteile in Osnabrück | seit 1990";
+const BASE_TITLE = "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück seit 1990";
 const BASE_DESCRIPTION =
-  "Original-Ersatzteile für Waschmaschine, Geschirrspüler, Kühlschrank & Backofen nach E-Nr., geprüfte Markengeräte mit Garantie und Ankauf – persönlich in Osnabrück seit 1990.";
+  "Hausgeräte-Spezialist in Osnabrück seit 1990: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage.";
 export const BASE_KEYWORDS = [
   "Hausgeräte Spezialist Osnabrück",
   "Elektrohaushaltsgeräte Beratung Osnabrück",
@@ -67,7 +67,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/leistungen" || normalizedPath === "/geraete") {
     return {
-      title: "Sortiment: Ersatzteile & Hausgeräte | Hannachi Osnabrück",
+      title: "Geräte, Beratung & Original-Ersatzteile | Hannachi Osnabrück",
       description: `${yearsOfExperience}+ Jahre Erfahrung in Osnabrück: Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
       robots: "index,follow",
       index: true,
@@ -85,7 +85,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     if (service) {
       const canonicalPath = `/leistungen/${service.slug}`;
       return {
-        title: `Ersatzteile für ${service.title} | Hannachi Osnabrück`,
+        title: `${service.title} – Beratung & Original-Ersatzteile | Hannachi Osnabrück`,
         description: `${service.short} Persönlich in Osnabrück seit 1990 – Termine nach Vereinbarung.`,
         robots: "index,follow",
         index: true,
@@ -104,8 +104,8 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
       robots: "index,follow",
       index: true,
       follow: true,
-      canonicalPath: "/kontakt",
-      canonicalUrl: toCanonicalUrl("/kontakt"),
+      canonicalPath: "/anfrage",
+      canonicalUrl: toCanonicalUrl("/anfrage"),
     };
   }
 
@@ -124,9 +124,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/kundenbewertungen" || normalizedPath === "/bewertungen") {
     return {
-      title: "Kundenbewertungen | Hannachi Osnabrück",
+      title: "Verifizierte Google-Bewertungen | Hannachi Osnabrück",
       description:
-        "Kundenstimmen aus Osnabrück: 4,8 Sterne bei Google für Hannachi – Hausgeräte & Ersatzteile.",
+        "Echte Kundenstimmen aus Osnabrück & Umgebung: Über 80 Google-Bewertungen für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
       robots: "index,follow",
       index: true,
       follow: true,
@@ -137,7 +137,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/kontakt") {
     return {
-      title: "Kontakt & Anfrage | Hannachi Osnabrück",
+      title: "Kontakt & Termine nach Vereinbarung | Hannachi Osnabrück",
       description:
         "Direkt per WhatsApp oder Telefon erreichbar: Persönliche Beratung, Original-Ersatzteile nach E-Nr. & Termine nach Vereinbarung in Osnabrück.",
       robots: "index,follow",
@@ -150,9 +150,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/impressum") {
     return {
-      title: "Impressum | Hannachi Osnabrück",
+      title: "Impressum & Rechtliche Hinweise (§ 5 DDG / § 14 GewO) | Hannachi",
       description:
-        "Impressum gemäß § 5 DDG – Hannachi, Inhaber Kamal Hannachi, Iburger Straße 5, 49082 Osnabrück.",
+        "Impressum gemäß § 5 DDG, gewerberechtliche Hinweise (§ 14 GewO / HwO) und Anschrift von Inhaber Kamal Hannachi in Osnabrück.",
       robots: "noindex,follow",
       index: false,
       follow: true,
@@ -165,7 +165,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     return {
       title: "Datenschutzerklärung (DSGVO) | Hannachi Osnabrück",
       description:
-        "Datenschutzhinweise zur Nutzung der Website hannachi.de – ohne Tracking und ohne Werbe-Cookies.",
+        "DSGVO-Datenschutzhinweise von Kamal Hannachi zur Website-Nutzung, lokalen Anfragevorbereitung für WhatsApp und optionalen Google-Maps-Karten.",
       robots: "noindex,follow",
       index: false,
       follow: true,
@@ -190,7 +190,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
   return {
     title: "Seite nicht gefunden (404) | Hannachi Osnabrück",
     description:
-      "Die angeforderte Seite wurde nicht gefunden.",
+      "Die angeforderte Seite wurde nicht gefunden. Kehren Sie zur Startseite von Hannachi Elektrohaushaltsgeräte & Ersatzteile in Osnabrück zurück.",
     robots: "noindex,follow",
     index: false,
     follow: true,
@@ -221,7 +221,7 @@ export function buildRouteMetadata(cleanPath: string): Metadata {
       type: "website",
       images: [
         {
-          url: `${business.url}/images/site/inhaber.jpg`,
+          url: `${business.url}/images/herr-hannachi.jpg`,
           alt: `${business.name} – Osnabrück`,
         },
       ],

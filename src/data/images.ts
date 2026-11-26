@@ -65,6 +65,15 @@ export const herrHannachiImage = createImageAsset(
   "pro2"
 );
 
+// Showroom photo (no tools / no repair scene) used on "Über uns".
+export const showroomImage = createImageAsset(
+  "showroom",
+  1200,
+  896,
+  "(min-width: 1024px) 46vw, 96vw",
+  "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADQAQCdASoQAAwAA4BaJZwAAh5YFTMR4AD+bE2xbc0pq73USAY0g5wyDcQ8hxhVFmi/QC7zjGX2yZPAec03IzYXrnn1kBQA"
+);
+
 export const washerModernImage = createImageAsset(
   "washer-modern",
   1600,
@@ -126,6 +135,7 @@ export const IMAGE_ASSETS_BY_PATH: Record<string, StaticImageData> = {
   "/images/werkstatt.jpg": werkstattImage,
   "/images/werkstatt-hero-hd.jpg": werkstattHeroHdImage,
   "/images/herr-hannachi.jpg": herrHannachiImage,
+  "/images/showroom.jpg": showroomImage,
   "/images/washer-modern.jpg": washerModernImage,
   "/images/dishwasher.jpg": dishwasherImage,
   "/images/fridge-modern.jpg": fridgeModernImage,
