@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sanitizeSingleLine, sanitizeText } from "../utils/sanitize.ts";
+import { fetchGooglePlace } from "./googlePlace.ts";
 
 // ── Isolate-scoped sliding-window rate limiter for POST /api/repair-request ──
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -152,9 +153,46 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
-export async function handleApiRequest(request: Request): Promise<Response> {
+export interface EdgeApiEnv {
+  GOOGLE_MAPS_API_KEY?: string;
+}
+
+const HANNACHI_PLACE_ID = "ChIJ_RB_R7_luUcRHnvjhljngB8";
+const GOOGLE_PLACE_EDGE_TTL_SECONDS = 6 * 60 * 60;
+
+// Live Google rating + reviews, cached at the edge for 6 h to stay within the free quota.
+async function handleGooglePlace(request: Request, env: EdgeApiEnv): Promise<Response> {
+  const apiKey = (env.GOOGLE_MAPS_API_KEY || "").trim();
+  if (!apiKey) {
+    return jsonResponse({ ok: false, source: "fallback", reason: "missing_api_key", quotaExceeded: false, place: null }, 200);
+  }
+
+  const cacheKey = new Request(new URL(`/api/google-place?placeId=${HANNACHI_PLACE_ID}`, request.url).toString());
+  const edgeCache = (globalThis as { caches?: { default?: Cache } }).caches?.default;
+  const hit = edgeCache ? await edgeCache.match(cacheKey) : undefined;
+  if (hit) return hit;
+
+  try {
+    const result = await fetchGooglePlace(HANNACHI_PLACE_ID, apiKey);
+    const response = jsonResponse(result.body, result.status);
+    if (result.body.ok === true && edgeCache) {
+      const cacheable = new Response(response.clone().body, response);
+      cacheable.headers.set("Cache-Control", `public, max-age=${GOOGLE_PLACE_EDGE_TTL_SECONDS}`);
+      await edgeCache.put(cacheKey, cacheable);
+    }
+    return response;
+  } catch {
+    return jsonResponse({ ok: false, source: "fallback", reason: "network_error", quotaExceeded: false, place: null }, 200);
+  }
+}
+
+export async function handleApiRequest(request: Request, env: EdgeApiEnv = {}): Promise<Response> {
   const url = new URL(request.url);
   const pathname = url.pathname;
+
+  if (pathname === "/api/google-place" && request.method === "GET") {
+    return handleGooglePlace(request, env);
+  }
 
   if (pathname === "/api/health" && request.method === "GET") {
     return jsonResponse(

@@ -617,7 +617,7 @@ export function GoogleReviewsSection({
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs sm:text-sm text-ink-muted">
-                        {place.userRatingCount} echte Google-Maps-Rezensionen für{" "}
+                        {place.userRatingCount} Bewertungen auf Google Maps für{" "}
                         <span className="font-semibold text-primary dark:text-slate-200">
                           {business.name} · {business.city}
                         </span>
@@ -912,12 +912,12 @@ export function GoogleReviewsSection({
                     </span>
                   </button>
                   <p className="text-[11px] text-ink-faint">
-                    Auszüge öffentlicher Kundenbewertungen auf Google Maps.
+                    Auszüge aus öffentlichen Google-Bewertungen. Die Bewertungen werden von Google veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
                   </p>
                 </div>
               ) : (
                 <p className="text-[11px] text-ink-faint">
-                  Auszüge öffentlicher Kundenbewertungen auf Google Maps.
+                  Auszüge aus öffentlichen Google-Bewertungen. Die Bewertungen werden von Google veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
                 </p>
               )}
 

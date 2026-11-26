@@ -72,7 +72,7 @@ const MILESTONE_ERAS: MilestoneEra[] = [
     title: `${yearsOfExperience}+ Jahre Erfahrung – modern & unkompliziert erreichbar`,
     summary:
       "Ob passgenaues Original-Ersatzteil nach Typenschild oder ausgewähltes Markengerät auf Anfrage inklusive schriftlicher Verkäufergarantie: Sie sprechen immer direkt mit dem Inhaber – ohne Warteschleife.",
-    highlight: "4,8 ★ Durchschnitt aus verifizierten Google-Bewertungen in Osnabrück",
+    highlight: "4,8 ★ Durchschnitt der Google-Bewertungen in Osnabrück",
   },
 ];
 

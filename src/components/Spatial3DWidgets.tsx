@@ -545,7 +545,7 @@ export function Rating3DPrismBanner({
                   ))}
                 </div>
                 <p className="text-base sm:text-lg font-extrabold text-white leading-snug">
-                  {reviewCount} verifizierte Google-Kundenstimmen
+                  {reviewCount} Bewertungen auf Google
                 </p>
                 <p className="mt-0.5 text-xs sm:text-sm text-white/75">
                   Ehrliche Rückmeldungen aus Osnabrück &amp; Umgebung · Seit {business.founded}

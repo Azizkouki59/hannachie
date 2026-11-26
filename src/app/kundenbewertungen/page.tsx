@@ -20,7 +20,7 @@ export default function Kundenbewertungen() {
     <>
       <PageHeader
         title={`Kundenbewertungen (${place.userRatingCount} Google-Rezensionen)`}
-        intro={`Aktuell ${ratingFormatted} von 5 Sternen aus ${place.userRatingCount} echten Google-Maps-Bewertungen für ${business.name} ${business.tagline} in ${business.city}.`}
+        intro={`Aktuell ${ratingFormatted} von 5 Sternen aus ${place.userRatingCount} Google-Bewertungen für ${business.name} ${business.tagline} in ${business.city}.`}
       />
       <Rating3DPrismBanner
         ratingFormatted={ratingFormatted}

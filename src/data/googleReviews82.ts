@@ -112,24 +112,6 @@ export interface DetailedGoogleReview {
  */
 export const googleReviews82: DetailedGoogleReview[] = [
   {
-    id: "google-review-myra-bonnici",
-    author: "Myra Bonnici",
-    rating: 5,
-    text: "Schnelle Terminvergabe und super Service rund um unsere Waschmaschine. Sehr freundlich, kompetent und preislich absolut fair.",
-    textEn:
-      "Quick appointment scheduling and great service around our washing machine. Very friendly, competent and absolutely fair pricing.",
-    relativeTime: "Auf Google Maps",
-    isNew: true,
-    serviceTag: "Waschmaschine",
-    localGuide: "Local Guide · 53 Fotos",
-    ownerReply:
-      "Herzlichen Dank für Ihre Bewertung, Frau Bonnici! Schön, dass wir Ihnen schnell weiterhelfen konnten.",
-    category: "waschmaschine",
-    topicTags: ["waschmaschinenreparatur", "schnelle_terminvergabe", "schnelle_reparatur"],
-    likesCount: 3,
-    verified: true,
-  },
-  {
     id: "google-review-viktoria-puskar",
     author: "Viktoria Puskar",
     rating: 5,
@@ -291,6 +273,24 @@ export const googleReviews82: DetailedGoogleReview[] = [
     category: "waschmaschine",
     topicTags: ["waschmaschinenreparatur", "schnelle_abwicklung", "schnelle_hilfe", "ersatzteile"],
     likesCount: 4,
+    verified: true,
+  },
+  {
+    id: "google-review-myra-bonnici",
+    author: "Myra Bonnici",
+    rating: 5,
+    text: "Schnelle Terminvergabe und super Service rund um unsere Waschmaschine. Sehr freundlich, kompetent und preislich absolut fair.",
+    textEn:
+      "Quick appointment scheduling and great service around our washing machine. Very friendly, competent and absolutely fair pricing.",
+    relativeTime: "Auf Google Maps",
+    isNew: true,
+    serviceTag: "Waschmaschine",
+    localGuide: "Local Guide · 53 Fotos",
+    ownerReply:
+      "Herzlichen Dank für Ihre Bewertung, Frau Bonnici! Schön, dass wir Ihnen schnell weiterhelfen konnten.",
+    category: "waschmaschine",
+    topicTags: ["waschmaschinenreparatur", "schnelle_terminvergabe", "schnelle_reparatur"],
+    likesCount: 3,
     verified: true,
   },
 ];
