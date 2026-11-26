@@ -176,7 +176,7 @@ export default function HowWeWorkSection({
                             <Icon size={22} strokeWidth={2} aria-hidden="true" />
                           </div>
                           <div className="text-right">
-                            <span className="block font-mono text-2xl font-extrabold leading-none text-primary/15 dark:text-white/15 tabular-nums transition-colors duration-300 group-hover/step:text-accent/45">
+                            <span aria-hidden="true" className="block font-mono text-2xl font-extrabold leading-none text-primary/60 dark:text-white/40 tabular-nums transition-colors duration-300 group-hover/step:text-accent/45">
                               {step.num}
                             </span>
                             <span className="mt-1 block text-[11px] font-semibold text-ink-faint">

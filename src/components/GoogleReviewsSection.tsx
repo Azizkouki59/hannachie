@@ -505,7 +505,8 @@ export function GoogleReviewsSection({
             verified: true,
             topicTags: inferTopics(r.text),
             authorUri: r.authorUri,
-            authorPhotoUri: r.authorPhotoUri,
+            // Initials instead of Google-hosted profile photos: no data transfer to Google without consent.
+            authorPhotoUri: undefined,
             publishTime: r.publishTime,
             originalText: r.originalText,
             originalLanguage: r.originalLanguage,
@@ -520,6 +521,7 @@ export function GoogleReviewsSection({
       .filter((r) => !liveAuthors.has(r.author.toLowerCase()))
       .map((r) => ({
         ...r,
+        authorPhotoUri: undefined,
         topicTags: r.topicTags && r.topicTags.length > 0 ? r.topicTags : inferTopics(r.text),
         googleMapsUri: mapsReviewsUri,
         isLiveFromApi: false,

@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
+  type Auth,
   type User,
 } from "firebase/auth";
 import firebaseConfig from "../../firebase-applet-config.json";
@@ -12,8 +13,16 @@ import type { AdminRepairTicket, AdminTimeSlot } from "@/lib/adminTypes";
 
 export const SCOPES = ["https://www.googleapis.com/auth/calendar.events"];
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Firebase Auth loads Google scripts (apis.google.com) as soon as it is created.
+// Create it lazily, only when the calendar feature is actually used — never on page load.
+let authInstance: Auth | null = null;
+function getAuthInstance(): Auth {
+  if (!authInstance) {
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    authInstance = getAuth(app);
+  }
+  return authInstance;
+}
 
 const provider = new GoogleAuthProvider();
 for (const scope of SCOPES) {
@@ -67,7 +76,7 @@ export const initCalendarAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
-  return onAuthStateChanged(auth, async (user: User | null) => {
+  return onAuthStateChanged(getAuthInstance(), async (user: User | null) => {
     if (user) {
       if (cachedAccessToken) {
         if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
@@ -91,7 +100,7 @@ export const googleCalendarSignIn = async (): Promise<{
 } | null> => {
   try {
     isSigningIn = true;
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(getAuthInstance(), provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     if (!credential?.accessToken) {
       throw new Error("Kein Zugriffstoken von Google erhalten.");
@@ -111,11 +120,11 @@ export const getCalendarAccessToken = async (): Promise<string | null> => {
 };
 
 export const getCurrentCalendarUser = (): User | null => {
-  return auth.currentUser;
+  return authInstance?.currentUser ?? null;
 };
 
 export const googleCalendarLogout = async (): Promise<void> => {
-  await auth.signOut();
+  await authInstance?.signOut();
   cachedAccessToken = null;
 };
 
