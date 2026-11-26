@@ -1,117 +1,365 @@
-import { Suspense, lazy, useEffect } from "react";
-import { business } from "@/data/site";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import ServiceNoticeBanner from "@/components/ServiceNoticeBanner";
+import Footer from "@/components/Footer";
+import { QuickRequestProvider } from "@/components/QuickRequestSheet";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ConsentProvider } from "@/lib/consent";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
+import MobileBottomDock from "@/components/MobileBottomDock";
+import SideContactWidget from "@/components/SideContactWidget";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { business, services } from "@/data/site";
+import {
+  GoogleLivePlaceProvider,
+  useGoogleLivePlace,
+} from "@/lib/googlePlaceLive";
 import { syncDocumentSeo } from "@/lib/seo";
 import { useLocationState } from "@/shims/next-navigation";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { Footer, Header, MobileActionBar } from "@/site/Chrome";
-import HomePage from "@/site/pages/Home";
-import SortimentPage, { SortimentDetailPage } from "@/site/pages/Sortiment";
-import { AboutPage, ContactPage, NotFoundPage, ReviewsPage } from "@/site/pages/Other";
-import { services } from "@/data/site";
-import { DatenschutzPage, ImpressumPage } from "@/site/pages/Legal";
+import { CardScrollRevealObserver } from "@/components/animations";
 
-// The admin console is large and only used by the owner – load it on demand.
-const AdminApp = lazy(() => import("@/site/AdminApp"));
+import Home from "@/app/page";
+const MarktplatzPage = lazy(() => import("@/app/marktplatz/page"));
+const LeistungenPage = lazy(() => import("@/app/leistungen/page"));
+const ServicePage = lazy(() => import("@/app/leistungen/[slug]/page"));
+const AnfragePage = lazy(() => import("@/app/anfrage/page"));
+const UeberUns = lazy(() => import("@/app/ueber-uns/page"));
+const Kundenbewertungen = lazy(() => import("@/app/kundenbewertungen/page"));
+const Kontakt = lazy(() => import("@/app/kontakt/page"));
+const Impressum = lazy(() => import("@/app/impressum/page"));
+const Datenschutz = lazy(() => import("@/app/datenschutz/page"));
+const AdminPage = lazy(() => import("@/app/admin/page"));
+import NotFound from "@/app/not-found";
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Store",
-  name: "Hannachi – Hausgeräte & Ersatzteile",
-  description: `Ersatzteile für Hausgeräte, geprüfte Markengeräte und persönliche Beratung in ${business.city} seit ${business.founded}.`,
-  url: business.url,
-  image: `${business.url}/images/site/inhaber.jpg`,
-  telephone: "+491703493494",
-  email: business.email,
-  founder: { "@type": "Person", name: business.owner },
-  foundingDate: String(business.founded),
-  areaServed: ["Osnabrück", "Landkreis Osnabrück"],
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: business.street,
-    postalCode: business.zip,
-    addressLocality: business.city,
-    addressCountry: "DE",
-  },
-  geo: { "@type": "GeoCoordinates", latitude: business.coordinates.lat, longitude: business.coordinates.lng },
-  hasMap: business.mapsUrl,
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      opens: "08:00",
-      closes: "18:00",
+function LiveBusinessJsonLd() {
+  const { place } = useGoogleLivePlace();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: `${business.name} ${business.tagline}`,
+    description: `Hausgeräte-Spezialist in ${business.city} seit ${business.founded}: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
+    url: business.url,
+    image: `${business.url}/images/herr-hannachi.jpg`,
+    telephone: place.internationalPhoneNumber || "+491703493494",
+    email: business.email,
+    founder: {
+      "@type": "Person",
+      name: business.owner,
     },
-  ],
+    foundingDate: String(business.founded),
+    areaServed: ["Osnabrück", "Landkreis Osnabrück"],
+    knowsAbout: [
+      "Elektrohaushaltsgeräte",
+      "Original-Ersatzteile nach Typenschild (E-Nr.)",
+      "Fachberatung Haushaltsgeräte",
+      "Miele",
+      "Bosch",
+      "Siemens",
+      "AEG",
+      "Liebherr",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      telephone: place.internationalPhoneNumber || "+491703493494",
+      email: business.email,
+      availableLanguage: ["German"],
+      areaServed: "DE",
+    },
+    hasMap: place.googleMapsUri || business.mapsUrl,
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: place.coordinates.lat,
+      longitude: place.coordinates.lng,
+    },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: business.street,
+      postalCode: business.zip,
+      addressLocality: business.city,
+      addressCountry: "DE",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: place.rating.toFixed(1),
+      reviewCount: String(place.userRatingCount),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+function AppLiveWidgets({ isAdminRoute }: { isAdminRoute: boolean }) {
+  const { place } = useGoogleLivePlace();
+  return (
+    <>
+      {!isAdminRoute && (
+        <>
+          <MobileBottomDock
+            phoneHref={place.phoneHref}
+            whatsappHref={business.whatsappHref}
+          />
+          <SideContactWidget
+            phone={place.phoneDisplay}
+            phoneHref={place.phoneHref}
+            whatsappHref={business.whatsappHref}
+            mapsUrl={place.googleMapsUri}
+            address={`${business.street}, ${business.zip} ${business.city}`}
+            hours={business.hours}
+            serviceNotice={business.serviceNotice}
+          />
+        </>
+      )}
+      <LiveBusinessJsonLd />
+    </>
+  );
+}
+
+function getRouteOrder(path: string): number {
+  if (path === "/") return 0;
+  if (path === "/marktplatz" || path === "/angebote") return 0.5;
+  if (path === "/leistungen" || path === "/geraete") return 1;
+  if (path.startsWith("/leistungen/")) return 1.5;
+  if (path === "/simulator") return 2;
+  if (path === "/anfrage") return 3;
+  if (path === "/kundenbewertungen" || path === "/bewertungen") return 4;
+  if (path === "/ueber-uns") return 5;
+  if (path === "/kontakt") return 6;
+  if (path === "/impressum") return 7;
+  if (path === "/datenschutz") return 8;
+  if (path === "/admin") return 8.5;
+  return 9;
+}
+
+const antigravityEase = [0.22, 1, 0.36, 1] as const;
+
+const pageSlideVariants = {
+  enter: (direction: number) => ({
+    x: direction >= 0 ? 18 : -18,
+    y: 12,
+    scale: 0.992,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    y: 0,
+    scale: 1,
+    opacity: 1,
+    transitionEnd: {
+      transform: "none",
+    },
+  },
+  exit: (direction: number) => ({
+    x: direction >= 0 ? -12 : 12,
+    y: -8,
+    scale: 0.994,
+    opacity: 0,
+    transition: { duration: 0.12, ease: "easeIn" as const },
+  }),
 };
 
-function renderPublicRoute(path: string, search: Record<string, string>) {
-  if (path === "/") return <HomePage />;
-  if (path === "/leistungen" || path === "/geraete" || path === "/marktplatz" || path === "/angebote") {
-    return <SortimentPage />;
-  }
-  if (path.startsWith("/leistungen/")) {
-    const slug = decodeURIComponent(path.slice("/leistungen/".length));
-    return services.some((s) => s.slug === slug) ? <SortimentDetailPage slug={slug} /> : <NotFoundPage />;
-  }
-  if (path === "/ueber-uns") return <AboutPage />;
-  if (path === "/kundenbewertungen" || path === "/bewertungen") return <ReviewsPage />;
-  if (path === "/kontakt" || path === "/anfrage") return <ContactPage searchParams={search} />;
-  if (path === "/impressum") return <ImpressumPage />;
-  if (path === "/datenschutz") return <DatenschutzPage />;
-  if (path === "/simulator") return <HomePage />;
-  return <NotFoundPage />;
+function RouteTransferRibbon({ routeKey }: { routeKey: string }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) return null;
+  return (
+    <motion.div
+      key={`transfer-ribbon-${routeKey}`}
+      aria-hidden="true"
+      initial={{ scaleX: 0, opacity: 0.95, transformOrigin: "0% 50%" }}
+      animate={{ scaleX: 1, opacity: [0.95, 0.85, 0] }}
+      transition={{
+        scaleX: { duration: 0.42, ease: antigravityEase },
+        opacity: { duration: 0.58, times: [0, 0.62, 1], ease: "easeOut" },
+      }}
+      className="pointer-events-none fixed top-0 inset-x-0 z-[70] h-[2.5px] bg-gradient-to-r from-sky-400 via-cyan-200 to-sky-500 shadow-[0_0_14px_rgba(56,189,248,0.85)]"
+    />
+  );
 }
 
 export default function App() {
   const { pathname, search, hash } = useLocationState();
-  const cleanPath = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  const prefersReducedMotion = useReducedMotion();
+  const cleanPath =
+    pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
   const isAdminRoute = cleanPath === "/admin";
+
+  // Track previous route order cleanly via ref without render-phase state mutations
+  const prevPathRef = useRef<string>(cleanPath);
+  const directionRef = useRef<number>(1);
+  if (prevPathRef.current !== cleanPath) {
+    const prevOrder = getRouteOrder(prevPathRef.current);
+    const nextOrder = getRouteOrder(cleanPath);
+    directionRef.current = nextOrder >= prevOrder ? 1 : -1;
+    prevPathRef.current = cleanPath;
+  }
+  const direction = directionRef.current;
+
+  const [mapsQuotaExceeded, setMapsQuotaExceeded] = useState(false);
+
+  // Warm up the code of the other pages once the current page is idle,
+  // so navigating between pages feels instant.
+  useEffect(() => {
+    const preload = () => {
+      void import("@/app/leistungen/page");
+      void import("@/app/kontakt/page");
+      void import("@/app/ueber-uns/page");
+      void import("@/app/kundenbewertungen/page");
+      void import("@/app/leistungen/[slug]/page");
+      void import("@/app/anfrage/page");
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) {
+      w.requestIdleCallback(preload, { timeout: 4000 });
+    } else {
+      const t = window.setTimeout(preload, 2500);
+      return () => window.clearTimeout(t);
+    }
+    return undefined;
+  }, []);
 
   useEffect(() => {
     syncDocumentSeo(cleanPath);
   }, [cleanPath]);
 
-  // Public pages are always rendered in the light theme.
   useEffect(() => {
-    if (!isAdminRoute) {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.style.colorScheme = "light";
-    }
-  }, [isAdminRoute]);
+    const onQuotaExceeded = () => setMapsQuotaExceeded(true);
+    window.addEventListener("gmp-quota-exceeded", onQuotaExceeded);
+    return () => window.removeEventListener("gmp-quota-exceeded", onQuotaExceeded);
+  }, []);
 
-  // Scroll to top (or to the anchor) on navigation.
   useEffect(() => {
-    if (hash) {
-      const el = document.getElementById(hash.slice(1));
+    if (!hash) return undefined;
+    const id = hash.slice(1);
+    let attempts = 0;
+    let timerId = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(id);
       if (el) {
-        el.scrollIntoView();
+        el.scrollIntoView({ behavior: "smooth" });
         return;
       }
+      attempts += 1;
+      if (attempts < 10) {
+        timerId = window.setTimeout(tryScroll, 80);
+      }
+    };
+    timerId = window.setTimeout(tryScroll, 180);
+    return () => window.clearTimeout(timerId);
+  }, [pathname, hash]);
+
+  const searchParamsObj = Object.fromEntries(new URLSearchParams(search).entries());
+
+  const renderRoute = () => {
+    try {
+      if (cleanPath === "/") return <Home />;
+      if (cleanPath === "/marktplatz" || cleanPath === "/angebote") return <MarktplatzPage />;
+      if (cleanPath === "/leistungen" || cleanPath === "/geraete") return <LeistungenPage />;
+      if (cleanPath.startsWith("/leistungen/")) {
+        const slug = decodeURIComponent(cleanPath.slice("/leistungen/".length));
+        if (!services.some((s) => s.slug === slug)) {
+          return <NotFound />;
+        }
+        return <ServicePage params={{ slug }} />;
+      }
+      if (cleanPath === "/simulator") return <Home />;
+      if (cleanPath === "/anfrage") return <AnfragePage searchParams={searchParamsObj} />;
+      if (cleanPath === "/ueber-uns") return <UeberUns />;
+      if (cleanPath === "/kundenbewertungen" || cleanPath === "/bewertungen") return <Kundenbewertungen />;
+      if (cleanPath === "/kontakt") return <Kontakt searchParams={searchParamsObj} />;
+      if (cleanPath === "/impressum") return <Impressum />;
+      if (cleanPath === "/datenschutz") return <Datenschutz />;
+      if (cleanPath === "/admin") return <AdminPage />;
+      return <NotFound />;
+    } catch {
+      return <NotFound />;
     }
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [cleanPath, hash]);
-
-  if (isAdminRoute) {
-    return (
-      <Suspense fallback={<div className="p-10 text-center text-ink-soft">Lädt …</div>}>
-        <AdminApp />
-      </Suspense>
-    );
-  }
-
-  const searchParams = Object.fromEntries(new URLSearchParams(search).entries());
+  };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white font-sans text-ink antialiased">
-      <Header pathname={cleanPath} />
-      <main id="inhalt" className="flex-1">
-        <ErrorBoundary resetKey={cleanPath}>{renderPublicRoute(cleanPath, searchParams)}</ErrorBoundary>
-      </main>
-      <div className="pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-0 bg-ink">
-        <Footer />
-      </div>
-      <MobileActionBar />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-    </div>
+    <GoogleLivePlaceProvider>
+      <ConsentProvider>
+        <ThemeProvider>
+          <QuickRequestProvider>
+            <div className="min-h-screen flex flex-col font-sans bg-surface text-primary dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
+              {!isAdminRoute && <RouteTransferRibbon routeKey={cleanPath} />}
+              <div className="relative flex min-h-screen flex-col">
+              <a
+                href="#main"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
+              >
+                Zum Inhalt springen
+              </a>
+              {mapsQuotaExceeded && (
+                <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+                  <span>
+                    Google Maps Platform quota reached. If you are the app owner, visit{" "}
+                    <a
+                      href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline font-semibold text-amber-950 hover:text-amber-800"
+                    >
+                      maps developer site
+                    </a>{" "}
+                    for instructions to update your account.
+                  </span>
+                </div>
+              )}
+              {!isAdminRoute && <ServiceNoticeBanner notice={business.serviceNotice} />}
+              {!isAdminRoute && <Navbar />}
+              <main id="main" className="flex-1 overflow-x-hidden relative">
+                <ErrorBoundary resetKey={cleanPath}>
+                  <AnimatePresence
+                    mode="wait"
+                    custom={direction}
+                    initial={false}
+                    onExitComplete={() => {
+                      if (!hash) {
+                        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+                      }
+                    }}
+                  >
+                    <motion.div
+                      key={cleanPath}
+                      custom={direction}
+                      variants={prefersReducedMotion ? undefined : pageSlideVariants}
+                      initial={prefersReducedMotion ? { opacity: 0 } : "enter"}
+                      animate={prefersReducedMotion ? { opacity: 1 } : "center"}
+                      exit={prefersReducedMotion ? { opacity: 0 } : "exit"}
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0.08 }
+                          : {
+                              duration: 0.24,
+                              ease: antigravityEase,
+                            }
+                      }
+                      className="will-change-transform"
+                    >
+                      <Suspense fallback={<div className="min-h-[70vh]" aria-busy="true" />}>
+                        {renderRoute()}
+                      </Suspense>
+                    </motion.div>
+                  </AnimatePresence>
+                </ErrorBoundary>
+              </main>
+              {!isAdminRoute && <Footer />}
+              <AppLiveWidgets isAdminRoute={isAdminRoute} />
+              <CookieConsentBanner />
+              <CardScrollRevealObserver routeKey={cleanPath} />
+              </div>
+            </div>
+          </QuickRequestProvider>
+        </ThemeProvider>
+      </ConsentProvider>
+    </GoogleLivePlaceProvider>
   );
 }

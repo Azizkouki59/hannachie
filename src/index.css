@@ -31,17 +31,7 @@
   --color-surface: #f8fafc;
   --color-surface-card: #ffffff;
   --color-surface-muted: #f1f5f9;
-  --color-ink: #12233b;
-  --color-ink-2: #1d3557;
-  --color-ink-soft: #4a5568;
-  --color-brand: #0b6e99;
-  --color-brand-dark: #08587b;
-  --color-sand: #f6f4ef;
-  --color-line: #e6e2d9;
-  --color-line-strong: #cfc9bc;
-  --color-whatsapp: #1a8f4c;
-  --color-whatsapp-dark: #157a40;
-  --color-gold: #e0a100;
+  --color-ink: #0f172a;
   --color-ink-muted: #475569;
   --color-ink-faint: #64748b;
 
@@ -1180,3 +1170,39 @@
 }
 
 
+
+/* ── Performance on phones & tablets ───────────────────────────────────────
+   Backdrop blur over scrolling content and permanently running decorative
+   animations are the main causes of scroll jank on mobile GPUs. All affected
+   surfaces already use (almost) opaque backgrounds, so the look stays the same. */
+@media (hover: none), (max-width: 1023px) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .float, .orb-drift, .orb-drift-reverse,
+  .hero-orb-float-1, .hero-orb-float-2, .hero-ring-cw, .hero-ring-ccw,
+  .hero-wave-slide, .hero-pulse-node, .hero-wrench-swing, .hero-coil-pulse,
+  .hero-van-route, .hero-ambient-sheen, .hero-aperture-cw, .hero-aperture-ccw,
+  .hero-horizon-glint, .text-gradient-shimmer,
+  .ambient-mesh-a, .ambient-mesh-b, .ambient-mesh-c,
+  .btn-shimmer-beam::before, .active-border-beam-rotor,
+  .contact-frosted-aura, .contact-light-sweep {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+
+
+/* ── Readability on phones ────────────────────────────────────────────────
+   Many labels were set at 8–11 px, which is hard to read for older customers.
+   On phones every tiny size is raised to a legible minimum. (Desktop keeps its
+   original typography; prefixed sm:/md:/lg: sizes are unaffected.) */
+@media (max-width: 639px) {
+  .text-\[8px\], .text-\[9px\], .text-\[9\.5px\] { font-size: 11px !important; }
+  .text-\[10px\], .text-\[10\.5px\] { font-size: 11.5px !important; }
+  .text-\[11px\], .text-\[11\.5px\] { font-size: 12.5px !important; }
+  .text-xs { font-size: 13px; }
+  .text-\[13px\] { font-size: 14px !important; }
+  .text-\[13\.5px\] { font-size: 15px !important; }
+}

@@ -17,7 +17,7 @@ import {
   Shield,
   ShieldCheck,
   Star,
-  Wrench,
+  PackageSearch,
 } from "lucide-react";
 import { business } from "@/data/site";
 import {
@@ -62,7 +62,7 @@ type RequestTypeOption = {
   tagPrefix: string;
   placeholder: string;
   quickHints: string[];
-  icon: typeof Wrench;
+  icon: typeof PackageSearch;
 };
 
 const REQUEST_TYPES: RequestTypeOption[] = [
@@ -77,7 +77,7 @@ const REQUEST_TYPES: RequestTypeOption[] = [
       "Pumpe / Dichtung / Teil",
       "Termin vereinbaren",
     ],
-    icon: Wrench,
+    icon: PackageSearch,
   },
   {
     id: "replacement_offer",

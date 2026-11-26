@@ -1,10 +1,10 @@
-import { handleApiRequest, SECURITY_HEADERS } from "./src/server/repairApiEdge.ts";
+import { handleApiRequest, SECURITY_HEADERS, type EdgeApiEnv } from "./src/server/repairApiEdge.ts";
 
 interface AssetsFetcher {
   fetch(input: Request | string): Promise<Response>;
 }
 
-interface CloudflareEnv {
+interface CloudflareEnv extends EdgeApiEnv {
   ASSETS: AssetsFetcher;
 }
 
@@ -13,7 +13,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
-      return handleApiRequest(request);
+      return handleApiRequest(request, env);
     }
 
     const assetResponse = await env.ASSETS.fetch(request);
