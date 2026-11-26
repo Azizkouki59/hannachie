@@ -1,310 +1,299 @@
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "framer-motion";
+
+interface HeroAnimatedBackdropProps {
+  variant?: "hero-water-drum" | "about-heritage-emblem" | "subpage-header";
+  seedKey?: string;
+}
 
 /**
- * Domain-authentic animated backdrop tailored to Hannachi Elektrohaushaltsgeräte & Ersatzteile Osnabrück:
- * - Rotating front-loader washing machine drum with 3 lifters & water wave
- * - Interlocking spare-parts precision gear (Ersatzteil-Zahnrad) & swinging service wrench
- * - Floating appliance schematics (Kältetechnik snowflake & Backofen heating element)
- * - Lower-edge Osnabrück Vor-Ort-Service route with gliding service van & location pins
- * - Protective dark left contrast scrim so white headlines stay 100% legible on all viewports
+ * Lightweight, 60fps CSS + inline SVG ambient light & architectural grid mesh
+ * for Hero and dark Subpage Headers (zero WebGL / canvas overhead on mobile & desktop).
+ * Palette: Hannachi Navy (#0F2A4A), Cerulean (#0284C7), Emerald (#10B981), opacity <= 0.15.
  */
-export function HeroAnimatedBackdrop() {
-  const uid = useId().replace(/:/g, "");
-  const waveGradPrimary = `hannachi-wave-primary-${uid}`;
-  const waveGradSecondary = `hannachi-wave-secondary-${uid}`;
-  const waveFill = `hannachi-wave-fill-${uid}`;
-  const drumGlow = `hannachi-drum-glow-${uid}`;
+export function HeroAnimatedBackdrop({
+  variant = "hero-water-drum",
+  seedKey = "",
+}: HeroAnimatedBackdropProps) {
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const gridId = useId();
+  const prefersReduced = useReducedMotion();
+
+  const rawSpotX = useMotionValue(720);
+  const rawSpotY = useMotionValue(180);
+  const rawSpotOpacity = useMotionValue(0);
+
+  const spotX = useSpring(rawSpotX, { stiffness: 130, damping: 24, mass: 0.6 });
+  const spotY = useSpring(rawSpotY, { stiffness: 130, damping: 24, mass: 0.6 });
+  const spotOpacity = useSpring(rawSpotOpacity, { stiffness: 130, damping: 24 });
+
+  const spotlightBg = useMotionTemplate`radial-gradient(500px circle at ${spotX}px ${spotY}px, rgba(2, 132, 199, 0.14), rgba(16, 185, 129, 0.04) 44%, transparent 72%)`;
+
+  useEffect(() => {
+    if (prefersReduced || typeof window === "undefined") return undefined;
+    const isFinePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches;
+    if (!isFinePointer) return undefined;
+
+    const sectionEl = anchorRef.current?.parentElement;
+    if (!sectionEl) return undefined;
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const rect = sectionEl.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      rawSpotX.set(e.clientX - rect.left);
+      rawSpotY.set(e.clientY - rect.top);
+      rawSpotOpacity.set(1);
+    };
+
+    const onPointerLeave = () => {
+      rawSpotOpacity.set(0);
+    };
+
+    sectionEl.addEventListener("pointermove", onPointerMove, { passive: true });
+    sectionEl.addEventListener("pointerleave", onPointerLeave, { passive: true });
+
+    return () => {
+      sectionEl.removeEventListener("pointermove", onPointerMove);
+      sectionEl.removeEventListener("pointerleave", onPointerLeave);
+    };
+  }, [prefersReduced, rawSpotX, rawSpotY, rawSpotOpacity]);
+
+  const isHero = variant === "hero-water-drum";
 
   return (
-    <>
-      {/* Layer 1: Technical blueprint grid, diagonal light sweep & protective dark text scrim */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      ref={anchorRef}
+      aria-hidden="true"
+      data-backdrop-variant={variant}
+      data-backdrop-seed={seedKey || undefined}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      {/* Base Hannachi architectural depth gradient (#020617 -> #0F2A4A) */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 85% 75% at 78% 12%, rgba(15, 42, 74, 0.92) 0%, rgba(15, 23, 42, 0.72) 48%, rgba(2, 6, 23, 0.98) 100%)",
+        }}
+      />
+
+      {/* Ultra-subtle infinitely drifting radial mesh orbs (GPU-composited transform only) */}
+      <div
+        className="ambient-mesh-a absolute -top-24 -right-20 h-[28rem] w-[28rem] sm:h-[36rem] sm:w-[36rem] rounded-full opacity-[0.14]"
+        style={{
+          background:
+            "radial-gradient(circle at center, #0284C7 0%, rgba(2, 132, 199, 0.32) 44%, transparent 72%)",
+        }}
+      />
+      <div
+        className="ambient-mesh-b absolute -bottom-28 left-[12%] h-[24rem] w-[24rem] sm:h-[32rem] sm:w-[32rem] rounded-full opacity-[0.11]"
+        style={{
+          background:
+            "radial-gradient(circle at center, #10B981 0%, rgba(16, 185, 129, 0.24) 42%, transparent 70%)",
+        }}
+      />
+      {isHero && (
         <div
-          className="absolute inset-0 opacity-[0.22]"
+          className="ambient-mesh-c absolute top-[22%] left-[44%] h-[20rem] w-[20rem] rounded-full opacity-[0.12]"
           style={{
-            backgroundImage:
-              "radial-gradient(rgba(186,230,253,0.55) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-            WebkitMaskImage:
-              "radial-gradient(ellipse 90% 95% at 78% 35%, black 18%, transparent 82%)",
-            maskImage:
-              "radial-gradient(ellipse 90% 95% at 78% 35%, black 18%, transparent 82%)",
+            background:
+              "radial-gradient(circle at center, #0F2A4A 0%, rgba(56, 189, 248, 0.25) 45%, transparent 72%)",
           }}
         />
+      )}
 
-        {/* Sweeping diagonal cyan light beam */}
-        <div className="hero-ambient-sheen absolute -inset-y-1/2 -left-1/3 w-[170%]" />
-
-        {/* Protective left dark gradient scrim so white headlines stay crisp */}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.84)_0%,rgba(2,6,23,0.56)_54%,rgba(2,6,23,0.20)_100%)]" />
-      </div>
-
-      {/* Layer 2: Hannachi Appliance & Vor-Ort-Service Schematics */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Drifting Ambient Glow Orbs */}
-        <div className="hero-orb-float-1 absolute -top-20 -right-16 h-64 w-64 sm:h-88 sm:w-88 rounded-full bg-sky-400/16 blur-3xl" />
-        <div className="hero-orb-float-2 absolute -bottom-24 -left-16 h-56 w-56 sm:h-72 sm:w-72 rounded-full bg-cyan-500/14 blur-3xl" />
-
-        {/* Right-Side Technical Blueprint: Washing Machine Drum + Interlocking Spare-Part Gear + Wrench */}
-        <div className="absolute -right-10 sm:right-4 lg:right-10 top-1/2 -translate-y-1/2 h-56 w-56 sm:h-72 sm:w-72 opacity-65 sm:opacity-75">
-          {/* Washing Machine Blueprint Housing & Rotating Drum */}
-          <svg
-            viewBox="0 0 220 220"
-            className="h-full w-full text-sky-300"
-            fill="none"
+      {/* Precision hairline SVG engineering grid with subtle radial mask */}
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.11]"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <pattern
+            id={`hero-grid-${gridId}`}
+            width="44"
+            height="44"
+            patternUnits="userSpaceOnUse"
           >
-            <defs>
-              <radialGradient id={drumGlow} cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="rgba(56, 189, 248, 0.22)" />
-                <stop offset="70%" stopColor="rgba(14, 165, 233, 0.06)" />
-                <stop offset="100%" stopColor="rgba(2, 6, 23, 0)" />
-              </radialGradient>
-            </defs>
-
-            {/* Outer Appliance Chassis Outline */}
-            <rect
-              x="26"
-              y="18"
-              width="148"
-              height="184"
-              rx="18"
-              stroke="rgba(125, 211, 252, 0.26)"
-              strokeWidth="1.5"
-              fill="rgba(15, 23, 42, 0.28)"
-            />
-            {/* Top Control Panel Divider */}
-            <line
-              x1="26"
-              y1="52"
-              x2="174"
-              y2="52"
-              stroke="rgba(125, 211, 252, 0.22)"
-              strokeWidth="1.25"
-            />
-            {/* Detergent Drawer */}
-            <rect
-              x="38"
-              y="28"
-              width="38"
-              height="14"
-              rx="3"
-              stroke="rgba(125, 211, 252, 0.32)"
-              strokeWidth="1.2"
-            />
-            {/* Program Dial & LED Indicators */}
-            <circle
-              cx="100"
-              cy="35"
-              r="7"
-              stroke="rgba(56, 189, 248, 0.5)"
-              strokeWidth="1.5"
-            />
-            <circle cx="136" cy="35" r="2.5" fill="rgba(52, 211, 153, 0.85)" />
-            <circle cx="146" cy="35" r="2.5" fill="rgba(56, 189, 248, 0.65)" />
-            <circle cx="156" cy="35" r="2.5" fill="rgba(56, 189, 248, 0.35)" />
-
-            {/* Outer Porthole Door Ring */}
-            <circle cx="100" cy="124" r="56" fill={`url(#${drumGlow})`} />
-            <circle
-              cx="100"
-              cy="124"
-              r="54"
-              stroke="rgba(125, 211, 252, 0.38)"
-              strokeWidth="2"
-            />
-            <circle
-              cx="100"
-              cy="124"
-              r="47"
-              stroke="rgba(56, 189, 248, 0.25)"
-              strokeWidth="1.2"
-              strokeDasharray="5 4"
-            />
-
-            {/* Water Level Wave Inside Drum */}
             <path
-              d="M 56 134 Q 78 124 100 134 T 144 134"
-              stroke="rgba(56, 189, 248, 0.45)"
-              strokeWidth="1.75"
+              d="M 44 0 L 0 0 0 44"
               fill="none"
+              stroke="rgba(148, 163, 184, 0.42)"
+              strokeWidth="0.75"
             />
-          </svg>
+            <circle cx="0" cy="0" r="1.15" fill="rgba(56, 189, 248, 0.55)" />
+          </pattern>
+          <radialGradient id={`hero-grid-mask-${gridId}`} cx="62%" cy="35%" r="68%">
+            <stop offset="0%" stopColor="white" stopOpacity="1" />
+            <stop offset="68%" stopColor="white" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <mask id={`hero-mask-${gridId}`}>
+            <rect width="100%" height="100%" fill={`url(#hero-grid-mask-${gridId})`} />
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill={`url(#hero-grid-${gridId})`}
+          mask={`url(#hero-mask-${gridId})`}
+        />
+      </svg>
 
-          {/* Rotating Inner Stainless-Steel Drum (3 Paddles + Perforations) */}
-          <div className="hero-ring-cw absolute left-[45.45%] top-[56.36%] -translate-x-1/2 -translate-y-1/2 h-[38%] w-[38%]">
-            <svg viewBox="0 0 100 100" className="h-full w-full" fill="none">
-              <circle
-                cx="50"
-                cy="50"
-                r="46"
-                stroke="rgba(56, 189, 248, 0.45)"
-                strokeWidth="1.75"
-                strokeDasharray="6 6"
-              />
-              {/* 3 Classic Washing Drum Lifters (Wäschemitnehmer) */}
-              <path
-                d="M50 4 L56 24 L44 24 Z"
-                fill="rgba(56, 189, 248, 0.35)"
-                stroke="rgba(125, 211, 252, 0.65)"
-                strokeWidth="1.2"
-              />
-              <path
-                d="M89.8 73 L70 67 L76 56 Z"
-                fill="rgba(56, 189, 248, 0.35)"
-                stroke="rgba(125, 211, 252, 0.65)"
-                strokeWidth="1.2"
-              />
-              <path
-                d="M10.2 73 L24 56 L30 67 Z"
-                fill="rgba(56, 189, 248, 0.35)"
-                stroke="rgba(125, 211, 252, 0.65)"
-                strokeWidth="1.2"
-              />
-              {/* Drum Center Hub */}
-              <circle
-                cx="50"
-                cy="50"
-                r="9"
-                stroke="rgba(125, 211, 252, 0.6)"
-                strokeWidth="1.5"
-                fill="rgba(14, 165, 233, 0.2)"
-              />
-              <circle cx="50" cy="30" r="1.8" fill="rgba(186, 230, 253, 0.65)" />
-              <circle cx="67" cy="60" r="1.8" fill="rgba(186, 230, 253, 0.65)" />
-              <circle cx="33" cy="60" r="1.8" fill="rgba(186, 230, 253, 0.65)" />
-            </svg>
-          </div>
+      {/* Subtle architectural precision arcs on right quadrant (zero blur cost) */}
+      {isHero && (
+        <svg
+          className="hidden sm:block absolute -right-24 -top-24 h-[520px] w-[520px] opacity-[0.1]"
+          viewBox="0 0 520 520"
+          fill="none"
+        >
+          <circle
+            cx="260"
+            cy="260"
+            r="228"
+            stroke="#38BDF8"
+            strokeWidth="0.75"
+            strokeDasharray="6 10"
+            className="hero-aperture-cw origin-center"
+          />
+          <circle
+            cx="260"
+            cy="260"
+            r="168"
+            stroke="#10B981"
+            strokeWidth="0.75"
+            strokeDasharray="3 12"
+            className="hero-aperture-ccw origin-center"
+          />
+        </svg>
+      )}
 
-          {/* Interlocking Counter-Rotating Spare-Parts Cogwheel (Ersatzteil-Zahnrad) */}
-          <div className="hero-ring-ccw absolute -top-2 right-1 sm:right-2 h-16 w-16 sm:h-20 sm:w-20">
-            <svg viewBox="0 0 80 80" className="h-full w-full" fill="none">
-              <circle
-                cx="40"
-                cy="40"
-                r="26"
-                stroke="rgba(56, 189, 248, 0.55)"
-                strokeWidth="5"
-                strokeDasharray="7 5.8"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="20"
-                stroke="rgba(125, 211, 252, 0.45)"
-                strokeWidth="1.75"
-                fill="rgba(15, 23, 42, 0.55)"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="8"
-                stroke="rgba(56, 189, 248, 0.7)"
-                strokeWidth="1.75"
-              />
-            </svg>
-          </div>
+      {/* Subtle cursor-tracked studio sheen (desktop fine pointer only) */}
+      {!prefersReduced && (
+        <motion.div
+          className="hidden lg:block absolute inset-0"
+          style={{
+            background: spotlightBg,
+            opacity: spotOpacity,
+          }}
+        />
+      )}
 
-          {/* Oscillating Service Wrench Badge (Vor-Ort-Diagnose & Reparatur) */}
-          <div className="hero-wrench-swing absolute -left-3 bottom-6 sm:bottom-8 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl border border-sky-400/35 bg-slate-900/75 shadow-[0_0_20px_rgba(14,165,233,0.3)] backdrop-blur-xs">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-6 w-6 text-sky-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-            </svg>
-          </div>
+      {/* Protective contrast scrim so white typography stays razor-sharp */}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.68)_0%,rgba(2,6,23,0.34)_52%,rgba(2,6,23,0.12)_100%)]" />
 
-          {/* Floating Cooling Crystal (Kühlschrank / Gefriergerät Service) & Heating Element (Herd / Backofen) */}
-          <div className="hero-coil-pulse absolute -left-8 top-6 hidden sm:flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-300/30 bg-slate-900/60 text-cyan-300">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-            >
-              <line x1="12" y1="2" x2="12" y2="22" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-              <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-            </svg>
-          </div>
-        </div>
+      {/* Crisp top & bottom architectural hairlines */}
+      <div
+        className="absolute top-0 inset-x-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 8%, rgba(2, 132, 199, 0.42) 38%, rgba(224, 242, 254, 0.54) 50%, rgba(16, 185, 129, 0.34) 64%, transparent 92%)",
+        }}
+      />
+      <div
+        className="absolute bottom-0 inset-x-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 5%, rgba(148, 163, 184, 0.16) 35%, rgba(56, 189, 248, 0.28) 55%, rgba(148, 163, 184, 0.14) 85%, transparent 98%)",
+        }}
+      />
+    </div>
+  );
+}
 
-        {/* Lower Edge: Mobile Vor-Ort-Service Route Across Osnabrück + Gliding Service Van */}
-        <div className="absolute inset-x-0 bottom-0 h-18 sm:h-24 overflow-hidden opacity-75">
-          {/* Gliding Mobile Service Van Along the Osnabrück Route */}
-          <div className="hero-van-route absolute bottom-3.5 sm:bottom-5 left-0 w-full pointer-events-none">
-            <div className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-slate-950/85 px-2.5 py-1 text-[10px] font-bold text-sky-300 shadow-[0_0_12px_rgba(14,165,233,0.25)]">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-3.5 w-3.5 text-emerald-400 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10 17h4V5H2v12h3" />
-                <path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" />
-                <circle cx="7.5" cy="17.5" r="2.5" />
-                <circle cx="17.5" cy="17.5" r="2.5" />
-              </svg>
-              <span>Vor-Ort Osnabrück</span>
-            </div>
-          </div>
+/**
+ * Ultra-lightweight CSS + inline SVG ambient mesh for light/dark content sections
+ * (Services, 3-Step Process, Google Reviews, Inquiry) — replaces heavy WebGL canvases.
+ */
+export function SectionAmbientMesh({
+  variant = "pillars",
+}: {
+  variant?: "pillars" | "process" | "reviews" | "inquiry";
+}) {
+  const meshId = useId();
 
-          <svg
-            viewBox="0 0 1200 120"
-            preserveAspectRatio="none"
-            className="hero-wave-slide h-full w-[200%] max-w-none"
+  const layout =
+    variant === "process"
+      ? {
+          orbA: "-top-24 left-[8%]",
+          orbB: "-bottom-28 right-[10%]",
+          colorA: "#0284C7",
+          colorB: "#10B981",
+        }
+      : variant === "reviews"
+        ? {
+            orbA: "-top-20 right-[12%]",
+            orbB: "-bottom-24 left-[14%]",
+            colorA: "#0284C7",
+            colorB: "#0F2A4A",
+          }
+        : variant === "inquiry"
+          ? {
+              orbA: "-top-24 right-[6%]",
+              orbB: "-bottom-24 left-[6%]",
+              colorA: "#10B981",
+              colorB: "#0284C7",
+            }
+          : {
+              orbA: "-top-24 right-[14%]",
+              orbB: "-bottom-28 left-[10%]",
+              colorA: "#0284C7",
+              colorB: "#0F2A4A",
+            };
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      <div
+        className={`ambient-mesh-a absolute ${layout.orbA} h-80 w-80 sm:h-[26rem] sm:w-[26rem] rounded-full opacity-[0.06] dark:opacity-[0.11]`}
+        style={{
+          background: `radial-gradient(circle at center, ${layout.colorA} 0%, transparent 70%)`,
+        }}
+      />
+      <div
+        className={`ambient-mesh-b absolute ${layout.orbB} h-72 w-72 sm:h-[24rem] sm:w-[24rem] rounded-full opacity-[0.05] dark:opacity-[0.09]`}
+        style={{
+          background: `radial-gradient(circle at center, ${layout.colorB} 0%, transparent 70%)`,
+        }}
+      />
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.055] dark:opacity-[0.07]"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <pattern
+            id={`section-dots-${meshId}`}
+            width="36"
+            height="36"
+            patternUnits="userSpaceOnUse"
           >
-            <defs>
-              <linearGradient id={waveGradPrimary} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(56, 189, 248, 0.16)" />
-                <stop offset="25%" stopColor="rgba(56, 189, 248, 0.48)" />
-                <stop offset="50%" stopColor="rgba(52, 211, 153, 0.35)" />
-                <stop offset="75%" stopColor="rgba(56, 189, 248, 0.48)" />
-                <stop offset="100%" stopColor="rgba(56, 189, 248, 0.16)" />
-              </linearGradient>
-              <linearGradient id={waveGradSecondary} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(14, 165, 233, 0.32)" />
-                <stop offset="50%" stopColor="rgba(125, 211, 252, 0.42)" />
-                <stop offset="100%" stopColor="rgba(14, 165, 233, 0.32)" />
-              </linearGradient>
-              <linearGradient id={waveFill} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="rgba(56, 189, 248, 0.10)" />
-                <stop offset="100%" stopColor="rgba(2, 6, 23, 0)" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M0,74 C150,28 300,110 450,66 C525,42 562,58 600,74 C750,28 900,110 1050,66 C1125,42 1162,58 1200,74 L1200,120 L0,120 Z"
-              fill={`url(#${waveFill})`}
-            />
-            {/* Continuous Water / Diagnostic Wave */}
-            <path
-              d="M0,74 C150,28 300,110 450,66 C525,42 562,58 600,74 C750,28 900,110 1050,66 C1125,42 1162,58 1200,74"
-              fill="none"
-              stroke={`url(#${waveGradPrimary})`}
-              strokeWidth="2"
-            />
-            {/* Dashed On-Site Navigation Route Line (Osnabrück & Umland) */}
-            <path
-              d="M0,90 C180,116 320,42 480,84 C540,98 570,92 600,90 C780,116 920,42 1080,84 C1140,98 1170,92 1200,90"
-              fill="none"
-              stroke={`url(#${waveGradSecondary})`}
-              strokeWidth="1.6"
-              strokeDasharray="8 6"
-            />
-          </svg>
-        </div>
-      </div>
-    </>
+            <circle cx="1.5" cy="1.5" r="1" fill="currentColor" />
+          </pattern>
+          <radialGradient id={`section-fade-${meshId}`} cx="50%" cy="45%" r="65%">
+            <stop offset="0%" stopColor="white" stopOpacity="1" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <mask id={`section-mask-${meshId}`}>
+            <rect width="100%" height="100%" fill={`url(#section-fade-${meshId})`} />
+          </mask>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          className="text-primary dark:text-sky-300"
+          fill={`url(#section-dots-${meshId})`}
+          mask={`url(#section-mask-${meshId})`}
+        />
+      </svg>
+    </div>
   );
 }

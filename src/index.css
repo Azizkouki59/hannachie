@@ -25,7 +25,9 @@
   --color-primary-light: #334155;
   --color-accent: #0284c7;
   --color-accent-dark: #0369a1;
+  --color-accent-hover: #0369a1;
   --color-accent-light: #38bdf8;
+  --color-background: #f8fafc;
   --color-surface: #f8fafc;
   --color-surface-card: #ffffff;
   --color-surface-muted: #f1f5f9;
@@ -122,55 +124,184 @@
   .dark .bg-surface-gradient { background-image: linear-gradient(180deg, #0f172a 0%, #020617 100%); }
 
   .container-page { @apply mx-auto w-full px-4 sm:px-6 lg:px-8; max-width: 76rem; }
-  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold transition-all duration-200 active:scale-[0.98]; }
-  .btn-primary { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold transition-all duration-200 bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-[0_4px_20px_rgba(14,165,233,.4)] hover:-translate-y-px active:translate-y-0 active:scale-[0.98]; }
-  .btn-ghost { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold transition-all duration-200 border border-primary/20 dark:border-white/20 text-primary dark:text-slate-100 hover:border-accent hover:text-accent active:scale-[0.98]; }
-  .btn-ghost-light { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold transition-all duration-200 border border-white/25 text-white hover:border-white/60 hover:bg-white/10 active:scale-[0.98]; }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold;
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  .btn:active { transform: translate3d(0, 1px, 0) scale(0.975); }
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-[0_6px_22px_rgba(14,165,233,.36)] hover:-translate-y-0.5;
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 160ms ease;
+  }
+  .btn-primary:active { transform: translate3d(0, 1px, 0) scale(0.975); }
+  .btn-ghost {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold border border-primary/20 dark:border-white/20 text-primary dark:text-slate-100 hover:border-accent hover:text-accent hover:-translate-y-px;
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  .btn-ghost:active { transform: translate3d(0, 1px, 0) scale(0.975); }
+  .btn-ghost-light {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-5 sm:px-6 py-3 sm:py-3.5 text-[15px] font-semibold border border-white/25 text-white hover:border-white/60 hover:bg-white/10 hover:-translate-y-px;
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+  .btn-ghost-light:active { transform: translate3d(0, 1px, 0) scale(0.975); }
   .section { @apply py-10 sm:py-16 lg:py-20; }
 
-  /* Premium card with pointer-safe lift-and-glow hover effect */
+  /* Studio-grade spotlight card: cursor radial glow, hairline rim highlight & crisp -2px lift */
   .card {
     @apply rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 shadow-card;
+    position: relative;
+    isolation: isolate;
+    --lift-y: 0px;
+    --card-scale: 1;
+    --sheen-x: 50%;
+    --sheen-y: 50%;
+    --sheen-opacity: 0;
+    transform: translate3d(0, var(--lift-y), 0) scale(var(--card-scale));
     transition:
-      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 280ms ease,
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms ease,
       background-color 200ms ease;
-    will-change: transform, box-shadow;
   }
+
+  /* Subtle Aceternity-style cursor radial spotlight */
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+    opacity: var(--sheen-opacity);
+    background: radial-gradient(
+      340px circle at var(--sheen-x) var(--sheen-y),
+      rgba(2, 132, 199, 0.09),
+      rgba(56, 189, 248, 0.03) 42%,
+      transparent 72%
+    );
+    transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .dark .card::before {
+    background: radial-gradient(
+      360px circle at var(--sheen-x) var(--sheen-y),
+      rgba(56, 189, 248, 0.14),
+      rgba(16, 185, 129, 0.04) 40%,
+      transparent 72%
+    );
+  }
+
+  /* Crisp hairline border glow tracking cursor position along the rim */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: var(--sheen-opacity);
+    background: radial-gradient(
+      240px circle at var(--sheen-x) var(--sheen-y),
+      rgba(2, 132, 199, 0.55),
+      rgba(56, 189, 248, 0.16) 46%,
+      transparent 74%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    transition: opacity 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .dark .card::after {
+    background: radial-gradient(
+      240px circle at var(--sheen-x) var(--sheen-y),
+      rgba(56, 189, 248, 0.62),
+      rgba(16, 185, 129, 0.16) 46%,
+      transparent 74%
+    );
+  }
+
   @media (hover: hover) and (pointer: fine) {
     .card:hover,
-    .card[data-card-reveal="visible"]:hover {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: var(--shadow-card-hover);
-      border-color: rgba(14, 165, 233, 0.45);
+    .card[data-card-reveal="visible"]:hover,
+    .card[data-card-reveal="done"]:hover {
+      --lift-y: -2px;
+      --card-scale: 1;
+      box-shadow:
+        0 10px 26px -10px rgba(15, 42, 74, 0.14),
+        0 4px 12px -4px rgba(2, 132, 199, 0.12);
+      border-color: rgba(2, 132, 199, 0.32);
     }
     .dark .card:hover,
-    .dark .card[data-card-reveal="visible"]:hover {
-      border-color: rgba(56, 189, 248, 0.5);
+    .dark .card[data-card-reveal="visible"]:hover,
+    .dark .card[data-card-reveal="done"]:hover {
+      box-shadow:
+        0 14px 32px -10px rgba(2, 6, 23, 0.65),
+        0 4px 16px -4px rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.38);
+    }
+    /* Prevent duplicate lift when SpotlightCard / Spatial3DCard already wraps the surface */
+    [data-spatial-3d="true"] .card,
+    [data-spatial-3d="true"] .card:hover,
+    [data-spatial-3d="true"] .card[data-card-reveal="visible"]:hover,
+    [data-spatial-3d="true"] .card[data-card-reveal="done"]:hover {
+      --lift-y: 0px;
+      --card-scale: 1;
     }
   }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    .card:hover,
+    .card[data-card-reveal="visible"]:hover,
+    .card[data-card-reveal="done"]:hover {
+      --lift-y: 0px;
+      --card-scale: 1;
+      --sheen-opacity: 0;
+    }
+  }
+
+  /* Clean tactile press feedback on touch screens without warping */
   @media (hover: none) {
+    .card[data-touch-pressed="true"],
     a.card:active,
     button.card:active {
-      transform: scale(0.985);
-      border-color: rgba(14, 165, 233, 0.35);
+      --card-scale: 0.988;
+      --lift-y: 0px;
+      border-color: rgba(2, 132, 199, 0.36);
+      transition:
+        transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 140ms ease;
     }
   }
 
   @media (prefers-reduced-motion: no-preference) {
     .card[data-card-reveal="pending"] {
       opacity: 0;
-      transform: translate3d(0, 14px, 0);
+      --lift-y: 16px;
+      --card-scale: 0.99;
     }
     .card[data-card-reveal="visible"] {
       opacity: 1;
-      transform: translate3d(0, 0, 0);
+      --lift-y: 0px;
+      --card-scale: 1;
       transition:
-        opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
-        transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
-        border-color 280ms ease;
+        opacity 420ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 460ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 220ms ease;
     }
   }
 
@@ -205,6 +336,8 @@
 @keyframes shimmer { from { background-position: -200% center; }      to { background-position: 200% center; } }
 @keyframes float   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes pulse-ring { 0% { transform: scale(.8); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
+
+/* Real physical light-surface sheen keyframes */
 
 /* Sweeping light sheen across badges (Inspired by skillloop.tn) */
 @keyframes badge-sheen {
@@ -286,47 +419,149 @@
   100% { transform: translate3d(105%, 0, 0); opacity: 0; }
 }
 
-.hero-rise { animation: rise .75s cubic-bezier(.16,.77,.2,1) both; }
-.fade-in   { animation: fade-in .6s ease both; }
+@keyframes hero-drum-cycle {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(220deg); }
+  52% { transform: rotate(240deg); }
+  92% { transform: rotate(-120deg); }
+  100% { transform: rotate(-100deg); }
+}
+
+.hero-rise { animation: rise .62s cubic-bezier(.16,1,.3,1) both; }
+.fade-in   { animation: fade-in .48s ease both; }
 .float     { animation: float 6s ease-in-out infinite; }
-.orb-drift { animation: orb-drift 14s ease-in-out infinite; }
-.orb-drift-reverse { animation: orb-drift-reverse 18s ease-in-out infinite; }
-.hero-orb-float-1 { animation: hero-orb-one 14s ease-in-out infinite; will-change: transform; }
-.hero-orb-float-2 { animation: hero-orb-two 17s ease-in-out infinite; will-change: transform; }
-.hero-ring-cw { animation: hero-ring-spin 22s linear infinite; will-change: transform; }
-.hero-ring-ccw { animation: hero-ring-spin 28s linear infinite reverse; will-change: transform; }
-.hero-wave-slide { animation: hero-wave-flow 18s linear infinite; will-change: transform; }
+.orb-drift { animation: orb-drift 16s ease-in-out infinite; }
+.orb-drift-reverse { animation: orb-drift-reverse 20s ease-in-out infinite; }
+.hero-orb-float-1 { animation: hero-orb-one 16s ease-in-out infinite; will-change: transform; }
+.hero-orb-float-2 { animation: hero-orb-two 19s ease-in-out infinite; will-change: transform; }
+/* Realistic gentle drum rotation (slow spin + subtle tumble pause) */
+.hero-ring-cw { animation: hero-ring-spin 26s linear infinite; will-change: transform; }
+.hero-ring-ccw { animation: hero-ring-spin 34s linear infinite reverse; will-change: transform; }
+.hero-wave-slide { animation: hero-wave-flow 20s linear infinite; will-change: transform; }
 .hero-pulse-node { animation: hero-node-pulse 4.5s ease-in-out infinite; }
-.hero-wrench-swing { animation: hero-wrench-turn 6.5s ease-in-out infinite; transform-origin: 50% 50%; will-change: transform; }
-.hero-coil-pulse { animation: hero-coil-glow 6.5s ease-in-out infinite; will-change: transform, opacity; }
+.hero-wrench-swing { animation: hero-wrench-turn 7.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; transform-origin: 50% 50%; will-change: transform; }
+.hero-coil-pulse { animation: hero-coil-glow 7s ease-in-out infinite; will-change: transform, opacity; }
 .hero-van-route { animation: hero-van-glide 18s cubic-bezier(0.35, 0, 0.25, 1) infinite; will-change: transform, opacity; }
 .hero-ambient-sheen {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(56, 189, 248, 0.08) 38%,
-    rgba(14, 165, 233, 0.15) 50%,
-    rgba(56, 189, 248, 0.07) 62%,
+    rgba(56, 189, 248, 0.07) 38%,
+    rgba(14, 165, 233, 0.13) 50%,
+    rgba(56, 189, 248, 0.06) 62%,
     transparent 100%
   );
-  animation: hero-sheen-sweep 14s ease-in-out infinite;
+  animation: hero-sheen-sweep 16s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .animate-live-ping { animation: live-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
 
-/* Hero badge sheen effect (preserves absolute positioning on overlay badges) */
-.hero-badge {
-  isolation: isolate;
-  overflow: hidden;
+/* Architectural precision aperture & hero specular optics */
+@keyframes hero-horizon-breathe {
+  0%, 100% { opacity: 0.42; transform: scaleX(0.92); }
+  50% { opacity: 0.92; transform: scaleX(1.04); }
 }
-.hero-badge::after {
+
+.hero-aperture-cw {
+  animation: hero-ring-spin 54s linear infinite;
+  will-change: transform;
+}
+.hero-aperture-ccw {
+  animation: hero-ring-spin 76s linear infinite reverse;
+  will-change: transform;
+}
+.hero-horizon-glint {
+  animation: hero-horizon-breathe 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  transform-origin: center;
+}
+
+/* Interactive cursor-tracked specular glass console inside Hero */
+.hero-glass-console {
+  --console-x: 50%;
+  --console-y: 50%;
+  --console-glow: 0;
+  position: relative;
+  isolation: isolate;
+}
+.hero-glass-console::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--console-glow);
+  background: radial-gradient(
+    280px circle at var(--console-x) var(--console-y),
+    rgba(125, 211, 252, 0.65),
+    rgba(56, 189, 248, 0.18) 42%,
+    transparent 74%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-glass-console::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 26%, rgba(56, 189, 248, 0.09) 50%, transparent 74%);
-  animation: badge-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  border-radius: inherit;
   pointer-events: none;
-  transform: translateX(-120%);
+  z-index: 0;
+  opacity: var(--console-glow);
+  background: radial-gradient(
+    340px circle at var(--console-x) var(--console-y),
+    rgba(56, 189, 248, 0.11),
+    rgba(255, 255, 255, 0.03) 42%,
+    transparent 72%
+  );
+  transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Responsive hover-only specular light glide for primary Hero CTA */
+.hero-cta-specular {
+  position: relative;
+  overflow: hidden;
+}
+.hero-cta-specular::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    108deg,
+    transparent 24%,
+    rgba(255, 255, 255, 0.26) 48%,
+    rgba(255, 255, 255, 0.06) 58%,
+    transparent 76%
+  );
+  transform: translate3d(-125%, 0, 0);
+  pointer-events: none;
+  transition: transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-cta-specular:hover::after {
+    transform: translate3d(125%, 0, 0);
+  }
+}
+
+/* Pause heavy ambient blur animations on small mobile screens for silky 60-120fps scrolling */
+@media (max-width: 767px) {
+  .hero-orb-float-1,
+  .hero-orb-float-2,
+  .hero-ambient-sheen,
+  .hero-horizon-glint {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+/* Hero badge subtle top glass highlight (no distracting infinite shimmer) */
+.hero-badge {
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 18px 36px -12px rgba(2, 6, 23, 0.65);
 }
 
 /* Card peek gradient sheet (Inspired by skillloop.tn card-peek) */
@@ -356,6 +591,150 @@
   animation: shimmer 4s linear infinite;
 }
 
+/* Ultra-subtle studio ambient mesh drift (GPU-composited transform only) */
+@keyframes ambient-mesh-drift-a {
+  0%, 100% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.07);
+  }
+}
+
+@keyframes ambient-mesh-drift-b {
+  0%, 100% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-4%, 3.5%, 0) scale(1.06);
+  }
+}
+
+@keyframes ambient-mesh-drift-c {
+  0%, 100% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2.5%, 3%, 0) scale(1.05);
+  }
+}
+
+.ambient-mesh-a {
+  animation: ambient-mesh-drift-a 22s ease-in-out infinite;
+  will-change: transform;
+}
+.ambient-mesh-b {
+  animation: ambient-mesh-drift-b 26s ease-in-out infinite;
+  will-change: transform;
+}
+.ambient-mesh-c {
+  animation: ambient-mesh-drift-c 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Magic UI-inspired shimmer sweep for primary WhatsApp CTAs */
+@keyframes cta-shimmer-glide {
+  0%, 62% {
+    transform: translate3d(-140%, 0, 0) skewX(-18deg);
+    opacity: 0;
+  }
+  68% {
+    opacity: 0.9;
+  }
+  84% {
+    transform: translate3d(220%, 0, 0) skewX(-18deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(220%, 0, 0) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.btn-shimmer-beam {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shimmer-beam::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  width: 55%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.34) 48%,
+    rgba(255, 255, 255, 0.08) 65%,
+    transparent 100%
+  );
+  transform: translate3d(-140%, 0, 0) skewX(-18deg);
+  pointer-events: none;
+  z-index: 1;
+  animation: cta-shimmer-glide 6.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-shimmer-beam:hover::before {
+    animation-duration: 2.2s;
+  }
+}
+
+/* Magic UI-inspired rotating hairline border beam for active device selector pill */
+@keyframes border-beam-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.active-border-beam {
+  position: relative;
+  isolation: isolate;
+}
+.active-border-beam::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  z-index: 2;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 230deg,
+    rgba(125, 211, 252, 0.9) 295deg,
+    rgba(255, 255, 255, 0.95) 325deg,
+    rgba(16, 185, 129, 0.85) 348deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.92;
+}
+.active-border-beam-rotor {
+  animation: border-beam-spin 5.5s linear infinite;
+  will-change: transform;
+}
+
+/* Calm live pulse ring restricted strictly to active WhatsApp ready / Startklar indicators */
+@keyframes status-live-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+  75%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.status-live-ring {
+  animation: status-live-ring 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
 /* Infinite horizontal brand logo ticker */
 @keyframes brand-ticker {
   0% {
@@ -370,15 +749,15 @@
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 5%,
-    black 95%,
+    black 7%,
+    black 93%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 5%,
-    black 95%,
+    black 7%,
+    black 93%,
     transparent 100%
   );
 }
@@ -757,12 +1136,24 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .card:hover,
+  .card[data-card-reveal="visible"]:hover,
   .orb-drift,
   .orb-drift-reverse,
+  .ambient-mesh-a,
+  .ambient-mesh-b,
+  .ambient-mesh-c,
+  .btn-shimmer-beam::before,
+  .active-border-beam-rotor,
+  .status-live-ring,
+  .animate-brand-ticker,
   .hero-orb-float-1,
   .hero-orb-float-2,
   .hero-ring-cw,
   .hero-ring-ccw,
+  .hero-aperture-cw,
+  .hero-aperture-ccw,
+  .hero-horizon-glint,
   .hero-wave-slide,
   .hero-pulse-node,
   .hero-wrench-swing,

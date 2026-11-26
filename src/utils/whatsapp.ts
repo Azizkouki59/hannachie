@@ -60,10 +60,35 @@ export type WhatsAppBuildResult =
 
 export const HANNACHI_WHATSAPP_PHONE = "491703493494";
 
+export const DEFAULT_WHATSAPP_GREETING =
+  "Hallo Herr Hannachi, ich habe eine kurze Anfrage zu einem Hausgerät.";
+
+export function buildWhatsAppDirectUrl(
+  message: string = DEFAULT_WHATSAPP_GREETING,
+  targetPhone: string = HANNACHI_WHATSAPP_PHONE
+): string {
+  const cleanTarget = targetPhone.replace(/\D/g, "") || HANNACHI_WHATSAPP_PHONE;
+  const trimmed = message.trim();
+  if (!trimmed) {
+    return `https://api.whatsapp.com/send?phone=${cleanTarget}`;
+  }
+  return `https://api.whatsapp.com/send?phone=${cleanTarget}&text=${encodeURIComponent(trimmed)}`;
+}
+
+export function buildWhatsAppWebUrl(
+  message: string = DEFAULT_WHATSAPP_GREETING,
+  targetPhone: string = HANNACHI_WHATSAPP_PHONE
+): string {
+  const cleanTarget = targetPhone.replace(/\D/g, "") || HANNACHI_WHATSAPP_PHONE;
+  const trimmed = message.trim();
+  const base = `https://web.whatsapp.com/send?phone=${cleanTarget}`;
+  return trimmed ? `${base}&text=${encodeURIComponent(trimmed)}` : base;
+}
+
 const URGENCY_LABELS: Record<WhatsAppUrgencyLevel, string> = {
-  normal: "Normal (nächste Tage)",
-  express: "Dringend (heute oder morgen)",
-  notfall: "NOTFALL (Kühlgerät / Wasseraustritt)",
+  normal: "Normal",
+  express: "Dringend",
+  notfall: "Sehr dringend",
 };
 
 export function getDeviceEmoji(deviceDisplay: string): string {
@@ -73,7 +98,7 @@ export function getDeviceEmoji(deviceDisplay: string): string {
     return "🧊";
   }
   if (normalized.includes("geschirr") || normalized.includes("spül") || normalized.includes("spuel")) {
-    return "🍴";
+    return "🍽️";
   }
   if (
     normalized.includes("ofen") ||
@@ -87,7 +112,7 @@ export function getDeviceEmoji(deviceDisplay: string): string {
   if (normalized.includes("kaffee") || normalized.includes("siebträger")) return "☕";
   if (normalized.includes("mikrowelle")) return "📡";
   if (normalized.includes("platine") || normalized.includes("elektronik")) return "🔌";
-  return "🔧";
+  return "⚙️";
 }
 
 function getUrgencyEmoji(urgency: WhatsAppUrgencyLevel): string {
@@ -114,7 +139,7 @@ function resolveDeviceDisplay(device: string, customDevice?: string): string {
   const isOther = cleanDevice.includes("Anderes") || cleanDevice === "Sonstiges";
 
   if (isOther && cleanCustom) {
-    return `${cleanCustom} (Sonstiges Gerät)`;
+    return cleanCustom;
   }
   return cleanDevice || "Haushaltsgerät";
 }
@@ -136,7 +161,7 @@ function resolveMapsLink(input: WhatsAppMessageInput): string {
   const addressParts = [
     sanitizeLine(input.streetAddress),
     sanitizeLine(input.location),
-    "Region Osnabrück",
+    "Osnabrück",
   ].filter(Boolean);
 
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -145,44 +170,35 @@ function resolveMapsLink(input: WhatsAppMessageInput): string {
 }
 
 /**
- * Validates required client fields (Name, Device, Custom Device, Brand, Phone, Symptom)
- * before allowing a WhatsApp message to be built for Hannachi.
+ * Validates client fields before building a WhatsApp message.
+ * Phone is optional because WhatsApp automatically identifies the sender's number;
+ * if entered, it must be a valid phone number.
  */
 export function validateWhatsAppFields(
   input: WhatsAppMessageInput
 ): WhatsAppValidationErrors {
-  const mode: WhatsAppInquiryMode = input.mode === "question" ? "question" : "repair";
   const errors: WhatsAppValidationErrors = {};
 
-  const name = sanitizeLine(input.name);
   const device = sanitizeLine(input.device);
   const customDevice = sanitizeLine(input.customDevice);
-  const brand = sanitizeLine(input.brand);
   const phone = sanitizeLine(input.phone);
   const symptom = sanitizeLine(input.symptom);
 
-  void name;
-
   if (device.length < 1) {
-    errors.device = "Bitte wählen Sie ein Gerät aus.";
+    errors.device = "Bitte Gerät wählen.";
   } else if ((device.includes("Anderes") || device === "Sonstiges") && customDevice.length < 2) {
-    errors.customDevice =
-      "Bitte nennen Sie uns kurz Ihr Gerät (z. B. Wäschetrockner, Dampfgarer).";
+    errors.customDevice = "Bitte Gerät kurz nennen (z. B. Trockner).";
   }
 
-  void brand;
-
-  const digitCount = phone.replace(/\D/g, "").length;
-  if (phone.length < 6 || !/^[+()\d\s/-]{6,30}$/.test(phone) || digitCount < 6) {
-    errors.phone =
-      "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein.";
+  if (phone.length > 0) {
+    const digitCount = phone.replace(/\D/g, "").length;
+    if (phone.length < 6 || !/^[+()\d\s/-]{6,30}$/.test(phone) || digitCount < 6) {
+      errors.phone = "Bitte gültige Nummer eingeben (mind. 6 Ziffern).";
+    }
   }
 
-  if (symptom.length < 4) {
-    errors.symptom =
-      mode === "question"
-        ? "Bitte geben Sie Ihre Frage oder Ihr Anliegen kurz ein."
-        : "Bitte wählen Sie ein Fehlerbild aus oder beschreiben Sie kurz das Problem.";
+  if (symptom.length < 3) {
+    errors.symptom = "Bitte Anliegen antippen oder kurz eingeben.";
   }
 
   return errors;
@@ -205,9 +221,7 @@ function isPlaceholderName(name: string): boolean {
 }
 
 /**
- * Formats validated input fields into a clean, scan-friendly WhatsApp
- * message for Herr Hannachi. Includes Google Maps pin & address ONLY when
- * a home visit (`visitType === "home_visit"`) is requested.
+ * Formats validated fields into a short, symbol-led WhatsApp message for Herr Hannachi.
  */
 export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): string {
   const mode: WhatsAppInquiryMode = input.mode === "question" ? "question" : "repair";
@@ -239,87 +253,46 @@ export function formatHannachiWhatsAppMessage(input: WhatsAppMessageInput): stri
   const locationText = isHomeVisit
     ? [sanitizeLine(input.streetAddress), sanitizeLine(input.location)].filter(Boolean).join(", ")
     : "";
-  const hasPinOrLocation = isHomeVisit && (locationText.length > 0 || Boolean(input.coordinates));
-  const mapsLink = hasPinOrLocation ? resolveMapsLink(input) : "";
+  const hasExplicitPin = Boolean(input.locationVerified || input.coordinates || sanitizeLine(input.streetAddress));
+  const mapsLink = isHomeVisit && hasExplicitPin ? resolveMapsLink(input) : "";
 
-  const verifiedCoordsTag =
-    isHomeVisit && input.locationVerified && input.coordinates
-      ? `${input.coordinates.lat.toFixed(5)}°, ${input.coordinates.lng.toFixed(5)}°`
+  const contactLine =
+    phone && customerName
+      ? `📞 *Telefon:* ${phone} (${customerName})`
+      : phone
+      ? `📞 *Telefon:* ${phone}`
+      : customerName
+      ? `👤 *Name:* ${customerName}`
       : "";
 
-  const contactLine = customerName
-    ? `📞 *Kontakt:* ${phone} (${customerName})`
-    : `📞 *Kontakt:* ${phone}`;
-
-  if (mode === "question") {
-    const lines: string[] = [
-      `💬 *Kurze Frage*${referenceId ? ` (#${referenceId})` : ""}`,
-      `Hallo Herr Hannachi,`,
-      ``,
-      `${deviceEmoji} *Gerät:* ${equipmentSummary}`,
-      `❓ *Frage:* ${cleanSymptom}`,
-      ``,
-      contactLine,
-      ...(email ? [`📧 *E-Mail:* ${email}`] : []),
-    ];
-
-    if (hasPinOrLocation) {
-      lines.push(
-        `📍 *Ort:* ${locationText || "Osnabrück & Umgebung"}${
-          verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
-        }`,
-        `Maps: ${mapsLink}`
-      );
-    }
-
-    if (photoName) {
-      lines.push(`📷 *Foto:* ${photoName} (folgt im Chat)`);
-    }
-
-    return lines.join("\n");
-  }
+  const headerLabel =
+    mode === "question"
+      ? "Kurze Frage"
+      : requestTag || "Anfrage";
 
   const urgencyKey: WhatsAppUrgencyLevel = input.urgency || "normal";
-  const callbackTime = sanitizeLine(input.callbackTime);
-  const hasCustomCallback =
-    Boolean(callbackTime) && callbackTime.toLowerCase() !== "jederzeit erreichbar";
-
-  const headerTitle = requestTag ? `🔧 *${requestTag}*` : `🔧 *Neue Service-Anfrage*`;
 
   const lines: string[] = [
-    `${headerTitle}${referenceId ? ` (#${referenceId})` : ""}`,
+    `👋 *${headerLabel}*${referenceId ? ` · #${referenceId}` : ""}`,
     `Hallo Herr Hannachi,`,
     ``,
     `${deviceEmoji} *Gerät:* ${equipmentSummary}`,
-    `📝 *Anliegen:* ${cleanSymptom}`,
+    `🔹 *Anliegen:* ${cleanSymptom}`,
     ...(urgencyKey !== "normal"
       ? [`${getUrgencyEmoji(urgencyKey)} *Priorität:* ${URGENCY_LABELS[urgencyKey]}`]
       : []),
-    ``,
-    contactLine,
-    ...(hasCustomCallback ? [`⏰ *Erreichbar:* ${callbackTime}`] : []),
+    ...(locationText ? [`📍 *Ort:* ${locationText}`] : []),
+    ...(mapsLink ? [`🗺️ ${mapsLink}`] : []),
+    ...(contactLine ? [contactLine] : []),
     ...(email ? [`📧 *E-Mail:* ${email}`] : []),
+    ...(photoName ? [`📷 *Foto:* ${photoName} (folgt im Chat)`] : []),
   ];
-
-  if (hasPinOrLocation) {
-    lines.push(
-      `📍 *Ort:* ${locationText || "Siehe Karten-Pin"}${
-        verifiedCoordsTag ? ` (${verifiedCoordsTag})` : ""
-      }`,
-      `Maps: ${mapsLink}`
-    );
-  }
-
-  if (photoName) {
-    lines.push(`📷 *Foto:* ${photoName} (folgt im Chat)`);
-  }
 
   return lines.join("\n");
 }
 
 /**
- * Validates required client fields first and returns a complete WhatsApp message
- * + ready-to-send URL only when all required inputs pass validation.
+ * Validates fields and returns a ready-to-send WhatsApp message + wa.me URL.
  */
 export function createHannachiWhatsAppPayload(
   input: WhatsAppMessageInput,
@@ -339,10 +312,7 @@ export function createHannachiWhatsAppPayload(
   }
 
   const message = formatHannachiWhatsAppMessage(input);
-  const cleanTarget = targetPhone.replace(/\D/g, "") || HANNACHI_WHATSAPP_PHONE;
-  const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanTarget}&text=${encodeURIComponent(
-    message
-  )}`;
+  const whatsappUrl = buildWhatsAppDirectUrl(message, targetPhone);
 
   return {
     valid: true,

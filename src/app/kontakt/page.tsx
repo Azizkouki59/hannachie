@@ -2,11 +2,23 @@
 import type { Metadata } from "next";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Clock, Link2, MapPin, MessageCircle, Phone, Radar } from "lucide-react";
+import {
+  Calendar,
+  Camera,
+  Check,
+  Clock,
+  Link2,
+  MapPin,
+  MessageCircle,
+  MessageSquareText,
+  Phone,
+  Radar,
+} from "lucide-react";
 import RepairForm from "@/components/RepairForm";
 import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
 import GoogleMapsEmbed, { type ContactMapViewMode } from "@/components/GoogleMapsEmbed";
 import PhotoAnleitungGuide from "@/components/PhotoAnleitungGuide";
+import { Spatial3DCard } from "@/components/animations";
 import { PageHeader } from "@/components/ui";
 import { business } from "@/data/site";
 import { triggerHapticFeedback } from "@/lib/haptics";
@@ -15,6 +27,8 @@ import { buildRouteMetadata } from "@/lib/seo";
 import { updateUrlSearchParams } from "@/shims/next-navigation";
 
 export const metadata: Metadata = buildRouteMetadata("/kontakt");
+
+type ContactHubTab = "anfrage" | "typenschild" | "kalender";
 
 const deviceBySlug: Record<string, string> = {
   waschmaschinen: "Waschmaschine",
@@ -52,20 +66,65 @@ function parseMapModeParam(mode?: string): ContactMapViewMode | null {
   return null;
 }
 
+function parseTabParam(tab?: string): ContactHubTab | null {
+  const normalized = tab?.trim().toLowerCase();
+  if (normalized === "anfrage") return "anfrage";
+  if (normalized === "typenschild" || normalized === "photo-anleitung") return "typenschild";
+  if (normalized === "kalender" || normalized === "kalender-termin") return "kalender";
+  return null;
+}
+
+const HUB_TABS: Array<{
+  id: ContactHubTab;
+  label: string;
+  shortLabel: string;
+  icon: typeof MessageSquareText;
+}> = [
+  {
+    id: "anfrage",
+    label: "Schnellanfrage",
+    shortLabel: "Anfrage",
+    icon: MessageSquareText,
+  },
+  {
+    id: "typenschild",
+    label: "Typenschild-Guide",
+    shortLabel: "Typenschild",
+    icon: Camera,
+  },
+  {
+    id: "kalender",
+    label: "Kalender-Termin",
+    shortLabel: "Kalender",
+    icon: Calendar,
+  },
+];
+
 export default function Kontakt({
   searchParams,
 }: {
-  searchParams: { geraet?: string; symptom?: string; mode?: string };
+  searchParams: { geraet?: string; symptom?: string; mode?: string; tab?: string };
 }) {
-  const { place, source } = useGoogleLivePlace();
+  const { place } = useGoogleLivePlace();
   const prefersReducedMotion = useReducedMotion();
   const urlMapMode = parseMapModeParam(searchParams?.mode);
+  const urlTab = parseTabParam(searchParams?.tab);
+
+  const [activeTab, setActiveTab] = useState<ContactHubTab>(() => {
+    if (urlTab) return urlTab;
+    if (typeof window !== "undefined") {
+      const h = window.location.hash.replace("#", "").toLowerCase();
+      if (h === "photo-anleitung") return "typenschild";
+      if (h === "kalender-termin") return "kalender";
+    }
+    return "anfrage";
+  });
+
   const [mapViewMode, setMapViewMode] = useState<ContactMapViewMode>(
     urlMapMode ?? "service-area"
   );
   const [copiedMapLink, setCopiedMapLink] = useState(false);
 
-  // Sync map view when URL ?mode= changes via external links or browser Back/Forward
   useEffect(() => {
     if (urlMapMode) {
       setMapViewMode(urlMapMode);
@@ -73,6 +132,26 @@ export default function Kontakt({
       setMapViewMode("service-area");
     }
   }, [urlMapMode, searchParams?.mode]);
+
+  useEffect(() => {
+    if (urlTab) setActiveTab(urlTab);
+  }, [urlTab]);
+
+  useEffect(() => {
+    const syncHashToTab = () => {
+      const h = window.location.hash.replace("#", "").toLowerCase();
+      if (h === "photo-anleitung") setActiveTab("typenschild");
+      else if (h === "kalender-termin") setActiveTab("kalender");
+      else if (h === "anfrage") setActiveTab("anfrage");
+    };
+    window.addEventListener("hashchange", syncHashToTab);
+    return () => window.removeEventListener("hashchange", syncHashToTab);
+  }, []);
+
+  const handleSelectTab = (next: ContactHubTab) => {
+    triggerHapticFeedback(25);
+    setActiveTab(next);
+  };
 
   const handleMapViewModeChange = (nextMode: ContactMapViewMode) => {
     triggerHapticFeedback(25);
@@ -91,7 +170,6 @@ export default function Kontakt({
       setCopiedMapLink(true);
       window.setTimeout(() => setCopiedMapLink(false), 2200);
     } catch {
-      // Clipboard API unavailable; update URL directly so user can copy from address bar
       updateUrlSearchParams({ mode: mapViewMode }, { replace: true });
     }
   };
@@ -110,100 +188,85 @@ export default function Kontakt({
   return (
     <>
       <PageHeader
-        title="Vor-Ort-Termin & persönliche Beratung."
-        intro="Nutzen Sie das Formular für einen Vor-Ort-Termin bei Ihnen zu Hause in Osnabrück & Umgebung, passende Ersatzteile nach Typenschild, ein geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie oder einen Garantie-Fall – Ihre Nachricht wird fertig für WhatsApp an Herrn Hannachi vorbereitet."
+        title="Kontakt & Anfrage."
+        intro="Direkt per WhatsApp, Telefon, Kurzformular oder Kalender-Termin · Osnabrück · Termine nach Vereinbarung."
       />
-      <section className="section bg-surface">
-        <div className="container-page grid gap-6 lg:gap-8 lg:grid-cols-12 lg:items-start">
-          <aside className="min-w-0 space-y-5 lg:col-span-4 lg:sticky lg:top-20">
-            <div className="card p-5 space-y-5">
-              <ContactItem icon={MessageCircle} title="Vor-Ort-Termin &amp; Direktanfrage">
-                <p className="text-[13px] leading-relaxed">
-                  Schildern Sie kurz das Problem an Ihrem Gerät oder das benötigte Ersatzteil – wir bereiten Ihre Anfrage direkt für WhatsApp an Herrn Hannachi vor.
-                </p>
-              </ContactItem>
-              <ContactItem icon={Phone} title="Telefon &amp; WhatsApp">
-                <a href={place.phoneHref} className="inline-flex min-h-[44px] sm:min-h-0 items-center font-semibold text-primary dark:text-slate-100 hover:text-accent transition-colors">
-                  {place.phoneDisplay}
-                </a>
-              </ContactItem>
-              <ContactItem icon={MapPin} title="Einsatzgebiet &amp; Anschrift">
-                <address className="not-italic text-[14px]">
-                  {business.owner}
-                  <br />
-                  {place.streetLine}
-                  <br />
-                  {place.zipCityLine}
-                </address>
-                <p className="mt-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  {business.mobileServiceNotice}
-                </p>
-              </ContactItem>
-              <ContactItem icon={Clock} title="Vor-Ort-Termine">
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[14px]">{place.hoursSummary}</span>
-                    {source === "live" && place.openNow !== null && (
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                          place.openNow
-                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                            : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            place.openNow ? "bg-emerald-500" : "bg-amber-500"
-                          }`}
-                          aria-hidden="true"
-                        />
-                        {place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}
-                      </span>
-                    )}
-                  </div>
-                  {source === "live" && place.weekdayDescriptions.length > 0 && (
-                    <ul className="space-y-0.5 border-t border-primary/8 dark:border-white/10 pt-1.5 text-xs text-ink-muted">
-                      {place.weekdayDescriptions.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </ContactItem>
-            </div>
+      <section className="py-7 sm:py-11 bg-surface dark:bg-slate-950">
+        <div className="container-page grid gap-6 lg:gap-7 lg:grid-cols-12 lg:items-start">
+          {/* Compact Sticky Contact & Map Sidebar */}
+          <aside className="min-w-0 space-y-4 lg:col-span-4 lg:sticky lg:top-20">
+            <Spatial3DCard maxTilt={4} className="rounded-2xl">
+              <div className="card p-4 sm:p-5 space-y-4">
+                <ContactItem icon={MessageCircle} title="WhatsApp (Direkt)">
+                  <p className="text-xs leading-relaxed mb-2">
+                    Schnellste Antwort · gerne mit Typenschild-Foto.
+                  </p>
+                  <a
+                    href={business.whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-extrabold text-white transition-colors"
+                  >
+                    <MessageCircle size={14} aria-hidden="true" />
+                    <span>WhatsApp öffnen</span>
+                  </a>
+                </ContactItem>
 
-            {/* Embedded Google Maps Card with Service Area / Pin Toggle */}
-            <div className="card overflow-hidden">
-              <div className="flex flex-col gap-2.5 border-b border-primary/8 dark:border-white/10 p-3.5 sm:p-4 pb-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
-                      key={mapViewMode}
-                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -3 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 3 }}
-                      transition={{ duration: prefersReducedMotion ? 0.1 : 0.2, ease: "easeOut" }}
-                      className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ink-faint min-w-0"
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5 pt-3 border-t border-primary/8 dark:border-white/10">
+                  <ContactItem icon={Phone} title="Telefon">
+                    <a
+                      href={place.phoneHref}
+                      className="inline-flex min-h-[36px] items-center font-bold text-primary dark:text-slate-100 hover:text-accent transition-colors tabular-nums"
                     >
-                      {mapViewMode === "service-area" ? (
-                        <Radar size={14} className="text-sky-600 dark:text-sky-400 shrink-0" />
-                      ) : (
-                        <MapPin size={14} className="text-accent shrink-0" />
-                      )}
-                      <span className="truncate">
-                        {mapViewMode === "service-area"
-                          ? "Einsatzgebiet · 25 km"
-                          : "Standort-Pin · Osnabrück"}
+                      {place.phoneDisplay}
+                    </a>
+                  </ContactItem>
+
+                  <ContactItem icon={Clock} title="Erreichbarkeit">
+                    <p className="text-xs font-semibold text-primary dark:text-slate-100">
+                      Mo–Sa 08:00–18:00 Uhr
+                    </p>
+                    <p className="text-[11px] text-ink-muted">
+                      Termine nach Vereinbarung
+                    </p>
+                  </ContactItem>
+
+                  <ContactItem icon={MapPin} title="Standort">
+                    <address className="not-italic text-xs leading-relaxed">
+                      <span className="font-semibold text-primary dark:text-slate-100">
+                        {business.owner}
                       </span>
-                    </motion.span>
-                  </AnimatePresence>
+                      <br />
+                      {business.street}, {business.zip} {business.city}
+                    </address>
+                  </ContactItem>
+                </div>
+              </div>
+            </Spatial3DCard>
+
+            {/* Compact Interactive Map Card */}
+            <div className="card overflow-hidden">
+              <div className="flex flex-col gap-2 border-b border-primary/8 dark:border-white/10 p-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-faint min-w-0">
+                    {mapViewMode === "service-area" ? (
+                      <Radar size={13} className="text-sky-600 dark:text-sky-400 shrink-0" />
+                    ) : (
+                      <MapPin size={13} className="text-accent shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {mapViewMode === "service-area"
+                        ? "Region Osnabrück · 25 km"
+                        : "Standort-Pin · Osnabrück"}
+                    </span>
+                  </span>
 
                   <button
                     type="button"
                     onClick={handleCopyShareLink}
                     data-testid="contact-map-share-link"
                     title={`Link zu dieser Kartenansicht kopieren (?mode=${mapViewMode})`}
-                    className="inline-flex min-h-[38px] sm:min-h-[32px] items-center gap-1.5 rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-surface px-2.5 sm:px-2 py-1 text-xs sm:text-[11px] font-bold text-ink-muted hover:text-primary dark:hover:text-white hover:border-sky-500/40 active:scale-95 transition-all cursor-pointer shrink-0"
+                    className="inline-flex min-h-[32px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-surface px-2 py-1 text-[11px] font-bold text-ink-muted hover:text-primary dark:hover:text-white hover:border-sky-500/40 transition-colors cursor-pointer shrink-0"
                   >
                     {copiedMapLink ? (
                       <>
@@ -213,13 +276,12 @@ export default function Kontakt({
                     ) : (
                       <>
                         <Link2 size={12} aria-hidden="true" />
-                        <span>Ansicht teilen</span>
+                        <span>Teilen</span>
                       </>
                     )}
                   </button>
                 </div>
 
-                {/* Segmented Map Mode Toggle Button */}
                 <div
                   role="group"
                   aria-label="Kartenansicht wechseln"
@@ -231,7 +293,7 @@ export default function Kontakt({
                     onClick={() => handleMapViewModeChange("service-area")}
                     aria-pressed={mapViewMode === "service-area"}
                     data-testid="contact-map-toggle-service-area"
-                    className={`relative min-h-[44px] sm:min-h-[40px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    className={`relative min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                       mapViewMode === "service-area"
                         ? "text-white"
                         : "text-ink-muted hover:text-ink"
@@ -249,15 +311,15 @@ export default function Kontakt({
                         aria-hidden="true"
                       />
                     )}
-                    <Radar size={14} aria-hidden="true" className="relative z-10 shrink-0" />
-                    <span className="relative z-10 truncate">Einsatzgebiet</span>
+                    <Radar size={13} aria-hidden="true" className="relative z-10 shrink-0" />
+                    <span className="relative z-10 truncate">Region (25 km)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleMapViewModeChange("pin")}
                     aria-pressed={mapViewMode === "pin"}
                     data-testid="contact-map-toggle-pin"
-                    className={`relative min-h-[44px] sm:min-h-[40px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    className={`relative min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                       mapViewMode === "pin"
                         ? "text-white"
                         : "text-ink-muted hover:text-ink"
@@ -275,39 +337,119 @@ export default function Kontakt({
                         aria-hidden="true"
                       />
                     )}
-                    <MapPin size={14} aria-hidden="true" className="relative z-10 shrink-0" />
+                    <MapPin size={13} aria-hidden="true" className="relative z-10 shrink-0" />
                     <span className="relative z-10 truncate">Standort-Pin</span>
                   </button>
                 </div>
               </div>
 
               <GoogleMapsEmbed
-                className="relative h-[245px] min-[380px]:h-[275px] sm:h-[310px] lg:h-[290px] xl:h-[310px] w-full"
+                className="relative h-[220px] sm:h-[250px] w-full"
                 viewMode={mapViewMode}
                 onViewModeChange={handleMapViewModeChange}
                 title={
                   mapViewMode === "service-area"
-                    ? "Hannachi Einsatzgebiet Osnabrück & Umgebung (25 km)"
+                    ? "Hannachi Region Osnabrück & Umgebung (25 km)"
                     : "Hannachi Standort-Pin Osnabrück auf Google Maps"
                 }
               />
             </div>
           </aside>
-          <div id="anfrage" className="min-w-0 scroll-mt-28 lg:col-span-8 space-y-6">
-            <RepairForm
-              defaultDevice={defaultDevice}
-              defaultSymptom={searchParams?.symptom || ""}
-              defaultMode={defaultMode}
-              showPhotoGuideLink
-            />
-            <PhotoAnleitungGuide id="photo-anleitung" />
-            <div id="kalender-termin" className="scroll-mt-28">
-              <GoogleCalendarScheduler
-                mode="customer"
-                defaultDevice={defaultDevice || "Waschmaschine"}
-                defaultProblem={searchParams?.symptom || ""}
-              />
+
+          {/* Compact 3-Tab Interactive Contact Hub */}
+          <div id="anfrage" className="min-w-0 scroll-mt-24 lg:col-span-8 space-y-4">
+            <div
+              role="tablist"
+              aria-label="Kontakt-Funktionen wählen"
+              className="grid grid-cols-3 gap-1.5 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-1.5 shadow-xs"
+            >
+              {HUB_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => handleSelectTab(tab.id)}
+                    className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs sm:text-[13px] font-extrabold transition-colors cursor-pointer ${
+                      active
+                        ? "text-white"
+                        : "text-ink-muted hover:text-primary dark:hover:text-white"
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="contact-hub-active-tab"
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.1 }
+                            : { type: "spring", stiffness: 400, damping: 32 }
+                        }
+                        aria-hidden="true"
+                        className="absolute inset-0 rounded-xl bg-primary dark:bg-accent shadow-xs"
+                      />
+                    )}
+                    <Icon size={15} className="relative z-10 shrink-0" aria-hidden="true" />
+                    <span className="relative z-10 hidden sm:inline truncate">{tab.label}</span>
+                    <span className="relative z-10 sm:hidden truncate">{tab.shortLabel}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              {activeTab === "anfrage" && (
+                <motion.div
+                  key="tab-anfrage"
+                  role="tabpanel"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <RepairForm
+                    defaultDevice={defaultDevice}
+                    defaultSymptom={searchParams?.symptom || ""}
+                    defaultMode={defaultMode}
+                    showPhotoGuideLink
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === "typenschild" && (
+                <motion.div
+                  key="tab-typenschild"
+                  id="photo-anleitung"
+                  role="tabpanel"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <PhotoAnleitungGuide id="photo-anleitung-panel" />
+                </motion.div>
+              )}
+
+              {activeTab === "kalender" && (
+                <motion.div
+                  key="tab-kalender"
+                  id="kalender-termin"
+                  role="tabpanel"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <GoogleCalendarScheduler
+                    mode="customer"
+                    defaultDevice={defaultDevice || "Waschmaschine"}
+                    defaultProblem={searchParams?.symptom || ""}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </section>
@@ -325,13 +467,15 @@ function ContactItem({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-4 items-start">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-        <Icon size={18} aria-hidden />
+    <div className="flex gap-3 items-start">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+        <Icon size={16} aria-hidden />
       </span>
       <div className="min-w-0">
-        <h2 className="text-sm font-bold text-primary dark:text-slate-100">{title}</h2>
-        <div className="mt-1 text-ink-muted text-sm">{children}</div>
+        <h2 className="text-xs font-extrabold uppercase tracking-wider text-primary dark:text-slate-100">
+          {title}
+        </h2>
+        <div className="mt-0.5 text-ink-muted text-xs sm:text-sm">{children}</div>
       </div>
     </div>
   );

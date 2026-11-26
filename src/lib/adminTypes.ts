@@ -146,12 +146,12 @@ export const SIMPLE_STATUS_OPTIONS: Array<{
   {
     value: "in_progress",
     label: "In Arbeit",
-    description: "Vor-Ort-Termin vereinbart oder in Bearbeitung",
+    description: "Übergabe- oder Beratungstermin vereinbart / in Bearbeitung",
   },
   {
     value: "completed",
     label: "Erledigt",
-    description: "Vor-Ort-Service / Verkauf abgeschlossen",
+    description: "Verkauf, Übergabe oder Garantiefall abgeschlossen",
   },
 ];
 
@@ -291,7 +291,7 @@ export function buildSingleGrossInvoiceItems(
   return [
     {
       id: "1",
-      description: description || "Vor-Ort-Check, Ersatzteil- oder Garantieservice inkl. Anfahrt",
+      description: description || "Elektrohaushaltsgerät, Original-Ersatzteil oder Lieferung gemäß Vereinbarung",
       quantity: 1,
       unitPriceNet,
     },

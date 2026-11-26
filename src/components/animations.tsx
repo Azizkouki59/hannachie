@@ -1,14 +1,31 @@
 "use client";
 import { useRef, useEffect, useState, ReactNode } from "react";
-import { motion, AnimatePresence, useInView, useScroll, useTransform, type Variants } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useInView,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type Variants,
+} from "framer-motion";
 import { Phone, MessageCircle, Wrench, X, ArrowRight, Sparkles, Info, Clock } from "lucide-react";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { business, type ServiceNotice } from "@/data/site";
 
-/* ── Shared easing ── */
-const smooth = [0.16, 1, 0.3, 1] as const;
+/* ── Weightless Antigravity spring & settling curves ── */
+const smooth = [0.22, 1, 0.36, 1] as const;
+const physicalSpring = {
+  type: "spring" as const,
+  stiffness: 195,
+  damping: 26,
+  mass: 0.85,
+};
 
-/* ── Fade-up on scroll ── */
+/* ── Clean Spring Fade-Up on scroll (60fps GPU-composited, clears transform on settle) ── */
 export function FadeUp({
   children,
   delay = 0,
@@ -20,12 +37,26 @@ export function FadeUp({
   className?: string;
   once?: boolean;
 }) {
+  const prefersReduced = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, amount: 0.15, margin: "-50px 0px" }}
-      transition={{ duration: 0.68, delay, ease: smooth }}
+      data-motion-reveal="true"
+      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 14 }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        transitionEnd: { transform: "none" },
+      }}
+      viewport={{ once, amount: "some", margin: "0px 0px -20px 0px" }}
+      transition={
+        prefersReduced
+          ? { duration: 0.01 }
+          : {
+              ...physicalSpring,
+              delay,
+              opacity: { duration: 0.36, delay, ease: smooth },
+            }
+      }
       className={className}
     >
       {children}
@@ -33,21 +64,27 @@ export function FadeUp({
   );
 }
 
-/* ── Staggered container + items ── */
+/* ── Staggered container + items (crisp studio cascade on phone & desktop) ── */
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.11, delayChildren: 0.04 },
+    transition: { staggerChildren: 0.065, delayChildren: 0.02 },
   },
 };
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 28, scale: 0.96 },
+  hidden: {
+    opacity: 0,
+    y: 14,
+  },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.62, ease: smooth },
+    transitionEnd: { transform: "none" },
+    transition: {
+      ...physicalSpring,
+      opacity: { duration: 0.36, ease: smooth },
+    },
   },
 };
 
@@ -58,12 +95,21 @@ export function StaggerContainer({
   children: ReactNode;
   className?: string;
 }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) {
+    return (
+      <div data-motion-reveal="true" className={className}>
+        {children}
+      </div>
+    );
+  }
   return (
     <motion.div
+      data-motion-reveal="true"
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.12, margin: "-40px 0px" }}
+      viewport={{ once: true, amount: "some", margin: "0px 0px -18px 0px" }}
       className={className}
     >
       {children}
@@ -72,6 +118,10 @@ export function StaggerContainer({
 }
 
 export function StaggerItem({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) {
+    return <div className={className}>{children}</div>;
+  }
   return (
     <motion.div variants={itemVariants} className={className}>
       {children}
@@ -79,7 +129,7 @@ export function StaggerItem({ children, className = "" }: { children: ReactNode;
   );
 }
 
-/* ── Dynamic Scroll-Triggered Service Card Reveal ── */
+/* ── Crisp Scroll-Triggered Card Reveal ── */
 export function ScrollRevealCard({
   children,
   index = 0,
@@ -89,37 +139,246 @@ export function ScrollRevealCard({
   index?: number;
   className?: string;
 }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) {
+    return (
+      <div data-motion-reveal="true" className={className}>
+        {children}
+      </div>
+    );
+  }
   return (
     <motion.div
-      initial={{ opacity: 0, y: 38, scale: 0.94, rotateX: 6 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-      viewport={{ once: true, amount: 0.16, margin: "-30px 0px" }}
-      transition={{
-        duration: 0.68,
-        delay: (index % 4) * 0.1,
-        ease: smooth,
+      data-motion-reveal="true"
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        transitionEnd: { transform: "none" },
       }}
-      style={{ transformPerspective: 1000 }}
-      className={`will-change-transform ${className}`}
+      viewport={{ once: true, amount: "some", margin: "0px 0px -18px 0px" }}
+      transition={{
+        ...physicalSpring,
+        delay: (index % 4) * 0.055,
+        opacity: { duration: 0.36, delay: (index % 4) * 0.055, ease: smooth },
+      }}
+      className={className}
     >
       {children}
     </motion.div>
   );
 }
 
-/* ── Parallax wrapper ── */
+/* ── Studio Spotlight & Calibrated CSS 3D Micro-Tilt Card (Desktop Pointer Only) ── */
+export function Spatial3DCard({
+  children,
+  className = "",
+  maxTilt = 2.8,
+}: {
+  children: ReactNode;
+  className?: string;
+  maxTilt?: number;
+  enableScrollTilt?: boolean;
+  scrollYaw?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prefersReduced = useReducedMotion();
+  // Cap tilt at a calm, studio-grade ±2.8deg maximum
+  const clampedMaxTilt = Math.min(Math.max(maxTilt, 0), 2.8);
+
+  const rawSpotX = useMotionValue(180);
+  const rawSpotY = useMotionValue(120);
+  const rawHover = useMotionValue(0);
+  const rawRotateX = useMotionValue(0);
+  const rawRotateY = useMotionValue(0);
+
+  const spotX = useSpring(rawSpotX, { stiffness: 260, damping: 28, mass: 0.5 });
+  const spotY = useSpring(rawSpotY, { stiffness: 260, damping: 28, mass: 0.5 });
+  const spotOpacity = useSpring(rawHover, { stiffness: 240, damping: 26 });
+  const rotateX = useSpring(rawRotateX, { stiffness: 240, damping: 26, mass: 0.65 });
+  const rotateY = useSpring(rawRotateY, { stiffness: 240, damping: 26, mass: 0.65 });
+
+  const surfaceSpotlight = useMotionTemplate`radial-gradient(320px circle at ${spotX}px ${spotY}px, rgba(2, 132, 199, 0.12), rgba(16, 185, 129, 0.04) 44%, transparent 74%)`;
+  const hairlineSpotlight = useMotionTemplate`radial-gradient(230px circle at ${spotX}px ${spotY}px, rgba(56, 189, 248, 0.65), rgba(16, 185, 129, 0.22) 48%, transparent 76%)`;
+
+  const updatePointer = (clientX: number, clientY: number) => {
+    const el = containerRef.current;
+    if (!el || prefersReduced) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const localX = clientX - rect.left;
+    const localY = clientY - rect.top;
+    const nx = localX / rect.width - 0.5;
+    const ny = localY / rect.height - 0.5;
+    rawSpotX.set(localX);
+    rawSpotY.set(localY);
+    rawRotateY.set(nx * clampedMaxTilt * 2);
+    rawRotateX.set(-ny * clampedMaxTilt * 2);
+    rawHover.set(1);
+  };
+
+  const resetPointer = () => {
+    rawHover.set(0);
+    rawRotateX.set(0);
+    rawRotateY.set(0);
+  };
+
+  if (prefersReduced) {
+    return (
+      <div data-spatial-3d="true" className={`relative h-full ${className}`}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      ref={containerRef}
+      data-spatial-3d="true"
+      whileHover={{ y: -2 }}
+      style={{
+        rotateX,
+        rotateY,
+        transformPerspective: 1100,
+      }}
+      transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.75 }}
+      onPointerMove={(e) => {
+        if (e.pointerType === "mouse") {
+          updatePointer(e.clientX, e.clientY);
+        }
+      }}
+      onPointerLeave={resetPointer}
+      className={`relative h-full ${className}`}
+    >
+      {children}
+
+      {/* Aceternity-style cursor radial spotlight overlay (zero React re-renders) */}
+      <motion.div
+        aria-hidden="true"
+        style={{
+          background: surfaceSpotlight,
+          opacity: spotOpacity,
+        }}
+        className="pointer-events-none absolute inset-0 z-10 rounded-[inherit]"
+      />
+
+      {/* Crisp hairline border glow tracking cursor around the rim */}
+      <motion.div
+        aria-hidden="true"
+        style={{
+          background: hairlineSpotlight,
+          opacity: spotOpacity,
+          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+          padding: "1px",
+        }}
+        className="pointer-events-none absolute -inset-px z-20 rounded-[inherit]"
+      />
+    </motion.div>
+  );
+}
+
+/* ── Recessed 3D Parallax Photography Frame (Works on BOTH Mobile & PC with Fallback) ── */
+export function Spatial3DPhoto({
+  src,
+  alt,
+  aspectClass = "aspect-[16/10]",
+  fallbackGradient = "from-slate-900 via-sky-950 to-slate-950",
+  priority = false,
+  className = "",
+  children,
+}: {
+  src: string;
+  alt: string;
+  aspectClass?: string;
+  fallbackGradient?: string;
+  priority?: boolean;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const prefersReduced = useReducedMotion();
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const { scrollYProgress } = useScroll({
+    target: frameRef,
+    offset: ["start end", "end start"],
+  });
+  const smoothScroll = useSpring(scrollYProgress, {
+    stiffness: 145,
+    damping: 26,
+    mass: 0.55,
+  });
+  const imgY = useTransform(smoothScroll, [0, 1], [-14, 14]);
+  const sheenX = useTransform(smoothScroll, [0, 1], ["-35%", "135%"]);
+
+  return (
+    <div
+      ref={frameRef}
+      className={`relative overflow-hidden bg-gradient-to-br ${fallbackGradient} ${aspectClass} ${className}`}
+    >
+      {!imgFailed && (
+        <motion.div
+          style={prefersReduced ? undefined : { y: imgY }}
+          className="absolute -inset-4 will-change-transform"
+        >
+          <img
+            src={src}
+            alt={alt}
+            referrerPolicy="no-referrer"
+            loading={priority ? "eager" : "lazy"}
+            decoding={priority ? "sync" : "async"}
+            onError={() => setImgFailed(true)}
+            className="h-full w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+          />
+        </motion.div>
+      )}
+
+      {/* Subtle scroll-driven diagonal studio glass sheen (visible on Mobile & PC scroll!) */}
+      {!prefersReduced && (
+        <motion.div
+          aria-hidden="true"
+          style={{ x: sheenX }}
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/[0.11] to-transparent z-[3]"
+        />
+      )}
+
+      {/* Measured contrast vignette */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent"
+      />
+
+      {children}
+    </div>
+  );
+}
+
+/* ── Parallax wrapper (desktop-only smooth depth, disabled on reduced motion / small phones) ── */
 export function Parallax({
   children,
-  speed = 0.3,
+  speed = 0.2,
   className = "",
 }: {
   children: ReactNode;
   speed?: number;
   className?: string;
 }) {
+  const prefersReduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [`${-speed * 100}px`, `${speed * 100}px`]);
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 180,
+    damping: 30,
+    mass: 0.5,
+  });
+  const y = useTransform(smoothProgress, [0, 1], [`${-speed * 60}px`, `${speed * 60}px`]);
+
+  if (prefersReduced) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <motion.div ref={ref} style={{ y }} className={className}>
       {children}
@@ -127,34 +386,59 @@ export function Parallax({
   );
 }
 
-/* ── Count-up number ── */
+/* ── Count-up number (smooth viewport-triggered deceleration with decimal & reduced-motion support) ── */
+function formatCountValue(value: number, decimals: number, decimalSeparator: string): string {
+  if (decimals <= 0) return String(Math.round(value));
+  return value.toFixed(decimals).replace(".", decimalSeparator);
+}
+
 export function CountUp({
   target,
   suffix = "",
   prefix = "",
-  duration = 2,
+  duration = 1.05,
+  decimals = 0,
+  decimalSeparator = ",",
 }: {
   target: number;
   suffix?: string;
   prefix?: string;
   duration?: number;
+  decimals?: number;
+  decimalSeparator?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
+  const prefersReduced = useReducedMotion();
+  const isInView = useInView(ref, { once: true, amount: "some" });
   return (
-    <span ref={ref}>
+    <span ref={ref} className="tabular-nums">
       {prefix}
-      {isInView ? (
-        <AnimatedNumber target={target} duration={duration} />
+      {isInView && !prefersReduced ? (
+        <AnimatedNumber
+          target={target}
+          duration={duration}
+          decimals={decimals}
+          decimalSeparator={decimalSeparator}
+        />
       ) : (
-        target
+        formatCountValue(target, decimals, decimalSeparator)
       )}
       {suffix}
     </span>
   );
 }
 
-function AnimatedNumber({ target, duration }: { target: number; duration: number }) {
+function AnimatedNumber({
+  target,
+  duration,
+  decimals,
+  decimalSeparator,
+}: {
+  target: number;
+  duration: number;
+  decimals: number;
+  decimalSeparator: string;
+}) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -165,8 +449,10 @@ function AnimatedNumber({ target, duration }: { target: number; duration: number
 
     const step = (ts: number) => {
       const progress = Math.min((ts - startTime) / (duration * 1000), 1);
-      const eased = 1 - Math.pow(1 - progress, 4);
-      el.textContent = String(Math.round(eased * target));
+      // Natural exponential ease-out so counting decelerates like a precision dial
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = eased * target;
+      el.textContent = formatCountValue(current, decimals, decimalSeparator);
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(step);
       }
@@ -176,9 +462,9 @@ function AnimatedNumber({ target, duration }: { target: number; duration: number
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [target, duration]);
+  }, [target, duration, decimals, decimalSeparator]);
 
-  return <span ref={ref}>{target}</span>;
+  return <span ref={ref}>{formatCountValue(target, decimals, decimalSeparator)}</span>;
 }
 
 /* ── Floating badge (glass) ── */
@@ -191,11 +477,12 @@ export function GlassBadge({
   className?: string;
   delay?: number;
 }) {
+  const prefersReduced = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      initial={prefersReduced ? false : { opacity: 0, scale: 0.92, y: 12 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay, duration: 0.6, ease: smooth }}
+      transition={prefersReduced ? { duration: 0.01 } : { ...physicalSpring, delay }}
       className={`rounded-2xl border border-white/10 bg-white/10 px-5 py-3 backdrop-blur-xl shadow-xl ${className}`}
     >
       {children}
@@ -203,13 +490,17 @@ export function GlassBadge({
   );
 }
 
-/* ── Magnetic hover effect ── */
+/* ── Tactile spring hover/tap effect (respects touch & reduced motion) ── */
 export function MagneticHover({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) {
+    return <div className={className}>{children}</div>;
+  }
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileHover={{ scale: 1.02, y: -3 }}
+      whileTap={{ scale: 0.975 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26 }}
       className={className}
     >
       {children}
@@ -217,13 +508,22 @@ export function MagneticHover({ children, className = "" }: { children: ReactNod
   );
 }
 
-/* ── Scroll progress bar (Top of page) ── */
+/* ── Scroll progress bar (Spring-damped for buttery wheel & touch momentum) ── */
 export function ScrollProgressBar() {
+  const prefersReduced = useReducedMotion();
   const { scrollYProgress } = useScroll();
+  const smoothScaleX = useSpring(scrollYProgress, {
+    stiffness: 260,
+    damping: 32,
+    restDelta: 0.001,
+  });
+
+  if (prefersReduced) return null;
+
   return (
     <motion.div
-      style={{ scaleX: scrollYProgress }}
-      className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-sky-400 to-indigo-500 origin-left z-50 pointer-events-none"
+      style={{ scaleX: smoothScaleX }}
+      className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-accent via-sky-400 to-cyan-300 origin-left z-50 pointer-events-none"
     />
   );
 }
@@ -404,12 +704,19 @@ const BRAND_LOGO_CATALOG: Record<string, BrandMeta> = {
     monogram: "J",
     wordmarkClass: "font-sans tracking-[0.2em] font-black text-[15px]",
   },
+  DeLonghi: {
+    name: "De'Longhi",
+    tagline: "Kaffee & Espresso",
+    accentColor: "#0F2A4A",
+    monogram: "DL",
+    wordmarkClass: "font-serif tracking-tight font-bold text-[16px]",
+  },
 };
 
 function BrandEmblem({ meta }: { meta: BrandMeta }) {
   return (
     <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/8 bg-surface transition-transform duration-300 group-hover/brand:scale-105"
+      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-800/80 transition-transform duration-200 group-hover/brand:scale-105"
       style={{
         boxShadow: `inset 0 0 0 1px ${meta.accentColor}22`,
       }}
@@ -435,7 +742,7 @@ function BrandEmblem({ meta }: { meta: BrandMeta }) {
           y="22"
           textAnchor="middle"
           fill={meta.accentColor}
-          className="font-sans text-[11px] font-black"
+          className="font-sans text-[10.5px] font-black"
         >
           {meta.monogram}
         </text>
@@ -451,20 +758,30 @@ export function Marquee({
   items: string[];
   onSelectBrand?: (brand: string) => void;
 }) {
+  const prefersReduced = useReducedMotion();
   // Duplicate items twice so translate3d(-50%, 0, 0) loops seamlessly without any jump
-  const loopItems = [...items, ...items];
+  const loopItems = prefersReduced ? items : [...items, ...items];
 
   return (
     <div
-      className="group relative flex w-full overflow-hidden select-none py-2.5 mask-fade-edges"
+      className={`group relative flex w-full overflow-hidden select-none py-2 ${
+        prefersReduced ? "" : "mask-fade-edges"
+      }`}
       aria-label="Unterstützte Herstellermarken"
     >
-      <div className="flex w-max shrink-0 items-center gap-3.5 sm:gap-4 pr-3.5 sm:pr-4 animate-brand-ticker group-hover:[animation-play-state:paused] will-change-transform">
+      <div
+        className={
+          prefersReduced
+            ? "flex flex-wrap items-center justify-center gap-2.5 w-full"
+            : "flex w-max shrink-0 items-center gap-3 sm:gap-3.5 pr-3 sm:pr-3.5 animate-brand-ticker group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] will-change-transform"
+        }
+      >
         {loopItems.map((rawName, i) => {
+          const isDuplicate = !prefersReduced && i >= items.length;
           const meta: BrandMeta = BRAND_LOGO_CATALOG[rawName] || {
             name: rawName,
             tagline: "Alle Modelle & Serien",
-            accentColor: "#0EA5E9",
+            accentColor: "#0284C7",
             monogram: rawName.slice(0, 2).toUpperCase(),
             wordmarkClass: "font-sans tracking-tight font-extrabold text-[15px]",
           };
@@ -494,9 +811,11 @@ export function Marquee({
               <button
                 key={`${rawName}-${i}`}
                 type="button"
+                tabIndex={isDuplicate ? -1 : undefined}
+                aria-hidden={isDuplicate ? true : undefined}
                 onClick={() => onSelectBrand(rawName)}
                 title={`${rawName} Geräte & Ersatzteile anfragen`}
-                className="group/brand inline-flex min-h-[54px] shrink-0 items-center gap-3 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-4 py-2.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-accent dark:hover:border-accent hover:shadow-md active:scale-95 cursor-pointer"
+                className="group/brand inline-flex min-h-[52px] shrink-0 items-center gap-3 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 sm:px-4 py-2 shadow-xs transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-accent/55 hover:shadow-[0_8px_20px_-8px_rgba(2,132,199,0.22)] active:scale-[0.98] cursor-pointer"
               >
                 {content}
               </button>
@@ -506,7 +825,8 @@ export function Marquee({
           return (
             <div
               key={`${rawName}-${i}`}
-              className="group/brand inline-flex min-h-[54px] shrink-0 items-center gap-3 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-4 py-2.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-accent dark:hover:border-accent hover:shadow-md"
+              aria-hidden={isDuplicate ? true : undefined}
+              className="group/brand inline-flex min-h-[52px] shrink-0 items-center gap-3 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 sm:px-4 py-2 shadow-xs transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-accent/55 hover:shadow-[0_8px_20px_-8px_rgba(2,132,199,0.22)]"
             >
               {content}
             </div>
@@ -1051,8 +1371,10 @@ export function FloatingSupportLauncher({
 }
 
 /**
- * Observes `.card` elements across all routes and triggers a smooth
- * viewport fade-in (`data-card-reveal="pending" -> "visible" -> "done"`).
+ * Unified Physical Motion & Scroll Reveal Controller for `.card` elements:
+ * 1. Smoothly reveals standalone `.card` elements entering the viewport (skipping cards already inside Framer Motion reveals so there is never a double-animation clash).
+ * 2. On PC (fine pointer): drives real spring-damped 3D physical tilt (`--tilt-x`, `--tilt-y`) and optical specular light sheen (`--sheen-x`, `--sheen-y`) following actual cursor position.
+ * 3. On Phone (touch pointer): drives tactile directional press depth (`--tilt-x`, `--tilt-y`, `data-touch-pressed`) toward the exact thumb contact point and releases smoothly on scroll/end.
  */
 export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
   useEffect(() => {
@@ -1060,7 +1382,7 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
 
     const prefersReduced =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (prefersReduced || typeof IntersectionObserver === "undefined") {
+    if (prefersReduced) {
       return undefined;
     }
 
@@ -1079,42 +1401,51 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
         activeTimers.delete(timer);
         card.style.transitionDelay = "";
         card.dataset.cardReveal = "done";
-      }, 620 + delayMs);
+      }, 560 + delayMs);
       activeTimers.add(timer);
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let batchIdx = 0;
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          const card = entry.target as HTMLElement;
-          observer.unobserve(card);
-          revealCard(card, Math.min(batchIdx * 55, 220));
-          batchIdx += 1;
-        }
-      },
-      {
-        threshold: 0.08,
-        rootMargin: "0px 0px -24px 0px",
-      }
-    );
+    const observer =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            (entries, obs) => {
+              let batchIdx = 0;
+              for (const entry of entries) {
+                if (!entry.isIntersecting) continue;
+                const card = entry.target as HTMLElement;
+                obs.unobserve(card);
+                revealCard(card, Math.min(batchIdx * 50, 180));
+                batchIdx += 1;
+              }
+            },
+            {
+              threshold: 0.04,
+              rootMargin: "0px 0px -16px 0px",
+            }
+          )
+        : null;
 
     const registerCards = () => {
       const root = document.getElementById("main") || document.body;
       const cards = root.querySelectorAll<HTMLElement>(".card");
-      const viewportCutoff = window.innerHeight * 0.94;
+      const viewportCutoff = window.innerHeight * 0.96;
 
       cards.forEach((card) => {
+        card.dataset.tiltBound = "true";
         if (card.dataset.cardReveal) return;
-        // Keep loading skeletons and continuous horizontal marquee cards visible immediately
-        if (card.classList.contains("animate-pulse") || card.hasAttribute("data-review-card")) {
+
+        // Avoid double-animating cards already wrapped by Framer Motion, skeletons, or marquee cards
+        if (
+          card.classList.contains("animate-pulse") ||
+          card.hasAttribute("data-review-card") ||
+          card.closest('[data-motion-reveal="true"]')
+        ) {
           card.dataset.cardReveal = "done";
           return;
         }
 
         const rect = card.getBoundingClientRect();
-        if (rect.top <= viewportCutoff) {
+        if (rect.top <= viewportCutoff || !observer) {
           card.dataset.cardReveal = "done";
           return;
         }
@@ -1134,12 +1465,93 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
     });
     mutationObserver.observe(mainEl, { childList: true, subtree: true });
 
+    // ── Studio Cursor Spotlight & Hairline Glow Controller (Zero 3D Warp, Zero React Re-Renders) ──
+    const isFinePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
+    let activeCard: HTMLElement | null = null;
+
+    const resetCardSpotlight = (card: HTMLElement | null) => {
+      if (!card) return;
+      card.removeAttribute("data-touch-pressed");
+      card.style.setProperty("--sheen-opacity", "0");
+    };
+
+    const findEligibleCard = (target: EventTarget | null): HTMLElement | null => {
+      if (!(target instanceof Element)) return null;
+      const card = target.closest<HTMLElement>(".card");
+      if (!card) return null;
+      if (
+        card.closest('[data-spatial-3d="true"]') ||
+        card.classList.contains("animate-pulse") ||
+        card.querySelector("iframe") ||
+        card.offsetHeight > 680
+      ) {
+        return null;
+      }
+      return card;
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isFinePointer || e.pointerType !== "mouse") return;
+      const card = findEligibleCard(e.target);
+
+      if (card !== activeCard) {
+        resetCardSpotlight(activeCard);
+        activeCard = card;
+      }
+      if (!card) return;
+
+      const rect = card.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const relY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+
+      card.style.setProperty("--sheen-x", `${(relX * 100).toFixed(1)}%`);
+      card.style.setProperty("--sheen-y", `${(relY * 100).toFixed(1)}%`);
+      card.style.setProperty("--sheen-opacity", "1");
+    };
+
+    const handlePointerLeaveDoc = () => {
+      resetCardSpotlight(activeCard);
+      activeCard = null;
+    };
+
+    let pressedTouchCard: HTMLElement | null = null;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      const card = findEligibleCard(e.target);
+      if (!card) return;
+      pressedTouchCard = card;
+      card.dataset.touchPressed = "true";
+    };
+
+    const releaseTouchCard = () => {
+      if (!pressedTouchCard) return;
+      resetCardSpotlight(pressedTouchCard);
+      pressedTouchCard = null;
+    };
+
+    document.addEventListener("pointermove", handlePointerMove, { passive: true });
+    document.addEventListener("pointerleave", handlePointerLeaveDoc, { passive: true });
+    document.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    document.addEventListener("pointerup", releaseTouchCard, { passive: true });
+    document.addEventListener("pointercancel", releaseTouchCard, { passive: true });
+    window.addEventListener("scroll", releaseTouchCard, { passive: true });
+
     return () => {
       window.cancelAnimationFrame(rafId);
+      resetCardSpotlight(activeCard);
+      resetCardSpotlight(pressedTouchCard);
       activeTimers.forEach((t) => window.clearTimeout(t));
       activeTimers.clear();
-      observer.disconnect();
+      observer?.disconnect();
       mutationObserver.disconnect();
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerleave", handlePointerLeaveDoc);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("pointerup", releaseTouchCard);
+      document.removeEventListener("pointercancel", releaseTouchCard);
+      window.removeEventListener("scroll", releaseTouchCard);
     };
   }, [routeKey]);
 

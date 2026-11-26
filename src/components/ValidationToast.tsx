@@ -34,7 +34,7 @@ function getFieldLabel(field: WhatsAppValidationField, mode: WhatsAppInquiryMode
     case "brand":
       return "Marke";
     case "symptom":
-      return mode === "question" ? "Ihre Frage" : "Fehlerbild";
+      return mode === "question" ? "Ihre Frage" : "Anliegen";
     case "name":
       return "Name";
     case "phone":

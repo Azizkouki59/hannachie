@@ -6,12 +6,14 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Clock3, MessageCircle, Quote, Star } from "lucide-react";
 import type { Review, Service } from "@/data/site";
 import { serviceIcons } from "./Illustrations";
 import { ApplianceGraphic } from "./AnimatedAppliances";
 import { ServiceCardSkeleton } from "./Skeletons";
 import { HeroAnimatedBackdrop } from "./HeroAnimatedBackdrop";
+import { Spatial3DCard } from "./animations";
 
 export type WhatsAppButtonVariant =
   | "hover-emerald"
@@ -188,26 +190,49 @@ export function PageHeader({
   intro?: string;
   readTime?: string;
 }) {
+  const prefersReduced = useReducedMotion();
   return (
-    <section className="relative overflow-hidden bg-hero-gradient text-white border-b border-white/10">
-      <HeroAnimatedBackdrop />
+    <section className="relative overflow-hidden bg-primary-dark text-white border-b border-white/10">
+      <HeroAnimatedBackdrop variant="subpage-header" seedKey={title} />
 
       <div className="container-page relative z-10 py-9 sm:py-14 lg:py-16">
         {readTime && (
-          <div className="mb-2.5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-light">
+          <motion.div
+            initial={prefersReduced ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-2.5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-accent-light"
+          >
             <Clock3 size={13} className="shrink-0" aria-hidden="true" />
             <span>{readTime}</span>
-          </div>
+          </motion.div>
         )}
-        <h1 className="max-w-3xl text-2xl min-[375px]:text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight">
-          {title}
-        </h1>
+        <div className="overflow-hidden pb-0.5">
+          <motion.h1
+            initial={prefersReduced ? false : { opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.56, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-3xl text-2xl min-[375px]:text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight"
+          >
+            {title}
+          </motion.h1>
+        </div>
         {intro && (
-          <p className="mt-3 sm:mt-4 max-w-2xl text-sm sm:text-base lg:text-lg leading-relaxed text-white/80">
+          <motion.p
+            initial={prefersReduced ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.48, delay: 0.11, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-3 sm:mt-4 max-w-2xl text-sm sm:text-base lg:text-lg leading-relaxed text-white/80"
+          >
             {intro}
-          </p>
+          </motion.p>
         )}
-        <div className="mt-6 sm:mt-7 h-[2px] w-14 bg-gradient-to-r from-accent to-accent-light rounded-full" />
+        <motion.div
+          initial={prefersReduced ? false : { scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ duration: 0.54, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="origin-left mt-6 sm:mt-7 h-[2px] w-14 bg-gradient-to-r from-accent to-accent-light rounded-full"
+        />
       </div>
     </section>
   );
@@ -226,31 +251,33 @@ export function ServiceCard({
 
   const Icon = serviceIcons[service.slug];
   return (
-    <Link
-      href={`/leistungen/${service.slug}`}
-      className="card group flex flex-col overflow-hidden bg-white dark:bg-slate-900"
-    >
-      <div className="relative flex aspect-[4/3] items-center justify-center bg-navy dark:bg-slate-950 p-4 overflow-hidden border-b border-primary/8 dark:border-white/10">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(14,165,233,0.14),transparent_70%)] opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-        />
-        <div className="relative z-10 scale-95 transition-transform duration-300 group-hover:scale-105">
-          <ApplianceGraphic slug={service.slug} size="sm" />
+    <Spatial3DCard maxTilt={5.5} className="rounded-2xl">
+      <Link
+        href={`/leistungen/${service.slug}`}
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 shadow-card transition-shadow duration-300 hover:shadow-card-hover"
+      >
+        <div className="relative flex aspect-[4/3] items-center justify-center bg-navy dark:bg-slate-950 p-4 overflow-hidden border-b border-primary/8 dark:border-white/10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(14,165,233,0.16),transparent_70%)] opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+          />
+          <div className="relative z-10 scale-95 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-108">
+            <ApplianceGraphic slug={service.slug} size="sm" />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-1 flex-col p-5 sm:p-6">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
-          <h3 className="text-lg font-bold text-primary dark:text-slate-100">{service.title}</h3>
+        <div className="flex flex-1 flex-col p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
+            <h3 className="text-lg font-bold text-primary dark:text-slate-100">{service.title}</h3>
+          </div>
+          <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-muted">{service.short}</p>
+          <span className="mt-4 inline-flex min-h-[44px] items-center justify-between rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 px-3.5 py-2 text-[13px] font-bold text-accent group-hover:border-accent/40 transition-colors">
+            <span>Mehr erfahren</span>
+            <ArrowRight size={15} className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1" />
+          </span>
         </div>
-        <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-muted">{service.short}</p>
-        <span className="mt-4 inline-flex min-h-[44px] items-center justify-between rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/70 px-3.5 py-2 text-[13px] font-bold text-accent group-hover:border-accent/40 transition-colors">
-          <span>Mehr erfahren</span>
-          <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-        </span>
-      </div>
-    </Link>
+      </Link>
+    </Spatial3DCard>
   );
 }
 

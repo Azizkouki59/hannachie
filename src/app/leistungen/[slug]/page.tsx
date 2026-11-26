@@ -49,7 +49,7 @@ export default function ServicePage({ params }: Props) {
   return (
     <>
       <PageHeader
-        title={`${service.title} – Vor-Ort-Service & Ersatzteile`}
+        title={`${service.title} – Beratung & Original-Ersatzteile`}
         intro={service.intro}
       />
 
@@ -62,18 +62,18 @@ export default function ServicePage({ params }: Props) {
               className="inline-flex min-h-[44px] sm:min-h-0 items-center gap-1.5 text-xs sm:text-sm font-bold text-ink-muted hover:text-accent transition-colors"
             >
               <ArrowLeft size={15} aria-hidden="true" />
-              <span>Alle Leistungen &amp; Geräte</span>
+              <span>Alle Geräte &amp; Ersatzteile</span>
             </Link>
             <span className="text-xs font-medium text-ink-faint">
-              {business.zip} {business.city} &amp; Umgebung · Mobiler Vor-Ort-Service
+              {business.city} &amp; Umgebung · Termine nach Vereinbarung
             </span>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-12 lg:gap-12 lg:items-start">
-            {/* Main Column: Clickable 1-Tap Symptoms + Spare Parts + Clear Approach */}
+            {/* Main Column: Clickable 1-Tap Trade Topics + Spare Parts + Clear Approach */}
             <div className="min-w-0 lg:col-span-7">
               <h2 className="text-xl font-extrabold text-primary dark:text-slate-100 sm:text-2xl lg:text-[28px] tracking-tight">
-                Typische Anliegen &amp; Fehlerbilder
+                Angebote, Ersatzteile &amp; Anliegen
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
                 Tippen Sie Ihr Anliegen direkt an, um Ihre vorausgefüllte Anfrage zu starten:
@@ -150,7 +150,7 @@ export default function ServicePage({ params }: Props) {
 
               <div className="mt-8 sm:mt-10">
                 <h2 className="text-xl font-extrabold text-primary dark:text-slate-100 sm:text-2xl lg:text-[28px] tracking-tight">
-                  Vor-Ort-Check &amp; Ersatzgerät mit Garantie
+                  Original-Ersatzteile &amp; Markengeräte auf Anfrage
                 </h2>
                 <p className="mt-3 max-w-xl text-sm sm:text-base leading-relaxed text-ink-muted">
                   {service.approach}
@@ -168,7 +168,7 @@ export default function ServicePage({ params }: Props) {
                         Original-Ersatzteile per Typenschild
                       </span>
                       <span className="text-ink-muted">
-                        Passgenau nach E-Nr. / PNC für alle bekannten Marken.
+                        Passgenau nach E-Nr. / PNC für alle bekannten Marken im Verkauf.
                       </span>
                     </div>
                   </div>
@@ -183,7 +183,14 @@ export default function ServicePage({ params }: Props) {
                         Schriftliche Verkäufergarantie
                       </span>
                       <span className="text-ink-muted">
-                        Für jedes geprüfte Ersatzgerät aus unserem Bestand.
+                        Für ausgewählte Markengeräte bei direktem Erwerb über Hannachi (
+                        <Link
+                          href="/impressum#garantie"
+                          className="font-semibold text-accent underline underline-offset-2"
+                        >
+                          Garantiebedingungen
+                        </Link>
+                        ).
                       </span>
                     </div>
                   </div>
@@ -199,7 +206,7 @@ export default function ServicePage({ params }: Props) {
                   }}
                   className="btn-primary w-full sm:w-auto cursor-pointer"
                 >
-                  <span>Vor-Ort-Termin &amp; Ersatzteil anfragen</span>
+                  <span>Ersatzteil oder Gerät anfragen</span>
                   <ArrowRight size={15} aria-hidden="true" />
                 </button>
                 <button
@@ -216,13 +223,19 @@ export default function ServicePage({ params }: Props) {
               </div>
             </div>
 
-            {/* Sticky Side Column: Clean Service Info Card (No Stock Photos) + Real Google Review */}
-            <div className="min-w-0 lg:col-span-5 lg:sticky lg:top-20 space-y-5">
-              <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-surface/70 dark:bg-slate-900 p-5 sm:p-6">
+            {/* Sticky Side Column: Clean Trade Info Card (No Stock Photos) + Real Google Review */}
+            <div
+              className={
+                service.customerNote
+                  ? "min-w-0 lg:col-span-5 lg:sticky lg:top-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5 items-stretch"
+                  : "min-w-0 lg:col-span-5 lg:sticky lg:top-20 space-y-5"
+              }
+            >
+              <div className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface/70 dark:bg-slate-900 p-5 sm:p-6">
                 <div className="flex items-center justify-between gap-3 pb-4 border-b border-primary/8 dark:border-white/10">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-accent block">
-                      Direkt-Service Osnabrück
+                      Spezialist in Osnabrück seit {business.founded}
                     </span>
                     <h3 className="mt-0.5 text-lg font-extrabold text-primary dark:text-slate-100 truncate">
                       {service.title}
@@ -242,10 +255,10 @@ export default function ServicePage({ params }: Props) {
                     />
                     <div>
                       <dt className="font-bold text-primary dark:text-slate-100">
-                        Einsatzgebiet (Vor-Ort-Termin)
+                        Region &amp; Termine
                       </dt>
                       <dd className="text-ink-muted mt-0.5">
-                        {business.zip} {business.city} &amp; Umgebung direkt bei Ihnen zu Hause
+                        {business.city} &amp; Umgebung · Termine nach Vereinbarung
                       </dd>
                     </div>
                   </div>
@@ -257,10 +270,10 @@ export default function ServicePage({ params }: Props) {
                     />
                     <div>
                       <dt className="font-bold text-primary dark:text-slate-100">
-                        Leistungsumfang
+                        Beratung &amp; Angebot
                       </dt>
                       <dd className="text-ink-muted mt-0.5">
-                        Vor-Ort-Check · Original-Ersatzteile nach E-Nr. · Geprüfte Ersatzgeräte mit schriftlicher Garantie
+                        Persönliche Fachberatung · Original-Ersatzteile nach E-Nr. · Ausgewählte Markengeräte auf Anfrage
                       </dd>
                     </div>
                   </div>
@@ -326,7 +339,7 @@ export default function ServicePage({ params }: Props) {
       </section>
 
       {/* Other Core Service Categories (Clean Icon Cards, No Photos) */}
-      <section className="section border-t border-primary/8 dark:border-white/10 bg-paper dark:bg-slate-900/60">
+      <section className="section border-t border-primary/8 dark:border-white/10 bg-paper dark:bg-slate-900">
         <div className="container-page">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <h2 className="text-xl font-extrabold text-primary dark:text-slate-100 sm:text-2xl tracking-tight">
@@ -336,16 +349,16 @@ export default function ServicePage({ params }: Props) {
               href="/leistungen"
               className="text-xs sm:text-sm font-bold text-accent hover:underline"
             >
-              Alle Leistungen ansehen →
+              Alle Geräte &amp; Ersatzteile ansehen →
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
             {others.map((s) => (
               <Link
                 key={s.slug}
                 href={`/leistungen/${s.slug}`}
-                className="card group rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-5 transition-colors hover:border-accent/45 flex flex-col justify-between gap-4"
+                className="card h-full group rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-5 transition-colors hover:border-accent/45 flex flex-col justify-between gap-4"
               >
                 <div>
                   <div className="flex items-center gap-3">

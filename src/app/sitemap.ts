@@ -6,7 +6,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/",
     "/leistungen",
     ...services.map((s) => `/leistungen/${s.slug}`),
-    "/simulator",
     "/anfrage",
     "/ueber-uns",
     "/kundenbewertungen",

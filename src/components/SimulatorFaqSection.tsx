@@ -50,7 +50,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Ablaufschlauch an der Rückseite auf Knicke sowie den Siphonanschluss unter dem Waschbecken auf Verstopfung prüfen.",
     ],
     proTip:
-      "Lässt sich das Pumpenrad frei drehen und das Sieb ist sauber, brummt die Pumpe aber nur leise, ist häufig eine neue Laugenpumpe (im Teileverkauf nach E-Nr.) oder der Werkskundendienst sinnvoll.",
+      "Lässt sich das Pumpenrad frei drehen und das Sieb ist sauber, brummt die Pumpe aber nur leise, ist häufig eine neue Original-Laugenpumpe nach E-Nr. sinnvoll.",
     keywords: ["e18", "f20", "pumpt nicht", "wasser", "flusensieb", "waschmaschine"],
   },
   {
@@ -86,7 +86,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Bei E15: Der Schwimmerschalter in der Bodenwanne hat ausgelöst – Wasserhahn schließen und Gerät nicht einfach schräg kippen, da sonst Elektronikteile nass werden können.",
     ],
     proTip:
-      "Bei Fehler E15 ist häufig die Pumpentopf-Dichtung undicht. Anhand Ihres Typenschilds (E-Nr.) nennen wir Ihnen gerne den passenden Dichtungssatz aus unserem Ersatzteil-Sortiment (reiner Teileverkauf).",
+      "Bei Fehler E15 ist häufig die Pumpentopf-Dichtung undicht. Anhand Ihres Typenschilds (E-Nr.) nennen wir Ihnen gerne den passenden Dichtungssatz aus unserem Ersatzteil-Sortiment.",
     keywords: ["e15", "e24", "wasserhahn", "aquastop", "geschirrspüler", "spülmaschine"],
   },
   {
@@ -140,7 +140,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Testen Sie kurz Ober-/Unterhitze im Vergleich zu Umluft: Wird Ober-/Unterhitze warm, Umluft aber nicht, ist lediglich der Ringheizkörper durchgebrannt.",
     ],
     proTip:
-      "Passende Original-Ringheizkörper für Umluft/Heißluft liefern wir Ihnen anhand Ihrer E-Nr. im reinen Teileverkauf (Montage/Anschluss bitte nur durch einen zugelassenen Fachbetrieb).",
+      "Passende Original-Ringheizkörper für Umluft und Heißluft erhalten Sie bei uns genau passend anhand Ihrer E-Nr.",
     keywords: ["backofen", "herd", "heizt nicht", "uhrzeit", "sicherung", "umluft", "ringheizkörper"],
   },
   {
@@ -158,7 +158,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Feuchtigkeitssensor-Metallstreifen im Inneren der Trommel (direkt hinter dem Türsieb) mit einem Essig-Tuch von Kalkbelägen befreien.",
     ],
     proTip:
-      "Benötigen Sie für Ihren Trockner eine neue Kondensatpumpe, ein Türschloss oder ein Flusensieb? Anhand des Typenschilds (E-Nr.) liefern wir Ihnen das passende Originalteil (reiner Teileverkauf).",
+      "Benötigen Sie für Ihren Trockner eine neue Kondensatpumpe, ein Türschloss oder ein Flusensieb? Anhand des Typenschilds (E-Nr.) finden wir schnell das passende Originalteil.",
     keywords: ["trockner", "behälter voll", "trocknet nicht", "wärmepumpe", "kondensator"],
   },
   {

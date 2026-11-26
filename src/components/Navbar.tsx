@@ -29,6 +29,7 @@ import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
+import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 
 const drawerListVariants: Variants = {
   hidden: { opacity: 0 },
@@ -50,7 +51,7 @@ const drawerItemVariants: Variants = {
 
 const desktopNav = [
   { href: "/", label: "Startseite" },
-  { href: "/leistungen", label: "Service & Geräte" },
+  { href: "/leistungen", label: "Geräte & Teile" },
   { href: "/kundenbewertungen", label: "Bewertungen" },
   { href: "/ueber-uns", label: "Über uns" },
   { href: "/kontakt", label: "Kontakt" },
@@ -72,31 +73,31 @@ export default function Navbar() {
     {
       href: "/",
       label: "Startseite",
-      sub: "Mobiler Vor-Ort-Service & Ersatzteile",
+      sub: "Beratung & Originalteile seit 1990",
       icon: Home,
     },
     {
       href: "/leistungen",
-      label: "Service & Geräte",
-      sub: "Vor-Ort-Check, Ersatzteile & Ersatzgeräte mit Garantie",
+      label: "Geräte & Teile",
+      sub: "Originalteile · Geräte auf Anfrage",
       icon: Wrench,
     },
     {
       href: "/kundenbewertungen",
       label: "Bewertungen",
-      sub: `${ratingFormatted} ★ Google-Rezensionen (${place.userRatingCount} Kundenstimmen)`,
+      sub: `${ratingFormatted} ★ · ${place.userRatingCount} Stimmen`,
       icon: Star,
     },
     {
       href: "/ueber-uns",
       label: "Über uns",
-      sub: `${business.owner} · Seit ${business.founded} in ${business.city}`,
+      sub: `${business.owner} · Seit ${business.founded}`,
       icon: Sparkles,
     },
     {
       href: "/kontakt",
       label: "Kontakt",
-      sub: `Vor-Ort-Termine & persönliche Beratung in ${business.city}`,
+      sub: "Termine nach Vereinbarung",
       icon: MapPin,
     },
   ];
@@ -211,15 +212,19 @@ export default function Navbar() {
           isPinned ? "shadow-[0_10px_30px_-10px_rgba(2,6,23,0.6)]" : ""
         }`}
       >
-        <div className="container-page flex h-full items-center justify-between gap-2 lg:gap-6 xl:gap-8">
+        <div className="container-page flex h-full items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-4 xl:gap-6">
           {/* Zone 1: Clean Brand Wordmark + Subtle Mobile Page Context */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 lg:justify-self-start">
             <Link
               href="/"
               onClick={() => triggerHapticFeedback(35)}
-              className="inline-flex h-11 min-h-[44px] items-center text-[17px] sm:text-lg lg:text-xl font-extrabold tracking-tight text-white whitespace-nowrap shrink-0 hover:text-accent-light transition-colors"
+              className="group inline-flex h-11 min-h-[44px] items-center gap-2.5 text-[17px] sm:text-lg lg:text-xl font-extrabold tracking-tight text-white whitespace-nowrap shrink-0 hover:text-accent-light transition-colors"
               aria-label="Hannachi – zur Startseite"
             >
+              <HannachiBrandLogo
+                size={28}
+                className="sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-[1.04]"
+              />
               <span>Hannachi</span>
             </Link>
 
@@ -229,8 +234,8 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* Zone 2: 5 Concise Single-Line Desktop Navigation Links */}
-          <nav aria-label="Hauptnavigation" className="hidden lg:flex items-center gap-5 xl:gap-8">
+          {/* Zone 2: 5 Concise Single-Line Desktop Navigation Links (True Center) */}
+          <nav aria-label="Hauptnavigation" className="hidden lg:flex lg:justify-self-center items-center gap-5 xl:gap-8">
             {desktopNav.map((n) => {
               const active = isActive(n.href);
               return (
@@ -249,10 +254,10 @@ export default function Navbar() {
                       transition={
                         prefersReducedMotion
                           ? { duration: 0.1 }
-                          : { type: "spring", stiffness: 440, damping: 34 }
+                          : { type: "spring", stiffness: 300, damping: 30 }
                       }
                       aria-hidden="true"
-                      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-accent"
+                      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.7)]"
                     />
                   )}
                 </Link>
@@ -261,7 +266,7 @@ export default function Navbar() {
           </nav>
 
           {/* Zone 3: Theme Toggle + CTA + Mobile Menu Drawer Button */}
-          <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 lg:gap-2 shrink-0 lg:justify-self-end">
             <button
               type="button"
               onClick={() => {
@@ -306,9 +311,9 @@ export default function Navbar() {
               type="button"
               onClick={() => openQuickRequest()}
               aria-expanded={isQuickRequestOpen}
-              className="hidden lg:inline-flex min-h-[40px] items-center gap-1.5 xl:gap-2 rounded-xl bg-accent px-3 xl:px-4 py-1.5 text-xs xl:text-sm font-bold text-white shadow-xs transition-all duration-150 hover:bg-accent-dark hover:-translate-y-px whitespace-nowrap shrink-0 cursor-pointer"
+              className="hidden lg:inline-flex min-h-[40px] items-center gap-1.5 xl:gap-2 rounded-xl bg-accent px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm font-bold text-white shadow-xs transition-all duration-150 hover:bg-accent-dark hover:-translate-y-px whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <span>Unverbindlich anfragen</span>
+              <span>Anfragen</span>
               <ArrowRight size={14} />
             </button>
 
@@ -392,7 +397,7 @@ export default function Navbar() {
             >
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="font-bold uppercase tracking-wider text-accent-light">
-                  Vor-Ort-Service · Osnabrück
+                  Hausgeräte-Spezialist · Osnabrück
                 </span>
                 <span className="text-[11px] font-medium text-white/55">Seit {business.founded}</span>
               </div>
@@ -466,19 +471,20 @@ export default function Navbar() {
                     <Phone size={15} className="text-emerald-400 shrink-0" />
                     <span className="truncate">{place.phoneDisplay}</span>
                   </motion.a>
-                  <motion.button
+                  <motion.a
                     whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                    type="button"
+                    href={business.whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={() => {
                       triggerHapticFeedback(50);
                       setOpen(false);
-                      openQuickRequest();
                     }}
-                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-accent px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-accent-dark transition-colors whitespace-nowrap cursor-pointer min-w-0"
+                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-emerald-700 transition-colors whitespace-nowrap min-w-0"
                   >
                     <MessageCircle size={15} className="shrink-0" />
-                    <span className="truncate">Vor-Ort-Anfrage</span>
-                  </motion.button>
+                    <span className="truncate">WhatsApp starten</span>
+                  </motion.a>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-white/70">
@@ -488,7 +494,7 @@ export default function Navbar() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(35)}
-                    className="inline-flex min-h-[36px] items-center font-bold text-sky-300 hover:underline shrink-0"
+                    className="inline-flex min-h-[44px] items-center px-1.5 -mr-1.5 font-bold text-sky-300 hover:underline shrink-0"
                   >
                     Facebook →
                   </a>

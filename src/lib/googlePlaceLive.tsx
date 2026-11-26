@@ -78,7 +78,7 @@ const DEFAULT_PLACE_DATA: LiveGooglePlaceData = {
   businessStatus: "OPERATIONAL",
   openNow: null,
   weekdayDescriptions: [],
-  todayHours: null,
+  todayHours: business.hours,
   hoursSummary: business.hours,
   rating: 4.8,
   userRatingCount: 84,
@@ -99,42 +99,7 @@ function normalizeTelHref(phoneText: string, fallbackHref: string): string {
   return `tel:${digits}`;
 }
 
-function splitGermanAddress(
-  formattedAddress: string,
-  shortFormattedAddress: string
-): { streetLine: string; zipCityLine: string } {
-  const raw = (shortFormattedAddress || formattedAddress || "").trim();
-  if (!raw) {
-    return {
-      streetLine: business.street,
-      zipCityLine: `${business.zip} ${business.city}`,
-    };
-  }
-  const parts = raw
-    .split(",")
-    .map((p) => p.trim())
-    .filter((p) => p && !/^deutschland$/i.test(p) && !/^germany$/i.test(p));
-  if (parts.length >= 2) {
-    return {
-      streetLine: parts[0],
-      zipCityLine: parts.slice(1).join(", "),
-    };
-  }
-  return {
-    streetLine: raw,
-    zipCityLine: `${business.zip} ${business.city}`,
-  };
-}
 
-function resolveTodayHours(weekdayDescriptions: string[]): string | null {
-  if (!Array.isArray(weekdayDescriptions) || weekdayDescriptions.length === 0) {
-    return null;
-  }
-  // Google returns Monday = index 0 ... Sunday = index 6
-  const mondayFirstIdx = (new Date().getDay() + 6) % 7;
-  const entry = weekdayDescriptions[mondayFirstIdx];
-  return typeof entry === "string" && entry.trim() ? entry.trim() : null;
-}
 
 const GoogleLivePlaceContext = createContext<GoogleLivePlaceContextValue>({
   place: DEFAULT_PLACE_DATA,
@@ -207,11 +172,6 @@ export function GoogleLivePlaceProvider({
         const weekdayDescriptions = Array.isArray(p.weekdayDescriptions)
           ? p.weekdayDescriptions
           : [];
-        const todayHours = resolveTodayHours(weekdayDescriptions);
-        const addrParts = splitGermanAddress(
-          p.formattedAddress || "",
-          p.shortFormattedAddress || ""
-        );
         const livePhone =
           (p.nationalPhoneNumber || "").trim() || business.phoneDisplay;
         const liveIntlPhone =
@@ -220,19 +180,17 @@ export function GoogleLivePlaceProvider({
           ? p.reviews.filter((r) => r && typeof r.text === "string")
           : [];
 
+        // Keep statutory address (§ 5 DDG) and official opening hours locked to central business config
+        // so stale Google Places entries can never contradict Impressum, Datenschutz, or Contact UI.
         setPlace({
           placeId: p.placeId || business.placeId,
           displayName:
             (p.displayName || "").trim() ||
             `${business.name} ${business.tagline}`,
-          formattedAddress:
-            (p.formattedAddress || "").trim() ||
-            DEFAULT_PLACE_DATA.formattedAddress,
-          shortFormattedAddress:
-            (p.shortFormattedAddress || "").trim() ||
-            `${addrParts.streetLine}, ${addrParts.zipCityLine}`,
-          streetLine: addrParts.streetLine,
-          zipCityLine: addrParts.zipCityLine,
+          formattedAddress: `${business.street}, ${business.zip} ${business.city}, Deutschland`,
+          shortFormattedAddress: `${business.street}, ${business.zip} ${business.city}`,
+          streetLine: business.street,
+          zipCityLine: `${business.zip} ${business.city}`,
           coordinates:
             p.coordinates &&
             typeof p.coordinates.lat === "number" &&
@@ -248,8 +206,8 @@ export function GoogleLivePlaceProvider({
           businessStatus: p.businessStatus || "OPERATIONAL",
           openNow: typeof p.openNow === "boolean" ? p.openNow : null,
           weekdayDescriptions,
-          todayHours,
-          hoursSummary: todayHours || business.hours,
+          todayHours: business.hours,
+          hoursSummary: business.hours,
           rating:
             typeof p.rating === "number" && Number.isFinite(p.rating)
               ? Number(p.rating.toFixed(1))

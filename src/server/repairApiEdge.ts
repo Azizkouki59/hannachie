@@ -129,15 +129,15 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy": [
     "default-src 'self'",
     "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self' data:",
     "img-src 'self' data: blob: https://hannachi.de https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com",
     "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://places.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://accounts.google.com",
     "worker-src 'self' blob:",
     "frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://*.firebaseapp.com",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self' https://wa.me https://api.whatsapp.com",
+    "form-action 'self' https://wa.me https://api.whatsapp.com https://web.whatsapp.com",
   ].join("; "),
 };
 

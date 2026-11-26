@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Phone,
   MessageCircle,
@@ -27,6 +27,7 @@ import {
   REPAIR_DRAFT_EVENT,
   type RepairDraft,
 } from "@/lib/repairRequest";
+import { buildWhatsAppDirectUrl } from "@/utils/whatsapp";
 
 export interface SideContactWidgetProps {
   phone?: string;
@@ -48,6 +49,7 @@ export default function SideContactWidget({
   serviceNotice = business.serviceNotice,
 }: SideContactWidgetProps) {
   const { isOpen: isQuickRequestOpen, openQuickRequest } = useQuickRequest();
+  const prefersReducedMotion = useReducedMotion();
   const containerRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -135,15 +137,34 @@ export default function SideContactWidget({
 
   const handleCopyPhone = async () => {
     triggerHapticFeedback(50);
+    let didCopy = false;
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(phone);
+        didCopy = true;
       }
+    } catch {
+      didCopy = false;
+    }
+    if (!didCopy && typeof document !== "undefined") {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = phone;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        didCopy = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch {
+        didCopy = false;
+      }
+    }
+    if (didCopy) {
       setCopied(true);
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
     }
   };
 
@@ -191,28 +212,11 @@ export default function SideContactWidget({
   };
 
   return (
-    <>
-      {/* Mobile Backdrop when Contact Panel is opened from the Top-Right Circular Button */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="side-contact-mobile-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 top-[52px] z-40 bg-black/45 backdrop-blur-[1px] lg:hidden"
-            aria-hidden="true"
-          />
-        )}
-      </AnimatePresence>
-
-      <aside
-        ref={containerRef}
-        aria-label="Direktkontakt Hannachi"
-        className="fixed bottom-4 right-4 xl:bottom-6 xl:right-6 z-50 hidden lg:flex flex-col items-end pointer-events-none"
-      >
+    <aside
+      ref={containerRef}
+      aria-label="Direktkontakt Hannachi"
+      className="fixed bottom-4 right-4 xl:bottom-6 xl:right-6 z-50 hidden lg:flex flex-col items-end pointer-events-none"
+    >
         {/* Expanded Contact Card (Opens above bottom-right Contact button on Desktop) */}
         <AnimatePresence>
           {open && (
@@ -220,10 +224,20 @@ export default function SideContactWidget({
               id="side-contact-panel"
               role="dialog"
               aria-label="Kontakt zu Hannachi"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 14 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 10 }}
+              transition={
+                prefersReducedMotion
+                  ? { duration: 0.1 }
+                  : {
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 30,
+                      mass: 0.72,
+                      opacity: { duration: 0.16, ease: [0.16, 1, 0.3, 1] },
+                    }
+              }
               className="pointer-events-auto origin-bottom-right relative mb-3 w-[min(calc(100vw-2rem),22.5rem)] max-h-[calc(100dvh-6.75rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-white/15 bg-primary-dark/98 dark:bg-slate-900/98 p-4 sm:p-5 text-white shadow-[0_24px_60px_rgba(2,6,23,0.7)] backdrop-blur-2xl"
             >
               {/* Soft Sky-Blue Sheen inside Expanded Panel */}
@@ -254,7 +268,7 @@ export default function SideContactWidget({
                       {business.owner}
                     </h2>
                     <p className="mt-0.5 text-xs text-white/65 truncate">
-                      Mobiler Vor-Ort-Service · {business.city}
+                      Beratung &amp; Ersatzteile · {business.city}
                     </p>
                   </div>
                 </div>
@@ -327,47 +341,104 @@ export default function SideContactWidget({
               {/* 3 Distinct Contact Actions (Zero Duplicates, All >= 48px touch targets) */}
               <div className="relative mt-3.5 space-y-2">
                 {/* 1. Online Form Inquiry (Vor-Ort-Check, Ersatzteil, Ersatzgerät) */}
-                <button
+                <motion.button
                   type="button"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.08 }
+                      : { delay: 0.03, duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+                  }
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   onClick={() => {
                     triggerHapticFeedback(50);
                     setOpen(false);
                     openQuickRequest("Waschmaschine", "", "", "repair");
                   }}
-                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl bg-accent px-3.5 py-3 text-xs font-bold text-white shadow-sm hover:bg-accent-dark active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                  className="btn-shimmer-beam flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl bg-accent px-3.5 py-3 text-xs font-bold text-white shadow-sm hover:bg-accent-dark transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                 >
                   <span className="flex items-center gap-2 min-w-0">
                     <Wrench size={16} className="shrink-0 text-sky-100" aria-hidden="true" />
                     <span className="truncate leading-tight text-left">
-                      {savedDraft
-                        ? "Anfrage im Formular fortsetzen"
-                        : "Vor-Ort-Termin & Ersatzteil anfragen"}
+                      {savedDraft ? "Entwurf fortsetzen" : "Online anfragen"}
                     </span>
                   </span>
                   <ArrowRight size={15} className="shrink-0 text-sky-100" aria-hidden="true" />
-                </button>
+                </motion.button>
 
-                {/* 2. Direct WhatsApp Chat Link */}
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    triggerHapticFeedback(50);
-                    setOpen(false);
-                  }}
-                  className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl border border-emerald-400/35 bg-emerald-600/20 px-3.5 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                {/* 2. Direct WhatsApp Chat Link + 1-Tap Quick Demands */}
+                <motion.div
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.08 }
+                      : { delay: 0.06, duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+                  }
+                  className="space-y-1.5"
                 >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <MessageCircle size={16} className="shrink-0 text-emerald-400" aria-hidden="true" />
-                    <span className="truncate leading-tight text-left">
-                      Direkt per WhatsApp schreiben
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      triggerHapticFeedback(50);
+                      window.setTimeout(() => setOpen(false), 450);
+                    }}
+                    className="flex min-h-[48px] w-full items-center justify-between gap-2.5 rounded-xl border border-emerald-400/35 bg-emerald-600/20 px-3.5 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      <MessageCircle size={16} className="shrink-0 text-emerald-400" aria-hidden="true" />
+                      <span className="truncate leading-tight text-left">
+                        WhatsApp schreiben
+                      </span>
                     </span>
-                  </span>
-                  <ExternalLink size={14} className="shrink-0 opacity-80" aria-hidden="true" />
-                </a>
+                    <ExternalLink size={14} className="shrink-0 opacity-80" aria-hidden="true" />
+                  </a>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      {
+                        label: "Ersatzteil",
+                        msg: "Hallo Herr Hannachi, ich suche ein Original-Ersatzteil und sende gleich die E-Nr. / ein Foto vom Typenschild.",
+                      },
+                      {
+                        label: "Gerät",
+                        msg: "Hallo Herr Hannachi, welche ausgewählten Markengeräte haben Sie aktuell in Osnabrück auf Anfrage?",
+                      },
+                      {
+                        label: "Termin",
+                        msg: "Hallo Herr Hannachi, ich möchte gerne einen kurzen Termin nach Vereinbarung in Osnabrück abstimmen.",
+                      },
+                    ].map((quick) => (
+                      <a
+                        key={quick.label}
+                        href={buildWhatsAppDirectUrl(quick.msg)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          triggerHapticFeedback(35);
+                          window.setTimeout(() => setOpen(false), 450);
+                        }}
+                        className="flex min-h-[32px] items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-bold text-emerald-200 hover:bg-emerald-600 hover:text-white active:scale-[0.97] transition-all"
+                      >
+                        {quick.label}
+                      </a>
+                    ))}
+                  </div>
+                  <p className="px-0.5 text-[10.5px] leading-snug text-white/55">
+                    Freiwilliger Chat über WhatsApp (Meta) ·{" "}
+                    <Link
+                      href="/datenschutz#whatsapp"
+                      onClick={() => setOpen(false)}
+                      className="text-sky-300 underline underline-offset-2 hover:text-white"
+                    >
+                      Datenschutz
+                    </Link>
+                  </p>
+                </motion.div>
 
-                {/* 2b. Schedule Visit with Google Calendar */}
+                {/* 2b. Schedule Appointment in Calendar */}
                 <Link
                   href="/kontakt#kalender-termin"
                   onClick={() => {
@@ -380,7 +451,7 @@ export default function SideContactWidget({
                   <span className="flex items-center gap-2 min-w-0">
                     <Clock size={15} className="shrink-0 text-sky-300" aria-hidden="true" />
                     <span className="truncate leading-tight text-left">
-                      Besuch im Google Kalender planen
+                      Termin im Kalender merken
                     </span>
                   </span>
                   <ArrowRight size={14} className="shrink-0 text-sky-300" aria-hidden="true" />
@@ -434,7 +505,7 @@ export default function SideContactWidget({
                   >
                     <MapPin size={15} className="text-sky-400 shrink-0" aria-hidden="true" />
                     <span className="truncate font-medium">
-                      Osnabrück &amp; Umgebung · Vor-Ort-Service
+                      Osnabrück · Termine nach Vereinbarung
                     </span>
                   </Link>
                   <a
@@ -460,7 +531,7 @@ export default function SideContactWidget({
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="contact-widget-facebook-link"
-                    aria-label="Hannachi Elektroservice auf Facebook besuchen"
+                    aria-label="Hannachi Elektrohaushaltsgeräte & Ersatzteile auf Facebook besuchen"
                     className="group flex min-h-[44px] w-full min-w-0 items-center justify-between gap-2.5 rounded-xl border border-[#1877F2]/40 bg-[#1877F2]/15 hover:bg-[#1877F2] px-3 py-2 text-xs font-bold text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                   >
                     <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -501,34 +572,50 @@ export default function SideContactWidget({
               type="button"
               data-contact-widget-trigger="true"
               onClick={handleToggleOpen}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.04 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.93 }}
+              transition={{ type: "spring", stiffness: 460, damping: 24 }}
               aria-expanded={open}
               aria-controls="side-contact-panel"
               aria-label={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
               title={open ? "Kontaktmenü schließen" : "Kontakt – Hannachi erreichen"}
-              className={`relative flex h-14 w-14 flex-col items-center justify-center rounded-full border transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/50 ${
+              className={`relative flex h-14 w-14 flex-col items-center justify-center rounded-full border transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/50 ${
                 open
                   ? "border-white/20 bg-slate-900 text-white hover:bg-slate-800 shadow-[0_12px_28px_rgba(2,6,23,0.45)]"
                   : "border-sky-300/40 bg-gradient-to-br from-accent to-accent-dark text-white hover:border-sky-200/70 shadow-[0_12px_28px_rgba(2,6,23,0.34),0_6px_18px_rgba(2,132,199,0.32)] hover:shadow-[0_16px_34px_rgba(2,6,23,0.4),0_8px_22px_rgba(14,165,233,0.42)]"
               }`}
             >
-              {open ? (
-                <>
-                  <X size={19} strokeWidth={2.2} aria-hidden="true" />
-                  <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
-                    Zu
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Phone size={18} strokeWidth={2.2} aria-hidden="true" />
-                  <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
-                    Kontakt
-                  </span>
-                </>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {open ? (
+                  <motion.span
+                    key="side-close"
+                    initial={prefersReducedMotion ? false : { rotate: -75, scale: 0.7, opacity: 0 }}
+                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { rotate: 75, scale: 0.7, opacity: 0 }}
+                    transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <X size={19} strokeWidth={2.2} aria-hidden="true" />
+                    <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
+                      Zu
+                    </span>
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="side-open"
+                    initial={prefersReducedMotion ? false : { rotate: 75, scale: 0.7, opacity: 0 }}
+                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { rotate: -75, scale: 0.7, opacity: 0 }}
+                    transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <Phone size={18} strokeWidth={2.2} aria-hidden="true" />
+                    <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
+                      Kontakt
+                    </span>
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </motion.button>
 
             {!open && savedDraft && draftShortBadge && (
@@ -542,6 +629,5 @@ export default function SideContactWidget({
           </div>
         </div>
       </aside>
-    </>
   );
 }

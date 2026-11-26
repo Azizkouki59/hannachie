@@ -255,72 +255,74 @@ export function resolveVerifiedFallbackLocation(
  * 1-Tap Presets for customers asking a Direct Question
  */
 export const quickQuestionPresets = [
-  "Gerät macht Probleme – Vor-Ort-Termin bei mir zu Hause gewünscht",
-  "Haben Sie das passende Ersatzteil nach Typenschild verfügbar?",
-  "Altgerät lohnt nicht mehr – suche geprüftes Ersatzgerät mit Garantie",
-  "Garantie-Anfrage zu einem bei Hannachi gekauften Gerät",
+  "Haben Sie das passende Original-Ersatzteil nach Typenschild (E-Nr.)?",
+  "Ich suche ein geprüftes Gebraucht- / Ersatzgerät mit schriftlicher Garantie",
+  "Termin für Abholung, Übergabe oder Lieferung in Osnabrück vereinbaren",
+  "Garantie- / Gewährleistungsanfrage zu einem bei Hannachi gekauften Gerät",
   "Ich möchte ein Marken-Haushaltsgerät zum Ankauf anbieten",
 ] as const;
 
 export const symptomsByDevice: Record<string, string[]> = {
   "Waschmaschine": [
-    "Pumpt nicht ab / Wasser steht in der Trommel (Vor-Ort-Termin)",
-    "Schleudert nicht oder macht laute Geräusche",
-    "Ersatzteil benötigt: Laugenpumpe, Türmanschette, Heizstab oder Kohlen",
-    "Altgerät lohnt nicht mehr: Geprüfte Ersatz-Waschmaschine mit Garantie gesucht",
-    "Garantie-Service (Gerät mit schriftlicher Garantie bei Hannachi gekauft)",
+    "Original-Ersatzteil benötigt: Laugenpumpe / Ablaufpumpe (nach E-Nr.)",
+    "Original-Ersatzteil benötigt: Türmanschette, Dichtung oder Türschloss",
+    "Original-Ersatzteil benötigt: Heizstab, NTC-Sensor, Stoßdämpfer oder Kohlen",
+    "Geprüfte Gebraucht-Waschmaschine mit schriftlicher Garantie gesucht",
+    "Garantie- / Gewährleistungsfall (Gerät direkt bei Hannachi gekauft)",
   ],
   "Wäschetrockner": [
-    "Trocknet nicht mehr richtig / bricht Programm ab (Vor-Ort-Termin)",
-    "Behälter voll / Kondensatpumpe oder Sensor benötigt",
-    "Altgerät lohnt nicht mehr: Geprüften Ersatz-Trockner mit Garantie anfragen",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Ersatzteil benötigt: Kondensatpumpe, Sensor oder Flusensieb",
+    "Original-Ersatzteil benötigt: Antriebsriemen, Spannrolle oder Türschloss",
+    "Geprüften Gebraucht-Trockner mit schriftlicher Garantie anfragen",
+    "Garantie- / Gewährleistungsfall (bei Hannachi gekauftes Gerät)",
   ],
   "Geschirrspüler": [
-    "Pumpt nicht ab / Wasser steht im Spülraum (Vor-Ort-Termin)",
-    "Geschirr bleibt kalt oder wird nicht trocken (Heizpumpe / Sensor)",
-    "Ersatzteil benötigt: Heizpumpe, Ablaufpumpe, Aquastop oder Korbrollen",
-    "Altgerät lohnt nicht mehr: Geprüften Geschirrspüler (45/60 cm) mit Garantie anfragen",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Ersatzteil benötigt: Heizpumpe / Umwälzpumpe oder Ablaufpumpe",
+    "Original-Ersatzteil benötigt: Aquastop-Zulaufschlauch oder Dichtung",
+    "Original-Zubehör: Geschirrkorb-Rollen, Sprüharme oder Dosierkammer",
+    "Geprüften Geschirrspüler (45/60 cm) mit schriftlicher Garantie anfragen",
+    "Garantie- / Gewährleistungsfall (bei Hannachi gekauftes Gerät)",
   ],
   "Kühlschrank / Gefriergerät": [
-    "Kühlt nicht mehr ausreichend / Temperatur zu warm (Vor-Ort-Termin)",
-    "Vereist stark oder Thermostat / Türdichtung schließt nicht",
-    "Altgerät lohnt nicht mehr: Geprüftes Ersatz-Kühlgerät mit Garantie gesucht",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Ersatzteil benötigt: Thermostat, NTC-Fühler oder Startrelais",
+    "Original-Ersatzteil benötigt: Magnet-Türdichtung oder Schleppscharnier",
+    "Original-Zubehör: Glasplatten, Gemüseschubladen oder Türfächer",
+    "Geprüftes Ersatz-Kühlgerät mit schriftlicher Garantie gesucht",
+    "Garantie- / Gewährleistungsfall (bei Hannachi gekauftes Gerät)",
   ],
   "Backofen / Herd": [
-    "Backofen wird nicht mehr richtig heiß (Umluft / Ober-/Unterhitze)",
-    "Ersatzteil benötigt: Ringheizkörper, Backofenschalter, Thermostat oder Dichtung",
-    "Altgerät lohnt nicht mehr: Geprüften Backofen / Herd mit Garantie anfragen",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Ersatzteil benötigt: Ringheizkörper oder Ober-/Unterhitze-Element",
+    "Original-Ersatzteil benötigt: Backofenschalter, Thermostat oder Dichtung",
+    "Original-Zubehör: Backbleche, Roste oder Türscharniere",
+    "Geprüften Backofen / Herd mit schriftlicher Garantie anfragen",
+    "Garantie- / Gewährleistungsfall (bei Hannachi gekauftes Gerät)",
   ],
   "Ceranfeld / Induktion": [
-    "Kochzone reagiert nicht oder heizt nicht mehr",
-    "Ersatzteil nach Typenschild (E-Nr.) oder geprüftes Austausch-Kochfeld",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Ersatzteil nach Typenschild (E-Nr.) anfragen",
+    "Geprüftes Austausch-Kochfeld mit schriftlicher Garantie anfragen",
+    "Garantie- / Gewährleistungsfall (bei Hannachi gekauftes Gerät)",
   ],
   "Dunstabzugshaube": [
-    "Ersatzteil benötigt: Gebläsemotor, Schalter oder Filter",
-    "Vor-Ort-Termin oder Austauschgerät anfragen",
+    "Original-Ersatzteil / Zubehör: Metallfettfilter, Aktivkohlefilter oder Schalter",
+    "Geprüftes Gerät / Verfügbarkeit anfragen",
   ],
   "Mikrowelle": [
-    "Drehteller, Rollenring, Glimmerplatte oder geprüftes Ersatzgerät anfragen",
-    "Garantie-Service (bei Hannachi gekauftes Gerät)",
+    "Original-Zubehör: Drehteller, Rollenring oder Glimmerplatte",
+    "Geprüftes Standgerät oder Garantiefall (bei Hannachi gekauft)",
   ],
   "Kaffeevollautomat": [
-    "Ersatzteil benötigt: Brühgruppe, Dichtungssatz, Pumpe oder Drainageventil",
-    "Geprüftes Gerät / Garantie-Anfrage",
+    "Original-Ersatzteil: Brühgruppe, Dichtungssatz, Pumpe oder Drainageventil",
+    "Geprüftes Gerät / Garantie-Anfrage (bei Hannachi gekauft)",
   ],
   "Elektronik / Platine": [
-    "Original-Steuerplatine / Leistungsmodul per E-Nr. anfragen",
-    "Garantieabwicklung für bei uns gekaufte Geräte",
+    "Original-Ersatzmodul / Leistungsmodul per E-Nr. (Teileverkauf) anfragen",
+    "Garantieabwicklung für direkt bei Hannachi gekaufte Geräte",
   ],
   "Anderes Gerät (Sonstiges)": [
-    "Gerät streikt – Vor-Ort-Termin & Ersteinschätzung gewünscht",
-    "Original-Ersatzteil mit Typenschild anfragen",
-    "Geprüftes Ersatzgerät inkl. schriftlicher Garantie anfragen",
-    "Garantie-Fall für ein bei Hannachi erworbenes Gerät",
+    "Original-Ersatzteil per Typenschild (E-Nr. / PNC) anfragen",
+    "Geprüftes Haushaltsgerät inkl. schriftlicher Garantie anfragen",
+    "Markengerät zum Ankauf anbieten",
+    "Garantie- / Gewährleistungsfall (bei Hannachi erworbenes Gerät)",
   ],
 };
 
@@ -329,43 +331,43 @@ export const diagnosticHintByDevice: Record<
   { title: string; hint: string; typicalTime: string }
 > = {
   "Waschmaschine": {
-    title: "Mobiler Vor-Ort-Service · Osnabrück",
-    hint: "Wir kommen nach Terminabsprache zu Ihnen nach Hause, klären den Ersatzteilbedarf oder bieten Ihnen – falls Ihr Altgerät nicht mehr zu retten ist – ein geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie an.",
-    typicalTime: "Vor-Ort-Termin nach Vereinbarung",
+    title: "Ersatzteilhandel & geprüfte Waschmaschinen",
+    hint: "Passgenaue Original-Ersatzteile nach Typenschild (E-Nr. / PNC) sowie geprüfte Gebraucht-Waschmaschinen inkl. schriftlicher Verkäufergarantie in Osnabrück.",
+    typicalTime: "Rückmeldung & Übergabe nach Termin",
   },
   "Wäschetrockner": {
-    title: "Mobiler Vor-Ort-Service · Osnabrück",
-    hint: "Vor-Ort-Check bei Ihnen zu Hause, passende Ersatzteile (Kondensatpumpen, NTC-Sensoren, Riemen) oder geprüftes Ersatzgerät inkl. schriftlicher Garantie.",
+    title: "Ersatzteilhandel & geprüfte Trockner",
+    hint: "Original-Ersatzteile (Kondensatpumpen, NTC-Sensoren, Riemen, Siebe) im Teileverkauf sowie geprüfte Gebraucht-Trockner inkl. schriftlicher Verkäufergarantie.",
     typicalTime: "Termin nach Vereinbarung",
   },
   "Geschirrspüler": {
-    title: "Mobiler Vor-Ort-Service · Osnabrück",
-    hint: "Vor-Ort-Termin bei Ihnen zu Hause: passende Ersatzteile (Heizpumpen, Ablaufpumpen, Aquastop) oder ein geprüfter Ersatz-Geschirrspüler (45/60 cm) mit schriftlicher Garantie.",
+    title: "Ersatzteile & geprüfte Geschirrspüler",
+    hint: "Original-Ersatzteile (Heizpumpen, Ablaufpumpen, Aquastop, Korbrollen) nach E-Nr. sowie geprüfte Geschirrspüler (45/60 cm) mit schriftlicher Garantie.",
     typicalTime: "Inkl. schriftlicher Verkäufergarantie",
   },
   "Kühlschrank / Gefriergerät": {
-    title: "Kühlgeräte · Schneller Vor-Ort-Termin",
-    hint: "Kurzfristige Terminabsprache bei Ihnen vor Ort, passende Thermostate, Fühler & Türdichtungen oder ein geprüftes Ersatz-Kühlgerät mit schriftlicher Verkäufergarantie.",
-    typicalTime: "Schnelle Terminvereinbarung",
+    title: "Kühlgeräte · Teile & geprüfter Bestand",
+    hint: "Original-Ersatzteile (Thermostate, Fühler, Türdichtungen, Fächer) im Teileverkauf sowie geprüfte Ersatz-Kühlgeräte mit schriftlicher Verkäufergarantie.",
+    typicalTime: "Schnelle Bestandsprüfung",
   },
   "Backofen / Herd": {
-    title: "Backöfen & Herde · Vor-Ort-Service",
-    hint: "Passende Ringheizkörper, Schalter & Dichtungen nach E-Nr. bei Ihnen vor Ort oder ein geprüftes Ersatzgerät inklusive schriftlicher Verkäufergarantie.",
-    typicalTime: "Vor-Ort-Service in Osnabrück",
+    title: "Backöfen & Herde · Teilehandel & Verkauf",
+    hint: "Original-Ringheizkörper, Schalter & Dichtungen nach E-Nr. sowie geprüfte Gebrauchtgeräte inkl. schriftlicher Verkäufergarantie (ohne Elektroanschluss).",
+    typicalTime: "Fachhandel Osnabrück",
   },
   "Ceranfeld / Induktion": {
-    title: "Kochfelder & Ersatzteile",
-    hint: "Passende Ersatzteile nach Typenschild (E-Nr.) oder Angebot für ein geprüftes Ersatzgerät mit Garantie.",
+    title: "Kochfelder & Original-Ersatzteile",
+    hint: "Passende Original-Ersatzteile nach Typenschild (E-Nr.) im Teileverkauf oder Angebot für ein geprüftes Ersatzgerät mit Garantie.",
     typicalTime: "Exakter Abgleich per E-Nr.",
   },
   "Kaffeevollautomat": {
-    title: "Ersatzteile & Zubehör",
-    hint: "Brühgruppen, O-Ring-Dichtungen, Drainageventile und Pumpen für Jura, DeLonghi, Siemens, Miele u. v. m.",
+    title: "Original-Ersatzteile & Zubehör",
+    hint: "Brühgruppen, O-Ring-Dichtungen, Drainageventile und Pumpen im Teileverkauf für Jura, DeLonghi, Siemens, Miele u. v. m.",
     typicalTime: "Rückmeldung nach Termin",
   },
   "Elektronik / Platine": {
-    title: "Steuerungsmodule & Verkäufergarantie",
-    hint: "Original-Steuerplatinen nach Typenschild sowie voller Garantie- & Reparaturservice für alle bei uns gekauften Geräte.",
+    title: "Original-Ersatzmodule & Verkäufergarantie",
+    hint: "Original-Ersatzmodule nach Typenschild im reinen Teileverkauf sowie Gewährleistungs- & Garantieabwicklung ausschließlich für bei uns gekaufte Geräte.",
     typicalTime: "Passgenaue Teile-Identifikation",
   },
 };
@@ -423,10 +425,7 @@ export const step2Schema = z.object({
   problem: z
     .string()
     .trim()
-    .min(
-      4,
-      "Bitte wählen Sie oben ein Symptom aus oder beschreiben Sie kurz Ihr Anliegen."
-    ),
+    .min(3, "Bitte Anliegen antippen oder kurz eingeben."),
   urgency: z.enum(["normal", "express", "notfall"]),
   photo: photoSchema,
 });
@@ -437,12 +436,14 @@ const step3ObjectSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(6, "Bitte geben Sie Ihre Telefonnummer für Rückruf oder WhatsApp ein.")
+    .optional()
+    .default("")
     .refine(
       (val) =>
-        /^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
-        val.replace(/\D/g, "").length >= 6,
-      "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
+        !val ||
+        (/^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
+          val.replace(/\D/g, "").length >= 6),
+      "Bitte gültige Nummer eingeben (mind. 6 Ziffern)."
     ),
   zip: z.string().trim().optional().default(""),
   streetAddress: z.string().optional(),
@@ -453,7 +454,7 @@ const step3ObjectSchema = z.object({
     .optional()
     .refine(
       (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val),
-      "Bitte geben Sie eine gültige E-Mail-Adresse ein (oder lassen Sie das Feld frei)."
+      "Bitte gültige E-Mail eingeben."
     ),
   preferredChannel: z.literal("whatsapp"),
   callbackTime: z.string().optional(),
@@ -464,8 +465,7 @@ export const step3Schema = step3ObjectSchema.superRefine((val, ctx) => {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["zip"],
-      message:
-        "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder markieren Sie Ihren Standort auf Google Maps.",
+      message: "Bitte PLZ / Ort angeben.",
     });
   }
 });
@@ -476,20 +476,22 @@ export const quickQuestionSchema = z
     problem: z
       .string()
       .trim()
-      .min(4, "Bitte geben Sie Ihre Frage oder Ihr Anliegen kurz ein."),
+      .min(3, "Bitte Frage oder Anliegen kurz eingeben."),
     zip: z.string().trim().optional().default(""),
     name: z.string().trim().optional().default(""),
     phone: z
       .string()
       .trim()
-      .min(6, "Bitte geben Sie Ihre Telefonnummer für die Antwort ein.")
+      .optional()
+      .default("")
       .refine(
         (val) =>
-          /^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
-          val.replace(/\D/g, "").length >= 6,
-        "Bitte geben Sie eine gültige Telefonnummer (mindestens 6 Ziffern) ein."
+          !val ||
+          (/^[+()\d\s/-]{6,30}$/.test(val.trim()) &&
+            val.replace(/\D/g, "").length >= 6),
+        "Bitte gültige Nummer eingeben (mind. 6 Ziffern)."
       ),
-    device: z.string().trim().min(1, "Bitte wählen Sie ein Gerät aus."),
+    device: z.string().trim().min(1, "Bitte Gerät wählen."),
     brand: z.string().trim().optional().default(""),
     streetAddress: z.string().optional(),
     mapsLocationUrl: z.string().optional(),
@@ -499,7 +501,7 @@ export const quickQuestionSchema = z
       .optional()
       .refine(
         (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val),
-        "Bitte geben Sie eine gültige E-Mail-Adresse ein (oder lassen Sie das Feld frei)."
+        "Bitte gültige E-Mail eingeben."
       ),
     photo: photoSchema,
   })
@@ -508,8 +510,7 @@ export const quickQuestionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["zip"],
-        message:
-          "Bitte wählen Sie Ihren Ort (Osnabrück & Umgebung) oder markieren Sie Ihren Standort auf Google Maps.",
+        message: "Bitte PLZ / Ort angeben.",
       });
     }
   });

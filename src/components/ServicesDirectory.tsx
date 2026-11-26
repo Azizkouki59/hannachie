@@ -2,28 +2,29 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  WashingMachine,
-  Wind,
-  Layers,
-  UtensilsCrossed,
-  Zap,
-  Refrigerator,
-  Snowflake,
-  Flame,
-  Fan,
-  Microwave,
-  Coffee,
-  Sparkles,
-  Cpu,
   ArrowRight,
   ChevronDown,
   ChevronRight,
   MessageCircle,
   Search,
+  Sparkles,
   X,
 } from "lucide-react";
+import {
+  CoffeeMachine,
+  ControlModule,
+  Cooktop,
+  Dishwasher,
+  Dryer,
+  Freezer,
+  Fridge,
+  MicrowaveIcon,
+  Oven,
+  RangeHood,
+  WashingMachine,
+} from "@/components/Illustrations";
 import {
   mainServiceCategories,
   electronicsWorkshopCategory,
@@ -35,40 +36,39 @@ import { useMediaQuery } from "@/lib/useMediaQuery";
 
 function DeviceIcon({
   iconName,
-  className = "h-5 w-5",
+  className = "h-6 w-6",
 }: {
   iconName: DeviceItem["iconName"];
   className?: string;
 }) {
   switch (iconName) {
     case "WashingMachine":
-      return <WashingMachine className={className} aria-hidden />;
+      return <WashingMachine className={className} />;
     case "Wind":
-      return <Wind className={className} aria-hidden />;
     case "Layers":
-      return <Layers className={className} aria-hidden />;
+      return <Dryer className={className} />;
     case "UtensilsCrossed":
-      return <UtensilsCrossed className={className} aria-hidden />;
+      return <Dishwasher className={className} />;
     case "Zap":
-      return <Zap className={className} aria-hidden />;
+      return <Cooktop className={className} />;
     case "Refrigerator":
-      return <Refrigerator className={className} aria-hidden />;
+      return <Fridge className={className} />;
     case "Snowflake":
-      return <Snowflake className={className} aria-hidden />;
+      return <Freezer className={className} />;
     case "Flame":
-      return <Flame className={className} aria-hidden />;
+      return <Oven className={className} />;
     case "Fan":
-      return <Fan className={className} aria-hidden />;
+      return <RangeHood className={className} />;
     case "Microwave":
-      return <Microwave className={className} aria-hidden />;
+      return <MicrowaveIcon className={className} />;
     case "Coffee":
-      return <Coffee className={className} aria-hidden />;
+      return <CoffeeMachine className={className} />;
     case "Sparkles":
       return <Sparkles className={className} aria-hidden />;
     case "Cpu":
-      return <Cpu className={className} aria-hidden />;
+      return <ControlModule className={className} />;
     default:
-      return <Zap className={className} aria-hidden />;
+      return <WashingMachine className={className} />;
   }
 }
 
@@ -87,19 +87,17 @@ function ApplianceCard({
   const prefersReducedMotion = useReducedMotion();
   const isSmUp = useMediaQuery("(min-width: 640px)", false);
 
-  const visibleTopics = useMemo(() => {
-    if (isSmUp || showAllMobile) return device.faults;
-    return device.faults.slice(0, 3);
-  }, [device.faults, isSmUp, showAllMobile]);
-
-  const hiddenMobileCount = Math.max(0, device.faults.length - 3);
+  const primaryTopics = useMemo(() => device.faults.slice(0, 3), [device.faults]);
+  const extraTopics = useMemo(() => device.faults.slice(3), [device.faults]);
+  const hiddenMobileCount = extraTopics.length;
+  const showExtraTopics = isSmUp || showAllMobile;
 
   return (
-    <article className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-5 sm:p-6 transition-colors hover:border-accent/40">
+    <article className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-4 sm:p-6 transition-colors hover:border-accent/40">
       <div>
         {/* Clean Card Header */}
-        <div className="flex items-start gap-3.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+        <div className="flex items-start gap-3 sm:gap-3.5">
+          <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-accent/20 bg-gradient-to-br from-accent/15 to-sky-500/5 text-accent shadow-2xs">
             <DeviceIcon iconName={device.iconName} className="h-5 w-5" />
           </div>
           <div className="min-w-0">
@@ -112,10 +110,10 @@ function ApplianceCard({
           </div>
         </div>
 
-        {/* Hairline-Divided Interactive 1-Tap Topics (No Box-in-Box Clutter) */}
+        {/* Hairline-Divided Interactive 1-Tap Topics with Smooth Animated Disclosure */}
         <div className="mt-4 border-t border-primary/8 dark:border-white/10">
           <ul className="divide-y divide-primary/8 dark:divide-white/10">
-            {visibleTopics.map((topic) => (
+            {primaryTopics.map((topic) => (
               <li key={topic}>
                 <button
                   type="button"
@@ -135,6 +133,41 @@ function ApplianceCard({
               </li>
             ))}
           </ul>
+
+          {extraTopics.length > 0 && (
+            <AnimatePresence initial={false}>
+              {showExtraTopics && (
+                <motion.ul
+                  key="extra-topics"
+                  initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+                  transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden border-t border-primary/8 dark:border-white/10 divide-y divide-primary/8 dark:divide-white/10"
+                >
+                  {extraTopics.map((topic) => (
+                    <li key={topic}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHapticFeedback(30);
+                          onSelectInquiry(device.name, topic);
+                        }}
+                        className="group/row flex min-h-[44px] w-full items-center justify-between gap-3 py-2.5 text-left text-xs sm:text-[13px] font-medium text-primary dark:text-slate-200 hover:text-accent dark:hover:text-accent-light transition-colors cursor-pointer"
+                      >
+                        <span className="leading-snug">{topic}</span>
+                        <ChevronRight
+                          size={14}
+                          aria-hidden="true"
+                          className="shrink-0 text-ink-faint transition-transform duration-150 group-hover/row:translate-x-0.5 group-hover/row:text-accent"
+                        />
+                      </button>
+                    </li>
+                  ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          )}
 
           {/* Clean Progressive Disclosure on Mobile (< sm) when more than 3 topics */}
           {!isSmUp && hiddenMobileCount > 0 && (
@@ -178,7 +211,7 @@ function ApplianceCard({
           }}
           className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary dark:bg-accent px-3.5 py-2.5 text-xs font-extrabold text-white hover:bg-accent dark:hover:bg-accent-dark active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer"
         >
-          <span>Termin / Teil anfragen</span>
+          <span>Teil / Gerät anfragen</span>
           <ArrowRight size={14} aria-hidden="true" />
         </button>
         <button
@@ -239,7 +272,7 @@ export default function ServicesDirectory() {
   return (
     <div className="w-full">
       {/* Sticky Filter & Search Toolbar */}
-      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/95 dark:bg-slate-950/95 py-3 sticky top-12 lg:top-16 z-30 backdrop-blur-md">
+      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/95 dark:bg-slate-950/95 py-2.5 sm:py-3 sticky top-[52px] lg:top-16 z-30 backdrop-blur-md">
         <div className="container-page flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
           <nav
             aria-label="Kategorienavigation"
@@ -252,32 +285,51 @@ export default function ServicesDirectory() {
                 setSelectedCategory("all");
               }}
               aria-pressed={selectedCategory === "all"}
-              className={`shrink-0 min-h-[44px] lg:min-h-[38px] rounded-xl px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 whitespace-nowrap cursor-pointer ${
+              className={`relative shrink-0 min-h-[44px] lg:min-h-[38px] rounded-xl px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 whitespace-nowrap cursor-pointer ${
                 selectedCategory === "all"
-                  ? "bg-primary dark:bg-accent text-white"
+                  ? "text-white"
                   : "text-ink-muted hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary dark:hover:text-slate-100"
               }`}
             >
-              Alle Bereiche
+              {selectedCategory === "all" && (
+                <motion.span
+                  layoutId="services-category-active-pill"
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-xl bg-primary dark:bg-accent"
+                />
+              )}
+              <span className="relative z-10">Alle Bereiche</span>
             </button>
-            {allCategories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  triggerHapticFeedback(25);
-                  setSelectedCategory(cat.id);
-                }}
-                aria-pressed={selectedCategory === cat.id}
-                className={`shrink-0 min-h-[44px] lg:min-h-[38px] rounded-xl px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 whitespace-nowrap cursor-pointer ${
-                  selectedCategory === cat.id
-                    ? "bg-primary dark:bg-accent text-white"
-                    : "text-ink-muted hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary dark:hover:text-slate-100"
-                }`}
-              >
-                {cat.shortTitle}
-              </button>
-            ))}
+            {allCategories.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    triggerHapticFeedback(25);
+                    setSelectedCategory(cat.id);
+                  }}
+                  aria-pressed={isSelected}
+                  className={`relative shrink-0 min-h-[44px] lg:min-h-[38px] rounded-xl px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? "text-white"
+                      : "text-ink-muted hover:bg-primary/5 dark:hover:bg-white/5 hover:text-primary dark:hover:text-slate-100"
+                  }`}
+                >
+                  {isSelected && (
+                    <motion.span
+                      layoutId="services-category-active-pill"
+                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-xl bg-primary dark:bg-accent"
+                    />
+                  )}
+                  <span className="relative z-10">{cat.shortTitle}</span>
+                </button>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -313,78 +365,121 @@ export default function ServicesDirectory() {
         </div>
       </div>
 
-      {/* Directory Grid */}
-      <div className="container-page py-8 sm:py-12 space-y-10 sm:space-y-14">
-        {filteredCategories.length === 0 ? (
-          <div className="card text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-primary/10 dark:border-white/10 p-8">
-            <p className="text-base font-bold text-primary dark:text-slate-100">
-              Keine Einträge für „{searchQuery.trim()}“ gefunden.
-            </p>
-            <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
-              Setzen Sie den Filter zurück oder schildern Sie uns Ihr Gerät direkt per Anfrage.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                }}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-4 py-2 text-xs font-bold text-primary dark:text-slate-100 cursor-pointer"
-              >
-                Filter zurücksetzen
-              </button>
-              <button
-                type="button"
-                onClick={() => openQuickRequest("Waschmaschine", searchQuery.trim(), "", "repair")}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white cursor-pointer"
-              >
-                <span>Direkt anfragen</span>
-                <ArrowRight size={13} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          filteredCategories.map((category, idx) => (
-            <section
-              key={category.id}
-              id={category.id}
-              className="scroll-mt-44 md:scroll-mt-32"
+      {/* Directory Grid with Smooth Filter Transitions */}
+      <div className="container-page py-8 sm:py-12">
+        <AnimatePresence mode="wait" initial={false}>
+          {filteredCategories.length === 0 ? (
+            <motion.div
+              key="empty-state"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="card text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-primary/10 dark:border-white/10 p-8"
             >
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-primary/8 dark:border-white/10">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-accent tabular-nums">
-                    <span>0{idx + 1}. Bereich</span>
-                    <span aria-hidden="true" className="text-ink-faint">·</span>
-                    <span className="text-ink-muted">{category.devices.length} Gerätegruppen</span>
-                  </div>
-                  <h2 className="mt-1 text-xl sm:text-2xl font-extrabold text-primary dark:text-slate-100 tracking-tight text-balance">
-                    {category.title}
-                  </h2>
-                  <p className="mt-1 text-xs sm:text-sm text-ink-muted leading-relaxed">
-                    {category.description}
-                  </p>
-                </div>
+              <p className="text-base font-bold text-primary dark:text-slate-100">
+                Keine Einträge für „{searchQuery.trim()}“ gefunden.
+              </p>
+              <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
+                Setzen Sie den Filter zurück oder schildern Sie uns Ihr Gerät direkt per Anfrage.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                  }}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-4 py-2 text-xs font-bold text-primary dark:text-slate-100 cursor-pointer"
+                >
+                  Filter zurücksetzen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openQuickRequest("Waschmaschine", searchQuery.trim(), "", "repair")}
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white cursor-pointer"
+                >
+                  <span>Direkt anfragen</span>
+                  <ArrowRight size={13} />
+                </button>
               </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`${selectedCategory}-${searchQuery.trim().toLowerCase()}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-10 sm:space-y-14"
+            >
+              {filteredCategories.map((category, idx) => {
+                const categoryNumber = allCategories.findIndex((c) => c.id === category.id) + 1;
+                const formattedNumber = String(categoryNumber > 0 ? categoryNumber : idx + 1).padStart(2, "0");
+                return (
+                  <section
+                    key={category.id}
+                    id={category.id}
+                    className="scroll-mt-44 md:scroll-mt-32"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-primary/8 dark:border-white/10">
+                      <div className="max-w-2xl">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-accent tabular-nums">
+                          <span>{formattedNumber}. Bereich</span>
+                          <span aria-hidden="true" className="text-ink-faint">·</span>
+                          <span className="text-ink-muted">{category.devices.length} Gerätegruppen</span>
+                        </div>
+                        <h2 className="mt-1 text-xl sm:text-2xl font-extrabold text-primary dark:text-slate-100 tracking-tight text-balance">
+                          {category.title}
+                        </h2>
+                        <p className="mt-1 text-xs sm:text-sm text-ink-muted leading-relaxed">
+                          {category.description}
+                          {category.id === "elektronik" && (
+                            <>
+                              {" "}
+                              <Link
+                                href="/impressum#garantie"
+                                className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark whitespace-nowrap"
+                              >
+                                Garantiebedingungen
+                              </Link>
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="mt-5 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {category.devices.map((device, dIdx) => (
-                  <ApplianceCard
-                    key={device.name}
-                    device={device}
-                    defaultExpandedOnMobile={dIdx === 0 && idx === 0}
-                    onSelectInquiry={(devName, fault) =>
-                      openQuickRequest(devName, fault, "", "repair")
-                    }
-                    onSelectQuestion={(devName) =>
-                      openQuickRequest(devName, "", "", "question")
-                    }
-                  />
-                ))}
-              </div>
-            </section>
-          ))
-        )}
+                    <div
+                      className={`mt-5 grid gap-4 sm:gap-5 ${
+                        category.devices.length === 1
+                          ? "grid-cols-1 max-w-2xl"
+                          : category.devices.length === 2
+                            ? "grid-cols-1 sm:grid-cols-2"
+                            : category.devices.length === 3
+                              ? "grid-cols-1 md:grid-cols-3"
+                              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                      }`}
+                    >
+                      {category.devices.map((device, dIdx) => (
+                        <ApplianceCard
+                          key={device.name}
+                          device={device}
+                          defaultExpandedOnMobile={dIdx === 0 && idx === 0}
+                          onSelectInquiry={(devName, fault) =>
+                            openQuickRequest(devName, fault, "", "repair")
+                          }
+                          onSelectQuestion={(devName) =>
+                            openQuickRequest(devName, "", "", "question")
+                          }
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ const NAVY_SKY_LOGO_VARIATIONS: Array<{
     id: "v2-shield",
     shortLabel: "Logo 2 · Schutzschild",
     badge: "Variante 2 · Schutzschild & Haus",
-    title: "Vertrauens-Wappen für den mobilen Vor-Ort-Kundendienst",
+    title: "Vertrauens-Wappen für den Fachhandel in Osnabrück",
     subtitle: "Hausdach, Zahnrad, Strom & Wasser in Marineblau & Himmelblau auf Weiß",
     src: logoV2Shield,
     filename: "Hannachi-Logo-V2-Schutzschild-Blau.jpg",
@@ -182,7 +182,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
     `${business.street} · ${business.zip} ${business.city}`
   );
   const [customTagline, setCustomTagline] = useState(
-    "Vor-Ort-Kundendienst · Gebrauchtgeräte · Ersatzteile"
+    "An- & Verkauf · Gebrauchtgeräte · Original-Ersatzteile"
   );
   const [qrUrl, setQrUrl] = useState("https://hannachi.de");
   const [exportingSide, setExportingSide] = useState<"front" | "back" | null>(null);
@@ -198,12 +198,12 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
   const applyPresetPerson = (preset: "mrs" | "mr") => {
     if (preset === "mrs") {
       setPersonName("Frau Hannachi");
-      setPersonRole("Geschäftsleitung & Kundenservice");
+      setPersonRole("Geschäftsleitung & Kundenberatung");
       notify("Vorlage für Frau Hannachi aktiviert");
     } else {
       setPersonName(business.owner);
-      setPersonRole("Inhaber & Servicetechniker");
-      notify("Vorlage für Herrn Mohamed Hannachi aktiviert");
+      setPersonRole("Inhaber · Fachhandel Hausgeräte & Teile");
+      notify("Vorlage für Herrn Hannachi aktiviert");
     }
   };
 

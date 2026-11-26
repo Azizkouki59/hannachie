@@ -11,119 +11,61 @@ import {
 import { osnabrueckServiceAreas } from "./repairRequest";
 import { business } from "@/data/site";
 
-const ADMIN_TOKEN_STORAGE_KEY = "hannachi_admin_session_token_v1";
+const LEGACY_ADMIN_TOKEN_STORAGE_KEY = "hannachi_admin_session_token_v1";
 const ADMIN_LOCAL_TICKETS_KEY = "hannachi_admin_local_tickets_v2";
 const LEGACY_LOCAL_TICKETS_KEY = "hannachi_admin_local_tickets_v1";
 const PENDING_SYNC_IDS_KEY = "hannachi_admin_pending_sync_ids_v1";
 
-export function getSavedAdminToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return (
-      window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) ||
-      window.localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY)
-    );
-  } catch {
-    return null;
-  }
-}
+// Hold server-issued Bearer token strictly in JS memory (never persisted to Web Storage)
+let inMemoryAdminToken: string | null = null;
 
-export function saveAdminToken(token: string): void {
+function purgeLegacyStoredTokens(): void {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
-    window.localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, token);
-  } catch {
-    // Ignore storage quota errors
-  }
-}
-
-export function clearAdminToken(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-    window.localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+    window.sessionStorage.removeItem(LEGACY_ADMIN_TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_ADMIN_TOKEN_STORAGE_KEY);
   } catch {
     // Ignore storage errors
   }
 }
 
-function getPendingSyncIds(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = window.localStorage.getItem(PENDING_SYNC_IDS_KEY);
-    if (!raw) return new Set();
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return new Set(parsed.filter((x): x is string => typeof x === "string"));
-    }
-  } catch {
-    // Ignore
-  }
-  return new Set();
+export function getSavedAdminToken(): string | null {
+  purgeLegacyStoredTokens();
+  return inMemoryAdminToken;
 }
 
-function savePendingSyncIds(ids: Set<string>): void {
+export function saveAdminToken(token: string): void {
+  purgeLegacyStoredTokens();
+  inMemoryAdminToken = token;
+}
+
+export function clearAdminToken(): void {
+  inMemoryAdminToken = null;
+  purgeLegacyStoredTokens();
+}
+
+function clearLegacyLocalTicketCache(): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
-      PENDING_SYNC_IDS_KEY,
-      JSON.stringify(Array.from(ids))
-    );
+    window.localStorage.removeItem(LEGACY_LOCAL_TICKETS_KEY);
+    window.localStorage.removeItem(ADMIN_LOCAL_TICKETS_KEY);
+    window.localStorage.removeItem(PENDING_SYNC_IDS_KEY);
   } catch {
-    // Ignore
+    // Ignore storage errors
   }
 }
 
-export function removePendingSyncId(ticketId: string): void {
-  const pending = getPendingSyncIds();
-  if (pending.has(ticketId)) {
-    pending.delete(ticketId);
-    savePendingSyncIds(pending);
-  }
+export function removePendingSyncId(_ticketId: string): void {
+  clearLegacyLocalTicketCache();
 }
 
 export function loadLocalFallbackTickets(): AdminRepairTicket[] {
-  if (typeof window === "undefined") return [];
-  try {
-    // Clean up legacy v1 storage if present and migrate only real non-mock tickets
-    const legacyRaw = window.localStorage.getItem(LEGACY_LOCAL_TICKETS_KEY);
-    if (legacyRaw) {
-      window.localStorage.removeItem(LEGACY_LOCAL_TICKETS_KEY);
-      const legacyParsed = JSON.parse(legacyRaw);
-      if (Array.isArray(legacyParsed)) {
-        const cleanedLegacy = stripMockTickets(legacyParsed as AdminRepairTicket[]);
-        window.localStorage.setItem(ADMIN_LOCAL_TICKETS_KEY, JSON.stringify(cleanedLegacy));
-        return cleanedLegacy;
-      }
-    }
-
-    const raw = window.localStorage.getItem(ADMIN_LOCAL_TICKETS_KEY);
-    if (!raw) {
-      return [];
-    }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      const cleaned = stripMockTickets(parsed as AdminRepairTicket[]);
-      if (cleaned.length !== parsed.length) {
-        window.localStorage.setItem(ADMIN_LOCAL_TICKETS_KEY, JSON.stringify(cleaned));
-      }
-      return cleaned;
-    }
-  } catch {
-    // Return empty list if storage is unavailable
-  }
+  clearLegacyLocalTicketCache();
   return [];
 }
 
-export function saveLocalFallbackTickets(tickets: AdminRepairTicket[]): void {
-  if (typeof window === "undefined") return;
-  try {
-    const cleaned = stripMockTickets(tickets);
-    window.localStorage.setItem(ADMIN_LOCAL_TICKETS_KEY, JSON.stringify(cleaned));
-  } catch {
-    // Ignore storage quota errors
-  }
+export function saveLocalFallbackTickets(_tickets: AdminRepairTicket[]): void {
+  clearLegacyLocalTicketCache();
 }
 
 export function resolveCoordinatesForZip(
@@ -155,64 +97,18 @@ export function resolveCoordinatesForZip(
   };
 }
 
-/**
- * Records a newly submitted public website repair request into local fallback storage
- * so it is guaranteed to be visible in /admin even if the preview server restarts.
- */
-export function recordClientSubmittedTicket(ticket: AdminRepairTicket): void {
-  if (typeof window === "undefined") return;
-  const existing = loadLocalFallbackTickets();
-  const filtered = existing.filter((t) => t.id !== ticket.id);
-  saveLocalFallbackTickets([ticket, ...filtered]);
-
-  const pending = getPendingSyncIds();
-  pending.add(ticket.id);
-  savePendingSyncIds(pending);
+export function recordClientSubmittedTicket(_ticket: AdminRepairTicket): void {
+  clearLegacyLocalTicketCache();
 }
 
-/**
- * Merges authoritative server tickets with any unsynced locally submitted tickets
- * while stripping any legacy mock IDs and respecting server deletions.
- */
 export function mergeServerAndLocalTickets(
   serverTickets: AdminRepairTicket[],
-  localTickets: AdminRepairTicket[]
+  _localTickets: AdminRepairTicket[] = []
 ): AdminRepairTicket[] {
-  const cleanServer = stripMockTickets(serverTickets);
-  const cleanLocal = stripMockTickets(localTickets);
-  const pendingIds = getPendingSyncIds();
-
-  const byId = new Map<string, AdminRepairTicket>();
-
-  // 1. Authoritative server tickets
-  for (const st of cleanServer) {
-    byId.set(st.id, st);
-    if (pendingIds.has(st.id)) {
-      pendingIds.delete(st.id);
-    }
-  }
-
-  // 2. Include any local ticket that was just created offline / pending sync
-  for (const lt of cleanLocal) {
-    const existing = byId.get(lt.id);
-    if (!existing && pendingIds.has(lt.id)) {
-      byId.set(lt.id, lt);
-    } else if (existing) {
-      const serverTime = Date.parse(existing.updatedAt || existing.createdAt || "") || 0;
-      const localTime = Date.parse(lt.updatedAt || lt.createdAt || "") || 0;
-      if (localTime > serverTime) {
-        byId.set(lt.id, lt);
-      }
-    }
-  }
-
-  savePendingSyncIds(pendingIds);
-
-  const merged = Array.from(byId.values()).sort(
+  clearLegacyLocalTicketCache();
+  return stripMockTickets(serverTickets).sort(
     (a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0)
   );
-  saveLocalFallbackTickets(merged);
-  return merged;
 }
 
 export type WhatsAppTemplateKind =
@@ -258,7 +154,7 @@ export const WHATSAPP_TEMPLATE_OPTIONS: {
     id: "sold_thanks",
     label: "Abschluss & Garantiebestätigung",
     shortLabel: "Abschluss & Garantie",
-    shortDesc: "Bestätigung nach Vor-Ort-Service oder Gerätekauf inkl. Garantie",
+    shortDesc: "Bestätigung nach Kauf, Teileübergabe oder Garantiefall",
   },
 ];
 
@@ -301,37 +197,37 @@ export function buildAdminWhatsAppReplyUrl(
   let statusText = "";
   if (templateKind === "appointment") {
     statusText = formattedDate
-      ? `wir bestätigen gerne Ihren Vor-Ort-Termin am *${formattedDate}*${slotText}. Bitte geben Sie uns kurz Bescheid, ob es dabei bleibt.`
-      : `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu Ihrem *${ticket.brand} ${deviceName}*. Wann passt Ihnen ein Vor-Ort-Termin (z. B. vormittags 09:00–12:00 Uhr oder nachmittags)?`;
+      ? `wir bestätigen gerne Ihren Übergabe- / Liefertermin am *${formattedDate}*${slotText}. Bitte geben Sie uns kurz Bescheid, ob es dabei bleibt.`
+      : `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu *${ticket.brand} ${deviceName}*. Wann passt Ihnen ein Übergabe- oder Beratungstermin (z. B. vormittags 09:00–12:00 Uhr oder nachmittags)?`;
   } else if (templateKind === "on_the_way") {
-    statusText = `wir sind jetzt auf dem Weg zu Ihnen wegen Ihres *${ticket.brand} ${deviceName}* (Auftrag *${ticket.id}*) und in Kürze vor Ort.`;
+    statusText = `wir sind jetzt auf dem Weg zu Ihnen zur Übergabe / Lieferung für *${ticket.brand} ${deviceName}* (Beleg *${ticket.id}*) und in Kürze da.`;
   } else if (templateKind === "price_estimate") {
     statusText = priceText
-      ? `zu Ihrem Auftrag (*${ticket.id}*, *${ticket.brand} ${deviceName}*) beträgt der vereinbarte Gesamtbetrag *${priceText} inkl. MwSt.*${ticket.technicianNotes ? ` (${ticket.technicianNotes.trim()})` : ""}. Bitte geben Sie uns kurz Bescheid.`
-      : `zu Ihrem Auftrag (*${ticket.id}*, *${ticket.brand} ${deviceName}*) möchten wir kurz die Ersteinschätzung und die passenden Optionen mit Ihnen abstimmen. Wann sind Sie kurz erreichbar?`;
+      ? `zu Ihrer Anfrage (*${ticket.id}*, *${ticket.brand} ${deviceName}*) beträgt der vereinbarte Gesamtbetrag *${priceText} inkl. MwSt.*${ticket.technicianNotes ? ` (${ticket.technicianNotes.trim()})` : ""}. Bitte geben Sie uns kurz Bescheid.`
+      : `zu Ihrer Anfrage (*${ticket.id}*, *${ticket.brand} ${deviceName}*) möchten wir kurz Verfügbarkeit, Preis und die passenden Optionen mit Ihnen abstimmen. Wann sind Sie kurz erreichbar?`;
   } else if (templateKind === "question") {
-    statusText = `zu Ihrem Auftrag (*${ticket.id}*) haben wir noch eine kurze Rückfrage zu Ihrem *${ticket.brand} ${deviceName}*: Könnten Sie uns bitte ein kurzes Foto vom *Typenschild (E-Nr. / PNC)* hier in WhatsApp senden?`;
+    statusText = `zu Ihrer Anfrage (*${ticket.id}*) haben wir noch eine kurze Rückfrage zu *${ticket.brand} ${deviceName}*: Könnten Sie uns bitte ein kurzes Foto vom *Typenschild (E-Nr. / PNC)* hier in WhatsApp senden?`;
   } else if (templateKind === "pickup_ready") {
-    statusText = `gute Nachrichten: Ihr *${ticket.brand} ${deviceName}* (Auftrag *${ticket.id}*) ist geprüft und bereit zur Lieferung / Übergabe nach Terminabsprache.`;
+    statusText = `gute Nachrichten: Ihr *${ticket.brand} ${deviceName}* (Vorgang *${ticket.id}*) ist geprüft und bereit zur Lieferung / Übergabe nach Terminabsprache.`;
   } else if (templateKind === "sold_thanks") {
     const gMonths = comp?.warrantyMonths ?? (comp?.outcome === "sold" ? 12 : 6);
     statusText =
       comp?.outcome === "sold"
         ? `vielen Dank für Ihren Kauf (*${ticket.id}*) bei Hannachi Osnabrück! Ihr *${ticket.brand} ${deviceName}* wurde geprüft übergeben${gMonths > 0 ? ` inklusive *${gMonths} Monaten schriftlicher Verkäufergarantie*` : ""}${priceText ? ` (Gesamtbetrag: *${priceText}*)` : ""}.`
-        : `vielen Dank für Ihren Auftrag (*${ticket.id}*). Der Vor-Ort- bzw. Garantieservice für Ihr *${ticket.brand} ${deviceName}* wurde erfolgreich abgeschlossen${gMonths > 0 ? ` (inkl. *${gMonths} Monaten Hannachi Garantie*)` : ""}${priceText ? ` · Betrag: *${priceText}*` : ""}.`;
+        : `vielen Dank für Ihre Rückmeldung (*${ticket.id}*). Ihr Garantie- bzw. Übergabevorgang für *${ticket.brand} ${deviceName}* wurde erfolgreich abgeschlossen${gMonths > 0 ? ` (inkl. *${gMonths} Monaten Hannachi Verkäufergarantie*)` : ""}${priceText ? ` · Betrag: *${priceText}*` : ""}.`;
   } else {
     statusText =
       simpleStatus === "in_progress" && formattedDate
-        ? `wir bestätigen gerne Ihren Vor-Ort-Termin für den *${formattedDate}*${slotText}.`
+        ? `wir bestätigen gerne Ihren Übergabe- / Liefertermin für den *${formattedDate}*${slotText}.`
         : simpleStatus === "completed" && comp?.outcome === "sold"
         ? `vielen Dank für Ihren Kauf (*${ticket.id}*). Ihr Artikel (*${ticket.brand} ${deviceName}*) wurde übergeben${comp.warrantyMonths > 0 ? ` inkl. ${comp.warrantyMonths} Monate schriftlicher Verkäufergarantie` : ""}.`
         : simpleStatus === "completed" && comp?.outcome === "repaired"
-        ? `der Vor-Ort-Service / Garantie-Termin für Ihr Gerät (*${ticket.brand} ${deviceName}*, Auftrag *${ticket.id}*) ist erfolgreich abgeschlossen.`
+        ? `Ihr Garantie- / Übergabevorgang für Ihr Gerät (*${ticket.brand} ${deviceName}*, Vorgang *${ticket.id}*) ist erfolgreich abgeschlossen.`
         : simpleStatus === "completed"
-        ? `vielen Dank für Ihren Auftrag (*${ticket.id}*). Ihr Anliegen zu (*${ticket.brand} ${deviceName}*) ist abgeschlossen.`
+        ? `vielen Dank für Ihren Vorgang (*${ticket.id}*). Ihr Anliegen zu (*${ticket.brand} ${deviceName}*) ist abgeschlossen.`
         : formattedDate
-        ? `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu Ihrem *${ticket.brand} ${deviceName}*. Passt Ihnen ein Vor-Ort-Termin am *${formattedDate}*${slotText}?`
-        : `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu Ihrem *${ticket.brand} ${deviceName}*. Wann passt Ihnen ein kurzer Vor-Ort-Termin?`;
+        ? `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu *${ticket.brand} ${deviceName}*. Passt Ihnen ein Übergabe- / Liefertermin am *${formattedDate}*${slotText}?`
+        : `vielen Dank für Ihre Anfrage (*${ticket.id}*) zu *${ticket.brand} ${deviceName}*. Wann passt Ihnen ein kurzer Termin zur Abstimmung oder Übergabe?`;
   }
 
   const addressLine = [ticket.streetAddress, ticket.zip]
@@ -341,21 +237,21 @@ export function buildAdminWhatsAppReplyUrl(
   const message = [
     `Guten Tag ${ticket.name},`,
     "",
-    `hier ist der *Kundendienst Hannachi (Osnabrück)* – ${statusText}`,
+    `hier ist *Hannachi Elektrohaushaltsgeräte & Ersatzteile (Osnabrück)* – ${statusText}`,
     "",
-    `• *Auftrags-Nr.:* ${ticket.id}`,
+    `• *Vorgangs-Nr.:* ${ticket.id}`,
     `• *Gerät:* ${ticket.brand} ${deviceName}${ticket.model ? ` (${ticket.model})` : ""}`,
     addressLine
-      ? `• *Einsatzort:* ${addressLine}`
-      : `• *Service:* Mobiler Vor-Ort-Kundendienst (Osnabrück & Umgebung)`,
+      ? `• *Liefer- / Übergabeort:* ${addressLine}`
+      : `• *Übergabe:* Fachhandel nach Terminvereinbarung (Osnabrück & Umgebung)`,
     ...(priceText ? [`• *Betrag (inkl. MwSt.):* ${priceText}`] : []),
     "",
     `Herzliche Grüße`,
-    `Kamal Hannachi · Elektrohaushaltsgeräte Service`,
+    `Kamal Hannachi · Elektrohaushaltsgeräte & Ersatzteile`,
     `Tel.: 0170 3493494`,
   ].join("\n");
 
-  return `https://api.whatsapp.com/send?phone=${intlPhone}&text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${intlPhone}?text=${encodeURIComponent(message)}`;
 }
 
 function escapeCsvCell(value: unknown): string {
@@ -403,7 +299,7 @@ export function exportTicketsToCsv(tickets: AdminRepairTicket[]): void {
       t.completionDetails?.outcome === "sold"
         ? "Verkauft"
         : t.completionDetails?.outcome === "repaired"
-        ? "Vor-Ort-/Garantieservice"
+        ? "Garantie- / Übergabevorgang"
         : "";
 
     return [
@@ -411,7 +307,7 @@ export function exportTicketsToCsv(tickets: AdminRepairTicket[]): void {
       new Date(t.createdAt).toLocaleString("de-DE"),
       ADMIN_STATUS_META[t.status]?.label || "Neu",
       ADMIN_URGENCY_META[t.urgency]?.label || t.urgency,
-      t.visitType === "home_visit" ? "Vor-Ort-Kundendienst" : "Lieferung & Übergabe",
+      t.visitType === "home_visit" ? "Lieferung / Übergabe vor Ort" : "Übergabe nach Termin",
       t.scheduledDate || "",
       t.scheduledSlot || "",
       t.name,
@@ -454,17 +350,17 @@ function getTicketDocMeta(docType: TicketExportType) {
       title: "KAUF- & GARANTIEBELEG",
       notesHeading: "GERÄTEDATEN / ÜBERGABE & GARANTIEHINWEIS",
       footerNote:
-        "Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei Hannachi Elektrohaushaltsgeräte Service erworbene Geräte. Geprüfte Markenqualität aus Osnabrück.",
+        "Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei Hannachi Elektrohaushaltsgeräte & Ersatzteile erworbene Geräte. Handelsgewerbe nach § 14 GewO (kein Handwerks- oder Meisterbetrieb).",
       sigLeft: "Datum / Unterschrift Verkäufer (Hannachi)",
       sigRight: "Datum / Unterschrift Käufer",
     };
   }
   return {
-    title: "AUFTRAGS- & SERVICEBELEG",
-    notesHeading: "ANLIEGEN / VOR-ORT-SERVICE & NOTIZEN",
+    title: "HANDELS- & ÜBERGABEBELEG",
+    notesHeading: "ANLIEGEN / ÜBERGABE & NOTIZEN",
     footerNote:
-      "Geprüft und dokumentiert durch Hannachi Elektrohaushaltsgeräte Service · An- & Verkauf sowie mobiler Vor-Ort-Service nach Terminvereinbarung in Osnabrück & Umgebung.",
-    sigLeft: "Datum / Unterschrift Hannachi Service",
+      "Dokumentiert durch Hannachi Elektrohaushaltsgeräte & Ersatzteile · An- & Verkauf von Geräten und Ersatzteilen nach Terminvereinbarung in Osnabrück (Handelsgewerbe nach § 14 GewO, kein Handwerksbetrieb).",
+    sigLeft: "Datum / Unterschrift Hannachi Fachhandel",
     sigRight: "Datum / Unterschrift Kunde",
   };
 }
@@ -506,7 +402,7 @@ export function formatTicketTextSummary(
   if (t.completionDetails) {
     const c = t.completionDetails;
     lines.push(
-      `Abschlussart: ${c.outcome === "sold" ? "Verkauft (Gerät / Ersatzteil)" : "Vor-Ort- / Garantieservice abgeschlossen"}`
+      `Abschlussart: ${c.outcome === "sold" ? "Verkauft (Gerät / Ersatzteil)" : "Garantie- / Übergabevorgang abgeschlossen"}`
     );
     if (c.workOrSaleSummary) {
       lines.push(`Abschluss-Details: ${c.workOrSaleSummary}`);
@@ -682,7 +578,7 @@ export async function renderTicketToPngBlob(
     rightY += 28;
   }
   ctx.fillText(
-    `Service-Art: ${t.visitType === "home_visit" ? "Vor-Ort-Kundendienst" : "Lieferung & Übergabe"}`,
+    `Übergabe-Art: ${t.visitType === "home_visit" ? "Lieferung / Übergabe vor Ort" : "Übergabe nach Termin"}`,
     rightColX,
     rightY
   );
@@ -733,7 +629,7 @@ export async function renderTicketToPngBlob(
     ctx.fillText(
       t.completionDetails?.outcome === "sold"
         ? "Verkaufs- & Übergabedetails:"
-        : "Vor-Ort-Service / Notiz:",
+        : "Übergabe- / Garantienotiz:",
       margin,
       y
     );
@@ -945,7 +841,7 @@ export function downloadPrintableReceiptsHtml(
               <div class="section-label">GERÄT &amp; TERMIN</div>
               <div class="customer-name">${escapeHtml(t.brand)} · ${escapeHtml(deviceLabel)}</div>
               ${t.model ? `<div>Modell / E-Nr.: ${escapeHtml(t.model)}</div>` : ""}
-              <div>Service-Art: ${t.visitType === "home_visit" ? "Vor-Ort-Kundendienst" : "Lieferung &amp; Übergabe"}</div>
+              <div>Übergabe-Art: ${t.visitType === "home_visit" ? "Lieferung / Übergabe vor Ort" : "Übergabe nach Termin"}</div>
               <div>Termin: ${escapeHtml(formattedDate)} (${escapeHtml(t.scheduledSlot)})</div>
             </div>
           </div>
@@ -955,12 +851,12 @@ export function downloadPrintableReceiptsHtml(
             <p><strong>Kundenangabe:</strong> ${escapeHtml(t.problem)}</p>
             ${
               t.completionDetails
-                ? `<p><strong>Status:</strong> Abgeschlossen (${t.completionDetails.outcome === "sold" ? "Verkauft" : "Vor-Ort-/Garantieservice"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}</p>`
+                ? `<p><strong>Status:</strong> Abgeschlossen (${t.completionDetails.outcome === "sold" ? "Verkauft" : "Garantie- / Übergabevorgang"})${t.completionDetails.warrantyMonths > 0 ? ` · ${t.completionDetails.warrantyMonths} Monate Garantie` : ""}</p>`
                 : ""
             }
             ${
               t.completionDetails?.workOrSaleSummary || t.technicianNotes
-                ? `<p><strong>${t.completionDetails?.outcome === "sold" ? "Verkaufs- & Übergabedetails" : "Vor-Ort-Service / Notiz"}:</strong> ${escapeHtml(t.completionDetails?.workOrSaleSummary || t.technicianNotes)}</p>`
+                ? `<p><strong>${t.completionDetails?.outcome === "sold" ? "Verkaufs- & Übergabedetails" : "Übergabe- / Garantienotiz"}:</strong> ${escapeHtml(t.completionDetails?.workOrSaleSummary || t.technicianNotes)}</p>`
                 : ""
             }
             ${

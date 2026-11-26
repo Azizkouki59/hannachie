@@ -21,7 +21,7 @@ export default function NotFound() {
           Diese Seite gibt es nicht.
         </h1>
         <p className="mt-3 text-base sm:text-lg leading-relaxed text-ink-muted dark:text-slate-400">
-          Die aufgerufene Adresse wurde möglicherweise verschoben oder existiert nicht mehr. Kehren Sie zur Startseite zurück oder wählen Sie direkt eine unserer Leistungen aus.
+          Die aufgerufene Adresse wurde möglicherweise verschoben oder existiert nicht mehr. Kehren Sie zur Startseite zurück oder entdecken Sie unsere Übersicht zu Geräten &amp; Original-Ersatzteilen.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -31,7 +31,7 @@ export default function NotFound() {
           </Link>
           <Link href="/leistungen" className="btn-ghost w-full sm:w-auto">
             <Wrench size={16} aria-hidden />
-            Alle Leistungen
+            Geräte &amp; Ersatzteile
           </Link>
           <button
             type="button"

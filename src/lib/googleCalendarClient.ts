@@ -238,19 +238,19 @@ export async function createCalendarVisitEvent(
     input.slot
   );
 
-  const summary = `Hannachi Vor-Ort-Termin: ${input.brand ? `${input.brand} ` : ""}${input.device} – ${input.customerName}`;
+  const summary = `Hannachi Termin: ${input.brand ? `${input.brand} ` : ""}${input.device} – ${input.customerName}`;
   const descriptionLines = [
-    `Vor-Ort-Servicetermin · ${business.name} ${business.tagline}`,
-    input.ticketId ? `Auftrags-Nr.: ${input.ticketId}` : null,
+    `Beratungs- & Übergabetermin · ${business.name} ${business.tagline}`,
+    input.ticketId ? `Anfrage-Nr.: ${input.ticketId}` : null,
     `Kunde: ${input.customerName}`,
     `Telefon / WhatsApp: ${input.phone}`,
     input.email ? `E-Mail: ${input.email}` : null,
     `Gerät: ${input.brand ? `${input.brand} · ` : ""}${input.device}`,
     `Zeitfenster: ${label}`,
-    `Anliegen / Fehlerbild: ${input.problem}`,
-    `Einsatzort: ${input.address}`,
+    `Anliegen / Ersatzteil: ${input.problem}`,
+    `Ort / Lieferadresse: ${input.address}`,
     "",
-    `Servicekontakt Hannachi: Tel. ${business.phoneDisplay} · ${business.url}`,
+    `Kontakt Hannachi: Tel. ${business.phoneDisplay} · ${business.url}`,
   ].filter(Boolean);
 
   const eventBody = {

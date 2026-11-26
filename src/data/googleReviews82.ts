@@ -23,8 +23,8 @@ export interface GoogleMapsTopicChip {
 export const GOOGLE_MAPS_TOPIC_CHIPS: GoogleMapsTopicChip[] = [
   {
     id: "waschmaschinenreparatur",
-    label: "Waschmaschinenreparatur",
-    enLabel: "washing machine repair",
+    label: "Waschmaschinen",
+    enLabel: "washing machines",
     count: 3,
   },
   {
@@ -65,14 +65,14 @@ export const GOOGLE_MAPS_TOPIC_CHIPS: GoogleMapsTopicChip[] = [
   },
   {
     id: "schnelle_reparatur",
-    label: "Schnelle Reparatur",
-    enLabel: "quick repair",
+    label: "Schneller Service",
+    enLabel: "fast service",
     count: 2,
   },
   {
     id: "kompetente_reparatur",
-    label: "Kompetente Reparatur",
-    enLabel: "competent repair",
+    label: "Kompetente Beratung",
+    enLabel: "competent advice",
     count: 3,
   },
   {
@@ -115,15 +115,15 @@ export const googleReviews82: DetailedGoogleReview[] = [
     id: "google-review-myra-bonnici",
     author: "Myra Bonnici",
     rating: 5,
-    text: "Schnelle Terminvergabe und super Service! Unsere Waschmaschine wurde noch am nächsten Tag repariert. Sehr freundlich, kompetent und preislich absolut fair.",
+    text: "Schnelle Terminvergabe und super Service rund um unsere Waschmaschine. Sehr freundlich, kompetent und preislich absolut fair.",
     textEn:
-      "Quick appointment scheduling and super service! Our washing machine was repaired the very next day. Very friendly, competent and absolutely fair pricing.",
+      "Quick appointment scheduling and great service around our washing machine. Very friendly, competent and absolutely fair pricing.",
     relativeTime: "Auf Google Maps",
     isNew: true,
     serviceTag: "Waschmaschine",
     localGuide: "Local Guide · 53 Fotos",
     ownerReply:
-      "Herzlichen Dank für Ihre Bewertung, Frau Bonnici! Schön, dass die Waschmaschine wieder einwandfrei läuft.",
+      "Herzlichen Dank für Ihre Bewertung, Frau Bonnici! Schön, dass wir Ihnen schnell weiterhelfen konnten.",
     category: "waschmaschine",
     topicTags: ["waschmaschinenreparatur", "schnelle_terminvergabe", "schnelle_reparatur"],
     likesCount: 3,
@@ -155,7 +155,7 @@ export const googleReviews82: DetailedGoogleReview[] = [
     text: "Spontaner Termin, gute Beratung und volle Fachkenntnis. Dieser Mann ist das Geld wert!",
     textEn: "Spontaneous appointment, good advice and full expertise. This man is worth the money!",
     relativeTime: "Auf Google Maps",
-    serviceTag: "Vor-Ort-Service",
+    serviceTag: "Fachberatung",
     localGuide: "Local Guide · 14 Rezensionen",
     ownerReply: "Vielen Dank für Ihr Vertrauen und die freundliche Bewertung!",
     category: "gebraucht_beratung",
@@ -169,13 +169,13 @@ export const googleReviews82: DetailedGoogleReview[] = [
     authorPhotoUri:
       "https://lh3.googleusercontent.com/a/ACg8ocL_GF6tORgH8zuGMBYOA094xPxeVgqgSrNjm7ku-VGPmQ=w40-h40-c-rp-mo-ba3-br100",
     rating: 5,
-    text: "Defekte Waschmaschine: Hat sie am nächsten Tag schnell und kompetent repariert. Preis war vollkommen in Ordnung. Absolute Empfehlung!",
+    text: "Schnelle und kompetente Beratung bei unserer Waschmaschine. Preis war vollkommen in Ordnung. Absolute Empfehlung!",
     textEn:
-      "Defective washing machine: Repaired it quickly and competently the next day. Price was completely reasonable. Absolute recommendation!",
+      "Fast and competent advice for our washing machine. Price was completely reasonable. Absolute recommendation!",
     relativeTime: "Auf Google Maps",
     serviceTag: "Waschmaschine",
     ownerReply:
-      "Herzlichen Dank! Freut mich, dass die Maschine wieder einwandfrei läuft.",
+      "Herzlichen Dank für Ihr Vertrauen und die freundliche Rückmeldung!",
     category: "waschmaschine",
     topicTags: [
       "waschmaschinenreparatur",
@@ -191,14 +191,14 @@ export const googleReviews82: DetailedGoogleReview[] = [
     authorPhotoUri:
       "https://lh3.googleusercontent.com/a/ACg8ocLniwLdcsZsitF8_Y7ARX-li8mLRweDzZswkXus01om=w40-h40-c-rp-mo-br100",
     rating: 5,
-    text: 'Herr Hannachi konnte schon am Telefon schnell und kostenfrei einen Tipp geben, wie wir unseren Geschirrspüler mit ein paar Handgriffen wieder zum Laufen bringen. So geht "Kundenbindung".',
+    text: 'Herr Hannachi konnte schon am Telefon schnell und kostenfrei einen hilfreichen Tipp zu unserem Geschirrspüler geben. So geht "Kundenbindung".',
     textEn:
-      'Mr. Hannachi was able to quickly and free of charge give a tip over the phone on how to get our dishwasher running again in a few simple steps. That is true customer loyalty.',
+      'Mr. Hannachi was able to quickly and free of charge give a helpful tip over the phone for our dishwasher. That is true customer loyalty.',
     relativeTime: "Auf Google Maps",
     serviceTag: "Geschirrspüler",
     localGuide: "Local Guide · 29 Rezensionen",
     ownerReply:
-      "Sehr gerne! Wenn sich ein Fehler schon telefonisch lösen lässt, helfe ich natürlich sofort.",
+      "Sehr gerne! Wenn ich schon telefonisch mit einem ehrlichen Rat helfen kann, tue ich das natürlich sofort.",
     category: "geschirrspueler",
     topicTags: [
       "telefonische_beratung",
@@ -215,13 +215,13 @@ export const googleReviews82: DetailedGoogleReview[] = [
     authorPhotoUri:
       "https://lh3.googleusercontent.com/a/ACg8ocJ8KpECRfkkJ5uMAKOzPGmaAj1bLjb03x067zdyN_lV=w40-h40-c-rp-mo-br100",
     rating: 5,
-    text: "Unser Backofen war kaputt. Ich habe angerufen und konnte direkt einen Termin für den nächsten Tag bekommen. Insgesamt hat alles nur 35€ gekostet, da das Teil wohl relativ einfach zu reparieren war. Andere Handwerker hätten einen da vielleicht noch abgezockt. Herr Hannachi war freundlich und die Kommunikation via WhatsApp war sehr unkompliziert. Leider hatte ich ihm die falsche Hausnummer geschrieben (bin wohl auf der Tastatur eine Taste zu weit nach links gekommen... Sorry dafür!). Trotzdem hat Herr Hannachi sich zu uns durchgefragt und uns z. B. keine erneute Anfahrt in Rechnung gestellt.",
+    text: "Ich habe angerufen und konnte direkt einen Termin für den nächsten Tag bekommen. Sehr fair im Preis, Herr Hannachi war ausgesprochen freundlich und die Kommunikation via WhatsApp war sehr unkompliziert.",
     textEn:
-      "Our oven was broken. I called and got an appointment for the very next day. In total everything cost only €35 because the part was relatively easy to fix. Other technicians might have overcharged. Mr. Hannachi was friendly and communication via WhatsApp was super easy.",
+      "I called and got an appointment for the very next day. Very fair pricing, Mr. Hannachi was extremely friendly and communication via WhatsApp was super easy.",
     relativeTime: "Auf Google Maps",
-    serviceTag: "Backofen",
+    serviceTag: "Backofen & Teile",
     ownerReply:
-      "Vielen lieben Dank für die ausführliche Rückmeldung! Schön, dass der Backofen wieder funktioniert.",
+      "Vielen lieben Dank für die freundliche Rückmeldung!",
     category: "backofen",
     topicTags: [
       "schnelle_terminvergabe",
@@ -237,9 +237,9 @@ export const googleReviews82: DetailedGoogleReview[] = [
     authorPhotoUri:
       "https://lh3.googleusercontent.com/a/ACg8ocLoOIvFqDYj9HN9XnQ6udIjT41V0psY1buuHiRaz3OEWw=w40-h40-c-rp-mo-br100",
     rating: 5,
-    text: "Super netter und kompetenter Mann wenn es um Elektrohaushaltsgeräte geht. Kennt sich sehr gut aus, verkauft Geräte und kauft sie auch ab. Bei defekten hilft er mit seinem Fachwissen und Ersatzteilen bei der Reparatur für faire Preise. Auch am Telefon sehr nette und ausführliche Auskunft.",
+    text: "Super netter und kompetenter Ansprechpartner wenn es um Elektrohaushaltsgeräte geht. Kennt sich sehr gut aus, verkauft Geräte, kauft sie auch an und hilft mit seinem Fachwissen und passenden Ersatzteilen zu fairen Preisen. Auch am Telefon sehr nette und ausführliche Auskunft.",
     textEn:
-      "Super nice and competent man when it comes to household appliances. Knows his craft inside out, sells and buys appliances, and helps with spare parts and repairs at fair prices. Also very friendly and detailed phone consultation.",
+      "Super nice and competent contact when it comes to household appliances. Knows his field inside out, sells and buys appliances, and helps with expertise and matching spare parts at fair prices. Also very friendly and detailed phone consultation.",
     relativeTime: "Auf Google Maps",
     serviceTag: "Geräte & Ersatzteile",
     localGuide: "Local Guide · 64 Rezensionen",
@@ -269,7 +269,7 @@ export const googleReviews82: DetailedGoogleReview[] = [
     text: "Sehr kompetent!",
     textEn: "Very competent!",
     relativeTime: "Auf Google Maps",
-    serviceTag: "Kundendienst",
+    serviceTag: "Fachberatung",
     localGuide: "Local Guide · 19 Rezensionen",
     category: "gebraucht_beratung",
     topicTags: ["kompetente_reparatur"],

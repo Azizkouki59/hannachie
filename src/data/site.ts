@@ -1,9 +1,9 @@
 // Single source of truth for business data.
-// Mobile-first on-site service model in Osnabrück & surrounding areas:
-// Trade & service: An- und Verkauf von Elektrohaushaltsgeräten & Ersatzteilen.
-// Mobile on-site service by appointment directly at the customer's home: on-site appliance check & spare parts,
-// individual replacement appliance offers with written seller's warranty when an old unit cannot be saved,
-// and full warranty & repair service for all appliances sold by Hannachi.
+// Strictly compliant German trade business (§ 14 GewO — Handelsgewerbe, kein Handwerksbetrieb i. S. d. HwO):
+// - An- und Verkauf von geprüften Elektrohaushaltsgeräten (Gebraucht- & Ersatzgeräte)
+// - Fachhandel & Verkauf von Original- und Qualitäts-Ersatzteilen sowie Zubehör nach Typenschild (E-Nr. / PNC)
+// - Persönliche Kauf- & Ersatzteilberatung sowie Lieferung / Übergabe in Osnabrück & Umgebung nach Terminvereinbarung
+// - Gesetzliche Gewährleistung & schriftliche Verkäufergarantie ausschließlich für direkt bei Hannachi gekaufte Geräte
 
 export type ServiceNoticeType = "maintenance" | "vacation";
 
@@ -14,27 +14,40 @@ export type ServiceNotice = {
   message: string;
 };
 
+const BUSINESS_STREET = "Iburger Straße 5, Im Hof";
+const BUSINESS_ZIP = "49082";
+const BUSINESS_CITY = "Osnabrück";
+const BUSINESS_PHONE_DISPLAY = "0170 3493494";
+const BUSINESS_EMAIL = "contact@hannachi.de";
+const BUSINESS_FOUNDED = 1990;
+
+export const businessFullAddress = `${BUSINESS_STREET}, ${BUSINESS_ZIP} ${BUSINESS_CITY}`;
+
 export const business = {
   name: "Hannachi",
   tagline: "Elektrohaushaltsgeräte & Ersatzteile",
-  legalLicense: "An- und Verkauf von Elektrohaushaltsgeräten & Ersatzteilen",
+  legalLicense:
+    "Handelsgewerbe gemäß § 14 GewO für Elektrohaushaltsgeräte, persönliche Fachberatung, Original-Ersatzteile & ausgewählte Markengeräte auf Anfrage",
   nonMeisterNotice:
-    "Fachhandel & mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile seit 1990.",
+    "Handelsgewerbe gemäß § 14 GewO (Fachberatung, Original-Ersatzteile & ausgewählte Markengeräte auf Anfrage) – kein eingetragener Handwerks- oder Meisterbetrieb i. S. d. Anlage A HwO.",
+  hwoDisclaimer:
+    "Rechtlicher Hinweis gemäß § 14 GewO & Handwerksordnung (HwO): Selbstständiges Handelsgewerbe für persönliche Fachberatung, Original-Ersatzteile nach Typenschild sowie ausgewählte Markengeräte auf Anfrage – kein eingetragener Handwerks- oder Meisterbetrieb nach Anlage A HwO. Über diese Website werden weder handwerkliche Reparatur-, Wartungs- noch Elektroanschlussleistungen (z. B. Starkstromanschluss) beworben, vermittelt oder angeboten. Gesetzliche Gewährleistungsrechte sowie eine schriftliche Verkäufergarantie bestehen ausschließlich für direkt bei Hannachi erworbene Geräte.",
   mobileServiceNotice:
-    "Mobiler Vor-Ort-Service nach Terminvereinbarung direkt bei Ihnen zu Hause in Osnabrück & Umgebung.",
+    "Osnabrück & Umgebung · Termine nach Vereinbarung.",
   warrantyNotice:
-    "An- und Verkauf von Elektrohaushaltsgeräten & Ersatzteilen. Jedes von uns gelieferte Ersatzgerät erhält eine schriftliche Verkäufergarantie – inklusive vollem Garantie- und Reparaturservice für alle bei uns gekauften Geräte.",
+    "Ausgewählte Markengeräte auf Anfrage – inkl. schriftlicher Verkäufergarantie bei direktem Erwerb.",
   owner: "Kamal Hannachi",
-  founded: 1990,
-  street: "Iburger Straße 5, Im Hof",
-  zip: "49082",
-  city: "Osnabrück",
-  phoneDisplay: "0170 3493494",
+  founded: BUSINESS_FOUNDED,
+  street: BUSINESS_STREET,
+  zip: BUSINESS_ZIP,
+  city: BUSINESS_CITY,
+  phoneDisplay: BUSINESS_PHONE_DISPLAY,
   phoneHref: "tel:+491703493494",
-  whatsappHref: "https://wa.me/491703493494",
-  hours: "Mo–Sa 08:00–18:00 Uhr (Termine nach Vereinbarung)",
-  email: "contact@hannachi.de",
-  taxNote: "Alle Konditionen werden transparent vorab mit Ihnen abgestimmt.",
+  whatsappHref:
+    "https://api.whatsapp.com/send?phone=491703493494&text=Hallo%20Herr%20Hannachi%2C%20ich%20habe%20eine%20kurze%20Anfrage%20zu%20einem%20Hausger%C3%A4t.",
+  hours: "Mo–Sa 08:00–18:00 Uhr · Termine nach Vereinbarung",
+  email: BUSINESS_EMAIL,
+  taxNote: "Persönliche, transparente Absprache direkt mit Inhaber Kamal Hannachi.",
   url: "https://hannachi.de",
   facebookUrl: "https://www.facebook.com/hannachi.elektroservice",
   facebookHandle: "hannachi.elektroservice",
@@ -55,8 +68,51 @@ export const business = {
     active: false,
     type: "vacation",
     label: "Info",
-    message: "Mobiler Vor-Ort-Service in Osnabrück & Umgebung: Rückmeldung per WhatsApp erfolgt zeitnah.",
+    message: "Termine nach Vereinbarung – für eine schnelle Rückmeldung schreiben Sie gerne per WhatsApp.",
   } as ServiceNotice,
+  legal: {
+    legalForm: "Einzelunternehmen",
+    tradeAuthority:
+      "Stadt Osnabrück – Fachbereich Bürger und Ordnung (Gewerbeabteilung), Natruper-Tor-Wall 2, 49076 Osnabrück",
+    chamber:
+      "Industrie- und Handelskammer (IHK) Osnabrück – Emsland – Grafschaft Bentheim, Neuer Graben 38, 49074 Osnabrück",
+    // Optional: falls eine offizielle DE-USt-IdNr. (§ 27a UStG) vorliegt, hier zentral eintragen.
+    ustIdNr: "",
+    // Optional: Wirtschafts-Identifikationsnummer (W-IdNr. gemäß § 139c AO / § 5 Abs. 1 Nr. 6 DDG), sofern zugeteilt.
+    wirtschaftsIdNr: "",
+    vatTransparencyNote:
+      "Es handelt sich um ein Einzelunternehmen im Handelsgewerbe (§ 14 GewO). Die jeweils anfallende Umsatzsteuer bzw. der steuerliche Rechnungsausweis erfolgt transparent auf dem individuellen Kaufbeleg bei persönlichem Geschäftsabschluss. Eine gesonderte Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG wird derzeit nicht geführt.",
+    pangvNotice:
+      "Diese Website ist ein reines Informations- und unverbindliches Anfrageportal ohne automatisierten Online-Shop oder Warenkorb-Checkout. Alle Preise, Liefer- bzw. Abholkonditionen sowie die Verfügbarkeit ausgewählter Markengeräte und Original-Ersatzteile werden individuell im persönlichen Gespräch bzw. auf dem schriftlichen Kaufbeleg verbindlich vereinbart; Endpreise verstehen sich stets inklusive der jeweils gesetzlich anfallenden Umsatzsteuer.",
+    warrantyBgb479: {
+      guarantor: `Kamal Hannachi, Hannachi Elektrohaushaltsgeräte & Ersatzteile, ${businessFullAddress}, Deutschland, Tel.: ${BUSINESS_PHONE_DISPLAY}, E-Mail: ${BUSINESS_EMAIL}`,
+      territorialScope:
+        "Bundesrepublik Deutschland (vorrangig Abwicklung im Raum Osnabrück & Umgebung nach persönlicher Terminvereinbarung).",
+      durationAndContent:
+        "Sofern für ein direkt bei Hannachi erworbenes Elektrohaushaltsgerät zusätzlich eine schriftliche Verkäufergarantie gewährt wird, ergeben sich die genaue Garantiedauer (in der Regel 6 bis 12 Monate ab Übergabe) sowie der konkrete Leistungsumfang verbindlich aus dem ausgehändigten Kauf- und Garantiebeleg. Im Garantiefall erfolgt nach Wahl des Garantiegebers eine kostenfreie Nachbesserung oder Ersatzlieferung eines gleichwertigen Geräts. Verschleißteile, unsachgemäße Handhabung, Fremdeingriffe sowie Transportschäden nach Übergabe sind nicht Gegenstand der freiwilligen Verkäufergarantie.",
+      claimProcedure: `Zur Geltendmachung genügt eine formlose Mitteilung unter Vorlage des Kauf- und Garantiebelegs per Telefon (${BUSINESS_PHONE_DISPLAY}), E-Mail (${BUSINESS_EMAIL}) oder persönlich nach Terminvereinbarung.`,
+      statutoryRightsNotice:
+        "Wichtiger gesetzlicher Hinweis (§ 479 Abs. 1 Nr. 1 BGB): Ihre gesetzlichen Rechte bei Mängeln (Gewährleistung nach §§ 437 ff. BGB) bestehen unabhängig von einer Verkäufergarantie, können gegenüber dem Verkäufer unentgeltlich in Anspruch genommen werden und werden durch die Garantie in keiner Weise eingeschränkt.",
+    },
+    usedGoodsBgb476Note:
+      "Für alle verkauften Waren gelten die gesetzlichen Mängelhaftungsrechte (Gewährleistung). Bei gebrauchten Elektrohaushaltsgeräten richtet sich die Verjährungsfrist für Mängelansprüche nach den gesetzlichen Bestimmungen des BGB; eine etwaige Verkürzung gegenüber Verbrauchern auf ein Jahr erfolgt ausschließlich bei gesonderter, ausdrücklicher und einzelvertraglicher Vereinbarung gemäß § 476 Abs. 2 BGB vor Vertragsschluss.",
+    elektroG: {
+      disposalNotice:
+        "Elektro- und Elektronikgeräte dürfen gemäß Elektro- und Elektronikgerätegesetz (ElektroG) nicht im unsortierten Hausmüll entsorgt werden. Darauf weist das Symbol der durchgestrichenen Mülltonne auf dem Gerät oder der Verpackung hin.",
+      returnOptions:
+        "Alte Haushaltsgeräte können kostenfrei an den kommunalen Sammelstellen und Recyclinghöfen (z. B. beim Osnabrücker ServiceBetrieb – OSB) abgegeben werden. Soweit beim Kauf eines entsprechenden Neugeräts oder im Rahmen der gesetzlichen Vorgaben des § 17 ElektroG eine Rücknahmepflicht besteht, informieren wir Sie vor Übergabe transparent über die unentgeltliche Rückgabemöglichkeit.",
+      dataDeletionNotice:
+        "Bitte beachten Sie bei smarten oder vernetzten Haushaltsgeräten, vor der Abgabe oder Entsorgung eigenverantwortlich alle gespeicherten personenbezogenen Daten (z. B. WLAN-Zugangsdaten oder App-Verknüpfungen) auf dem Altgerät zu löschen.",
+    },
+    dataProtectionAuthority: {
+      name: "Der Landesbeauftragte für den Datenschutz Niedersachsen (LfD Niedersachsen)",
+      street: "Prinzenstraße 5",
+      zipCity: "30159 Hannover",
+      phone: "+49 511 120-4500",
+      email: "poststelle@lfd.niedersachsen.de",
+      website: "https://www.lfd.niedersachsen.de",
+    },
+  },
 };
 
 export const yearsOfExperience = new Date().getFullYear() - business.founded;
@@ -77,77 +133,77 @@ export const services: Service[] = [
   {
     slug: "waschmaschinen",
     title: "Waschmaschinen",
-    short: "Mobiler Vor-Ort-Gerätecheck, passende Ersatzteile & geprüfte Ersatz-Waschmaschinen mit schriftlicher Verkäufergarantie.",
+    short: "Beratung, Originalteile nach E-Nr. & Geräte auf Anfrage.",
     intro:
-      "Ihre Waschmaschine pumpt nicht ab, schleudert nicht oder zeigt eine Fehlermeldung? Wir kommen nach Terminvereinbarung direkt zu Ihnen nach Hause in Osnabrück & Umgebung, prüfen den Ersatzteilbedarf vor Ort oder unterbreiten Ihnen – falls sich das Altgerät nicht mehr lohnt – ein faires Angebot für ein geprüftes Ersatzgerät inklusive schriftlicher Verkäufergarantie.",
+      "Persönliche Beratung, Original-Ersatzteile nach Typenschild (E-Nr.) und ausgewählte Waschmaschinen auf Anfrage.",
     symptoms: [
-      "Pumpt nicht ab / Wasser bleibt in der Trommel stehen",
-      "Schleudert nicht mehr oder macht laute Laufgeräusche",
-      "Türmanschette / Dichtung undicht oder Tür öffnet nicht",
-      "Lohnt nicht mehr? Geprüftes Ersatzgerät mit schriftlicher Garantie",
+      "Persönliche Beratung",
+      "Pumpe, Dichtung, Heizstab, Schloss (E-Nr.)",
+      "Motorkohlen, Stoßdämpfer & Sensor",
+      "Markengerät auf Anfrage",
     ],
     approach:
-      "Schildern Sie uns kurz das Problem an Ihrer Waschmaschine oder senden Sie das Typenschild (E-Nr.). Herr Hannachi meldet sich persönlich für einen Vor-Ort-Termin bei Ihnen zu Hause.",
+      "Kurz per WhatsApp (gerne mit Typenschild-Foto) oder Telefon melden – schnelle Rückmeldung direkt vom Inhaber.",
     customerNote: {
-      quote: "Sehr ehrliche Beratung und super Service vor Ort. Preis-Leistung absolut fair.",
-      author: "A. U.",
+      quote: "Spontaner Termin, gute Beratung und volle Fachkenntnis. Preis-Leistung absolut fair.",
+      author: "Google-Rezension (Osnabrück)",
     },
   },
   {
     slug: "geschirrspueler",
     title: "Geschirrspüler",
-    short: "Vor-Ort-Check bei Ihnen zu Hause, passende Ersatzteile & geprüfte Geschirrspüler (45/60 cm) inkl. schriftlicher Garantie.",
+    short: "Beratung, Pumpen, Aquastop, Körbe & Geräte auf Anfrage.",
     intro:
-      "Ihr Geschirrspüler zieht kein Wasser, heizt nicht oder zeigt einen Fehlercode? Im Rahmen unseres mobilen Vor-Ort-Services in Osnabrück klären wir den Ersatzteilbedarf direkt bei Ihnen zu Hause oder bieten Ihnen bei wirtschaftlichem Totalschaden ein geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie an.",
+      "Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Geschirrspüler (45 / 60 cm) auf Anfrage.",
     symptoms: [
-      "Geschirr bleibt kalt oder wird nicht sauber / trocken",
-      "Wasser steht unten im Spülraum / Fehlercode (z. B. E15, E24)",
-      "Heizpumpe, Ablaufpumpe, Aquastop oder Korbrollen benötigt",
-      "Geprüfter Ersatz-Geschirrspüler (45 cm / 60 cm) mit schriftlicher Garantie",
+      "Persönliche Beratung",
+      "Heiz- & Ablaufpumpe (E-Nr.)",
+      "Aquastop, Korbrollen & Dichtungen",
+      "Markengerät auf Anfrage",
     ],
     approach:
-      "Teilen Sie uns kurz das Fehlerbild oder die E-Nr. vom Typenschild mit – wir vereinbaren zeitnah einen Vor-Ort-Termin bei Ihnen in Osnabrück.",
+      "E-Nr. vom Typenschild per WhatsApp senden – ich prüfe das passende Teil persönlich.",
     customerNote: {
-      quote: "Herr Hannachi konnte schon am Telefon schnell und kostenfrei einen Tipp geben und war pünktlich vor Ort.",
-      author: "Roman Osinsky",
+      quote: "Herr Hannachi konnte schon am Telefon schnell und kostenfrei einen hilfreichen Tipp geben.",
+      author: "Roman Osinsky (Google Maps)",
     },
   },
   {
     slug: "kuehlschraenke",
     title: "Kühlschränke",
-    short: "Schneller Vor-Ort-Termin, passende Ersatzteile (Thermostate, Dichtungen) & geprüfte Kühlgeräte mit schriftlicher Garantie.",
+    short: "Beratung, Dichtungen, Thermostate & Geräte auf Anfrage.",
     intro:
-      "Wenn Kühlschrank oder Gefriergerät nicht mehr richtig kühlen, zählt schnelle Reaktion. Wir kommen nach Terminabsprache zu Ihnen nach Hause in Osnabrück, versorgen Sie mit passenden Original-Ersatzteilen oder liefern Ihnen kurzfristig ein geprüftes Ersatz-Kühlgerät mit schriftlicher Verkäufergarantie.",
+      "Schnelle Fachberatung, Original-Ersatzteile nach E-Nr. und ausgewählte Kühlgeräte auf Anfrage.",
     symptoms: [
-      "Kühlt nicht mehr ausreichend oder vereist stark",
-      "Thermostat, NTC-Temperaturfühler oder Türdichtung verschlissen",
-      "Türscharnier / Schleppscharnier schließt nicht mehr bündig",
-      "Schnelles Angebot für ein geprüftes Ersatz-Kühlgerät mit Garantie",
+      "Persönliche Beratung",
+      "Thermostat, Fühler & Türdichtung",
+      "Scharniere, Glasplatten & Fächer",
+      "Markengerät auf Anfrage",
     ],
     approach:
-      "Bei Kühlgeräten vergeben wir besonders kurzfristige Vor-Ort-Termine in Osnabrück & Umgebung – einfach per WhatsApp oder Telefon melden.",
+      "Bei Kühlgeräten kurz anrufen oder per WhatsApp schreiben – schnelle persönliche Rückmeldung.",
     customerNote: {
-      quote: "Sehr zuverlässig, kompetent und preiswert. Sehr zu empfehlen.",
-      author: "Myra Bonnici",
+      quote: "Sehr zuverlässig, kompetent und preislich absolut fair. Sehr zu empfehlen.",
+      author: "Myra Bonnici (Google Maps)",
     },
   },
   {
     slug: "backoefen",
     title: "Backöfen & Herde",
-    short: "Vor-Ort-Service für Backöfen & Herde, passende Heizelemente & Schalter sowie geprüfte Ersatzgeräte mit schriftlicher Garantie.",
+    short: "Beratung, Heizelemente, Schalter & Geräte auf Anfrage.",
     intro:
-      "Die Heißluft bleibt kalt, die Unterhitze fällt aus oder die Backofentür schließt nicht mehr richtig? Wir unterstützen Sie mit unserem mobilen Vor-Ort-Service in Osnabrück, liefern passende Original-Ersatzteile nach Typenschild oder bieten Ihnen ein geprüftes Ersatzgerät inklusive schriftlicher Verkäufergarantie.",
+      "Persönliche Beratung, Originalteile (Heizelemente, Schalter, Dichtungen) und ausgewählte Geräte auf Anfrage.",
     symptoms: [
-      "Backofen wird nicht mehr richtig heiß (Umluft / Ober- / Unterhitze)",
-      "Ringheizkörper, Backofenschalter, Thermostat oder Türdichtung benötigt",
-      "Backofentür schließt nicht mehr dicht (Scharniere / Dichtung)",
-      "Geprüfter Ersatz-Backofen oder Herd mit schriftlicher Verkäufergarantie",
+      "Persönliche Beratung",
+      "Ringheizkörper & Heizelemente",
+      "Schalter, Thermostat & Dichtung",
+      "Markengerät auf Anfrage",
     ],
     approach:
-      "Wir beraten Sie ehrlich vor Ort bei Ihnen zu Hause: passendes Ersatzteil oder ein geprüftes Austauschgerät mit schriftlicher Garantie.",
+      "Typenschild per WhatsApp senden – wir klären Teil oder Gerätewunsch direkt persönlich.",
     customerNote: {
-      quote: "Ich habe angerufen und konnte schnell einen Termin vereinbaren. Ehrliche Beratung und fairer Preis.",
-      author: "Pia B",
+      quote: "Sehr freundlich, unkomplizierte Abstimmung per WhatsApp und schnelle Terminvereinbarung.",
+      author: "Pia B (Google Maps)",
     },
   },
 ];
@@ -175,7 +231,7 @@ export const reviews: Review[] = googleReviews82;
 
 export const nav = [
   { href: "/", label: "Startseite" },
-  { href: "/leistungen", label: "Service & Geräte" },
+  { href: "/leistungen", label: "Geräte & Teile" },
   { href: "/kundenbewertungen", label: "Bewertungen" },
   { href: "/ueber-uns", label: "Über uns" },
   { href: "/kontakt", label: "Kontakt" },
@@ -183,20 +239,20 @@ export const nav = [
 
 export const sparePartsHighlights = [
   {
-    title: "Mobiler Vor-Ort-Service beim Kunden",
-    desc: "Wir kommen nach Terminvereinbarung direkt zu Ihnen nach Hause in Osnabrück & Umgebung.",
+    title: "Seit 1990 in Osnabrück",
+    desc: `${yearsOfExperience}+ Jahre Erfahrung · Termine nach Vereinbarung.`,
   },
   {
-    title: "Passende Ersatzteile aller Marken",
-    desc: "Original- & Qualitäts-Ersatzteile nach Typenschild (E-Nr. / PNC) für Bosch, Siemens, Miele, AEG, Bauknecht, Liebherr, Neff u. v. m.",
+    title: "Originalteile nach E-Nr.",
+    desc: "Miele, Bosch, Siemens, AEG, Bauknecht, Liebherr u. v. m.",
   },
   {
-    title: "Ersatzgerät-Angebot falls unrentabel",
-    desc: "Wenn sich Ihr Altgerät nicht mehr retten lässt, bieten wir Ihnen auf Wunsch ein geprüftes Ersatzgerät aus unserem Bestand an.",
+    title: "Markengeräte auf Anfrage",
+    desc: "Ausgewählte geprüfte Geräte nach Verfügbarkeit.",
   },
   {
-    title: "Schriftliche Verkäufergarantie",
-    desc: "Jedes bei uns gekaufte Ersatzgerät erhält eine schriftliche Verkäufergarantie – inklusive vollem Garantie- & Reparaturservice durch uns.",
+    title: "Verkäufergarantie",
+    desc: "Schriftliche Garantie bei direkt erworbenen Geräten.",
   },
 ];
 
@@ -211,7 +267,7 @@ export const sparePartsCategories = [
       "Keilriemen & Antriebsriemen",
       "Motorkohlen & Kohlebürsten",
       "Stoßdämpfer & Aufhängungsfedern",
-      "Türverriegelungen & Elektronikmodule",
+      "Türverriegelungen & Ersatzmodule",
     ],
   },
   {
@@ -289,21 +345,21 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
   {
     title: "Wäsche waschen und trocknen",
     badge: "Geräte & Teile",
-    description: "An- und Verkauf geprüfter Waschmaschinen & Trockner inkl. schriftlicher Verkäufergarantie sowie Original-Ersatzteile.",
+    description: "Persönliche Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Waschmaschinen und Trockner auf Anfrage.",
     items: [
       {
         name: "Waschmaschinen & Toplader",
-        description: "Geprüfte Frontlader, Toplader und Original-Ersatzteile aller Fabrikate.",
-        symptoms: ["Laugenpumpe / Ablaufpumpe", "Türmanschette / Dichtung", "Heizstab & NTC-Sensor", "Motorkohlen & Stoßdämpfer", "Geprüftes Gebrauchtgerät anfragen"],
+        description: "Fachberatung, Original-Ersatzteile aller Marken & ausgewählte Frontlader auf Anfrage.",
+        symptoms: ["Laugenpumpe / Ablaufpumpe", "Türmanschette / Dichtung", "Heizstab & NTC-Sensor", "Motorkohlen & Stoßdämpfer", "Ausgewähltes Markengerät anfragen"],
       },
       {
         name: "Wäschetrockner",
-        description: "Wärmepumpentrockner, Kondenstrockner und Ersatzteile aller Hersteller.",
-        symptoms: ["Kondensatpumpe & Sensor", "Anlaufkondensator", "Türschloss & Flusensieb", "Geprüften Trockner anfragen"],
+        description: "Original-Ersatzteile für Wärmepumpen- & Kondenstrockner sowie Geräte auf Anfrage.",
+        symptoms: ["Kondensatpumpe & Sensor", "Anlaufkondensator", "Türschloss & Flusensieb", "Ausgewählten Trockner anfragen"],
       },
       {
         name: "Waschtrockner (2-in-1)",
-        description: "Kombinierte Wasch- und Trockengeräte sowie Zubehörteile.",
+        description: "Persönliche Beratung, Original-Ersatzteile & Zubehör nach Typenschild.",
         symptoms: ["Pumpen- & Ventileinheit", "Dichtungen & Riemen", "Verfügbarkeit anfragen"],
       },
     ],
@@ -311,70 +367,70 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
   {
     title: "Geschirr spülen",
     badge: "Küche",
-    description: "An- und Verkauf geprüfter Geschirrspüler inkl. schriftlicher Garantie sowie Ersatzteile ab Lager.",
+    description: "Persönliche Beratung, Original-Ersatzteile nach E-Nr. & ausgewählte Geschirrspüler auf Anfrage.",
     items: [
       {
         name: "Geschirrspüler (45 cm & 60 cm)",
-        description: "Vollintegrierte, teilintegrierte, Unterbau- und Stand-Spülmaschinen.",
-        symptoms: ["Umwälzpumpe / Heizpumpe", "Aquastop-Zulaufschlauch", "Korbrollen & Sprüharme", "Geprüften Geschirrspüler anfragen"],
+        description: "Originalteile für Einbau-, Unterbau- und Standgeräte sowie ausgewählte Markengeräte auf Anfrage.",
+        symptoms: ["Umwälzpumpe / Heizpumpe", "Aquastop-Zulaufschlauch", "Korbrollen & Sprüharme", "Ausgewählten Geschirrspüler anfragen"],
       },
       {
         name: "Büro- & Kleingewerbespüler",
-        description: "Geprüfte Spülmaschinen und Ersatzteile für Teeküchen und Büros.",
-        symptoms: ["Dosierkammer & Dichtungen", "Ablaufpumpe", "Geräteangebot anfragen"],
+        description: "Original-Ersatzteile und persönliche Beratung für Teeküchen und Büros.",
+        symptoms: ["Dosierkammer & Dichtungen", "Ablaufpumpe", "Geräteverfügbarkeit anfragen"],
       },
     ],
   },
   {
     title: "Kühlen und Gefrieren",
     badge: "Kühltechnik",
-    description: "Geprüfte Kühl- und Gefriergeräte mit schriftlicher Verkäufergarantie sowie passende Ersatzteile.",
+    description: "Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Kühl- und Gefriergeräte auf Anfrage.",
     items: [
       {
         name: "Kühlschränke",
-        description: "Unterbau- und Standkühlschränke mit und ohne Gefrierfach.",
-        symptoms: ["Thermostat & NTC-Fühler (Teileverkauf)", "Magnet-Türdichtung", "Schleppscharnier-Satz", "Geprüften Kühlschrank anfragen"],
+        description: "Dichtungen, Thermostate & Zubehör sowie ausgewählte Stand- und Unterbaugeräte auf Anfrage.",
+        symptoms: ["Thermostat & NTC-Fühler", "Magnet-Türdichtung", "Schleppscharnier-Satz", "Ausgewählten Kühlschrank anfragen"],
       },
       {
         name: "Gefrierschränke & Gefriertruhen",
-        description: "NoFrost-Gefrierschränke, Tiefkühltruhen und Ersatzteile.",
-        symptoms: ["Lüftermotor & Startrelais (Teileverkauf)", "Gefrierfachklappen & Schubladen", "Geräteverfügbarkeit anfragen"],
+        description: "Original-Ersatzteile, Schubladen & ausgewählte NoFrost-Geräte auf Anfrage.",
+        symptoms: ["Lüftermotor & Startrelais", "Gefrierfachklappen & Schubladen", "Verfügbarkeit anfragen"],
       },
       {
         name: "Side-by-Side & Kühl-Gefrierkombis",
-        description: "Großraum-Kühlgeräte und Original-Zubehörteile.",
-        symptoms: ["Wasserfilter & Magnetventil", "Türdichtungen", "Bestandsgerät anfragen"],
+        description: "Original-Wasserfilter, Dichtungen & ausgewählte Großraumgeräte auf Anfrage.",
+        symptoms: ["Wasserfilter & Magnetventil", "Türdichtungen", "Verfügbarkeit anfragen"],
       },
     ],
   },
   {
     title: "Kochen, Backen und Lüften",
     badge: "Küche & Hitze",
-    description: "Geprüfte Backöfen, Herde & Kochfelder inkl. schriftlicher Garantie sowie Original-Ersatzteile (ohne Einbau / ohne Anschluss).",
+    description: "Original-Ersatzteile nach Typenschild & ausgewählte Backöfen, Herde und Kochfelder auf Anfrage.",
     items: [
       {
         name: "Backöfen",
-        description: "Umluft-, Heißluft- und autarke Backöfen sowie Heizelemente im Teileverkauf.",
-        symptoms: ["Heißluft-Ringheizkörper", "Ober-/Unterhitze-Element", "Backofenschalter & Thermostat", "Geprüften Backofen anfragen"],
+        description: "Heizelemente, Schalter & Dichtungen nach E-Nr. sowie ausgewählte Backöfen auf Anfrage.",
+        symptoms: ["Heißluft-Ringheizkörper", "Ober-/Unterhitze-Element", "Backofenschalter & Thermostat", "Ausgewählten Backofen anfragen"],
       },
       {
         name: "Elektro- & Standherde",
-        description: "Klassische Standherde und Herd-Kombinationen inkl. schriftlicher Garantie.",
-        symptoms: ["Energieregler & Kochplatten", "Backofentürdichtung", "Geprüftes Herd-Set anfragen"],
+        description: "Original-Schalter, Dichtungen & ausgewählte Standherde auf Anfrage.",
+        symptoms: ["Energieregler & Kochplatten", "Backofentürdichtung", "Ausgewähltes Herd-Set anfragen"],
       },
       {
         name: "Ceran- & Induktionskochfelder",
-        description: "Autarke Glaskeramik- und Induktionsfelder sowie Ersatzteile nach Typenschild.",
-        symptoms: ["Teile-Identifikation nach E-Nr.", "Geprüftes Kochfeld anfragen"],
+        description: "Original-Ersatzteile nach Typenschild & ausgewählte Kochfelder auf Anfrage.",
+        symptoms: ["Teile-Identifikation nach E-Nr.", "Ausgewähltes Kochfeld anfragen"],
       },
       {
         name: "Dunstabzugshauben",
-        description: "Wandhauben, Flachschirmhauben und Filter-/Motorenteile.",
-        symptoms: ["Metallfettfilter & Aktivkohlefilter", "Gebläsemotor & Schalter (Teileverkauf)"],
+        description: "Original-Filter, Gebläseteile & Zubehör für Wand- und Flachschirmhauben.",
+        symptoms: ["Metallfettfilter & Aktivkohlefilter", "Gebläsemotor & Schalter"],
       },
       {
         name: "Mikrowellen & Dampfgarer",
-        description: "Standgeräte sowie Drehteller und Original-Zubehör.",
+        description: "Drehteller, Original-Zubehör & ausgewählte Standgeräte auf Anfrage.",
         symptoms: ["Drehteller, Rollenring & Glimmerplatte", "Verfügbarkeit anfragen"],
       },
     ],
@@ -382,7 +438,7 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
   {
     title: "Kaffee und Kleingeräte",
     badge: "Kaffee & Zubehör",
-    description: "Original-Ersatzteile, Pflegezubehör und geprüfte Geräte auf Anfrage.",
+    description: "Original-Ersatzteile, Dichtungen & Pflegezubehör nach Modellnummer.",
     items: [
       {
         name: "Kaffeevollautomaten",
@@ -391,7 +447,7 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
       },
       {
         name: "Siebträgermaschinen",
-        description: "Siebträgerdichtungen, Vibrationspumpen und Zubehör.",
+        description: "Siebträgerdichtungen, Pumpen und Original-Zubehör.",
         symptoms: ["Gruppendichtung & Duschsieb", "Pumpe & Druckventil"],
       },
       {
@@ -402,23 +458,23 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
     ],
   },
   {
-    title: "Elektronikmodule & Verkäufergarantie",
-    badge: "Ersatzteile & Garantie",
-    description: "Original-Steuerungsmodule, Relais und Elektronikbauteile im Teileverkauf sowie Garantieabwicklung ausschließlich für bei uns gekaufte Geräte.",
+    title: "Ersatzmodule & Verkäufergarantie",
+    badge: "Module & Garantie",
+    description: "Original-Ersatzmodule nach Typenschild (E-Nr. / PNC) sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
     items: [
       {
-        name: "Steuerungsplatinen & Leistungsmodule",
-        description: "Ersatz-Steuermodule und elektronische Bauteile nach Typenschild-Abgleich.",
-        symptoms: ["Passendes Steuermodul per E-Nr. anfragen", "Garantiefall für bei uns gekaufte Geräte"],
+        name: "Steuerungs- & Leistungsmodule",
+        description: "Original-Ersatzmodule nach Typenschild-Abgleich (E-Nr. / PNC).",
+        symptoms: ["Passendes Ersatzmodul per E-Nr. anfragen", "Garantieanfrage für bei Hannachi erworbene Geräte"],
       },
       {
         name: "Inverter- & Motorsteuerungen",
-        description: "Original-Elektronikmodule für Waschmaschinen, Trockner und Kühlgeräte.",
+        description: "Original-Steuermodule für Waschmaschinen, Trockner und Kühlgeräte.",
         symptoms: ["Modultyp per Foto vom Typenschild klären"],
       },
       {
-        name: "Display- & Bedienmodule",
-        description: "Drehwähler, Tastenmodule und Anzeigeeinheiten.",
+        name: "Display- & Bedienblenden",
+        description: "Drehwähler, Tastenmodule und Anzeigeeinheiten nach Modellnummer.",
         symptoms: ["Original-Bedieneinheit anfragen"],
       },
     ],

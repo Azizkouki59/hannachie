@@ -16,6 +16,7 @@ import {
   Download,
   ExternalLink,
   Eye,
+  EyeOff,
   FileText,
   History,
   ImageDown,
@@ -71,18 +72,15 @@ import {
   exportTicketsToCsv,
   formatTicketTextSummary,
   getSavedAdminToken,
-  loadLocalFallbackTickets,
   mergeServerAndLocalTickets,
   removePendingSyncId,
   resolveCoordinatesForZip,
   saveAdminToken,
-  saveLocalFallbackTickets,
   shareTicketNative,
   type TicketExportType,
 } from "@/lib/adminClient";
 import {
   isMarketplaceItemSold,
-  loadLocalMarketplaceItems,
   saveLocalMarketplaceItems,
   type MarketplaceItem,
 } from "@/data/marketplaceItems";
@@ -135,8 +133,10 @@ const EMPTY_ORDER_FORM: OrderFormState = {
 
 export default function AdminPage() {
   const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [pinInput, setPinInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -156,10 +156,8 @@ export default function AdminPage() {
   >("all");
   const [sortBy, setSortBy] = useState<"newest" | "urgency" | "scheduled">("newest");
 
-  // Marketplace items cache for ticket cross-linking
-  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(() =>
-    loadLocalMarketplaceItems()
-  );
+  // Marketplace items cache for ticket cross-linking (real stock only)
+  const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>([]);
 
   // WhatsApp template dropdown state & Customer History drawer
   const [openWaMenuId, setOpenWaMenuId] = useState<string | null>(null);
@@ -219,65 +217,53 @@ export default function AdminPage() {
     });
   }, []);
 
+  const buildAdminHeaders = useCallback(
+    (activeToken?: string | null, withJson = false): Record<string, string> => {
+      const headers: Record<string, string> = { Accept: "application/json" };
+      if (withJson) headers["Content-Type"] = "application/json";
+      const resolved = activeToken ?? token;
+      if (resolved) headers.Authorization = `Bearer ${resolved}`;
+      return headers;
+    },
+    [token]
+  );
+
   const fetchTickets = useCallback(
-    async (activeToken: string) => {
+    async (activeToken?: string | null) => {
       setLoadingTickets(true);
-      const localList = loadLocalFallbackTickets();
       try {
         const res = await fetch("/api/admin/tickets", {
-          headers: {
-            Authorization: `Bearer ${activeToken}`,
-            Accept: "application/json",
-          },
+          cache: "no-store",
+          credentials: "include",
+          headers: buildAdminHeaders(activeToken, false),
         });
         if (res.status === 401) {
           clearAdminToken();
           setToken(null);
+          setIsAuthenticated(false);
           setLoadingTickets(false);
           return;
         }
         if (res.ok) {
           const data = (await res.json()) as { tickets?: AdminRepairTicket[] };
           if (Array.isArray(data.tickets)) {
-            const serverIds = new Set(data.tickets.map((t) => t.id));
-            const merged = mergeServerAndLocalTickets(data.tickets, localList);
-
-            // Push any offline-submitted tickets to the server so server & client stay 100% synced
-            const unsynced = merged.filter((t) => !serverIds.has(t.id));
-            if (unsynced.length > 0) {
-              await Promise.allSettled(
-                unsynced.map((u) =>
-                  fetch("/api/admin/tickets", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${activeToken}`,
-                    },
-                    body: JSON.stringify(u),
-                  }).then((r) => {
-                    if (r.ok) removePendingSyncId(u.id);
-                  })
-                )
-              );
-            }
-
-            setTickets(merged);
-            syncDraftsFromTickets(merged);
+            const authoritative = mergeServerAndLocalTickets(data.tickets, []);
+            setTickets(authoritative);
+            syncDraftsFromTickets(authoritative);
             setLoadingTickets(false);
             return;
           }
         }
       } catch {
-        // Fallback to local tickets if server is temporarily unreachable
+        // Keep current authoritative state on transient error
       }
-      setTickets(localList);
-      syncDraftsFromTickets(localList);
       setLoadingTickets(false);
     },
-    [syncDraftsFromTickets]
+    [buildAdminHeaders, syncDraftsFromTickets]
   );
 
   useEffect(() => {
+    let active = true;
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const scannedTicketId = params.get("ticket")?.trim();
@@ -285,36 +271,61 @@ export default function AdminPage() {
         setSearchQuery(scannedTicketId);
       }
     }
-    const saved = getSavedAdminToken();
-    if (saved) {
-      setToken(saved);
-      void fetchTickets(saved);
-    }
-    setAuthReady(true);
 
-    // Sync Marketplace items for cross-linking inside Tickets / Completion Modal
-    fetch("/api/marketplace", { cache: "no-store" })
+    const restoreSession = async () => {
+      const saved = getSavedAdminToken();
+      if (saved) {
+        setToken(saved);
+        setIsAuthenticated(true);
+        setAuthReady(true);
+        void fetchTickets(saved);
+        return;
+      }
+      try {
+        const res = await fetch("/api/admin/session", {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { authenticated?: boolean };
+          if (active && data.authenticated) {
+            setIsAuthenticated(true);
+            void fetchTickets(null);
+          }
+        }
+      } catch {
+        // Require login when session check fails
+      } finally {
+        if (active) setAuthReady(true);
+      }
+    };
+
+    void restoreSession();
+
+    // Sync Marketplace items for cross-linking inside Tickets / Completion Modal (real stock only)
+    fetch("/api/marketplace", { cache: "no-store", credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { ok?: boolean; items?: MarketplaceItem[] } | null) => {
-        if (data?.ok && Array.isArray(data.items) && data.items.length > 0) {
+        if (active && data?.ok && Array.isArray(data.items)) {
           setMarketplaceItems(data.items);
           saveLocalMarketplaceItems(data.items);
         }
       })
       .catch(() => {
-        // Keep local fallback
+        // Keep empty list on error
       });
 
     const onMpUpdated = (e: Event) => {
       const custom = e as CustomEvent<MarketplaceItem[]>;
       if (Array.isArray(custom.detail)) {
         setMarketplaceItems(custom.detail);
-      } else {
-        setMarketplaceItems(loadLocalMarketplaceItems());
       }
     };
     window.addEventListener("hannachi:marketplace-updated", onMpUpdated);
-    return () => window.removeEventListener("hannachi:marketplace-updated", onMpUpdated);
+    return () => {
+      active = false;
+      window.removeEventListener("hannachi:marketplace-updated", onMpUpdated);
+    };
   }, [fetchTickets]);
 
   // Keep selectedTicketIds in sync if tickets are removed
@@ -342,11 +353,11 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogin = async (e?: React.FormEvent, overridePin?: string) => {
+  const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const candidate = (overridePin ?? pinInput).trim();
+    const candidate = pinInput.trim();
     if (!candidate) {
-      setAuthError("Bitte geben Sie die PIN (z. B. 49082) ein.");
+      setAuthError("Bitte geben Sie das Admin-Passwort ein.");
       return;
     }
 
@@ -356,42 +367,47 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: candidate }),
+        body: JSON.stringify({ password: candidate }),
       });
 
       if (res.ok) {
         const data = (await res.json()) as { token?: string };
-        const sessionToken = data.token || "hannachi-admin-demo-token-49082";
-        saveAdminToken(sessionToken);
-        setToken(sessionToken);
+        if (data.token) {
+          saveAdminToken(data.token);
+          setToken(data.token);
+        }
+        setIsAuthenticated(true);
         setPinInput("");
-        void fetchTickets(sessionToken);
+        setShowPassword(false);
+        void fetchTickets(data.token || null);
         setAuthLoading(false);
         return;
       }
 
       const errData = (await res.json().catch(() => null)) as { error?: string } | null;
-      setAuthError(errData?.error || "Ungültige PIN. (Standard-PIN: 49082)");
+      setAuthError(errData?.error || "Ungültiges Passwort. Bitte erneut versuchen.");
     } catch {
-      if (["49082", "hannachi2026", "hannachi"].includes(candidate.toLowerCase())) {
-        const fallbackToken = "hannachi-admin-demo-token-49082";
-        saveAdminToken(fallbackToken);
-        setToken(fallbackToken);
-        setPinInput("");
-        void fetchTickets(fallbackToken);
-      } else {
-        setAuthError("Ungültige PIN. (Standard-PIN: 49082)");
-      }
+      setAuthError("Verbindung zum Server fehlgeschlagen. Bitte erneut versuchen.");
     } finally {
       setAuthLoading(false);
     }
   };
 
   const handleLogout = () => {
+    const activeToken = token;
     clearAdminToken();
     setToken(null);
+    setIsAuthenticated(false);
     setSelectedTicketIds([]);
+    void fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : undefined,
+    }).catch(() => {
+      // Ignore network errors on logout cleanup
+    });
   };
 
   const updateTicket = async (
@@ -401,27 +417,29 @@ export default function AdminPage() {
     upsertBaseTicket?: AdminRepairTicket
   ) => {
     const nowIso = new Date().toISOString();
-    setTickets((prev) => {
-      const next = prev.map((t) =>
+    setTickets((prev) =>
+      prev.map((t) =>
         t.id === ticketId ? { ...t, ...patch, updatedAt: nowIso } : t
-      );
-      saveLocalFallbackTickets(next);
-      return next;
-    });
+      )
+    );
 
-    if (token) {
+    if (isAuthenticated) {
       try {
         const res = await fetch(`/api/admin/tickets/${encodeURIComponent(ticketId)}`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
+          headers: buildAdminHeaders(token, true),
           body: JSON.stringify({
             ...patch,
             ...(upsertBaseTicket ? { upsertTicket: upsertBaseTicket } : {}),
           }),
         });
+        if (res.status === 401) {
+          clearAdminToken();
+          setToken(null);
+          setIsAuthenticated(false);
+          return;
+        }
         if (res.ok) {
           const data = (await res.json()) as {
             ok?: boolean;
@@ -430,21 +448,24 @@ export default function AdminPage() {
           };
           if (data.ok && data.ticket) {
             const authoritative = data.ticket;
-            setTickets((prev) => {
-              const next = prev.map((t) =>
-                t.id === ticketId ? authoritative : t
-              );
-              saveLocalFallbackTickets(next);
-              return next;
-            });
+            setTickets((prev) =>
+              prev.map((t) => (t.id === ticketId ? authoritative : t))
+            );
           }
           if (Array.isArray(data.updatedMarketplaceItems)) {
             setMarketplaceItems(data.updatedMarketplaceItems);
             saveLocalMarketplaceItems(data.updatedMarketplaceItems);
           }
+          showToast(toastMessage);
+          return;
         }
+        showToast("Speichern auf dem Server fehlgeschlagen");
+        void fetchTickets(token);
+        return;
       } catch {
-        // Local storage already updated
+        showToast("Verbindungsfehler beim Speichern");
+        void fetchTickets(token);
+        return;
       }
     }
 
@@ -477,7 +498,7 @@ export default function AdminPage() {
 
     const description =
       draft.noteInput.trim() ||
-      `Vor-Ort-Check & Service (${ticket.brand} ${deviceName})`;
+      `Elektrohaushaltsgerät / Original-Ersatzteil (${ticket.brand} ${deviceName})`;
 
     const nextItems = buildSingleGrossInvoiceItems(grossVal, description);
 
@@ -493,25 +514,27 @@ export default function AdminPage() {
 
   const handleDeleteTicket = async (ticketId: string) => {
     removePendingSyncId(ticketId);
-    setTickets((prev) => {
-      const next = prev.filter((t) => t.id !== ticketId);
-      saveLocalFallbackTickets(next);
-      return next;
-    });
-    setSelectedTicketIds((prev) => prev.filter((id) => id !== ticketId));
     setConfirmDeleteId(null);
 
-    if (token) {
+    if (isAuthenticated) {
       try {
-        await fetch(`/api/admin/tickets/${encodeURIComponent(ticketId)}`, {
+        const res = await fetch(`/api/admin/tickets/${encodeURIComponent(ticketId)}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+          headers: buildAdminHeaders(token, false),
         });
+        if (!res.ok) {
+          showToast("Auftrag konnte nicht gelöscht werden");
+          return;
+        }
       } catch {
-        // Local state already updated
+        showToast("Serverfehler beim Löschen");
+        return;
       }
     }
 
+    setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+    setSelectedTicketIds((prev) => prev.filter((id) => id !== ticketId));
     showToast("Auftrag gelöscht");
   };
 
@@ -551,7 +574,7 @@ export default function AdminPage() {
     const grossVal = Number.isFinite(parsedGross) && parsedGross > 0 ? parsedGross : 0;
     const description =
       orderForm.technicianNotes.trim() ||
-      `Vor-Ort-Service / Ersatzteil (${orderForm.brand} ${orderForm.device})`;
+      `Elektrohaushaltsgerät / Original-Ersatzteil (${orderForm.brand} ${orderForm.device})`;
     const nextInvoiceItems = buildSingleGrossInvoiceItems(grossVal, description);
 
     // 1. Editing an existing ticket
@@ -637,14 +660,12 @@ export default function AdminPage() {
 
     let createdTicket = fallbackTicket;
 
-    if (token) {
+    if (isAuthenticated) {
       try {
         const res = await fetch("/api/admin/tickets", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
+          headers: buildAdminHeaders(token, true),
           body: JSON.stringify({
             ...orderForm,
             status: orderForm.scheduledDate ? "in_progress" : "new",
@@ -656,17 +677,17 @@ export default function AdminPage() {
           if (data.ticket) {
             createdTicket = data.ticket;
           }
+        } else {
+          showToast("Auftrag konnte nicht auf dem Server gespeichert werden");
+          return;
         }
       } catch {
-        // Fallback ticket used
+        showToast("Server nicht erreichbar – Auftrag nicht gespeichert");
+        return;
       }
     }
 
-    setTickets((prev) => {
-      const next = [createdTicket, ...prev];
-      saveLocalFallbackTickets(next);
-      return next;
-    });
+    setTickets((prev) => [createdTicket, ...prev]);
 
     setDraftsById((prev) => ({
       ...prev,
@@ -694,7 +715,7 @@ export default function AdminPage() {
         : ticket.device;
       const description =
         draft.noteInput.trim() ||
-        `Vor-Ort-Check & Service (${ticket.brand} ${deviceName})`;
+        `Elektrohaushaltsgerät / Original-Ersatzteil (${ticket.brand} ${deviceName})`;
       return {
         ...ticket,
         technicianNotes: draft.noteInput.trim(),
@@ -769,17 +790,17 @@ export default function AdminPage() {
       }
     } else {
       if (dl.includes("wasch")) {
-        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Ablauf, Pumpe & Anschlüsse geprüft, Probelauf vor Ort ohne Fehler abgeschlossen.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Ersatzteil nach Typenschild übergeben bzw. Garantiefall für bei Hannachi gekauftes Gerät abgeschlossen.`;
       } else if (dl.includes("trockner")) {
-        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Kondensatablauf, Siebe & Heizfunktion geprüft, Funktionscheck vor Ort bestanden.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Passendes Original-Ersatzteil übergeben bzw. Garantiefall für bei Hannachi gekauftes Gerät abgeschlossen.`;
       } else if (dl.includes("spül") || dl.includes("geschirr")) {
-        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Zulauf, Aquastop & Heizprogramm vor Ort geprüft und erfolgreich abgenommen.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Original-Ersatzteil nach E-Nr. übergeben bzw. Garantiefall für bei Hannachi gekauftes Gerät abgeschlossen.`;
       } else if (dl.includes("kühl") || dl.includes("gefrier")) {
-        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Temperaturregelung & Türdichtung vor Ort geprüft, Kühlfunktion stabil.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Original-Ersatzteil übergeben bzw. Garantiefall für bei Hannachi gekauftes Gerät abgeschlossen.`;
       } else if (dl.includes("ofen") || dl.includes("herd") || dl.includes("koch")) {
-        baseTemplate = `Mobiler Vor-Ort-Check / Hannachi Garantieservice an ${subject}${modelStr}: Heizkreise, Regler & Anschlüsse geprüft, Sicherheits- und Funktionscheck bestanden.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Original-Ersatzteil nach Typenschild übergeben (ohne Elektroanschluss).`;
       } else {
-        baseTemplate = `Mobiler Vor-Ort-Service / Garantieleistung an ${subject}${modelStr}: Gerät vor Ort geprüft, passendes Ersatzteil / Garantielösung umgesetzt und getestet.`;
+        baseTemplate = `Übergabe / Hannachi Verkäufergarantie für ${subject}${modelStr}: Original-Ersatzteil übergeben bzw. Garantiefall für bei Hannachi gekauftes Gerät abgeschlossen.`;
       }
     }
 
@@ -1101,30 +1122,33 @@ export default function AdminPage() {
     const targetSet = new Set(targetIds);
     const nowIso = new Date().toISOString();
 
-    setTickets((prev) => {
-      const next = prev.map((t) =>
+    setTickets((prev) =>
+      prev.map((t) =>
         targetSet.has(t.id) ? { ...t, status: newStatus, updatedAt: nowIso } : t
-      );
-      saveLocalFallbackTickets(next);
-      return next;
-    });
+      )
+    );
 
-    if (token) {
+    if (isAuthenticated) {
       try {
-        await fetch("/api/admin/tickets/bulk", {
+        const res = await fetch("/api/admin/tickets/bulk", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
+          headers: buildAdminHeaders(token, true),
           body: JSON.stringify({
             ids: targetIds,
             action: "status",
             status: newStatus,
           }),
         });
+        if (!res.ok) {
+          await fetchTickets(token);
+          showToast("Sammel-Status konnte nicht gespeichert werden");
+          return;
+        }
       } catch {
-        // Local storage already updated
+        await fetchTickets(token);
+        showToast("Serverfehler beim Sammel-Status");
+        return;
       }
     }
 
@@ -1146,31 +1170,31 @@ export default function AdminPage() {
       removePendingSyncId(id);
     }
 
-    setTickets((prev) => {
-      const next = prev.filter((t) => !targetSet.has(t.id));
-      saveLocalFallbackTickets(next);
-      return next;
-    });
-    setSelectedTicketIds([]);
     setConfirmBulkDelete(false);
 
-    if (token) {
+    if (isAuthenticated) {
       try {
-        await fetch("/api/admin/tickets/bulk", {
+        const res = await fetch("/api/admin/tickets/bulk", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
+          headers: buildAdminHeaders(token, true),
           body: JSON.stringify({
             ids: targetIds,
             action: "delete",
           }),
         });
+        if (!res.ok) {
+          showToast("Aufträge konnten nicht gelöscht werden");
+          return;
+        }
       } catch {
-        // Local state already updated
+        showToast("Serverfehler beim Löschen");
+        return;
       }
     }
+
+    setTickets((prev) => prev.filter((t) => !targetSet.has(t.id)));
+    setSelectedTicketIds([]);
 
     showToast(
       `${targetIds.length} ${
@@ -1203,66 +1227,75 @@ export default function AdminPage() {
 
   if (!authReady) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen bg-surface dark:bg-slate-950 flex items-center justify-center p-6">
         <div className="text-sm font-medium text-ink-muted">Auftragsbuch wird geladen…</div>
       </div>
     );
   }
 
-  // ── 1. SIMPLE PIN LOGIN GATE ──────────────────────────────────────────────
-  if (!token) {
+  // ── 1. SERVER-VERIFIED ADMIN LOGIN GATE ───────────────────────────────────
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background text-ink flex flex-col justify-between p-4 sm:p-8">
-        <div className="max-w-6xl w-full mx-auto flex items-center justify-between">
+      <div className="min-h-screen bg-surface dark:bg-slate-950 text-ink dark:text-slate-100 flex flex-col justify-between p-4 sm:p-8">
+        <div className="max-w-6xl w-full mx-auto flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-ink-muted hover:text-ink transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ink-muted hover:text-ink dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Zurück zur Website
           </Link>
           <span className="text-xs font-mono text-ink-muted tabular-nums">
-            Hannachi Kundendienst · Osnabrück
+            Hannachi Fachhandel · Osnabrück
           </span>
         </div>
 
-        <div className="max-w-md w-full mx-auto my-10 bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/10 rounded-xl p-6 sm:p-8 shadow-lg">
-          <div className="w-12 h-12 rounded-lg bg-primary text-white flex items-center justify-center mb-5">
-            <Lock className="w-5 h-5 text-accent" />
+        <div className="max-w-md w-full mx-auto my-10 bg-white dark:bg-slate-900 border border-primary/12 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mb-5">
+            <Lock className="w-5 h-5 text-accent-light" />
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-ink tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-white tracking-tight">
             Hannachi Auftragsbuch
           </h1>
           <p className="mt-2 text-sm text-ink-muted leading-relaxed">
-            Übersicht für alle Kundenanfragen, Vor-Ort-Termine, Marktplatz-Geräte und Belege. Bitte mit Ihrer Admin-PIN anmelden.
+            Geschützter Verwaltungsbereich für Kundenanfragen, Termine und Belege. Bitte melden Sie sich mit dem Admin-Passwort an.
           </p>
 
           <form onSubmit={(e) => void handleLogin(e)} className="mt-6 space-y-4">
             <div>
               <label
                 htmlFor="admin-pin-input"
-                className="block text-xs font-semibold text-ink mb-1.5"
+                className="block text-xs font-bold text-primary dark:text-slate-200 mb-1.5"
               >
-                Admin-PIN oder Passwort
+                Admin-Passwort
               </label>
               <div className="relative">
                 <KeyRound className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="admin-pin-input"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={pinInput}
                   onChange={(e) => {
                     setPinInput(e.target.value);
                     if (authError) setAuthError(null);
                   }}
-                  placeholder="PIN eingeben (Standard: 49082)"
+                  placeholder="Passwort eingeben"
+                  autoComplete="current-password"
                   autoFocus
-                  className="w-full pl-10 pr-4 py-3 rounded-lg bg-background dark:bg-slate-950 border border-primary/20 dark:border-white/15 text-base font-mono text-ink focus:outline-none focus:border-accent transition-colors"
+                  className="w-full pl-10 pr-11 py-3 rounded-xl bg-surface dark:bg-slate-950 border border-primary/20 dark:border-white/15 text-base font-mono text-primary dark:text-white focus:outline-none focus:border-accent transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
               {authError && (
-                <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                <p role="alert" className="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
                   {authError}
                 </p>
               )}
@@ -1271,21 +1304,10 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full min-h-[48px] py-3 px-5 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full min-h-[48px] py-3 px-5 rounded-xl bg-accent hover:bg-accent-dark disabled:opacity-60 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              {authLoading ? "Wird geöffnet…" : "Auftragsbuch öffnen"}
+              {authLoading ? "Wird geprüft…" : "Auftragsbuch öffnen"}
             </button>
-
-            <div className="pt-3 border-t border-primary/10 dark:border-white/10 flex items-center justify-between gap-2 text-xs text-ink-muted">
-              <span>Schnellzugang (PIN: 49082):</span>
-              <button
-                type="button"
-                onClick={() => void handleLogin(undefined, "49082")}
-                className="font-semibold text-accent-hover dark:text-accent hover:underline cursor-pointer"
-              >
-                Direkt mit 1 Klick anmelden →
-              </button>
-            </div>
           </form>
         </div>
 
@@ -1296,9 +1318,9 @@ export default function AdminPage() {
     );
   }
 
-  // ── 2. SIMPLIFIED SINGLE-PAGE ADMIN WORKSPACE FOR MRS. HANNACHI ───────────
+  // ── 2. SIMPLIFIED SINGLE-PAGE ADMIN WORKSPACE ─────────────────────────────
   return (
-    <div className="min-h-screen bg-background text-ink">
+    <div className="min-h-screen bg-surface dark:bg-slate-950 text-ink dark:text-slate-100">
       {/* Screen-Only Workspace (Hidden when printing receipt) */}
       <div className="print:hidden pb-28 md:pb-24">
         {/* Compact Top Bar: Mobile 56px thumb-app header | Desktop 3-Zone bar */}
@@ -1382,7 +1404,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={openNewOrderModal}
-                className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg bg-accent hover:bg-accent-dark text-white font-bold text-xs sm:text-sm transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span className="sm:hidden">Neu</span>
@@ -1475,14 +1497,13 @@ export default function AdminPage() {
             <AdminBrandCardStudio onToast={showToast} />
           ) : activeTab === "marketplace" ? (
             <AdminMarketplaceManager
-              adminToken={token}
+              adminToken={token || ""}
               onToast={showToast}
               onItemsChanged={(items) => setMarketplaceItems(items)}
               onMarketplaceSaleTicketCreated={(newTicket, openExport) => {
                 setTickets((prev) => {
                   const filtered = prev.filter((t) => t.id !== newTicket.id);
                   const next = [newTicket, ...filtered];
-                  saveLocalFallbackTickets(next);
                   syncDraftsFromTickets(next);
                   return next;
                 });
@@ -1505,7 +1526,7 @@ export default function AdminPage() {
               <div className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base sm:text-lg font-extrabold text-ink">
-                    Geplante Vor-Ort-Termine &amp; Lieferungen ({scheduledTickets.length})
+                    Geplante Übergabe- &amp; Liefertermine ({scheduledTickets.length})
                   </h2>
                   <p className="text-xs text-ink-muted mt-0.5">
                     Chronologisch sortiert – ideal für unterwegs auf dem Smartphone.
@@ -1514,7 +1535,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={openNewOrderModal}
-                  className="min-h-[44px] px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  className="min-h-[44px] px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                   Termin / Auftrag anlegen
@@ -1796,7 +1817,7 @@ export default function AdminPage() {
                 </span>
               </div>
               <p className="hidden sm:block mt-1 text-xs text-ink-muted">
-                Vor-Ort-Termin vereinbart oder in Bearbeitung
+                Übergabe- oder Liefertermin vereinbart / in Bearbeitung
               </p>
             </button>
 
@@ -1973,7 +1994,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Scope Filter Row: Reparatur vs Marktplatz / Verkauf vs Vor-Ort vs Lieferung */}
+            {/* Scope Filter Row: Ersatzteile vs Marktplatz / Verkauf vs Lieferung vs Übergabe */}
             {tickets.length > 0 && (
               <div className="pt-2 border-t border-primary/8 dark:border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 <span className="text-[11px] font-bold text-ink-muted mr-1 shrink-0">
@@ -1982,10 +2003,10 @@ export default function AdminPage() {
                 {(
                   [
                     { id: "all" as const, label: "Alle", desktopLabel: "Alle Bereiche", count: counts.all },
-                    { id: "repair" as const, label: "Service", desktopLabel: "Service & Ersatzteile", count: counts.repair },
+                    { id: "repair" as const, label: "Teile/Garantie", desktopLabel: "Ersatzteile & Garantie", count: counts.repair },
                     { id: "marketplace" as const, label: "Marktplatz", desktopLabel: "Marktplatz / Verkauf", count: counts.marketplace },
-                    { id: "home_visit" as const, label: "Vor-Ort", desktopLabel: "Vor-Ort-Kundendienst", count: counts.home_visit },
-                    { id: "workshop" as const, label: "Übergabe", desktopLabel: "Lieferung & Übergabe", count: counts.workshop },
+                    { id: "home_visit" as const, label: "Lieferung", desktopLabel: "Lieferung / Übergabe vor Ort", count: counts.home_visit },
+                    { id: "workshop" as const, label: "Übergabe", desktopLabel: "Übergabe nach Termin", count: counts.workshop },
                   ]
                 ).map((sc) => {
                   const active = scopeFilter === sc.id;
@@ -2025,7 +2046,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={openNewOrderModal}
-                  className="w-full sm:w-auto min-h-[46px] px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto min-h-[46px] px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-bold text-sm transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
                   Telefon-Auftrag eintragen
@@ -2609,7 +2630,7 @@ export default function AdminPage() {
                             onClick={() => handleSavePriceAndNote(ticket, true)}
                             className={`min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                               isDirty
-                                ? "bg-accent hover:bg-accent-hover text-primary shadow-xs"
+                                ? "bg-accent hover:bg-accent-hover text-white shadow-xs"
                                 : "border border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 text-ink-muted hover:text-ink"
                             }`}
                             title="Preis und Notiz speichern"
@@ -2642,8 +2663,8 @@ export default function AdminPage() {
                             className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <Wrench className="w-4 h-4 shrink-0" />
-                            <span className="sm:hidden">Service fertig</span>
-                            <span className="hidden sm:inline">Vor-Ort-Service bestätigen</span>
+                            <span className="sm:hidden">Übergabe fertig</span>
+                            <span className="hidden sm:inline">Übergabe / Garantie bestätigen</span>
                           </button>
                         </div>
                       )}
@@ -2896,7 +2917,7 @@ export default function AdminPage() {
                                   ? comp?.outcome === "sold"
                                     ? "Abgeschlossen · Verkauft"
                                     : comp?.outcome === "repaired"
-                                    ? "Abgeschlossen · Vor-Ort- / Garantieservice"
+                                    ? "Abgeschlossen · Übergabe / Garantie"
                                     : "Abgeschlossen (Erledigt)"
                                   : simpleStatus === "in_progress"
                                   ? "In Arbeit / Terminiert"
@@ -2929,10 +2950,10 @@ export default function AdminPage() {
                                 {comp?.partsOrSerial || ticket.model || "Nicht angegeben"}
                               </div>
                               <div>
-                                Einsatzart:{" "}
+                                Übergabe-Art:{" "}
                                 {ticket.visitType === "home_visit"
-                                  ? "Vor-Ort-Kundendienst"
-                                  : "Lieferung & Übergabe"}
+                                  ? "Lieferung / Übergabe vor Ort"
+                                  : "Übergabe nach Termin"}
                               </div>
                             </div>
 
@@ -3009,7 +3030,7 @@ export default function AdminPage() {
                             <button
                               type="button"
                               onClick={() => handleOpenPrintPreview(ticket)}
-                              className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer"
+                              className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               <span>
@@ -3094,7 +3115,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleBulkPdfExport}
-                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span className="sm:hidden">PDF ({selectedTicketIds.length})</span>
@@ -3159,7 +3180,7 @@ export default function AdminPage() {
                       : "Neuen Auftrag eintragen"}
                   </h2>
                   <p className="text-xs text-ink-muted mt-0.5 truncate">
-                    Telefonanfrage, Vor-Ort-Termin oder Geräte-Bestellung
+                    Telefonanfrage, Übergabetermin oder Geräte-/Teilebestellung
                   </p>
                 </div>
                 <button
@@ -3178,7 +3199,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-ink mb-1">
-                      Service-Art
+                      Übergabe-Art
                     </label>
                     <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15">
                       <button
@@ -3192,7 +3213,7 @@ export default function AdminPage() {
                             : "text-ink-muted hover:text-ink"
                         }`}
                       >
-                        Vor-Ort-Service
+                        Lieferung vor Ort
                       </button>
                       <button
                         type="button"
@@ -3462,7 +3483,7 @@ export default function AdminPage() {
                   </button>
                   <button
                     type="submit"
-                    className="min-h-[44px] flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-primary font-bold text-sm cursor-pointer"
+                    className="min-h-[44px] flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-bold text-sm cursor-pointer"
                   >
                     {orderForm.editingTicketId
                       ? "Änderungen speichern"
@@ -3599,7 +3620,7 @@ export default function AdminPage() {
                             : "text-ink-muted"
                         }`}
                       >
-                        Vor-Ort-Check, Ersatzteil oder Hannachi-Garantieleistung abgeschlossen
+                        Original-Ersatzteil übergeben oder Hannachi-Garantiefall abgeschlossen
                       </p>
                     </button>
                   </div>
@@ -3636,7 +3657,7 @@ export default function AdminPage() {
                       className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-base sm:text-xs font-semibold text-ink focus:outline-none focus:border-accent"
                     >
                       <option value="">
-                        — Kein Marktplatz-Artikel (nur Auftragsbeleg) —
+                        — Kein Marktplatz-Artikel (nur Handelsbeleg) —
                       </option>
                       {marketplaceItems
                         .filter(
@@ -3658,7 +3679,7 @@ export default function AdminPage() {
                     <label className="block text-xs font-semibold text-ink">
                       {completionModal.outcome === "sold"
                         ? "Verkaufter Artikel & Übergabe-Details *"
-                        : "Vor-Ort-Service / Garantie-Details *"}
+                        : "Teileübergabe / Hannachi-Garantie-Details *"}
                     </label>
                     <button
                       type="button"
@@ -3695,8 +3716,8 @@ export default function AdminPage() {
                     }
                     placeholder={
                       completionModal.outcome === "sold"
-                        ? "z. B. Miele W1 übergeben, Probelauf vor Ort, inkl. 12 Monate Garantie"
-                        : "z. B. Vor-Ort-Check durchgeführt, Original-Ersatzteil übergeben, Probelauf ohne Fehler"
+                        ? "z. B. Miele W1 übergeben, Lieferung nach Termin, inkl. 12 Monate Verkäufergarantie"
+                        : "z. B. Original-Ersatzteil nach E-Nr. übergeben oder Garantiefall für bei Hannachi gekauftes Gerät erledigt"
                     }
                     className="w-full px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink focus:outline-none focus:border-accent"
                   />
@@ -3705,15 +3726,15 @@ export default function AdminPage() {
                     {(completionModal.outcome === "sold"
                       ? [
                           "Inkl. schriftl. Garantiebeleg",
-                          "Probelauf vor Ort",
-                          "Fachgerechte Übergabe",
-                          "Lieferung & Anschluss",
+                          "Im Lager funktionsgeprüft",
+                          "Persönliche Übergabe",
+                          "Lieferung nach Termin",
                         ]
                       : [
-                          "Original-Ersatzteil verbaut",
-                          "VDE-Prüfung bestanden",
-                          "Probelauf ohne Fehler",
-                          "Dichtung erneuert",
+                          "Original-Ersatzteil übergeben",
+                          "Typenschild (E-Nr.) abgeglichen",
+                          "Garantiefall (Hannachi-Kauf)",
+                          "Austauschgerät übergeben",
                         ]
                     ).map((phrase) => (
                       <button
@@ -3994,7 +4015,7 @@ export default function AdminPage() {
                                 setCustomerHistoryPhone(null);
                                 handleOpenPrintPreview(ht);
                               }}
-                              className="min-h-[34px] px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer"
+                              className="min-h-[34px] px-3 py-1 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               <span>Beleg exportieren</span>
@@ -4092,7 +4113,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="min-h-[40px] px-3.5 py-2 rounded-lg bg-accent hover:bg-accent-hover text-primary text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="min-h-[40px] px-3.5 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-4 h-4 shrink-0" />
                   <span>Drucken / PDF</span>
@@ -4241,7 +4262,7 @@ export default function AdminPage() {
                       <div className="font-bold text-sm">
                         {isWarrantyDoc
                           ? "KAUF- & GARANTIEBELEG"
-                          : "AUFTRAGS- & KUNDENDIENSTBELEG"}
+                          : "HANDELS- & ÜBERGABEBELEG"}
                       </div>
                       <div className="mt-1">Auftrags-Nr.: {printTicket.id}</div>
                       <div>Beleg-Nr.: {printTicket.invoiceNumber}</div>
@@ -4280,10 +4301,10 @@ export default function AdminPage() {
                     </div>
                     {printTicket.model && <div>Modell / E-Nr.: {printTicket.model}</div>}
                     <div className="mt-0.5 text-slate-600">
-                      Service-Art:{" "}
+                      Übergabe-Art:{" "}
                       {printTicket.visitType === "home_visit"
-                        ? "Vor-Ort-Kundendienst"
-                        : "Lieferung & Übergabe"}
+                        ? "Lieferung / Übergabe vor Ort"
+                        : "Übergabe nach Termin"}
                     </div>
                     <div className="mt-0.5">
                       Termin:{" "}
@@ -4301,7 +4322,7 @@ export default function AdminPage() {
                   <div className="text-xs font-bold text-slate-500">
                     {isWarrantyDoc
                       ? "GERÄTEDATEN / ÜBERGABE & GARANTIEHINWEIS"
-                      : "ANLIEGEN / DURCHGEFÜHRTE ARBEITEN & NOTIZEN"}
+                      : "ANLIEGEN / ÜBERGABE & NOTIZEN"}
                   </div>
                   <p className="mt-1.5 text-sm leading-relaxed">
                     <strong>Kundenangabe:</strong> {printTicket.problem}
@@ -4312,7 +4333,7 @@ export default function AdminPage() {
                         Bestätigter Abschluss (
                         {printTicket.completionDetails.outcome === "sold"
                           ? "Verkauft"
-                          : "Vor-Ort- / Garantieservice"}
+                          : "Garantie- / Übergabevorgang"}
                         ):
                       </strong>{" "}
                       {printTicket.completionDetails.workOrSaleSummary}
@@ -4363,14 +4384,14 @@ export default function AdminPage() {
                 <div className="pt-6 sm:pt-8 text-xs text-slate-600 space-y-6">
                   <p>
                     {isWarrantyDoc
-                      ? "Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei Hannachi Elektrohaushaltsgeräte Service erworbene Geräte. Geprüfte Markenqualität aus Osnabrück."
-                      : "Geprüft und dokumentiert durch Hannachi Elektrohaushaltsgeräte Service · Iburger Straße 5, 49082 Osnabrück. Vielen Dank für Ihr Vertrauen!"}
+                      ? "Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei Hannachi Elektrohaushaltsgeräte & Ersatzteile erworbene Geräte. Handelsgewerbe nach § 14 GewO (kein Handwerks- oder Meisterbetrieb)."
+                      : "Dokumentiert durch Hannachi Elektrohaushaltsgeräte & Ersatzteile · Iburger Straße 5, 49082 Osnabrück (Handelsgewerbe nach § 14 GewO, kein Handwerksbetrieb). Vielen Dank für Ihr Vertrauen!"}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-8 sm:gap-12 pt-6 sm:pt-8">
                     <div className="border-t border-slate-400 pt-1">
                       {isWarrantyDoc
                         ? "Datum / Unterschrift Verkäufer (Hannachi)"
-                        : "Datum / Unterschrift Kundendienst Hannachi"}
+                        : "Datum / Unterschrift Hannachi Fachhandel"}
                     </div>
                     <div className="border-t border-slate-400 pt-1">
                       {isWarrantyDoc

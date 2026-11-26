@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import ServiceNoticeBanner from "@/components/ServiceNoticeBanner";
 import Footer from "@/components/Footer";
@@ -20,6 +20,7 @@ import { useLocationState } from "@/shims/next-navigation";
 import { CardScrollRevealObserver } from "@/components/animations";
 
 import Home from "@/app/page";
+import MarktplatzPage from "@/app/marktplatz/page";
 import LeistungenPage from "@/app/leistungen/page";
 import ServicePage from "@/app/leistungen/[slug]/page";
 import AnfragePage from "@/app/anfrage/page";
@@ -36,13 +37,36 @@ function LiveBusinessJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: place.displayName || "Hannachi Elektrohaushaltsgeräte & Ersatzteile",
+    name: `${business.name} ${business.tagline}`,
+    description: `Hausgeräte-Spezialist in ${business.city} seit ${business.founded}: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
     url: business.url,
     image: `${business.url}/images/werkstatt.jpg`,
     telephone: place.internationalPhoneNumber || "+491703493494",
+    email: business.email,
+    founder: {
+      "@type": "Person",
+      name: business.owner,
+    },
     foundingDate: String(business.founded),
     areaServed: ["Osnabrück", "Landkreis Osnabrück"],
-    openingHours: "Mo-Sa 08:00-18:00",
+    knowsAbout: [
+      "Elektrohaushaltsgeräte",
+      "Original-Ersatzteile nach Typenschild (E-Nr.)",
+      "Fachberatung Haushaltsgeräte",
+      "Miele",
+      "Bosch",
+      "Siemens",
+      "AEG",
+      "Liebherr",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      telephone: place.internationalPhoneNumber || "+491703493494",
+      email: business.email,
+      availableLanguage: ["German"],
+      areaServed: "DE",
+    },
     hasMap: place.googleMapsUri || business.mapsUrl,
     geo: {
       "@type": "GeoCoordinates",
@@ -51,7 +75,7 @@ function LiveBusinessJsonLd() {
     },
     address: {
       "@type": "PostalAddress",
-      streetAddress: place.streetLine || business.street,
+      streetAddress: business.street,
       postalCode: business.zip,
       addressLocality: business.city,
       addressCountry: "DE",
@@ -88,8 +112,8 @@ function AppLiveWidgets({ isAdminRoute }: { isAdminRoute: boolean }) {
             phoneHref={place.phoneHref}
             whatsappHref={business.whatsappHref}
             mapsUrl={place.googleMapsUri}
-            address={place.shortFormattedAddress}
-            hours={place.hoursSummary}
+            address={`${business.street}, ${business.zip} ${business.city}`}
+            hours={business.hours}
             serviceNotice={business.serviceNotice}
           />
         </>
@@ -102,11 +126,11 @@ function AppLiveWidgets({ isAdminRoute }: { isAdminRoute: boolean }) {
 function getRouteOrder(path: string): number {
   if (path === "/") return 0;
   if (path === "/marktplatz" || path === "/angebote") return 0.5;
-  if (path === "/leistungen") return 1;
+  if (path === "/leistungen" || path === "/geraete") return 1;
   if (path.startsWith("/leistungen/")) return 1.5;
   if (path === "/simulator") return 2;
   if (path === "/anfrage") return 3;
-  if (path === "/kundenbewertungen") return 4;
+  if (path === "/kundenbewertungen" || path === "/bewertungen") return 4;
   if (path === "/ueber-uns") return 5;
   if (path === "/kontakt") return 6;
   if (path === "/impressum") return 7;
@@ -115,26 +139,53 @@ function getRouteOrder(path: string): number {
   return 9;
 }
 
+const antigravityEase = [0.22, 1, 0.36, 1] as const;
+
 const pageSlideVariants = {
   enter: (direction: number) => ({
-    x: direction >= 0 ? "10%" : "-10%",
+    x: direction >= 0 ? 18 : -18,
+    y: 12,
+    scale: 0.992,
     opacity: 0,
-    scale: 0.995,
   }),
   center: {
-    x: "0%",
-    opacity: 1,
+    x: 0,
+    y: 0,
     scale: 1,
+    opacity: 1,
+    transitionEnd: {
+      transform: "none",
+    },
   },
   exit: (direction: number) => ({
-    x: direction >= 0 ? "-6%" : "6%",
+    x: direction >= 0 ? -12 : 12,
+    y: -8,
+    scale: 0.994,
     opacity: 0,
-    scale: 0.995,
   }),
 };
 
+function RouteTransferRibbon({ routeKey }: { routeKey: string }) {
+  const prefersReduced = useReducedMotion();
+  if (prefersReduced) return null;
+  return (
+    <motion.div
+      key={`transfer-ribbon-${routeKey}`}
+      aria-hidden="true"
+      initial={{ scaleX: 0, opacity: 0.95, transformOrigin: "0% 50%" }}
+      animate={{ scaleX: 1, opacity: [0.95, 0.85, 0] }}
+      transition={{
+        scaleX: { duration: 0.42, ease: antigravityEase },
+        opacity: { duration: 0.58, times: [0, 0.62, 1], ease: "easeOut" },
+      }}
+      className="pointer-events-none fixed top-0 inset-x-0 z-[70] h-[2.5px] bg-gradient-to-r from-sky-400 via-cyan-200 to-sky-500 shadow-[0_0_14px_rgba(56,189,248,0.85)]"
+    />
+  );
+}
+
 export default function App() {
   const { pathname, search, hash } = useLocationState();
+  const prefersReducedMotion = useReducedMotion();
   const cleanPath =
     pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
   const isAdminRoute = cleanPath === "/admin";
@@ -163,18 +214,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (hash) {
-      const id = hash.slice(1);
-      const timer = setTimeout(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 60);
-      return () => clearTimeout(timer);
-    } else {
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-    }
+    if (!hash) return undefined;
+    const id = hash.slice(1);
+    let attempts = 0;
+    let timerId = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+      attempts += 1;
+      if (attempts < 10) {
+        timerId = window.setTimeout(tryScroll, 80);
+      }
+    };
+    timerId = window.setTimeout(tryScroll, 180);
+    return () => window.clearTimeout(timerId);
   }, [pathname, hash]);
 
   const searchParamsObj = Object.fromEntries(new URLSearchParams(search).entries());
@@ -182,8 +238,8 @@ export default function App() {
   const renderRoute = () => {
     try {
       if (cleanPath === "/") return <Home />;
-      if (cleanPath === "/marktplatz" || cleanPath === "/angebote") return <Home />;
-      if (cleanPath === "/leistungen") return <LeistungenPage />;
+      if (cleanPath === "/marktplatz" || cleanPath === "/angebote") return <MarktplatzPage />;
+      if (cleanPath === "/leistungen" || cleanPath === "/geraete") return <LeistungenPage />;
       if (cleanPath.startsWith("/leistungen/")) {
         const slug = decodeURIComponent(cleanPath.slice("/leistungen/".length));
         if (!services.some((s) => s.slug === slug)) {
@@ -194,7 +250,7 @@ export default function App() {
       if (cleanPath === "/simulator") return <Home />;
       if (cleanPath === "/anfrage") return <AnfragePage searchParams={searchParamsObj} />;
       if (cleanPath === "/ueber-uns") return <UeberUns />;
-      if (cleanPath === "/kundenbewertungen") return <Kundenbewertungen />;
+      if (cleanPath === "/kundenbewertungen" || cleanPath === "/bewertungen") return <Kundenbewertungen />;
       if (cleanPath === "/kontakt") return <Kontakt searchParams={searchParamsObj} />;
       if (cleanPath === "/impressum") return <Impressum />;
       if (cleanPath === "/datenschutz") return <Datenschutz />;
@@ -211,6 +267,8 @@ export default function App() {
         <ThemeProvider>
           <QuickRequestProvider>
             <div className="min-h-screen flex flex-col font-sans bg-surface text-primary dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
+              {!isAdminRoute && <RouteTransferRibbon routeKey={cleanPath} />}
+              <div className="relative flex min-h-screen flex-col">
               <a
                 href="#main"
                 className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
@@ -237,19 +295,31 @@ export default function App() {
               {!isAdminRoute && <Navbar />}
               <main id="main" className="flex-1 overflow-x-hidden relative">
                 <ErrorBoundary resetKey={cleanPath}>
-                  <AnimatePresence mode="wait" custom={direction} initial={false}>
+                  <AnimatePresence
+                    mode="wait"
+                    custom={direction}
+                    initial={false}
+                    onExitComplete={() => {
+                      if (!hash) {
+                        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+                      }
+                    }}
+                  >
                     <motion.div
                       key={cleanPath}
                       custom={direction}
-                      variants={pageSlideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{
-                        x: { type: "spring", stiffness: 340, damping: 34, mass: 0.85 },
-                        opacity: { duration: 0.18, ease: "easeOut" },
-                        scale: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-                      }}
+                      variants={prefersReducedMotion ? undefined : pageSlideVariants}
+                      initial={prefersReducedMotion ? { opacity: 0 } : "enter"}
+                      animate={prefersReducedMotion ? { opacity: 1 } : "center"}
+                      exit={prefersReducedMotion ? { opacity: 0 } : "exit"}
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0.08 }
+                          : {
+                              duration: 0.34,
+                              ease: antigravityEase,
+                            }
+                      }
                       className="will-change-transform"
                     >
                       {renderRoute()}
@@ -261,6 +331,7 @@ export default function App() {
               <AppLiveWidgets isAdminRoute={isAdminRoute} />
               <CookieConsentBanner />
               <CardScrollRevealObserver routeKey={cleanPath} />
+              </div>
             </div>
           </QuickRequestProvider>
         </ThemeProvider>

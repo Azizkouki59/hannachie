@@ -32,41 +32,41 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Wäsche waschen und trocknen",
     shortTitle: "Waschen & Trocknen",
     description:
-      "Mobiler Vor-Ort-Service bei Ihnen zu Hause in Osnabrück, passende Original-Ersatzteile aller Marken sowie geprüfte Ersatzgeräte inkl. schriftlicher Verkäufergarantie.",
+      "Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr. / PNC) & ausgewählte Markengeräte auf Anfrage.",
     devices: [
       {
         name: "Waschmaschinen",
-        description: "Vor-Ort-Check, passende Ersatzteile & geprüfte Frontlader / Toplader mit Garantie.",
+        description: "Fachberatung, Original-Ersatzteile aller Marken & ausgewählte Frontlader / Toplader auf Anfrage.",
         iconName: "WashingMachine",
         faults: [
-          "Pumpt nicht ab / schleudert nicht (Vor-Ort-Termin)",
-          "Ersatzteil: Laugenpumpe / Ablaufpumpe",
+          "Ersatzteil: Laugenpumpe / Ablaufpumpe (nach E-Nr.)",
           "Ersatzteil: Türmanschette / Bullaugendichtung",
           "Ersatzteil: Heizstab, NTC-Fühler & Motorkohlen",
-          "Altgerät lohnt nicht mehr: Geprüfte Waschmaschine mit Garantie anfragen",
+          "Ersatzteil: Stoßdämpfer, Türschloss & Keilriemen",
+          "Ausgewählte Marken-Waschmaschine auf Anfrage",
         ],
       },
       {
         name: "Wäschetrockner",
-        description: "Vor-Ort-Termin, passende Ersatzteile & geprüfte Wärmepumpen- / Kondenstrockner.",
+        description: "Original-Ersatzteile für Wärmepumpen- & Kondenstrockner sowie ausgewählte Geräte auf Anfrage.",
         iconName: "Wind",
         faults: [
-          "Trocknet nicht mehr richtig / bricht ab (Vor-Ort-Termin)",
           "Ersatzteil: Kondensatpumpe & Schwimmerschalter",
           "Ersatzteil: Temperatursensor (NTC) & Heizelement",
-          "Ersatzteil: Antriebsriemen, Spannrolle & Türschloss",
-          "Altgerät lohnt nicht mehr: Geprüften Trockner mit Garantie anfragen",
+          "Ersatzteil: Antriebsriemen, Spannrolle & Flusensieb",
+          "Ersatzteil: Türschloss & Anlaufkondensator",
+          "Ausgewählten Marken-Trockner auf Anfrage",
         ],
       },
       {
         name: "Waschtrockner (2-in-1)",
-        description: "Kombinierte Geräte zum Waschen und Trocknen sowie passende Ersatzteile.",
+        description: "Persönliche Beratung, Original-Ersatzteile nach E-Nr. & ausgewählte Geräte auf Anfrage.",
         iconName: "Layers",
         faults: [
-          "Vor-Ort-Termin oder Ersatzteil nach Typenschild (E-Nr.)",
+          "Ersatzteil-Identifikation nach Typenschild (E-Nr.)",
           "Ersatzteil: Ablaufpumpe & Magnetventil",
           "Ersatzteil: Stoßdämpfer & Türverriegelung",
-          "Geprüften Waschtrockner mit schriftlicher Garantie anfragen",
+          "Ausgewählten Waschtrockner auf Anfrage",
         ],
       },
     ],
@@ -76,28 +76,28 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Geschirr spülen",
     shortTitle: "Geschirr spülen",
     description:
-      "Mobiler Vor-Ort-Service für Geschirrspüler, passende Original-Ersatzteile sowie geprüfte Ersatzgeräte (45 cm / 60 cm) inkl. schriftlicher Garantie.",
+      "Fachberatung, Original-Ersatzteile nach Typenschild & ausgewählte Geschirrspüler (45 / 60 cm) auf Anfrage.",
     devices: [
       {
         name: "Geschirrspüler",
-        description: "Vor-Ort-Check, Original-Ersatzteile & geprüfte Unterbau- und Stand-Spülmaschinen.",
+        description: "Original-Ersatzteile & ausgewählte Unterbau-, Einbau- und Stand-Spülmaschinen auf Anfrage.",
         iconName: "UtensilsCrossed",
         faults: [
-          "Pumpt nicht ab / heizt nicht (Vor-Ort-Termin)",
-          "Ersatzteil: Heizpumpe / Umwälzpumpe",
+          "Ersatzteil: Heizpumpe / Umwälzpumpe (nach E-Nr.)",
           "Ersatzteil: Aquastop-Zulaufschlauch & Ablaufpumpe",
           "Ersatzteil: Geschirrkorb-Rollen, Sprüharme & Türdichtung",
-          "Altgerät lohnt nicht mehr: Geprüften Geschirrspüler mit Garantie anfragen",
+          "Ersatzteil: Dosierkammer & Sieb-Einheit",
+          "Ausgewählten Geschirrspüler (45/60 cm) auf Anfrage",
         ],
       },
       {
         name: "Büro- & Kleingewerbespüler",
-        description: "Vor-Ort-Service, Ersatzteile und geprüfte Spülmaschinen für Teeküchen, Büros und Praxen.",
+        description: "Original-Ersatzteile & persönliche Beratung für Teeküchen, Büros und Praxen.",
         iconName: "Zap",
         faults: [
-          "Vor-Ort-Termin für Büro / Praxis anfragen",
-          "Ersatzteil: Dosierkammer & Klarspülerspender",
-          "Geprüftes Ersatzgerät mit schriftlicher Garantie anfragen",
+          "Ersatzteil-Anfrage nach Typenschild (E-Nr.)",
+          "Ersatzteil: Dosierkammer, Dichtungen & Ablaufpumpe",
+          "Ausgewähltes Markengerät auf Anfrage",
         ],
       },
     ],
@@ -107,38 +107,38 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Kühlen und Gefrieren",
     shortTitle: "Kühlen & Gefrieren",
     description:
-      "Schnelle Vor-Ort-Termine bei Kühlproblemen, passgenaue Original-Ersatzteile sowie geprüfte Kühl- und Gefriergeräte inkl. schriftlicher Verkäufergarantie.",
+      "Original-Ersatzteile & Zubehör nach E-Nr. sowie ausgewählte Kühl- und Gefriergeräte auf Anfrage.",
     devices: [
       {
         name: "Kühlschränke",
-        description: "Schneller Vor-Ort-Check, Original-Ersatzteile & geprüfte Stand- / Unterbaukühlschränke.",
+        description: "Original-Ersatzteile, Zubehör & ausgewählte Stand- / Unterbaukühlschränke auf Anfrage.",
         iconName: "Refrigerator",
         faults: [
-          "Kühlt nicht mehr ausreichend / vereist stark (Vor-Ort-Termin)",
           "Ersatzteil: Thermostat & NTC-Temperaturfühler",
           "Ersatzteil: Magnet-Türdichtung & Schleppscharnier",
-          "Geprüften Ersatz-Kühlschrank inkl. schriftlicher Garantie anfragen",
+          "Zubehör: Glasplatten, Gemüseschubladen & Türfächer",
+          "Ausgewählten Marken-Kühlschrank auf Anfrage",
         ],
       },
       {
         name: "Gefrierschränke & Gefriertruhen",
-        description: "Vor-Ort-Service, Ersatzteile & geprüfte NoFrost-Gefrierschränke.",
+        description: "Original-Ersatzteile & ausgewählte NoFrost-Gefrierschränke auf Anfrage.",
         iconName: "Snowflake",
         faults: [
-          "Temperaturalarm / kühlt nicht mehr (Vor-Ort-Termin)",
           "Ersatzteil: Umluftventilator & Abtauheizung",
-          "Ersatzteil: Startrelais & Gefrierschubladen",
-          "Geprüften Gefrierschrank inkl. Garantie anfragen",
+          "Ersatzteil: Startrelais & Klixon",
+          "Zubehör: Gefrierschubladen & Gefrierfachklappen",
+          "Ausgewählten Gefrierschrank auf Anfrage",
         ],
       },
       {
         name: "Side-by-Side & Kühl-Gefrierkombis",
-        description: "Große Kühl-Gefrierkombinationen und Original-Ersatzteile.",
+        description: "Original-Wasserfilter, Dichtungen & ausgewählte Kühl-Gefrierkombis auf Anfrage.",
         iconName: "Layers",
         faults: [
-          "Vor-Ort-Termin bei Kühlproblemen anfragen",
           "Ersatzteil: Wasserfilter, Magnetventil & Lüfter",
-          "Geprüfte Kühl-Gefrierkombination mit Garantie anfragen",
+          "Ersatzteil: Türdichtungen & Innenausstattung",
+          "Ausgewählte Kühl-Gefrierkombination auf Anfrage",
         ],
       },
     ],
@@ -148,56 +148,56 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Kochen, Backen und Lüften",
     shortTitle: "Kochen & Backen",
     description:
-      "Mobiler Vor-Ort-Service für Backöfen und Herde, Original-Ersatzteile nach Typenschild sowie geprüfte Ersatzgeräte inkl. schriftlicher Verkäufergarantie.",
+      "Original-Ersatzteile nach Typenschild & ausgewählte Backöfen, Herde und Kochfelder auf Anfrage.",
     devices: [
       {
         name: "Backöfen & Herde",
-        description: "Vor-Ort-Service, passende Heizelemente & Schalter sowie geprüfte Backöfen mit Garantie.",
+        description: "Original-Heizelemente, Schalter & Zubehör sowie ausgewählte Backöfen auf Anfrage.",
         iconName: "Flame",
         faults: [
-          "Backofen wird nicht mehr richtig heiß (Vor-Ort-Termin)",
-          "Ersatzteil: Heißluft-Ringheizkörper (2.000–2.400 W)",
+          "Ersatzteil: Heißluft-Ringheizkörper",
           "Ersatzteil: Ober-/Unterhitze-Heizkörper & Thermostat",
-          "Ersatzteil: Backofentürdichtung, Scharniere & Backblech",
-          "Geprüften Ersatz-Backofen inkl. Garantie anfragen",
+          "Ersatzteil: Backofentürdichtung & Türscharniere",
+          "Zubehör: Backbleche, Kombiroste & Knöpfe",
+          "Ausgewählten Marken-Backofen auf Anfrage",
         ],
       },
       {
         name: "Elektroherde & Standherde",
-        description: "Freistehende Herde, Herd-Sets und Original-Schalterelemente.",
+        description: "Original-Schalterelemente, Dichtungen & ausgewählte Standherde auf Anfrage.",
         iconName: "Flame",
         faults: [
-          "Vor-Ort-Termin oder Ersatzteil nach E-Nr. anfragen",
+          "Ersatzteil-Identifikation nach Typenschild (E-Nr.)",
           "Ersatzteil: Energieregler & Backofenschalter",
-          "Geprüftes Herd-Set inkl. schriftlicher Garantie anfragen",
+          "Ausgewähltes Herd-Set auf Anfrage",
         ],
       },
       {
         name: "Ceran- & Induktionskochfelder",
-        description: "Glaskeramik- und Induktionsfelder sowie passende Ersatzteile.",
+        description: "Original-Ersatzteile nach Typenschild & ausgewählte Kochfelder auf Anfrage.",
         iconName: "Zap",
         faults: [
           "Ersatzteil: Strahlungsheizkörper & Sensormodul",
           "Teile-Identifikation per E-Nr. vom Typenschild",
-          "Geprüftes Ceran- / Induktionskochfeld anfragen",
+          "Ausgewähltes Ceran- / Induktionskochfeld auf Anfrage",
         ],
       },
       {
         name: "Dunstabzugshauben",
-        description: "Wand-, Insel- und Flachschirmhauben sowie Filter & Motoren.",
+        description: "Original-Filter, Gebläseteile & Zubehör für Wand-, Insel- und Flachschirmhauben.",
         iconName: "Fan",
         faults: [
-          "Ersatzteil: Metallfettfilter & Aktivkohlefilter",
+          "Zubehör: Metallfettfilter & Aktivkohlefilter",
           "Ersatzteil: Gebläsemotor, Kondensator & Tastenfeld",
         ],
       },
       {
         name: "Mikrowellen",
-        description: "Geprüfte Stand-Mikrowellen sowie Drehteller & Zubehörteile.",
+        description: "Drehteller, Original-Zubehör & ausgewählte Standgeräte auf Anfrage.",
         iconName: "Microwave",
         faults: [
           "Ersatzteil: Glasteller, Rollenring & Glimmerplatte",
-          "Geprüftes Gerät unverbindlich anfragen",
+          "Ausgewähltes Standgerät auf Anfrage",
         ],
       },
     ],
@@ -207,11 +207,11 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Kaffee und Kleingeräte",
     shortTitle: "Kaffee & Zubehör",
     description:
-      "Original-Ersatzteile, Dichtungssätze und Brühgruppen für Kaffeemaschinen sowie geprüfte Geräte auf Anfrage.",
+      "Original-Ersatzteile, Dichtungssätze & Brühgruppen nach Modellnummer sowie ausgewählte Geräte auf Anfrage.",
     devices: [
       {
         name: "Kaffeevollautomaten",
-        description: "Ersatzteile für Jura, DeLonghi, Siemens, Miele, Philips u. v. m.",
+        description: "Original-Ersatzteile für Jura, DeLonghi, Siemens, Miele, Philips u. v. m.",
         iconName: "Coffee",
         faults: [
           "Ersatzteil: Komplette Brühgruppe & O-Ring-Dichtungssatz",
@@ -221,7 +221,7 @@ export const mainServiceCategories: ServiceCategory[] = [
       },
       {
         name: "Siebträgermaschinen",
-        description: "Dichtungen, Pumpen und Zubehör für Espressomaschinen.",
+        description: "Original-Dichtungen, Pumpen und passendes Zubehör nach Modellnummer.",
         iconName: "Coffee",
         faults: [
           "Ersatzteil: Siebträgerdichtung & Duschsieb",
@@ -230,11 +230,11 @@ export const mainServiceCategories: ServiceCategory[] = [
       },
       {
         name: "Ausgewählte Kleingeräte",
-        description: "Ersatzteile und Zubehör nach Typenschild-Abgleich.",
+        description: "Original-Ersatzteile und Zubehör nach Typenschild-Abgleich.",
         iconName: "Sparkles",
         faults: [
           "Ersatzteil per Foto vom Typenschild anfragen",
-          "Garantie-Anfrage für bei uns erworbene Geräte",
+          "Garantie-Anfrage für direkt bei Hannachi erworbene Geräte",
         ],
       },
     ],
@@ -243,24 +243,24 @@ export const mainServiceCategories: ServiceCategory[] = [
 
 export const electronicsWorkshopCategory: ServiceCategory = {
   id: "elektronik",
-  title: "Elektronikmodule & Schriftliche Verkäufergarantie",
-  shortTitle: "Elektronik & Garantie",
+  title: "Ersatzmodule & Verkäufergarantie",
+  shortTitle: "Module & Garantie",
   description:
-    "Original-Steuerungsmodule & Elektronikbauteile nach Typenschild-Abgleich sowie voller Garantie- & Reparaturservice für alle direkt bei uns mit schriftlicher Verkäufergarantie erworbenen Geräte.",
+    "Original-Ersatzmodule nach Typenschild (E-Nr. / PNC) sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
   devices: [
     {
-      name: "Steuerungsplatinen & Leistungsmodule",
-      description: "Original-Steuermodule, Relais und elektronische Ersatzteile.",
+      name: "Steuerungs- & Leistungsmodule",
+      description: "Original-Ersatzmodule und elektronische Ersatzteile nach E-Nr. / PNC.",
       iconName: "Cpu",
       faults: [
-        "Original-Steuerplatine per E-Nr. / PNC anfragen",
-        "Relais, Netzteil-IC & elektronische Ersatzbauteile",
-        "Garantieabwicklung für bei uns gekaufte Geräte",
+        "Original-Ersatzmodul per E-Nr. / PNC anfragen",
+        "Relais & elektronische Ersatzbauteile",
+        "Garantieabwicklung für direkt bei Hannachi erworbene Geräte",
       ],
     },
     {
       name: "Inverter- & Motorsteuerungen",
-      description: "Original-Steuereinheiten für Motoren und Wärmepumpengeräte.",
+      description: "Original-Steuereinheiten für Motoren und Wärmepumpengeräte nach Typenschild.",
       iconName: "Zap",
       faults: [
         "Passendes Inverter-Modul per Typenschild anfragen",
@@ -268,12 +268,12 @@ export const electronicsWorkshopCategory: ServiceCategory = {
       ],
     },
     {
-      name: "Display- & Bedienmodule",
+      name: "Display- & Bedienblenden",
       description: "Original-Tastenfelder, Programmwähler und Anzeigemodule.",
       iconName: "Layers",
       faults: [
-        "Original-Bedienblende / Programmschalter anfragen",
-        "Garantieabwicklung für bei uns erworbene Geräte",
+        "Original-Bedieneinheit / Programmschalter anfragen",
+        "Garantieabwicklung für direkt bei Hannachi erworbene Geräte",
       ],
     },
   ],

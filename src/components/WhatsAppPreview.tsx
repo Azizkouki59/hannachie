@@ -112,12 +112,20 @@ export default function WhatsAppPreview({
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-primary dark:text-white truncate">
-              {isReady ? "WhatsApp-Nachricht bereit" : "Noch kurz ergänzen:"}
+            <p className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-white truncate">
+              {isReady && (
+                <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden="true">
+                  <span className="status-live-ring absolute inset-0 rounded-full bg-emerald-400/70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+              )}
+              <span className="truncate">
+                {isReady ? "WhatsApp bereit" : "Noch kurz antippen:"}
+              </span>
             </p>
             {isReady ? (
               <p className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate">
-                Alle Angaben vollständig · Öffnet direkt im Chat
+                Startklar · 1 Klick zum Chat
               </p>
             ) : (
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
@@ -142,8 +150,10 @@ export default function WhatsAppPreview({
           </div>
         </div>
 
-        <button
+        <motion.button
           type="button"
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 520, damping: 28 }}
           onClick={() => {
             hapticTap();
             setIsBubbleOpen((prev) => !prev);
@@ -151,12 +161,12 @@ export default function WhatsAppPreview({
           aria-expanded={isBubbleOpen}
           className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-surface dark:bg-slate-800 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
-          <span>{isBubbleOpen ? "Schließen" : "Vorschau"}</span>
+          <span>{isBubbleOpen ? "Zu" : "Vorschau"}</span>
           <ChevronDown
             size={13}
             className={`transition-transform duration-200 ${isBubbleOpen ? "rotate-180" : ""}`}
           />
-        </button>
+        </motion.button>
       </div>
 
       <AnimatePresence initial={false}>
@@ -172,16 +182,18 @@ export default function WhatsAppPreview({
               {onUrgencyChange && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[11px] font-bold text-ink-muted">
-                    Dringlichkeit:
+                    Priorität:
                   </span>
                   <div className="inline-flex rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-primary/10 dark:border-white/10 gap-0.5">
                     {URGENCY_OPTIONS.map((opt) => {
                       const Icon = opt.icon;
                       const active = urgency === opt.id;
                       return (
-                        <button
+                        <motion.button
                           key={opt.id}
                           type="button"
+                          whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 520, damping: 28 }}
                           onClick={() => {
                             hapticTap();
                             onUrgencyChange(opt.id);
@@ -195,7 +207,7 @@ export default function WhatsAppPreview({
                         >
                           <Icon size={11} aria-hidden="true" />
                           <span>{opt.label}</span>
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -210,7 +222,7 @@ export default function WhatsAppPreview({
                       .map((line, idx) => renderWhatsAppLine(line, idx))}
                   </div>
                   <div className="mt-2 pt-1.5 border-t border-emerald-600/15 flex items-center justify-between text-[10px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
-                    <span className="truncate">Live-Vorschau für Herrn Hannachi</span>
+                    <span className="truncate">Nachricht an Herrn Hannachi</span>
                     <span className="inline-flex items-center gap-1 shrink-0">
                       <span>Jetzt</span>
                       <CheckCheck size={13} className="text-sky-600 dark:text-sky-400" />
@@ -219,7 +231,7 @@ export default function WhatsAppPreview({
                 </div>
               ) : (
                 <p className="text-xs text-ink-muted">
-                  Sobald Sie oben ein Problem wählen (oder kurz beschreiben) und Ihre Telefonnummer eintragen, sehen Sie hier Ihre fertige WhatsApp-Nachricht.
+                  Oben ein Anliegen antippen – die Nachricht erscheint sofort.
                 </p>
               )}
             </div>

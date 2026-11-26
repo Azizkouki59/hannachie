@@ -24,7 +24,7 @@ export default function SimulatorPage() {
     <>
       <PageHeader
         title="Interaktiver Geräte- & Ersatzteil-Assistent"
-        intro="Wählen Sie Ihr Haushaltsgerät, nutzen Sie die kostenlose Selbsthilfe-Checkliste oder ermitteln Sie gezielt das passende Original-Ersatzteil anhand Ihres Typenschilds (reiner Teileverkauf – kein Handwerksbetrieb)."
+        intro="Wählen Sie Ihr Haushaltsgerät, nutzen Sie die kostenlose Selbsthilfe-Checkliste oder ermitteln Sie gezielt das passende Original-Ersatzteil anhand Ihres Typenschilds."
       />
 
       {/* Interactive Appliance Lab */}
@@ -71,7 +71,7 @@ export default function SimulatorPage() {
               Originalersatzteile für alle Marken
             </h2>
             <p className="mt-3 text-sm sm:text-base text-ink-muted">
-              Gängige Verschleißteile direkt ab Osnabrücker Lager oder kurzfristig für Sie beschafft (reiner Ersatzteilverkauf nach Terminvereinbarung – kein Einbau).
+              Gängige Original-Ersatzteile nach Typenschild (E-Nr. / PNC) – persönliche Abstimmung und Übergabe nach Terminvereinbarung in Osnabrück.
             </p>
           </div>
 

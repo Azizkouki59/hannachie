@@ -205,7 +205,7 @@ export function RepairFormStepSkeleton({ step = 1 }: { step?: 1 | 2 | 3 }) {
       <div
         role="status"
         aria-live="polite"
-        aria-label="Schritt 2 (Fehlerbild) wird geladen"
+        aria-label="Schritt 2 (Anliegen) wird geladen"
         className="mt-6 space-y-6"
       >
         {/* Summary Chip Bar Skeleton */}

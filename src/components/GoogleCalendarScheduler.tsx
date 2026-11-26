@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import type { User } from "firebase/auth";
 import {
   AlertTriangle,
@@ -155,6 +156,7 @@ export default function GoogleCalendarScheduler({
   );
   const [submitting, setSubmitting] = useState(false);
   const [syncingTicketId, setSyncingTicketId] = useState<string | null>(null);
+  const [privacyAccepted, setPrivacyAccepted] = useState(mode === "admin");
 
   // Inline reschedule state for an existing event
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -279,6 +281,13 @@ export default function GoogleCalendarScheduler({
       return;
     }
 
+    if (mode === "customer" && !privacyAccepted) {
+      setErrorMsg(
+        "Bitte bestätigen Sie kurz den Datenschutzhinweis, bevor Sie den Termin eintragen."
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const fullAddress = [streetAddress.trim(), zip.trim()]
@@ -298,29 +307,31 @@ export default function GoogleCalendarScheduler({
         slot: visitSlot,
       });
 
-      // 2. Also register the appointment in the Hannachi backend order book if in customer mode
+      // 2. Register the appointment in the validated Hannachi backend order book
       if (mode === "customer") {
-        await fetch("/api/repair-ticket", {
+        await fetch("/api/repair-request", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            inquiryMode: "repair",
             name: customerName.trim(),
             phone: phone.trim(),
             email: email.trim(),
             visitType: "home_visit",
             urgency: "normal",
-            device,
+            device: device || "Waschmaschine",
             brand,
             problem: `[Google Kalender Termin: ${visitDate} · ${visitSlot}] ${problem.trim()}`,
-            zip,
+            zip: zip.trim() || `${business.zip} ${business.city}`,
             streetAddress: streetAddress.trim(),
             callbackTime: `${visitDate} (${visitSlot})`,
+            website: "",
           }),
         }).catch(() => null);
       }
 
       setSuccessBanner({
-        title: `Vor-Ort-Termin am ${new Date(
+        title: `Termin am ${new Date(
           `${visitDate}T12:00:00`
         ).toLocaleDateString("de-DE", {
           weekday: "short",
@@ -457,12 +468,12 @@ export default function GoogleCalendarScheduler({
             </div>
             <h3 className="text-base sm:text-lg font-extrabold text-ink">
               {mode === "admin"
-                ? "Google Kalender Synchronisierung & Vor-Ort-Termine"
-                : "Optional: Vor-Ort-Besuch im Google Kalender eintragen"}
+                ? "Google Kalender Synchronisierung & Übergabetermine"
+                : "Optional: Übergabe- oder Beratungstermin im Google Kalender eintragen"}
             </h3>
             <p className="text-xs text-ink-muted mt-0.5">
               {mode === "admin"
-                ? "Synchronisieren Sie Ihre geplanten Kundenbesuche mit 1 Klick in Ihren Google Kalender."
+                ? "Synchronisieren Sie Ihre geplanten Übergabe- und Beratungstermine mit 1 Klick in Ihren Google Kalender."
                 : "Nicht erforderlich – für Ihre Anfrage genügt das Formular oben. Optional können Sie den Termin hier zusätzlich in Ihrem Google Kalender speichern."}
             </p>
           </div>
@@ -537,7 +548,7 @@ export default function GoogleCalendarScheduler({
           <button
             type="button"
             onClick={() => setErrorMsg(null)}
-            className="text-red-700 dark:text-red-300 hover: opacity-80 cursor-pointer"
+            className="text-red-700 dark:text-red-300 hover:opacity-80 cursor-pointer"
             aria-label="Fehlermeldung schließen"
           >
             <X className="w-4 h-4" />
@@ -573,10 +584,14 @@ export default function GoogleCalendarScheduler({
         <div className="rounded-xl border border-dashed border-sky-500/35 bg-sky-500/[0.04] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1 max-w-xl">
             <h4 className="text-sm sm:text-base font-extrabold text-ink">
-              Optional: Mit Google anmelden, um Vor-Ort-Besuche zu terminieren
+              Optional: Mit Google anmelden, um persönliche Termine vorzumerken
             </h4>
             <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-              Dieser Schritt ist freiwillig. Nach der Anmeldung können Sie freie Zeitfenster prüfen, einen neuen Vor-Ort-Besuch für Waschmaschine, Geschirrspüler, Kühlschrank oder Herd direkt im Google Kalender anlegen und bestehende Termine verwalten.
+              Dieser Schritt ist freiwillig. Nach der Anmeldung können Sie freie Zeitfenster prüfen, einen persönlichen Beratungs- oder Übergabetermin für Beratung, Original-Ersatzteile oder ausgewählte Markengeräte direkt im Google Kalender anlegen und verwalten. Hinweise zur Datenverarbeitung durch Google finden Sie in unserer{" "}
+              <Link href="/datenschutz#google" className="font-semibold text-accent underline underline-offset-2">
+                Datenschutzerklärung
+              </Link>
+              .
             </p>
           </div>
           <div className="shrink-0">
@@ -643,7 +658,7 @@ export default function GoogleCalendarScheduler({
               <div className="flex items-center justify-between gap-2 pb-2 border-b border-primary/10 dark:border-white/10">
                 <h4 className="text-sm font-extrabold text-ink flex items-center gap-2">
                   <Wrench className="w-4 h-4 text-accent" />
-                  <span>Neuen Vor-Ort-Besuch im Google Kalender eintragen</span>
+                  <span>Persönlichen Beratungs- oder Übergabetermin eintragen</span>
                 </h4>
               </div>
 
@@ -748,7 +763,7 @@ export default function GoogleCalendarScheduler({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-ink mb-1">
-                    PLZ &amp; Ort (Einsatzgebiet)
+                    PLZ &amp; Ort (Region Osnabrück)
                   </label>
                   <select
                     value={zip}
@@ -778,17 +793,39 @@ export default function GoogleCalendarScheduler({
 
               <div>
                 <label className="block text-xs font-bold text-ink mb-1">
-                  Fehlerbild / Anliegen für den Vor-Ort-Besuch *
+                  Anliegen / Gesuchtes Ersatzteil oder Gerät *
                 </label>
                 <textarea
                   rows={2}
                   required
-                  placeholder="Kurze Beschreibung (z. B. Waschmaschine pumpt nicht ab, Ersatzteil-Check vor Ort)…"
+                  placeholder="Kurze Angabe (z. B. Original-Ersatzteil nach E-Nr., Beratung oder Markengerät auf Anfrage)…"
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                 />
               </div>
+
+              {mode === "customer" && (
+                <label className="flex items-start gap-2.5 rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-900 px-3 py-2.5 text-[11px] sm:text-xs text-ink-muted leading-relaxed cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded accent-sky-600 cursor-pointer"
+                  />
+                  <span>
+                    Ich stimme der Verarbeitung meiner Angaben zur Terminabstimmung sowie der
+                    Eintragung über Google Kalender gemäß{" "}
+                    <Link
+                      href="/datenschutz#google"
+                      className="font-semibold text-accent underline underline-offset-2"
+                    >
+                      Datenschutzerklärung
+                    </Link>{" "}
+                    zu.
+                  </span>
+                </label>
+              )}
 
               <button
                 type="submit"
@@ -799,8 +836,8 @@ export default function GoogleCalendarScheduler({
                 <CalendarPlus className="w-4 h-4 shrink-0" />
                 <span>
                   {submitting
-                    ? "Trage Besuch in Google Kalender ein…"
-                    : "Vor-Ort-Besuch jetzt im Google Kalender buchen"}
+                    ? "Trage Termin in Google Kalender ein…"
+                    : "Persönlichen Termin im Google Kalender eintragen"}
                 </span>
               </button>
             </form>

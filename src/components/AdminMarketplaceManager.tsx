@@ -6,7 +6,6 @@ import {
   Edit3,
   CheckCircle2,
   Clock,
-  RotateCcw,
   ExternalLink,
   Package,
   X,
@@ -25,14 +24,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
-  INITIAL_MARKETPLACE_DEMO_ITEMS,
   MARKETPLACE_CATEGORIES,
   MARKETPLACE_QUICK_PRESETS,
-  loadLocalMarketplaceItems,
   loadLocalMarketplaceSettings,
   saveLocalMarketplaceItems,
   saveLocalMarketplaceSettings,
   resolveMarketplaceItemGallery,
+  stripDemoMarketplaceItems,
   type MarketplaceCategoryId,
   type MarketplaceItem,
   type MarketplaceAvailabilityStatus,
@@ -105,9 +103,7 @@ export default function AdminMarketplaceManager({
   ) => void;
   onItemsChanged?: (items: MarketplaceItem[]) => void;
 }) {
-  const [items, setItems] = useState<MarketplaceItem[]>(() =>
-    loadLocalMarketplaceItems()
-  );
+  const [items, setItems] = useState<MarketplaceItem[]>([]);
   const [mpSettings, setMpSettings] = useState<MarketplaceSettings>(() =>
     loadLocalMarketplaceSettings()
   );
@@ -145,35 +141,37 @@ export default function AdminMarketplaceManager({
 
   const syncFromApi = useCallback(async () => {
     try {
-      const res = await fetch("/api/marketplace", { cache: "no-store" });
+      const res = await fetch("/api/marketplace", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!res.ok) return;
       const data = (await res.json()) as {
         ok?: boolean;
         items?: MarketplaceItem[];
         settings?: MarketplaceSettings;
       };
-      if (data.ok && Array.isArray(data.items) && data.items.length > 0) {
-        setItems(data.items);
-        saveLocalMarketplaceItems(data.items);
-        onItemsChanged?.(data.items);
+      if (data.ok && Array.isArray(data.items)) {
+        const cleaned = stripDemoMarketplaceItems(data.items);
+        setItems(cleaned);
+        saveLocalMarketplaceItems(cleaned);
+        onItemsChanged?.(cleaned);
       }
       if (data.ok && data.settings) {
         setMpSettings(data.settings);
         saveLocalMarketplaceSettings(data.settings);
       }
     } catch {
-      // Fallback to localStorage
+      // Keep current authoritative state
     }
   }, [onItemsChanged]);
 
   useEffect(() => {
-    syncFromApi();
+    void syncFromApi();
     const onUpdated = (e: Event) => {
       const custom = e as CustomEvent<MarketplaceItem[]>;
       if (Array.isArray(custom.detail)) {
-        setItems(custom.detail);
-      } else {
-        setItems(loadLocalMarketplaceItems());
+        setItems(stripDemoMarketplaceItems(custom.detail));
       }
     };
     window.addEventListener("hannachi:marketplace-updated", onUpdated);
@@ -261,9 +259,10 @@ export default function AdminMarketplaceManager({
         try {
           const res = await fetch("/api/admin/marketplace/upload", {
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
+              ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
             },
             body: JSON.stringify({
               dataUrl: compressed.dataUrl,
@@ -361,9 +360,8 @@ export default function AdminMarketplaceManager({
             `/api/admin/marketplace/upload/${encodeURIComponent(filename)}`,
             {
               method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
-              },
+              credentials: "include",
+              headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined,
             }
           );
         } catch {
@@ -405,9 +403,10 @@ export default function AdminMarketplaceManager({
     try {
       const res = await fetch("/api/admin/marketplace", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
         },
         body: JSON.stringify(payload),
       });
@@ -418,8 +417,10 @@ export default function AdminMarketplaceManager({
           items?: MarketplaceItem[];
         };
         if (data.ok && Array.isArray(data.items)) {
-          setItems(data.items);
-          saveLocalMarketplaceItems(data.items);
+          const cleaned = stripDemoMarketplaceItems(data.items);
+          setItems(cleaned);
+          saveLocalMarketplaceItems(cleaned);
+          onItemsChanged?.(cleaned);
           setIsModalOpen(false);
           onToast?.(
             form.id
@@ -430,69 +431,12 @@ export default function AdminMarketplaceManager({
           return;
         }
       }
+      onToast?.("Speichern fehlgeschlagen – bitte erneut versuchen");
     } catch {
-      // Fallback local save below
+      onToast?.("Server nicht erreichbar – Angebot konnte nicht gespeichert werden");
+    } finally {
+      setIsSaving(false);
     }
-
-    // Local fallback save if offline
-    const catMeta =
-      MARKETPLACE_CATEGORIES.find((c) => c.id === form.category) ||
-      MARKETPLACE_CATEGORIES[1];
-    const cond =
-      form.category === "spare_parts" ? "new_part" : form.conditionType;
-    const itemId = form.id || `mp-${Date.now().toString(36)}`;
-    const existingItem = items.find((i) => i.id === itemId);
-    const fallbackItem: MarketplaceItem = {
-      id: itemId,
-      createdAt: existingItem?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      skuOrEnr: payload.skuOrEnr,
-      title: payload.title,
-      brand: payload.brand,
-      category: form.category,
-      categoryLabel: catMeta.label,
-      deviceTypeForForm: catMeta.defaultDeviceForForm,
-      conditionType: cond,
-      conditionBadge:
-        cond === "new_part" ? "Neu · Originalteil" : "Geprüft & Aufbereitet",
-      warrantyBadge:
-        cond === "new_part"
-          ? "Geprüfte Passgenauigkeit"
-          : "Inkl. schriftlicher Garantie",
-      shortSpecs: payload.shortSpecs,
-      bulletSpecs: payload.bulletSpecs as [string, string, string],
-      detailedSpecs: [
-        { label: "Hersteller & Marke", value: payload.brand },
-        { label: "E-Nr. / Teilenummer", value: payload.skuOrEnr },
-        { label: "Kategorie", value: catMeta.label },
-        { label: "Eckdaten", value: payload.shortSpecs },
-      ],
-      warrantyTerms:
-        "Inklusive schriftlicher Verkäufergarantie von Hannachi Elektrohaushaltsgeräte & Ersatzteile in Osnabrück.",
-      pickupInfo:
-        "Mobiler Vor-Ort-Service & Übergabe in 49082 Osnabrück & Umgebung nach Terminvereinbarung.",
-      availability: form.availability,
-      priceLabel: "Preis auf Anfrage",
-      imageKey: catMeta.defaultImageKey,
-      photos: cleanedPhotos,
-      searchKeywords: [
-        payload.brand.toLowerCase(),
-        payload.skuOrEnr.toLowerCase(),
-        payload.title.toLowerCase(),
-      ],
-      inquiryTopic:
-        form.category === "spare_parts" ? "spare_parts" : "device_purchase",
-      inquiryPreset: `Reservierung / Anfrage: ${payload.title} (${payload.skuOrEnr})`,
-    };
-
-    const nextList = form.id
-      ? items.map((i) => (i.id === form.id ? fallbackItem : i))
-      : [fallbackItem, ...items];
-    setItems(nextList);
-    saveLocalMarketplaceItems(nextList);
-    setIsModalOpen(false);
-    setIsSaving(false);
-    onToast?.("Marktplatz-Angebot & Fotogalerie gespeichert");
   };
 
   const handleSetAvailability = async (
@@ -522,19 +466,27 @@ export default function AdminMarketplaceManager({
     onItemsChanged?.(optimistic);
 
     try {
-      await fetch(`/api/admin/marketplace/${encodeURIComponent(item.id)}`, {
+      const res = await fetch(`/api/admin/marketplace/${encodeURIComponent(item.id)}`, {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
         },
         body: JSON.stringify({
           availability: nextAvailability,
           ...(linkedTicketId ? { linkedTicketId } : {}),
         }),
       });
+      if (!res.ok) {
+        await syncFromApi();
+        onToast?.("Status konnte nicht gespeichert werden");
+        return;
+      }
     } catch {
-      // Keep local update
+      await syncFromApi();
+      onToast?.("Serverfehler beim Speichern des Status");
+      return;
     }
     onToast?.(`Status geändert: ${nextAvailability}`);
   };
@@ -547,16 +499,24 @@ export default function AdminMarketplaceManager({
     saveLocalMarketplaceSettings(nextSettings);
 
     try {
-      await fetch("/api/admin/marketplace/settings", {
+      const res = await fetch("/api/admin/marketplace/settings", {
         method: "PATCH",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
         },
         body: JSON.stringify(nextSettings),
       });
+      if (!res.ok) {
+        await syncFromApi();
+        onToast?.("Einstellung konnte nicht gespeichert werden");
+        return;
+      }
     } catch {
-      // Keep local setting
+      await syncFromApi();
+      onToast?.("Serverfehler beim Speichern der Einstellung");
+      return;
     }
     onToast?.(
       nextSettings.hideSoldPublicly
@@ -635,7 +595,7 @@ export default function AdminMarketplaceManager({
         model: item.skuOrEnr,
         problem: `Marktplatz-Verkauf: ${item.title} (${item.skuOrEnr})`,
         urgency: "normal",
-        callbackTime: "Vor-Ort-Termin nach Vereinbarung",
+        callbackTime: "Übergabe- / Liefertermin nach Vereinbarung",
         zip: "49082 Osnabrück",
         streetAddress: "Iburger Straße 5, Im Hof",
         mapsLocationUrl: `https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
@@ -660,9 +620,10 @@ export default function AdminMarketplaceManager({
       try {
         const res = await fetch("/api/admin/tickets", {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
+            ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
           },
           body: JSON.stringify({
             id: randomId,
@@ -722,39 +683,24 @@ export default function AdminMarketplaceManager({
   };
 
   const handleDeleteItem = async (id: string) => {
-    const nextList = items.filter((i) => i.id !== id);
-    setItems(nextList);
-    saveLocalMarketplaceItems(nextList);
-    onItemsChanged?.(nextList);
-
     try {
-      await fetch(`/api/admin/marketplace/${encodeURIComponent(id)}`, {
+      const res = await fetch(`/api/admin/marketplace/${encodeURIComponent(id)}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
-        },
+        credentials: "include",
+        headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined,
       });
+      if (!res.ok) {
+        onToast?.("Artikel konnte nicht entfernt werden");
+        return;
+      }
+      const nextList = items.filter((i) => i.id !== id);
+      setItems(nextList);
+      saveLocalMarketplaceItems(nextList);
+      onItemsChanged?.(nextList);
+      onToast?.("Angebot aus dem Marktplatz entfernt");
     } catch {
-      // Keep local update
+      onToast?.("Serverfehler beim Entfernen des Artikels");
     }
-    onToast?.("Angebot aus dem Marktplatz entfernt");
-  };
-
-  const handleResetFiveDemos = async () => {
-    setItems(INITIAL_MARKETPLACE_DEMO_ITEMS);
-    saveLocalMarketplaceItems(INITIAL_MARKETPLACE_DEMO_ITEMS);
-    onItemsChanged?.(INITIAL_MARKETPLACE_DEMO_ITEMS);
-    try {
-      await fetch("/api/admin/marketplace/reset-demos", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${adminToken || "hannachi-admin-demo-token-49082"}`,
-        },
-      });
-    } catch {
-      // Keep local update
-    }
-    onToast?.("5 Standard-Kategorie-Demos (1 je Kategorie) wiederhergestellt");
   };
 
   const filteredInventory = items.filter((item) => {
@@ -826,15 +772,6 @@ export default function AdminMarketplaceManager({
                 ? "Verkaufte versteckt"
                 : "Verkaufte sichtbar"}
             </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleResetFiveDemos}
-            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-sky-500 cursor-pointer whitespace-nowrap"
-          >
-            <RotateCcw size={13} />
-            <span>5 Demos laden</span>
           </button>
 
           <button

@@ -1,7 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import Link from "next/link";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useMotionTemplate,
+  useScroll,
+} from "framer-motion";
 import {
   Phone,
   Star,
@@ -15,7 +25,6 @@ import {
   ShieldCheck,
   Zap,
   Check,
-  ChevronDown,
 } from "lucide-react";
 import {
   FadeUp,
@@ -23,60 +32,81 @@ import {
   StaggerItem,
   CountUp,
   ScrollProgressBar,
+  Spatial3DCard,
+  Spatial3DPhoto,
+  BrandLogoTicker,
 } from "@/components/animations";
 import { business, yearsOfExperience } from "@/data/site";
 import RepairForm, { type RequestTypeId } from "@/components/RepairForm";
 import type { InquiryMode } from "@/lib/repairRequest";
-import RepairJourneyTimeline from "@/components/RepairJourneyTimeline";
+import HowWeWorkSection from "@/components/HowWeWorkSection";
 import { GoogleReviewsSection } from "@/components/GoogleReviewsSection";
 import ApplianceLogo from "@/components/ApplianceLogo";
-import { HANNACHI_WHATSAPP_PHONE, getDeviceEmoji } from "@/utils/whatsapp";
+import { buildWhatsAppDirectUrl, getDeviceEmoji } from "@/utils/whatsapp";
 import {
   herrHannachiImage,
   werkstattHeroHdImage,
   werkstattImage,
 } from "@/data/images";
+import { generatedPhotos, type GeneratedPhotoAsset } from "@/data/generatedPhotos";
 import { usePreloadHeroImages } from "@/lib/usePreloadHeroImages";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { hapticTap, triggerHapticFeedback } from "@/lib/haptics";
-import { useMediaQuery } from "@/lib/useMediaQuery";
-import { HeroAnimatedBackdrop } from "@/components/HeroAnimatedBackdrop";
+import { HeroAnimatedBackdrop, SectionAmbientMesh } from "@/components/HeroAnimatedBackdrop";
+import SparePartsExplorer3D from "@/components/SparePartsExplorer3D";
+import {
+  resolveExplorerAppliance,
+  type ExplorerApplianceId,
+} from "@/components/explorer3d/types";
+
+const FEATURED_APPLIANCE_BRANDS = [
+  "Miele",
+  "Bosch",
+  "Siemens",
+  "AEG",
+  "Bauknecht",
+  "Liebherr",
+  "Neff",
+  "Constructa",
+  "Jura",
+  "DeLonghi",
+];
 
 const heroQuickDevices = [
   {
     label: "Waschmaschine",
-    subtitle: "Front- & Toploader",
+    subtitle: "Beratung & Teile",
     device: "Waschmaschine",
     badgeClass: "bg-sky-500/20 text-sky-300 border-sky-400/30",
-    quickProblems: ["Pumpt nicht ab", "Schleudert nicht", "Heizt nicht / Fehlercode"],
+    quickProblems: ["Beratung", "Originalteil (E-Nr.)", "Gerät auf Anfrage"],
   },
   {
     label: "Kühlschrank",
-    subtitle: "Kühl- & Gefrierkombi",
+    subtitle: "Kühl- & Gefriergeräte",
     device: "Kühlschrank / Gefriergerät",
     badgeClass: "bg-cyan-500/20 text-cyan-300 border-cyan-400/30",
-    quickProblems: ["Kühlt nicht mehr", "Vereist stark", "Brummt laut / Dichtung"],
+    quickProblems: ["Beratung", "Dichtung / Teil (E-Nr.)", "Gerät auf Anfrage"],
   },
   {
     label: "Geschirrspüler",
     subtitle: "Einbau & Standgerät",
     device: "Geschirrspüler",
     badgeClass: "bg-teal-500/20 text-teal-300 border-teal-400/30",
-    quickProblems: ["Wasser steht unten", "Spült / heizt nicht", "Zieht kein Wasser"],
+    quickProblems: ["Beratung", "Pumpe / Korb (E-Nr.)", "Gerät auf Anfrage"],
   },
   {
-    label: "Herd / Backofen",
-    subtitle: "Backofen & Ceranfeld",
+    label: "Herd / Ofen",
+    subtitle: "Beratung & Teile",
     device: "Backofen / Herd",
     badgeClass: "bg-amber-500/20 text-amber-300 border-amber-400/30",
-    quickProblems: ["Heizt nicht auf", "Kochfeld ohne Funktion", "Sicherung fliegt raus"],
+    quickProblems: ["Beratung", "Heizelement / Teil", "Gerät auf Anfrage"],
   },
   {
-    label: "Sonstiges Gerät",
-    subtitle: "Trockner, Kaffee & mehr",
+    label: "Sonstiges",
+    subtitle: "Trockner, Kaffee…",
     device: "Sonstiges",
     badgeClass: "bg-indigo-500/20 text-indigo-300 border-indigo-400/30",
-    quickProblems: ["Trockner trocknet nicht", "Kaffeevollautomat brüht nicht", "Mikrowelle / Kleingerät"],
+    quickProblems: ["Beratung", "Originalteil (E-Nr.)", "Gerät auf Anfrage"],
   },
 ] as const;
 
@@ -88,63 +118,126 @@ const helpPillars: Array<{
   ctaLabel: string;
   requestType: RequestTypeId;
   icon: typeof Wrench;
+  photo: GeneratedPhotoAsset;
 }> = [
   {
     num: "01",
-    title: "Vor-Ort-Gerätecheck & Ersatzteil-Service",
-    description:
-      "Ihr Gerät macht Probleme? Wir kommen nach Terminabsprache direkt zu Ihnen nach Hause in Osnabrück & Umgebung, prüfen das Gerät vor Ort und versorgen Sie mit den passenden Original-Ersatzteilen.",
+    title: "Fachberatung",
+    description: "Ehrliche Einschätzung direkt vom Inhaber.",
     bullets: [
-      "Mobiler Vor-Ort-Termin direkt bei Ihnen zu Hause in Osnabrück",
-      "Passgenaue Ersatzteile nach Typenschild (E-Nr. / PNC) aller Marken",
-      "Persönliche Betreuung durch Inhaber Kamal Hannachi ohne Callcenter",
+      `${yearsOfExperience}+ Jahre Erfahrung seit 1990`,
+      "Direkt per Telefon & WhatsApp",
+      "Termine nach Vereinbarung",
     ],
-    ctaLabel: "Vor-Ort-Check & Ersatzteil anfragen",
+    ctaLabel: "Beratung anfragen",
     requestType: "check_parts",
     icon: Wrench,
+    photo: generatedPhotos.pillarConsultation,
   },
   {
     num: "02",
-    title: "Passendes Ersatzgerät mit schriftlicher Garantie",
-    description:
-      "Wenn sich die Rettung Ihres Altgeräts wirtschaftlich nicht mehr lohnt, bieten wir Ihnen auf Wunsch ein geprüftes Ersatzgerät direkt aus unserem Bestand an – inklusive offizieller schriftlicher Verkäufergarantie.",
+    title: "Original-Ersatzteile",
+    description: "Passgenaue Teile nach Typenschild (E-Nr.).",
     bullets: [
-      "Ehrliches Angebot nur dann, wenn Ihr Altgerät nicht mehr zu retten ist",
-      "Geprüfte Markengeräte (Miele, Bosch, Siemens, Liebherr u. v. m.)",
-      "Übergabe inklusive schriftlicher Verkäufergarantie vom Inhaber",
+      "Prüfung per Typenschild-Foto",
+      "Pumpen, Dichtungen, Filter & mehr",
+      "Alle bekannten Marken",
     ],
-    ctaLabel: "Ersatzgerät mit Garantie anfragen",
-    requestType: "replacement_offer",
+    ctaLabel: "Ersatzteil anfragen",
+    requestType: "check_parts",
     icon: ShieldCheck,
+    photo: generatedPhotos.pillarSpareParts,
   },
   {
     num: "03",
-    title: "Voller Garantie-Service für unsere Geräte",
-    description:
-      "Da jedes von uns verkaufte Gerät mit einer schriftlichen Verkäufergarantie übergeben wird, übernehmen wir für alle bei Hannachi gekauften Geräte den vollen technischen Garantie- und Reparaturservice.",
+    title: "Markengeräte",
+    description: "Ausgewählte geprüfte Geräte auf Anfrage.",
     bullets: [
-      "Gesetzlich & vertraglich abgesicherte Garantie-Abwicklung",
-      "Eigener Vor-Ort-Garantieservice für bei Hannachi gekaufte Geräte",
-      "Über 35 Jahre Erfahrung in Osnabrück (seit 1990)",
+      "Individuell nach Verfügbarkeit",
+      "Inkl. schriftlicher Verkäufergarantie",
+      "Persönliche Empfehlung",
     ],
-    ctaLabel: "Garantie-Anfrage stellen",
-    requestType: "warranty",
+    ctaLabel: "Verfügbarkeit prüfen",
+    requestType: "replacement_offer",
     icon: Shield,
+    photo: generatedPhotos.pillarAppliances,
   },
 ];
 
 export default function HomepageClient() {
-  const { place, ratingFormatted, source } = useGoogleLivePlace();
+  const { place, ratingFormatted } = useGoogleLivePlace();
   const { isMobileViewport } = usePreloadHeroImages();
   const prefersReducedMotion = useReducedMotion();
-  const isMdUp = useMediaQuery("(min-width: 768px)", false);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const consoleRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-linked calm studio depth inside the Hero section
+  const { scrollYProgress: heroScrollProgress } = useScroll({
+    target: heroSectionRef,
+    offset: ["start start", "end start"],
+  });
+  const smoothHeroScroll = useSpring(heroScrollProgress, {
+    stiffness: 160,
+    damping: 28,
+    mass: 0.5,
+  });
+  const desktopPhotoScrollY = useTransform(smoothHeroScroll, [0, 1], [0, 24]);
+  const mobilePhotoScrollY = useTransform(smoothHeroScroll, [0, 1], [0, 16]);
+
+  // Desktop cursor-tracked optical glare + calibrated CSS 3D micro-tilt on portrait stage (zero React re-renders)
+  const portraitRawGlareX = useMotionValue(50);
+  const portraitRawGlareY = useMotionValue(50);
+  const portraitRawHover = useMotionValue(0);
+  const portraitRawRotateX = useMotionValue(0);
+  const portraitRawRotateY = useMotionValue(0);
+
+  const glareX = useSpring(portraitRawGlareX, { stiffness: 180, damping: 24 });
+  const glareY = useSpring(portraitRawGlareY, { stiffness: 180, damping: 24 });
+  const glareOpacity = useSpring(portraitRawHover, { stiffness: 180, damping: 26 });
+  const portraitRotateX = useSpring(portraitRawRotateX, { stiffness: 210, damping: 26, mass: 0.7 });
+  const portraitRotateY = useSpring(portraitRawRotateY, { stiffness: 210, damping: 26, mass: 0.7 });
+  const portraitGlareBg = useMotionTemplate`radial-gradient(380px circle at ${glareX}% ${glareY}%, rgba(224, 242, 254, 0.18), rgba(2, 132, 199, 0.06) 44%, transparent 72%)`;
+
+  const handleConsolePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion || e.pointerType !== "mouse" || !consoleRef.current) return;
+    const rect = consoleRef.current.getBoundingClientRect();
+    consoleRef.current.style.setProperty("--console-x", `${(e.clientX - rect.left).toFixed(1)}px`);
+    consoleRef.current.style.setProperty("--console-y", `${(e.clientY - rect.top).toFixed(1)}px`);
+    consoleRef.current.style.setProperty("--console-glow", "1");
+  };
+
+  const handleConsolePointerLeave = () => {
+    if (!consoleRef.current) return;
+    consoleRef.current.style.setProperty("--console-glow", "0");
+  };
+
+  const handlePortraitPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion || e.pointerType !== "mouse") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+    portraitRawGlareX.set(nx * 100);
+    portraitRawGlareY.set(ny * 100);
+    portraitRawRotateY.set((nx - 0.5) * 6.4); // ±3.2deg max calibrated tilt
+    portraitRawRotateX.set((0.5 - ny) * 6.4); // ±3.2deg max calibrated tilt
+    portraitRawHover.set(1);
+  };
+
+  const handlePortraitPointerLeave = () => {
+    portraitRawHover.set(0);
+    portraitRawRotateX.set(0);
+    portraitRawRotateY.set(0);
+  };
+
   const [selectedDevice, setSelectedDevice] = useState<string>("Waschmaschine");
+  const [explorerAppliance, setExplorerAppliance] = useState<ExplorerApplianceId>("waschmaschine");
   const [customOtherDevice, setCustomOtherDevice] = useState<string>("");
   const [selectedSymptom, setSelectedSymptom] = useState<string>("");
-  const [selectedBrand] = useState<string>("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [inquiryMode] = useState<InquiryMode>("repair");
   const [selectedRequestType, setSelectedRequestType] = useState<RequestTypeId>("check_parts");
-  const [expandedPillar, setExpandedPillar] = useState<string | null>("01");
+  const [selectionSeq, setSelectionSeq] = useState<number>(0);
 
   const activeHeroDeviceObj =
     heroQuickDevices.find((d) => d.device === selectedDevice) || heroQuickDevices[0];
@@ -153,24 +246,33 @@ export default function HomepageClient() {
       ? customOtherDevice.trim()
       : selectedDevice;
 
-  const ratingInt = Math.floor(place.rating);
-  const ratingDec = place.rating.toFixed(1).split(".")[1] || "0";
-  const stats = [
-    { value: yearsOfExperience, suffix: "+ J.", label: "Erfahrung in Osnabrück seit 1990", icon: Award },
+  const stats: Array<{
+    value: number;
+    decimals?: number;
+    suffix: string;
+    label: string;
+    icon: typeof Award;
+  }> = [
+    { value: yearsOfExperience, suffix: "+ J.", label: "Erfahrung seit 1990", icon: Award },
     {
-      value: ratingInt,
-      suffix: `,${ratingDec} ★`,
-      label: `Verifizierte Google-Bewertung (${place.userRatingCount})`,
+      value: place.rating,
+      decimals: 1,
+      suffix: " ★",
+      label: `Google (${place.userRatingCount})`,
       icon: Star,
     },
-    { value: 100, suffix: " %", label: "Schriftliche Verkäufergarantie auf Ersatzgeräte", icon: Shield },
-    { value: 24, suffix: " Std.", label: "Schnelle Rückmeldung & Vor-Ort-Termin", icon: Zap },
+    { value: 1, suffix: " : 1", label: "Direkt mit Inhaber", icon: Shield },
+    { value: 24, suffix: " h", label: "Schnelle Antwort", icon: Zap },
   ];
 
   const handleSelectDevice = (device: string) => {
     hapticTap();
     setSelectedDevice(device);
     setSelectedSymptom("");
+    const resolved = resolveExplorerAppliance(device);
+    if (resolved) {
+      setExplorerAppliance(resolved);
+    }
   };
 
   const handleToggleSymptom = (symptom: string) => {
@@ -178,18 +280,22 @@ export default function HomepageClient() {
     setSelectedSymptom((prev) => (prev === symptom ? "" : symptom));
   };
 
-  const handleScrollToRequest = () => {
-    triggerHapticFeedback(35);
+  const scrollAndFocusForm = () => {
     const el = document.getElementById("anfrage");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
       window.setTimeout(() => {
         const target =
-          el.querySelector<HTMLElement>('[data-field="brand"]') ||
+          el.querySelector<HTMLElement>('[data-field="problem"]') ||
           el.querySelector<HTMLElement>('[data-field="phone"]');
         target?.focus({ preventScroll: true });
-      }, 450);
+      }, 420);
     }
+  };
+
+  const handleScrollToRequest = () => {
+    triggerHapticFeedback(35);
+    scrollAndFocusForm();
   };
 
   const whatsappDeviceLabel =
@@ -198,30 +304,54 @@ export default function HomepageClient() {
       : activeHeroDeviceObj.label;
 
   const heroWhatsAppMessage = [
-    `🔧 *Kurzanfrage (Startseite)*`,
+    `👋 *Kurze Anfrage*`,
     `Hallo Herr Hannachi,`,
     ``,
     `${getDeviceEmoji(whatsappDeviceLabel)} *Gerät:* ${whatsappDeviceLabel}`,
-    ...(selectedSymptom ? [`📝 *Problem:* ${selectedSymptom}`] : []),
-    `Ich bitte um Rückmeldung für einen Vor-Ort-Termin.`,
+    ...(selectedSymptom ? [`🔹 *Anliegen:* ${selectedSymptom}`] : []),
+    `📍 *Region:* Osnabrück`,
   ].join("\n");
 
-  const heroDirectWhatsappHref = `https://api.whatsapp.com/send?phone=${HANNACHI_WHATSAPP_PHONE}&text=${encodeURIComponent(
-    heroWhatsAppMessage
-  )}`;
+  const heroDirectWhatsappHref = buildWhatsAppDirectUrl(heroWhatsAppMessage);
 
   const handleSelectPillar = (reqType: RequestTypeId) => {
     triggerHapticFeedback(35);
     setSelectedRequestType(reqType);
-    const el = document.getElementById("anfrage");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    setSelectionSeq((n) => n + 1);
+    scrollAndFocusForm();
   };
 
-  const toggleMobilePillar = (num: string) => {
+  const handleSelectBrandFromMarquee = (brandName: string) => {
     triggerHapticFeedback(30);
-    setExpandedPillar((prev) => (prev === num ? null : num));
+    setSelectedBrand(brandName);
+    setSelectionSeq((n) => n + 1);
+    scrollAndFocusForm();
+  };
+
+  const handleRequestPartFromExplorer = (deviceValue: string, symptomText: string) => {
+    setSelectedDevice(deviceValue);
+    setSelectedSymptom(symptomText);
+    setSelectedRequestType("check_parts");
+    setSelectionSeq((n) => n + 1);
+    scrollAndFocusForm();
+  };
+
+  const handleRequestOtherDeviceFromExplorer = () => {
+    setSelectedDevice("Sonstiges");
+    setSelectedSymptom("");
+    setSelectedRequestType("check_parts");
+    setSelectionSeq((n) => n + 1);
+    scrollAndFocusForm();
+  };
+
+  const handleScrollToExplorer = () => {
+    hapticTap();
+    const resolved = resolveExplorerAppliance(selectedDevice);
+    if (resolved) {
+      setExplorerAppliance(resolved);
+    }
+    const el = document.getElementById("3d-explorer");
+    el?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -231,92 +361,122 @@ export default function HomepageClient() {
       {/* ══════════════════════════════════════════════════════════════════
           SECTION 1: MOBILE ON-SITE HERO (CLEAR & COMPLIANT)
       ══════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-primary-dark pt-3 pb-6 sm:pt-9 sm:pb-12 lg:pt-12 lg:pb-14 border-b border-white/10">
-        <HeroAnimatedBackdrop />
+      <section
+        ref={heroSectionRef}
+        className="relative overflow-hidden bg-primary-dark pt-3 pb-6 sm:pt-9 sm:pb-12 lg:pt-12 lg:pb-14 border-b border-white/10"
+      >
+        <HeroAnimatedBackdrop variant="hero-water-drum" />
 
         <div className="container-page relative z-10">
           <div className="grid gap-4 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
-            {/* Left Column (7 cols): Compliant Hero Positioning */}
+            {/* Left Column (7 cols): Editorial Masked Typography + Specular Glass Console */}
             <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
               {/* Compact Trust Eyebrow */}
-              <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-[13px] font-semibold text-white/75">
-                <a
-                  href="#kundenstimmen"
-                  className="inline-flex items-center gap-1.5 text-accent-light font-extrabold hover:underline"
+              <div className="overflow-hidden">
+                <motion.div
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-[13px] font-semibold text-white/75"
                 >
-                  <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" aria-hidden="true" />
-                  <span className="tabular-nums">{ratingFormatted} ★ Google ({place.userRatingCount})</span>
-                </a>
-                {source === "live" && place.openNow !== null && (
-                  <>
-                    <span aria-hidden="true" className="text-white/30">·</span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 font-bold ${
-                        place.openNow ? "text-emerald-300" : "text-amber-200"
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`inline-flex h-1.5 w-1.5 rounded-full shrink-0 ${
-                          place.openNow ? "bg-emerald-400" : "bg-amber-400"
-                        }`}
-                      />
-                      <span>{place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}</span>
-                    </span>
-                  </>
-                )}
-                <span aria-hidden="true" className="hidden min-[380px]:inline text-white/30">·</span>
-                <span className="hidden min-[380px]:inline">Vor-Ort Osnabrück</span>
-                <span aria-hidden="true" className="text-white/30">·</span>
-                <span>Seit {business.founded}</span>
+                  <a
+                    href="#kundenstimmen"
+                    className="inline-flex items-center gap-1.5 text-accent-light font-extrabold hover:underline"
+                  >
+                    <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" aria-hidden="true" />
+                    <span className="tabular-nums">{ratingFormatted} ★ Google ({place.userRatingCount})</span>
+                  </a>
+                  <span aria-hidden="true" className="text-white/30">·</span>
+                  <span className="font-bold text-white/90">Seit {business.founded} in Osnabrück</span>
+                  <span aria-hidden="true" className="text-white/30">·</span>
+                  <span className="text-white/80">Termine nach Vereinbarung</span>
+                </motion.div>
               </div>
 
-              <h1 className="text-[22px] min-[375px]:text-[25px] sm:text-[34px] lg:text-[42px] font-extrabold leading-[1.13] tracking-[-0.025em] text-white text-balance">
-                Ihr mobiler Vor-Ort-Service für Elektrohaushaltsgeräte &amp; Ersatzteile in Osnabrück.
-              </h1>
+              <div className="overflow-hidden pb-1">
+                <motion.h1
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 22 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.58,
+                    delay: 0.06,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="text-[24px] min-[375px]:text-[27px] sm:text-[36px] lg:text-[42px] font-extrabold leading-[1.14] tracking-[-0.025em] text-white text-balance"
+                >
+                  Ihr Hausgeräte-Spezialist{" "}
+                  <span className="bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent">
+                    für Beratung &amp; Original-Ersatzteile
+                  </span>
+                </motion.h1>
+              </div>
 
-              <p className="mt-2 sm:mt-3 max-w-[60ch] text-[13px] sm:text-[15px] lg:text-base leading-relaxed text-white/80">
-                Ihr Hausgerät streikt? Wir kommen nach Terminabsprache{" "}
-                <strong className="text-white font-semibold">
-                  direkt zu Ihnen nach Hause in Osnabrück &amp; Umgebung
-                </strong>
-                : mit passenden Original-Ersatzteilen, einem fairen Angebot für ein{" "}
-                <strong className="text-white font-semibold">
-                  geprüftes Ersatzgerät inkl. schriftlicher Garantie
-                </strong>{" "}
-                sowie vollem Garantie-Service.
-              </p>
+              <motion.p
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-2.5 sm:mt-3.5 max-w-[56ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.58] text-white/82"
+              >
+                Persönliche Fachberatung von Inhaber{" "}
+                <strong className="text-white font-semibold">{business.owner}</strong> in{" "}
+                {business.city} – seit über{" "}
+                <strong className="text-white font-semibold">{yearsOfExperience} Jahren</strong>{" "}
+                für passgenaue Original-Ersatzteile nach Typenschild (E-Nr.) und ausgewählte
+                Markengeräte auf Anfrage.
+              </motion.p>
 
-              {/* App-Like 1-Tap Appliance Selector + Quick Problems + Direct Contact */}
-              <div className="mt-3.5 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.04] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-xl shadow-black/20">
-                <div className="flex items-center justify-between gap-2 text-xs">
+              {/* Interactive Specular Glass Console: 1-Tap Appliance Selector + Quick Topics + Direct Contact */}
+              <motion.div
+                ref={consoleRef}
+                onPointerMove={handleConsolePointerMove}
+                onPointerLeave={handleConsolePointerLeave}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{
+                  duration: 0.58,
+                  delay: 0.18,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="hero-glass-console mt-3.5 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.035] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-[0_24px_56px_-18px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
+              >
+                <div className="relative z-10 flex items-center justify-between gap-2 text-xs">
                   <span className="font-extrabold text-white min-w-0">
-                    Welches Gerät bereitet Probleme?
+                    Gerät wählen
                   </span>
-                  <span className="text-[11px] font-semibold text-accent-light shrink-0">
-                    <span className="sm:hidden">Tippen &amp; senden</span>
-                    <span className="hidden sm:inline">Auswählen &amp; direkt kontaktieren</span>
-                  </span>
+                  {resolveExplorerAppliance(selectedDevice) !== null ? (
+                    <button
+                      type="button"
+                      onClick={handleScrollToExplorer}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-accent-light hover:text-white transition-colors shrink-0 cursor-pointer"
+                    >
+                      <span>Bauteile in 3D ↓</span>
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-accent-light shrink-0">
+                      Tippen &amp; senden
+                    </span>
+                  )}
                 </div>
 
                 {/* Mobile: Symmetric 3+2 App-Tile Grid (100% Visible on Phone) | Tablet & Desktop: 5-Column Row */}
-                <div className="grid grid-cols-6 sm:grid-cols-5 gap-1.5 sm:gap-2">
+                <div className="relative z-10 grid grid-cols-6 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   {heroQuickDevices.map((item, idx) => {
                     const isSelected = selectedDevice === item.device;
                     return (
                       <motion.button
                         key={item.device}
                         type="button"
-                        whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
-                        transition={{ type: "spring", stiffness: 520, damping: 24 }}
+                        whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 460, damping: 28, mass: 0.7 }}
                         onClick={() => handleSelectDevice(item.device)}
                         aria-pressed={isSelected}
                         className={`${
                           idx < 3 ? "col-span-2 sm:col-span-1" : "col-span-3 sm:col-span-1"
-                        } relative overflow-hidden min-w-0 w-full flex flex-col items-center text-center justify-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl border px-1 sm:px-1.5 py-2 sm:py-3 transition-all cursor-pointer ${
+                        } relative overflow-hidden min-w-0 min-h-[70px] sm:min-h-0 w-full flex flex-col items-center text-center justify-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl border px-1.5 py-2 sm:py-3 transition-colors duration-200 cursor-pointer ${
                           isSelected
-                            ? "border-accent text-white shadow-lg shadow-accent/25"
-                            : "border-white/12 bg-white/[0.05] text-white/90 hover:border-white/30 hover:bg-white/[0.1]"
+                            ? "border-sky-300/70 text-white shadow-[0_10px_24px_-6px_rgba(2,132,199,0.55)]"
+                            : "border-white/12 bg-white/[0.045] text-white/90 hover:border-white/28 hover:bg-white/[0.095]"
                         }`}
                       >
                         {isSelected && (
@@ -325,34 +485,64 @@ export default function HomepageClient() {
                             transition={
                               prefersReducedMotion
                                 ? { duration: 0.1 }
-                                : { type: "spring", stiffness: 420, damping: 32 }
+                                : { type: "spring", stiffness: 380, damping: 32, mass: 0.8 }
                             }
                             aria-hidden="true"
-                            className="absolute inset-0 rounded-xl sm:rounded-2xl bg-accent"
-                          />
+                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-500 to-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
+                          >
+                            {/* Magic UI-inspired animated hairline border beam on active device pill */}
+                            {!prefersReducedMotion && (
+                              <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -inset-[1px] rounded-[inherit] p-[1.5px]"
+                                style={{
+                                  WebkitMask:
+                                    "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                                  WebkitMaskComposite: "xor",
+                                  maskComposite: "exclude",
+                                }}
+                              >
+                                <span
+                                  className="active-border-beam-rotor block h-[220%] w-[220%] -translate-x-[27%] -translate-y-[27%]"
+                                  style={{
+                                    background:
+                                      "conic-gradient(from 0deg, transparent 0deg, transparent 220deg, rgba(224,242,254,0.95) 285deg, rgba(16,185,129,0.9) 330deg, transparent 360deg)",
+                                  }}
+                                />
+                              </span>
+                            )}
+                          </motion.span>
                         )}
                         <AnimatePresence>
                           {isSelected && (
                             <motion.span
-                              initial={prefersReducedMotion ? false : { scale: 0 }}
-                              animate={{ scale: 1 }}
+                              initial={prefersReducedMotion ? false : { scale: 0, rotate: -25 }}
+                              animate={{ scale: 1, rotate: 0 }}
                               exit={prefersReducedMotion ? undefined : { scale: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                              transition={{ type: "spring", stiffness: 480, damping: 24 }}
                               className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-10 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-white text-accent shadow-xs"
                             >
                               <Check size={9} strokeWidth={3.5} aria-hidden="true" />
                             </motion.span>
                           )}
                         </AnimatePresence>
-                        <span
+                        <motion.span
+                          animate={
+                            prefersReducedMotion
+                              ? undefined
+                              : isSelected
+                                ? { scale: 1.06, y: -0.5 }
+                                : { scale: 1, y: 0 }
+                          }
+                          transition={{ type: "spring", stiffness: 420, damping: 24 }}
                           className={`relative z-10 flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                             isSelected
                               ? "border-white/35 bg-white/20 text-white"
                               : item.badgeClass
                           }`}
                         >
-                          <ApplianceLogo device={item.device} size={21} />
-                        </span>
+                          <ApplianceLogo device={item.device} size={22} />
+                        </motion.span>
                         <div className="relative z-10 w-full min-w-0">
                           <span className="block truncate text-[10.5px] min-[375px]:text-[11px] xl:text-xs font-extrabold leading-tight tracking-[-0.01em]">
                             {item.label}
@@ -377,7 +567,8 @@ export default function HomepageClient() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
+                      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                      className="relative z-10 overflow-hidden"
                     >
                       <input
                         type="text"
@@ -390,11 +581,11 @@ export default function HomepageClient() {
                   )}
                 </AnimatePresence>
 
-                {/* 1-Tap Quick-Symptoms Wrapped Grid */}
-                <div className="space-y-1.5">
+                {/* 1-Tap Quick-Topics Wrapped Grid */}
+                <div className="relative z-10 space-y-1.5">
                   <div className="flex items-center justify-between gap-2 text-[11px]">
                     <span className="font-semibold text-white/75">
-                      Häufiges Problem <span className="text-white/50">(optional)</span>:
+                      Ihr Anliegen <span className="text-white/50">(optional)</span>:
                     </span>
                     {selectedSymptom && (
                       <button
@@ -410,36 +601,53 @@ export default function HomepageClient() {
                     {activeHeroDeviceObj.quickProblems.map((problem) => {
                       const active = selectedSymptom === problem;
                       return (
-                        <button
-                          key={problem}
+                        <motion.button
+                          key={`${selectedDevice}-${problem}`}
                           type="button"
+                          whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                          whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 480, damping: 26 }}
                           onClick={() => handleToggleSymptom(problem)}
                           aria-pressed={active}
-                          className={`inline-flex min-h-[38px] sm:min-h-[34px] max-w-full items-center gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-left leading-tight cursor-pointer ${
+                          className={`inline-flex min-h-[42px] sm:min-h-[34px] max-w-full items-center gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1.5 sm:py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-left leading-tight cursor-pointer ${
                             active
-                              ? "border-emerald-400 bg-emerald-500/25 text-emerald-200 shadow-xs"
-                              : "border-white/15 bg-white/[0.05] text-white/85 hover:border-white/30 hover:text-white"
+                              ? "border-emerald-400/80 bg-emerald-500/25 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                              : "border-white/15 bg-white/[0.045] text-white/85 hover:border-white/30 hover:bg-white/[0.09] hover:text-white"
                           }`}
                         >
-                          {active && <Check size={12} className="text-emerald-300 shrink-0" />}
+                          <AnimatePresence initial={false} mode="popLayout">
+                            {active && (
+                              <motion.span
+                                key="chip-check"
+                                initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={prefersReducedMotion ? undefined : { scale: 0, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 520, damping: 24 }}
+                                className="inline-flex shrink-0"
+                              >
+                                <Check size={12} className="text-emerald-300" />
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span>{problem}</span>
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* App-Style Action Dock: Primary WhatsApp + Balanced Call & Form */}
-                <div className="pt-2.5 border-t border-white/12 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2">
+                {/* App-Style Action Dock: Symmetric 2-col Mobile (2 + 1|1) & 12-col Tablet/Desktop (6 + 3 + 3) */}
+                <div className="relative z-10 pt-2.5 border-t border-white/12 grid grid-cols-2 sm:grid-cols-12 items-stretch gap-1.5 sm:gap-2">
                   <motion.a
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -1.5 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.975 }}
+                    transition={{ type: "spring", stiffness: 460, damping: 26 }}
                     href={heroDirectWhatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-whatsapp-btn"
-                    className="col-span-2 sm:flex-1 sm:min-w-[200px] min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/45 bg-emerald-600/90 hover:bg-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-md shadow-emerald-950/30 transition-colors overflow-hidden"
+                    className="btn-shimmer-beam hero-cta-specular col-span-2 sm:col-span-6 min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/50 bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-[0_10px_24px_-8px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors"
                   >
                     <MessageCircle size={16} className="text-white shrink-0" aria-hidden="true" />
                     <span className="truncate inline-flex items-center min-w-0">
@@ -450,7 +658,7 @@ export default function HomepageClient() {
                           initial={prefersReducedMotion ? false : { y: 8, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           exit={prefersReducedMotion ? undefined : { y: -8, opacity: 0 }}
-                          transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                           className="inline-block truncate"
                         >
                           {whatsappDeviceLabel}
@@ -460,243 +668,369 @@ export default function HomepageClient() {
                     </span>
                   </motion.a>
                   <motion.a
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 480, damping: 26 }}
                     href={place.phoneHref}
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-call-btn"
-                    className="min-w-0 w-full sm:w-auto sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.08] hover:bg-white/14 px-2.5 sm:px-3 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
+                    className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
                   >
                     <Phone size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
                     <span className="truncate">{place.phoneDisplay}</span>
                   </motion.a>
                   <motion.button
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 480, damping: 26 }}
                     type="button"
                     onClick={handleScrollToRequest}
                     data-testid="hero-direct-form-btn"
-                    className="min-w-0 w-full sm:w-auto sm:flex-initial inline-flex min-h-[44px] sm:min-h-[46px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-2.5 sm:px-4 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-md shadow-accent/25 transition-colors cursor-pointer overflow-hidden"
+                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
                   >
                     <span className="truncate">
-                      {selectedSymptom ? "Im Formular senden" : "Termin anfragen"}
+                      {selectedSymptom ? "Formular" : "Termin"}
                     </span>
-                    <ArrowRight size={13} className="shrink-0" aria-hidden="true" />
+                    <ArrowRight
+                      size={13}
+                      className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/hero-form:translate-x-0.5"
+                      aria-hidden="true"
+                    />
                   </motion.button>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Mobile Service Photography Card (Tighter aspect ratio for mobile above-the-fold balance) */}
-              <div className="mt-3 lg:hidden">
-                <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-slate-900/80 shadow-xl">
-                  <Image
-                    src={werkstattImage}
-                    alt="Kamal Hannachi – Mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile in Osnabrück"
-                    width={900}
-                    height={540}
-                    mobilePriority
-                    preload
-                    placeholder="blur"
-                    blurDataURL={werkstattImage.blurDataURL}
-                    sizes="(max-width: 640px) 94vw, (max-width: 1023px) 92vw, 520px"
-                    className="aspect-[16/8.5] sm:aspect-[16/9] w-full object-cover object-center"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-                  <div className="hero-badge absolute inset-x-3 bottom-3 z-10 flex items-center justify-between gap-2 rounded-xl border border-white/20 bg-slate-950/88 px-3.5 py-2.5 backdrop-blur-md text-xs text-white shadow-lg">
-                    <span className="inline-flex items-center gap-1.5 font-bold truncate min-w-0">
-                      <MapPin size={13} className="shrink-0 text-accent-light" aria-hidden="true" />
-                      <span className="truncate">
-                        Inh. {business.owner} · Vor-Ort in {business.city}
-                      </span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 tabular-nums shrink-0">
+              {/* Mobile Calm Studio Photo Frame with Mr. Hannachi's Real Photo */}
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.56, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-3.5 lg:hidden"
+              >
+                <div className="relative overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
+                  <motion.div
+                    initial={prefersReducedMotion ? false : { scale: 1.06 }}
+                    animate={{ scale: 1.02 }}
+                    transition={{ duration: 0.85, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                    style={prefersReducedMotion ? undefined : { y: mobilePhotoScrollY }}
+                    className="w-full"
+                  >
+                    <Image
+                      src={werkstattImage}
+                      alt="Kamal Hannachi – Fachhandel für Elektrohaushaltsgeräte & Original-Ersatzteile in Osnabrück"
+                      width={900}
+                      height={540}
+                      mobilePriority
+                      preload
+                      placeholder="blur"
+                      blurDataURL={werkstattImage.blurDataURL}
+                      sizes="(max-width: 640px) 94vw, (max-width: 1023px) 92vw, 520px"
+                      className="aspect-[16/9] w-full object-cover object-center"
+                    />
+                  </motion.div>
+
+                  <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/95 via-slate-950/28 to-slate-950/15" />
+
+                  <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1.5 rounded-lg border border-white/22 bg-slate-950/78 px-2.5 py-1 text-[10.5px] font-bold text-sky-200 backdrop-blur-md shadow-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    <span>Fachberatung · Seit {business.founded}</span>
+                  </div>
+
+                  <div className="hero-badge absolute inset-x-2.5 bottom-2.5 z-10 flex items-center justify-between gap-2.5 rounded-xl border border-white/22 bg-slate-950/88 px-3 py-2.5 backdrop-blur-md text-white">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-extrabold leading-tight text-white truncate">
+                        {business.owner}
+                      </p>
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-[10.5px] font-semibold text-white/75 leading-tight max-w-full">
+                        <MapPin size={10.5} className="shrink-0 text-accent-light" aria-hidden="true" />
+                        <span className="truncate">{business.city} · Termine nach Vereinbarung</span>
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-400/12 px-2 py-1 text-[11px] font-extrabold text-amber-300 tabular-nums shrink-0">
                       <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
-                      <span>{ratingFormatted} ({place.userRatingCount})</span>
+                      <span>{ratingFormatted}</span>
                     </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
-            {/* Right Column (5 cols): Desktop Real Portrait / Service Card */}
-            <div className="relative hidden lg:flex lg:col-span-5 flex-col">
-              <div className="relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/15 bg-slate-900/90 shadow-2xl">
-                <Image
-                  src={werkstattHeroHdImage}
-                  alt="Hannachi Elektrohaushaltsgeräte & Ersatzteile – Mobiler Vor-Ort-Service Osnabrück"
-                  fill
-                  priority={!isMobileViewport}
-                  preload={!isMobileViewport}
-                  quality={95}
-                  placeholder="blur"
-                  blurDataURL={werkstattHeroHdImage.blurDataURL}
-                  sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
-                  className="object-cover object-center"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
-                <div className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/20 bg-slate-950/88 px-4 py-3.5 backdrop-blur-md shadow-xl">
+            {/* Right Column (5 cols): Desktop Studio Portrait Stage with Mr. Hannachi's Real Photo */}
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.62,
+                delay: 0.14,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative hidden lg:flex lg:col-span-5 flex-col"
+            >
+              <motion.div
+                onPointerMove={handlePortraitPointerMove}
+                onPointerLeave={handlePortraitPointerLeave}
+                style={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        rotateX: portraitRotateX,
+                        rotateY: portraitRotateY,
+                        transformPerspective: 1100,
+                      }
+                }
+                className="relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/18 bg-slate-900/90 shadow-[0_26px_64px_-18px_rgba(2,6,23,0.84),0_0_0_1px_rgba(255,255,255,0.08)] will-change-transform"
+              >
+                <motion.div
+                  initial={prefersReducedMotion ? false : { scale: 1.07 }}
+                  animate={{ scale: 1.03 }}
+                  transition={{ duration: 0.95, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-0"
+                >
+                  <motion.div
+                    style={prefersReducedMotion ? undefined : { y: desktopPhotoScrollY }}
+                    className="relative h-full w-full"
+                  >
+                    <Image
+                      src={werkstattHeroHdImage}
+                      alt="Kamal Hannachi – Persönliche Hausgeräte-Beratung & Ersatzteile in Osnabrück"
+                      fill
+                      priority={!isMobileViewport}
+                      preload={!isMobileViewport}
+                      quality={95}
+                      placeholder="blur"
+                      blurDataURL={werkstattHeroHdImage.blurDataURL}
+                      sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
+                      className="object-cover object-center"
+                    />
+                  </motion.div>
+                </motion.div>
+
+                {/* Subtle cursor-tracked studio optical sheen */}
+                {!prefersReducedMotion && (
+                  <motion.div
+                    aria-hidden="true"
+                    style={{
+                      background: portraitGlareBg,
+                      opacity: glareOpacity,
+                    }}
+                    className="pointer-events-none absolute inset-0 z-[5]"
+                  />
+                )}
+
+                <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/92 via-slate-950/24 to-slate-950/12" />
+
+                <motion.div
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                  className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/22 bg-slate-950/86 px-4 py-3.5 backdrop-blur-md"
+                >
                   <div className="flex items-center justify-between gap-2 text-xs text-accent-light font-bold">
-                    <span>Mobiler Vor-Ort-Service</span>
+                    <span>Hausgeräte-Spezialist seit {business.founded}</span>
                     <span className="inline-flex items-center gap-1">
                       <MapPin size={12} className="shrink-0" aria-hidden="true" />
                       <span>{business.city} &amp; Umgebung</span>
                     </span>
                   </div>
                   <p className="mt-1 text-sm font-extrabold text-white leading-snug">
-                    Persönliche Betreuung durch Inhaber {business.owner}
+                    Persönlich &amp; kompetent: {business.owner}
                   </p>
                   <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between text-[11px] text-white/80">
-                    <span>Seit {business.founded} in Osnabrück · inkl. Garantie</span>
+                    <span>Termine nach Vereinbarung</span>
                     <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 tabular-nums">
                       <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
                       <span>{ratingFormatted} Google ({place.userRatingCount})</span>
                     </span>
                   </div>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </div>
 
-          {/* Compact 4-Box KPI Strip (All 4 values visible at a glance on mobile & desktop) */}
-          <StaggerContainer className="mt-3 sm:mt-7 grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
-            {stats.map(({ value, suffix, label, icon: Icon }) => (
-              <StaggerItem key={label}>
-                <div className="h-full rounded-2xl border border-white/12 bg-white/[0.05] p-3 sm:p-4 flex flex-col justify-between min-w-0 transition-colors hover:border-white/22 hover:bg-white/[0.07]">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-base min-[375px]:text-lg sm:text-xl lg:text-2xl font-extrabold text-white tabular-nums">
-                      <CountUp target={value} suffix={suffix} />
+          {/* Interactive Spotlight KPI Tiles with Viewport Count-Up */}
+          <div className="mt-3.5 sm:mt-7 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+            {stats.map(({ value, decimals, suffix, label, icon: Icon }, idx) => (
+              <motion.div
+                key={label}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.46,
+                  delay: 0.22 + idx * 0.06,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="h-full"
+              >
+                <Spatial3DCard className="rounded-2xl">
+                  <div className="group/kpi relative h-full overflow-hidden rounded-2xl border border-white/14 bg-gradient-to-b from-white/[0.08] via-white/[0.045] to-slate-950/30 p-3 sm:p-4 flex flex-col justify-between min-w-0 shadow-[0_14px_30px_-14px_rgba(2,6,23,0.75),inset_0_1px_0_rgba(255,255,255,0.16)] transition-colors duration-200 hover:border-sky-400/45 hover:bg-white/[0.09]">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-0 inset-x-4 h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-base min-[375px]:text-lg sm:text-xl lg:text-2xl font-extrabold text-white tabular-nums">
+                        <CountUp target={value} decimals={decimals} suffix={suffix} />
+                      </p>
+                      <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl border border-sky-300/25 bg-gradient-to-br from-sky-400/20 to-sky-600/10 text-accent-light shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/kpi:-translate-y-0.5">
+                        <Icon size={14} aria-hidden="true" />
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[11px] sm:text-xs font-medium text-white/78 leading-snug">
+                      {label}
                     </p>
-                    <Icon size={15} className="shrink-0 text-accent-light" aria-hidden="true" />
                   </div>
-                  <p className="mt-1 text-[11px] sm:text-xs font-medium text-white/75 leading-snug">
-                    {label}
-                  </p>
-                </div>
-              </StaggerItem>
+                </Spatial3DCard>
+              </motion.div>
             ))}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 2: COMPLIANT 3-PILLAR VALUE PROPOSITION (CLEAN MOBILE)
+          SECTION 1.5: INFINITE SMOOTH BRAND MARQUEE (PAUSE ON HOVER/FOCUS)
+      ══════════════════════════════════════════════════════════════════ */}
+      <section
+        aria-label="Unterstützte Hausgeräte-Marken"
+        className="border-b border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-950 py-5 sm:py-6"
+      >
+        <div className="container-page">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2.5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+              Markenvielfalt · Original-Ersatzteile &amp; Fachberatung
+            </p>
+            <p className="text-[11px] font-medium text-ink-faint">
+              Marke antippen für direkte Anfrage · Pausiert beim Überfahren
+            </p>
+          </div>
+          <BrandLogoTicker
+            items={FEATURED_APPLIANCE_BRANDS}
+            onSelectBrand={handleSelectBrandFromMarquee}
+          />
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SECTION 1.75: FLAGSHIP INTERACTIVE 3D SPARE-PARTS EXPLORER
+      ══════════════════════════════════════════════════════════════════ */}
+      <SparePartsExplorer3D
+        activeAppliance={explorerAppliance}
+        onChangeAppliance={setExplorerAppliance}
+        onRequestPart={handleRequestPartFromExplorer}
+        onRequestOtherDevice={handleRequestOtherDeviceFromExplorer}
+      />
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SECTION 2: 3-PILLAR VALUE PROPOSITION (CRISP & SYMBOL-LED)
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="leistungen"
         aria-labelledby="how-we-help-heading"
-        className="section bg-white dark:bg-slate-900 border-b border-primary/8 dark:border-white/10"
+        className="section relative overflow-hidden bg-white dark:bg-slate-900 border-b border-primary/8 dark:border-white/10"
       >
-        <div className="container-page">
+        <SectionAmbientMesh variant="pillars" />
+        <div className="container-page relative z-10">
           <FadeUp>
-            <div className="max-w-3xl mx-auto text-center mb-6 sm:mb-10">
-              <p className="eyebrow">Mobiler Vor-Ort-Service · Osnabrück &amp; Umgebung</p>
+            <div className="max-w-2xl mx-auto text-center mb-6 sm:mb-10">
+              <p className="eyebrow">Seit {business.founded} · {business.city}</p>
               <h2
                 id="how-we-help-heading"
-                className="mt-1.5 sm:mt-2 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
+                className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
               >
-                So helfen wir Ihnen direkt bei Ihnen zu Hause
+                Beratung, Originalteile &amp; Geräte
               </h2>
-              <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm lg:text-[15px] text-ink-muted leading-relaxed">
+              <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
                 {business.mobileServiceNotice}
               </p>
             </div>
           </FadeUp>
 
           <StaggerContainer className="grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
-            {helpPillars.map((pillar) => {
+            {helpPillars.map((pillar, idx) => {
               const Icon = pillar.icon;
-              const isExpanded = expandedPillar === pillar.num;
               return (
-                <StaggerItem key={pillar.num}>
-                  <article className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 p-5 sm:p-6">
-                    <div>
-                      <div className="flex items-center justify-between gap-3 mb-4">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                          <Icon size={21} aria-hidden="true" />
+                <StaggerItem key={pillar.num} className="h-full">
+                  <Spatial3DCard
+                    maxTilt={5.8}
+                    scrollYaw={idx === 0 ? 1.8 : idx === 2 ? -1.8 : 0}
+                    className="rounded-2xl"
+                  >
+                    <article className="group h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 shadow-card transition-shadow duration-300 hover:shadow-card-hover">
+                      <div>
+                        {/* Recessed 3D Parallax Studio Photography Header */}
+                        <Spatial3DPhoto
+                          src={pillar.photo.src}
+                          alt={pillar.photo.alt}
+                          aspectClass="aspect-[16/10]"
+                          fallbackGradient={pillar.photo.fallbackGradient}
+                          className="border-b border-primary/8 dark:border-white/10"
+                        >
+                          <div className="absolute inset-x-3.5 bottom-3 z-10 flex items-end justify-between gap-2">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/25 bg-slate-950/75 text-sky-300 backdrop-blur-md shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:scale-105">
+                              <Icon size={19} aria-hidden="true" />
+                            </div>
+                            <span className="font-mono text-2xl font-extrabold leading-none text-white/90 drop-shadow-[0_2px_10px_rgba(2,6,23,0.7)] tabular-nums">
+                              {pillar.num}
+                            </span>
+                          </div>
+                        </Spatial3DPhoto>
+
+                        <div className="p-5 sm:p-6 pb-0">
+                          <h3 className="text-lg sm:text-xl font-extrabold text-primary dark:text-white leading-snug">
+                            {pillar.title}
+                          </h3>
+
+                          <p className="mt-1.5 text-xs sm:text-[14px] leading-relaxed text-ink-muted">
+                            {pillar.description}
+                          </p>
+
+                          <ul className="mt-4 space-y-2 border-t border-primary/8 dark:border-white/10 pt-3.5">
+                            {pillar.bullets.map((bullet) => (
+                              <li
+                                key={bullet}
+                                className="flex items-center gap-2 text-xs text-primary/90 dark:text-slate-200"
+                              >
+                                <CheckCircle2
+                                  size={14}
+                                  className="shrink-0 text-emerald-600 dark:text-emerald-400"
+                                  aria-hidden="true"
+                                />
+                                {bullet.includes("Verkäufergarantie") ? (
+                                  <span>
+                                    Inkl.{" "}
+                                    <Link
+                                      href="/impressum#garantie"
+                                      className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark"
+                                    >
+                                      schriftlicher Verkäufergarantie
+                                    </Link>
+                                  </span>
+                                ) : (
+                                  <span>{bullet}</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                        <span className="font-mono text-2xl font-extrabold text-accent/30 tabular-nums">
-                          {pillar.num}
-                        </span>
                       </div>
 
-                      <h3 className="text-lg sm:text-xl font-extrabold text-primary dark:text-white leading-snug">
-                        {pillar.title}
-                      </h3>
-
-                      <p className="mt-2 text-xs sm:text-[14px] leading-relaxed text-ink-muted">
-                        {pillar.description}
-                      </p>
-
-                      {/* Mobile Collapsible Accordion Trigger (< md) */}
-                      <motion.button
-                        whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                        type="button"
-                        onClick={() => toggleMobilePillar(pillar.num)}
-                        aria-expanded={isExpanded}
-                        className="mt-3.5 flex md:hidden min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-200 transition-colors cursor-pointer"
-                      >
-                        <span>
-                          {isExpanded ? "Vorteile ausblenden" : "Alle 3 Vorteile anzeigen"}
-                        </span>
-                        <motion.span
-                          animate={{ rotate: isExpanded ? 180 : 0 }}
-                          transition={{ type: "spring", stiffness: 360, damping: 26 }}
-                          className="shrink-0 text-accent flex items-center"
+                      <div className="p-5 sm:p-6 pt-4 mt-4 border-t border-primary/8 dark:border-white/10">
+                        <motion.button
+                          whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                          type="button"
+                          onClick={() => handleSelectPillar(pillar.requestType)}
+                          className="group/pillar-cta flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-accent/25 bg-accent/10 px-4 py-2.5 text-xs font-extrabold text-accent hover:bg-accent hover:text-white transition-colors cursor-pointer"
                         >
-                          <ChevronDown size={15} />
-                        </motion.span>
-                      </motion.button>
-
-                      <motion.div
-                        initial={false}
-                        animate={
-                          isMdUp || isExpanded
-                            ? { height: "auto", opacity: 1 }
-                            : { height: 0, opacity: 0 }
-                        }
-                        transition={
-                          prefersReducedMotion
-                            ? { duration: 0.08 }
-                            : {
-                                height: { type: "spring", stiffness: 360, damping: 32 },
-                                opacity: { duration: 0.2 },
-                              }
-                        }
-                        className="overflow-hidden md:!h-auto md:!opacity-100"
-                        aria-hidden={!isMdUp && !isExpanded}
-                      >
-                        <ul className="mt-3 md:mt-5 space-y-2 border-t border-primary/8 dark:border-white/10 pt-4">
-                          {pillar.bullets.map((bullet) => (
-                            <li
-                              key={bullet}
-                              className="flex items-start gap-2 text-xs text-primary/90 dark:text-slate-200"
-                            >
-                              <CheckCircle2
-                                size={14}
-                                className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-                                aria-hidden="true"
-                              />
-                              <span>{bullet}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    </div>
-
-                    <div className="mt-4 md:mt-6 pt-3.5 md:pt-4 border-t border-primary/8 dark:border-white/10">
-                      <motion.button
-                        whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                        type="button"
-                        onClick={() => handleSelectPillar(pillar.requestType)}
-                        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-accent/25 bg-accent/10 px-4 py-2.5 text-xs font-extrabold text-accent hover:bg-accent hover:text-white transition-colors cursor-pointer"
-                      >
-                        <span className="min-w-0 text-left leading-snug">{pillar.ctaLabel}</span>
-                        <ArrowRight size={14} className="shrink-0" />
-                      </motion.button>
-                    </div>
-                  </article>
+                          <span className="min-w-0 text-left leading-snug">{pillar.ctaLabel}</span>
+                          <ArrowRight
+                            size={14}
+                            className="shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/pillar-cta:translate-x-1"
+                          />
+                        </motion.button>
+                      </div>
+                    </article>
+                  </Spatial3DCard>
                 </StaggerItem>
               );
             })}
@@ -705,9 +1039,9 @@ export default function HomepageClient() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 3: 4-STEP MOBILE ON-SITE WORKFLOW
+          SECTION 3: HOW WE WORK (3 DISTINCT ICON-BASED FLOW CARDS)
       ══════════════════════════════════════════════════════════════════ */}
-      <RepairJourneyTimeline />
+      <HowWeWorkSection onSelectStep={handleSelectPillar} />
 
       {/* ══════════════════════════════════════════════════════════════════
           SECTION 4: VERIFIED GOOGLE CUSTOMER REVIEWS (4,8 ★ · 82 Reviews)
@@ -715,21 +1049,22 @@ export default function HomepageClient() {
       <GoogleReviewsSection />
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 5: STREAMLINED INQUIRY FORM (#anfrage) & MOBILE SERVICE CARD
+          SECTION 5: STREAMLINED INQUIRY FORM (#anfrage) & OWNER CARD
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="anfrage"
         className="section relative scroll-mt-16 lg:scroll-mt-20 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
       >
-        <div className="container-page">
+        <SectionAmbientMesh variant="inquiry" />
+        <div className="container-page relative z-10">
           <FadeUp>
-            <div className="max-w-3xl mx-auto text-center mb-5 sm:mb-10">
-              <p className="eyebrow">Mobiler Vor-Ort-Service Osnabrück · Schnelle Terminanfrage</p>
-              <h2 className="mt-1.5 sm:mt-2 text-xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
-                Vor-Ort-Termin, Ersatzteil oder Ersatzgerät anfragen
+            <div className="max-w-2xl mx-auto text-center mb-5 sm:mb-9">
+              <p className="eyebrow">Direktkontakt · Termine nach Vereinbarung</p>
+              <h2 className="mt-1.5 text-xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance">
+                Direkt per WhatsApp anfragen
               </h2>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm lg:text-[15px] text-ink-muted">
-                Schildern Sie kurz das Problem an Ihrem Gerät oder Ihren Ersatzteilwunsch – Herr Hannachi meldet sich direkt bei Ihnen.
+              <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
+                Gerät &amp; Anliegen antippen – Nachricht öffnet direkt im Chat.
               </p>
             </div>
           </FadeUp>
@@ -742,102 +1077,106 @@ export default function HomepageClient() {
                 defaultBrand={selectedBrand}
                 defaultMode={inquiryMode}
                 defaultRequestType={selectedRequestType}
+                selectionSeq={selectionSeq}
               />
             </div>
 
-            <aside className="space-y-4 sm:space-y-5 lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-20">
-              <div className="rounded-2xl bg-primary-dark p-4 sm:p-6 text-white shadow-xl border border-white/10">
-                <div className="flex items-center gap-3.5 sm:gap-4 pb-4 sm:pb-5 border-b border-white/10">
-                  <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-xl border-2 border-accent/40">
-                    <Image
-                      src={herrHannachiImage}
-                      alt="Kamal Hannachi"
-                      fill
-                      loading="lazy"
-                      decoding="async"
-                      placeholder="blur"
-                      blurDataURL={herrHannachiImage.blurDataURL}
-                      className="object-cover object-top"
-                      sizes="64px"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-accent-light">
-                      Ihr direkter Ansprechpartner
-                    </p>
-                    <h3 className="text-base sm:text-lg font-extrabold text-white truncate">
-                      {business.owner}
-                    </h3>
-                    <p className="text-xs text-white/65">
-                      Inhaber · Seit {business.founded} in Osnabrück
-                    </p>
-                  </div>
-                </div>
-
-                <ul className="mt-4 sm:mt-5 space-y-2.5 text-xs sm:text-[13px] text-white/85">
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={15} className="text-accent-light shrink-0 mt-0.5" />
-                    <span>Mobiler Vor-Ort-Termin &amp; Ersatzteil-Service bei Ihnen zu Hause</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={15} className="text-accent-light shrink-0 mt-0.5" />
-                    <span>Geprüftes Ersatzgerät mit schriftlicher Verkäufergarantie, falls Ihr Altgerät nicht mehr zu retten ist</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={15} className="text-accent-light shrink-0 mt-0.5" />
-                    <span>Voller Garantie- &amp; Reparaturservice für alle bei Hannachi gekauften Geräte</span>
-                  </li>
-                </ul>
-
-                <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-white/10 space-y-2.5 text-xs">
-                  <div className="flex items-start gap-2 text-white/80 min-w-0">
-                    <MapPin size={14} className="text-accent-light shrink-0 mt-0.5" />
-                    <span className="min-w-0 break-words">
-                      Mobiler Vor-Ort-Service in {business.city} &amp; Umgebung · {place.streetLine}, {place.zipCityLine}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-white/80 min-w-0">
-                    <Phone size={14} className="text-accent-light shrink-0" />
-                    <a href={place.phoneHref} className="inline-flex min-h-[44px] items-center font-bold hover:underline">
-                      {place.phoneDisplay}
-                    </a>
-                    <span className="text-white/55 break-words">({place.hoursSummary})</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/60 p-4 sm:p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-accent">
-                  Service &amp; Erreichbarkeit
-                </p>
-                <h3 className="mt-1 text-base font-extrabold text-primary dark:text-slate-100">
-                  Hannachi Osnabrück
-                </h3>
-                <dl className="mt-3 space-y-2 text-xs text-ink-muted">
-                  <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
-                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Vor-Ort-Termine</dt>
-                    <dd className="text-right min-w-0 break-words">
-                      {place.hoursSummary}
-                      {source === "live" && place.openNow !== null && (
+            <aside className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-stretch lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-20">
+              <Spatial3DCard maxTilt={5} scrollYaw={-1.8} className="rounded-2xl">
+                <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900 to-primary-dark p-4 sm:p-6 text-white shadow-[0_24px_54px_-14px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.16)] border border-sky-300/18">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-sky-300/60 to-transparent"
+                  />
+                  <div>
+                    <div className="flex items-center gap-3.5 sm:gap-4 pb-4 border-b border-white/10">
+                      <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0">
+                        <div className="relative h-full w-full overflow-hidden rounded-xl border-2 border-sky-400/50 shadow-[0_10px_22px_-8px_rgba(14,165,233,0.55)]">
+                          <Image
+                            src={herrHannachiImage}
+                            alt="Kamal Hannachi"
+                            fill
+                            loading="lazy"
+                            decoding="async"
+                            placeholder="blur"
+                            blurDataURL={herrHannachiImage.blurDataURL}
+                            className="object-cover object-top"
+                            sizes="64px"
+                          />
+                        </div>
                         <span
-                          className={`block text-[11px] font-bold ${
-                            place.openNow
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-amber-600 dark:text-amber-300"
-                          }`}
-                        >
-                          {place.openNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}
-                        </span>
-                      )}
-                    </dd>
+                          aria-hidden="true"
+                          className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-emerald-400 shadow-sm"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-accent-light">
+                          Inhaber · Direktkontakt
+                        </p>
+                        <h3 className="text-base sm:text-lg font-extrabold text-white truncate">
+                          {business.owner}
+                        </h3>
+                        <p className="text-xs text-white/65">
+                          Seit {business.founded} · {business.city}
+                        </p>
+                      </div>
+                    </div>
+
+                    <ul className="mt-4 space-y-2 text-xs sm:text-[13px] text-white/85">
+                      <li className="flex items-center gap-2.5">
+                        <CheckCircle2 size={15} className="text-accent-light shrink-0" />
+                        <span>{yearsOfExperience}+ Jahre Erfahrung</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <CheckCircle2 size={15} className="text-accent-light shrink-0" />
+                        <span>Originalteile nach E-Nr.</span>
+                      </li>
+                      <li className="flex items-center gap-2.5">
+                        <CheckCircle2 size={15} className="text-accent-light shrink-0" />
+                        <span>Markengeräte auf Anfrage</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-white/10 space-y-2 text-xs">
+                    <div className="flex items-start gap-2 text-white/80 min-w-0">
+                      <MapPin size={14} className="text-accent-light shrink-0 mt-0.5" />
+                      <span className="min-w-0 break-words">
+                        {business.street}, {business.zip} {business.city}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-white/80 min-w-0">
+                      <Phone size={14} className="text-accent-light shrink-0" />
+                      <a href={business.phoneHref} className="inline-flex min-h-[44px] items-center font-bold hover:underline tabular-nums">
+                        {business.phoneDisplay}
+                      </a>
+                      <span className="text-white/55">Telefon &amp; WhatsApp</span>
+                    </div>
+                  </div>
+                </div>
+              </Spatial3DCard>
+
+              <div className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/60 p-4 sm:p-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-accent">
+                    Terminvergabe
+                  </p>
+                  <h3 className="mt-1 text-base font-extrabold text-primary dark:text-slate-100">
+                    Termine nach Vereinbarung
+                  </h3>
+                </div>
+                <dl className="mt-3 space-y-2 text-xs text-ink-muted border-t border-primary/8 dark:border-white/10 pt-3">
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Erreichbarkeit</dt>
+                    <dd className="text-right min-w-0 break-words">Mo–Sa 08:00–18:00 Uhr</dd>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
-                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Einsatzgebiet</dt>
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Region</dt>
                     <dd className="text-right min-w-0">Osnabrück &amp; Umgebung</dd>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:gap-3">
-                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Ersatzgeräte</dt>
-                    <dd className="text-right min-w-0">Inkl. schriftlicher Garantie</dd>
+                    <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Markengeräte</dt>
+                    <dd className="text-right min-w-0">Ausgewählte Geräte auf Anfrage</dd>
                   </div>
                 </dl>
               </div>

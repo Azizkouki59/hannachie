@@ -3,7 +3,7 @@
 // - Trade scope: An- und Verkauf von Elektrohaushaltsgeräten & Ersatzteilen
 // - Price display: "Preis auf Anfrage" (no online cart / checkout)
 // - Written seller's warranty (schriftliche Verkäufergarantie) on all appliances sold.
-// - Seeded with strictly 1 starter demo item per category (5 items total).
+// - Production real-stock-only catalog (zero seeded demo listings).
 
 import {
   washerModernImage,
@@ -210,266 +210,21 @@ export const MARKETPLACE_CONDITIONS: {
   { id: "new_part", label: "Neuware / Originalteil" },
 ];
 
-// Strictly 1 starter demo item per category (5 total, zero mock clutter)
-export const INITIAL_MARKETPLACE_DEMO_ITEMS: MarketplaceItem[] = [
-  {
-    id: "demo-washing-miele-w1",
-    createdAt: "2026-11-15T08:00:00.000Z",
-    updatedAt: "2026-11-15T08:00:00.000Z",
-    isDemo: true,
-    skuOrEnr: "E-Nr. WDB030WCS · Miele W1",
-    title: "Miele W1 Waschmaschine (Frontlader · 8 kg Schontrommel)",
-    brand: "Miele",
-    category: "washing_drying",
-    categoryLabel: "Waschmaschinen & Trockner",
-    deviceTypeForForm: "Waschmaschine",
-    conditionType: "refurbished",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    shortSpecs: "8 kg Fassungsvermögen · 1400 U/min · Energieeffizienzklasse A",
-    bulletSpecs: [
-      "8 kg Miele-Schontrommel · 1.400 U/min Schleuderdrehzahl",
-      "Komplett geprüft, hygienisch gereinigt & Verschleißteile kontrolliert",
-      "Watercontrol-System (Aquastop) & verschleißfreier ProfiEco-Motor",
-    ],
-    detailedSpecs: [
-      { label: "Hersteller & Modell", value: "Miele W1 WDB 030 WCS Eco" },
-      { label: "E-Nr. / Serienreferenz", value: "WDB030WCS" },
-      { label: "Fassungsvermögen", value: "8,0 kg (Patentierte Schontrommel)" },
-      { label: "Schleuderdrehzahl", value: "Bis zu 1.400 U/min" },
-      { label: "Abmessungen (H × B × T)", value: "85,0 × 59,6 × 63,6 cm" },
-      { label: "Prüfstatus", value: "Geprüft, gereinigt & technisch abgenommen" },
-      { label: "Verkäufergarantie", value: "Inkl. schriftlicher Verkäufergarantie auf Kaufbeleg" },
-    ],
-    warrantyTerms:
-      "Sie erhalten beim Kauf dieses Geräts eine schriftliche Verkäufergarantie von Hannachi Elektrohaushaltsgeräte & Ersatzteile. Garantie- und Gewährleistungsleistungen gelten ausschließlich für direkt bei uns erworbene Geräte.",
-    pickupInfo:
-      "Mobiler Vor-Ort-Service & Übergabe nach Terminvereinbarung in 49082 Osnabrück & Umgebung.",
-    availability: "Sofort verfügbar in Osnabrück",
-    priceLabel: "Preis auf Anfrage",
-    imageKey: "washer",
-    searchKeywords: [
-      "waschmaschine",
-      "trockner",
-      "miele",
-      "w1",
-      "wdb030wcs",
-      "8 kg",
-      "1400",
-      "frontlader",
-    ],
-    inquiryTopic: "device_purchase",
-    inquiryPreset:
-      "Unverbindliche Reservierung / Preisanfrage: Miele W1 Waschmaschine 8 kg (E-Nr. WDB030WCS · Geprüft & Aufbereitet inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-cooling-liebherr-nofrost",
-    createdAt: "2026-11-15T08:05:00.000Z",
-    updatedAt: "2026-11-15T08:05:00.000Z",
-    isDemo: true,
-    skuOrEnr: "Modell CNef 4315 · NoFrost",
-    title: "Liebherr CNef 4315 Comfort NoFrost Kühl-Gefrierkombination",
-    brand: "Liebherr",
-    category: "cooling",
-    categoryLabel: "Kühl- & Gefriergeräte",
-    deviceTypeForForm: "Kühlschrank / Gefriergerät",
-    conditionType: "refurbished",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    shortSpecs: "321 Liter Nutzinhalt · NoFrost-Abtauautomatik · Edelstahl SmartSteel",
-    bulletSpecs: [
-      "Nie wieder abtauen dank Liebherr NoFrost-Umluftkühlung",
-      "DuoCooling mit 2 getrennt regelbaren Kältekreisläufen",
-      "24-Stunden-Kühlleistungstest, Türdichtungen & Thermostat geprüft",
-    ],
-    detailedSpecs: [
-      { label: "Hersteller & Modell", value: "Liebherr CNef 4315 Comfort NoFrost" },
-      { label: "E-Nr. / Serienreferenz", value: "CNef 4315-20 / 9989" },
-      { label: "Gesamtnutzinhalt", value: "321 Liter (220 L Kühlen / 101 L Gefrieren)" },
-      { label: "Abmessungen (H × B × T)", value: "201,1 × 60,0 × 62,5 cm" },
-      { label: "Front & Gehäuse", value: "Edelstahl mit SmartSteel-Oberfläche" },
-      { label: "Prüfstatus", value: "24h Temperaturprotokoll & Dichtungscheck bestanden" },
-      { label: "Verkäufergarantie", value: "Inkl. schriftlicher Verkäufergarantie auf Kaufbeleg" },
-    ],
-    warrantyTerms:
-      "Inklusive schriftlicher Verkäufergarantie von Hannachi Osnabrück. Dokumentiertes Kühlprotokoll liegt bei Übergabe vor.",
-    pickupInfo:
-      "Mobiler Vor-Ort-Service & Übergabe nach Terminvereinbarung in 49082 Osnabrück & Umgebung.",
-    availability: "Sofort verfügbar in Osnabrück",
-    priceLabel: "Preis auf Anfrage",
-    imageKey: "cooling",
-    searchKeywords: [
-      "kühlschrank",
-      "gefrierschrank",
-      "kühl-gefrierkombination",
-      "liebherr",
-      "nofrost",
-      "cnef 4315",
-      "edelstahl",
-    ],
-    inquiryTopic: "device_purchase",
-    inquiryPreset:
-      "Unverbindliche Reservierung / Preisanfrage: Liebherr CNef 4315 NoFrost Kühl-Gefrierkombination (Geprüft & Aufbereitet inkl. schriftlicher Garantie)",
-  },
-  {
-    id: "demo-dishwasher-bosch-serie6",
-    createdAt: "2026-11-15T08:10:00.000Z",
-    updatedAt: "2026-11-15T08:10:00.000Z",
-    isDemo: true,
-    skuOrEnr: "E-Nr. SMU68TS06E/51 · Serie 6",
-    title: "Bosch Serie 6 Unterbau-Geschirrspüler (60 cm · Zeolith-Trocknung)",
-    brand: "Bosch",
-    category: "dishwashers",
-    categoryLabel: "Geschirrspüler",
-    deviceTypeForForm: "Geschirrspüler",
-    conditionType: "refurbished",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    shortSpecs: "60 cm Breite · 14 Maßgedecke · VarioSchublade & AquaStop",
-    bulletSpecs: [
-      "60 cm Unterbaugerät (Edelstahlfront) · 14 Maßgedecke + Besteckschublade",
-      "PerfectDry mit Zeolith-Trocknung & flüsterleiser EcoSilence Drive (42 dB)",
-      "Heizpumpe, Umwälzsystem und AquaStop-Ventil komplett geprüft",
-    ],
-    detailedSpecs: [
-      { label: "Hersteller & Modell", value: "Bosch Serie 6 PerfectDry" },
-      { label: "E-Nr. / Serienreferenz", value: "SMU68TS06E/51" },
-      { label: "Bauart & Breite", value: "Unterbaugerät · 60,0 cm Standardbreite" },
-      { label: "Fassungsvermögen", value: "14 Maßgedecke inkl. VarioSchublade Pro" },
-      { label: "Geräuschwert", value: "Sehr leise (42 dB(A), im Silence-Programm 40 dB)" },
-      { label: "Prüfstatus", value: "Dichtheits-, Heiz- & Pumpendruckprüfung dokumentiert" },
-      { label: "Verkäufergarantie", value: "Inkl. schriftlicher Verkäufergarantie auf Kaufbeleg" },
-    ],
-    warrantyTerms:
-      "Inklusive schriftlicher Verkäufergarantie. Sämtliche wasserführenden Bauteile und Dichtungen wurden im mehrstufigen Prüflauf getestet.",
-    pickupInfo:
-      "Mobiler Vor-Ort-Service & Übergabe nach Terminvereinbarung in 49082 Osnabrück & Umgebung.",
-    availability: "Sofort verfügbar in Osnabrück",
-    priceLabel: "Preis auf Anfrage",
-    imageKey: "dishwasher",
-    searchKeywords: [
-      "geschirrspüler",
-      "spülmaschine",
-      "bosch",
-      "serie 6",
-      "smu68ts06e",
-      "60 cm",
-      "unterbau",
-      "zeolith",
-    ],
-    inquiryTopic: "device_purchase",
-    inquiryPreset:
-      "Unverbindliche Reservierung / Preisanfrage: Bosch Serie 6 Unterbau-Geschirrspüler 60 cm (E-Nr. SMU68TS06E/51 · Geprüft & Aufbereitet)",
-  },
-  {
-    id: "demo-oven-siemens-iq500",
-    createdAt: "2026-11-15T08:15:00.000Z",
-    updatedAt: "2026-11-15T08:15:00.000Z",
-    isDemo: true,
-    skuOrEnr: "E-Nr. HB517ABS0/01 · iQ500",
-    title: "Siemens iQ500 Backofen (71 L · 3D Heißluft plus · Autark)",
-    brand: "Siemens",
-    category: "ovens_stoves",
-    categoryLabel: "Herde & Backöfen",
-    deviceTypeForForm: "Backofen / Herd",
-    conditionType: "refurbished",
-    conditionBadge: "Geprüft & Aufbereitet",
-    warrantyBadge: "Inkl. schriftlicher Garantie",
-    shortSpecs: "71 Liter Garraum · 3D Heißluft plus · Steckerfertig (230V Schuko)",
-    bulletSpecs: [
-      "Autarker 60-cm-Backofen · Steckerfertig (230 V, reiner Geräteverkauf ohne Montage)",
-      "3D Heißluft plus, Schnellaufheizung, coolStart & LCD-Display",
-      "Ringheizkörper, Ober-/Unterhitze, Thermostat und Türdichtung intern kontrolliert",
-    ],
-    detailedSpecs: [
-      { label: "Hersteller & Modell", value: "Siemens iQ500 Backofen" },
-      { label: "E-Nr. / Serienreferenz", value: "HB517ABS0/01" },
-      { label: "Bauart & Nischenmaß", value: "Autark (230 V) · 59,5 × 59,4 × 54,8 cm" },
-      { label: "Garraumvolumen", value: "71 Liter · GranitEmail-Innenraum" },
-      { label: "Beheizungsarten", value: "7 Heizarten inkl. 3D Heißluft plus & Umluft-Grill" },
-      { label: "Funktionskontrolle", value: "Isolations-, Temperatur- & Heizelementkontrolle im Lager" },
-      { label: "Verkäufergarantie", value: "Inkl. schriftlicher Verkäufergarantie auf Kaufbeleg" },
-    ],
-    warrantyTerms:
-      "Inklusive schriftlicher Verkäufergarantie von Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
-    pickupInfo:
-      "Übergabe nach Terminvereinbarung im Raum 49082 Osnabrück.",
-    availability: "Sofort verfügbar in Osnabrück",
-    priceLabel: "Preis auf Anfrage",
-    imageKey: "oven",
-    searchKeywords: [
-      "backofen",
-      "herd",
-      "siemens",
-      "iq500",
-      "hb517abs0",
-      "heißluft",
-      "autark",
-    ],
-    inquiryTopic: "device_purchase",
-    inquiryPreset:
-      "Unverbindliche Reservierung / Preisanfrage: Siemens iQ500 Backofen (E-Nr. HB517ABS0/01 · Geprüft & Aufbereitet)",
-  },
-  {
-    id: "demo-part-bsh-miele-oem",
-    createdAt: "2026-11-15T08:20:00.000Z",
-    updatedAt: "2026-11-15T08:20:00.000Z",
-    isDemo: true,
-    skuOrEnr: "Teilenr. 00651956 / DPS-30W",
-    title: "Original Heizpumpen, Laugenpumpen & Heizelemente (Bosch / Siemens / Miele / AEG)",
-    brand: "Bosch",
-    category: "spare_parts",
-    categoryLabel: "Ersatzteile & Zubehör",
-    deviceTypeForForm: "Geschirrspüler",
-    conditionType: "new_part",
-    conditionBadge: "Neu · Originalteil",
-    warrantyBadge: "Geprüfte Passgenauigkeit",
-    shortSpecs: "Original-Ersatzteile ab Lager · E-Nr. & PNC Typenschild-Abgleich · Neuware",
-    bulletSpecs: [
-      "Original BSH-Heizpumpen (00651956 / 00654575) gegen Fehlercode E09 / E04",
-      "Original Laugenpumpen, Türmanschetten, Ringheizkörper & Thermostate",
-      "Kostenloser Passgenauigkeits-Abgleich anhand Ihrer E-Nr. oder PNC vorab",
-    ],
-    detailedSpecs: [
-      { label: "Artikelgruppe", value: "Original-Pumpen, Heizelemente, Dichtungen & Elektronik" },
-      { label: "Teilenummer-Beispiele", value: "BSH 00651956, 00654575, Miele 6239562, AEG 140066" },
-      { label: "Kompatible Marken", value: "Bosch, Siemens, Miele, AEG, Neff, Bauknecht, Liebherr" },
-      { label: "Typischer Einsatz", value: "Fehlercodes E09, E18, F11, F24 oder defekte Ringheizung" },
-      { label: "Zustand", value: "Neuware · Original- & Erstausrüsterqualität" },
-      { label: "Typenschild-Abgleich", value: "Passgenauigkeit durch E-Nr. / PNC-Abgleich" },
-    ],
-    warrantyTerms:
-      "Neuware in Original-/Erstausrüsterqualität mit gesetzlicher Gewährleistung. Vor Übergabe gleichen wir die E-Nr. oder PNC Ihres Typenschilds ab, damit das Bauteil exakt passt.",
-    pickupInfo:
-      "Mobiler Vor-Ort-Ersatzteil-Service in 49082 Osnabrück & Umgebung nach Terminvereinbarung.",
-    availability: "Sofort verfügbar in Osnabrück",
-    priceLabel: "Preis auf Anfrage",
-    imageKey: "parts",
-    searchKeywords: [
-      "ersatzteil",
-      "heizpumpe",
-      "umwälzpumpe",
-      "laugenpumpe",
-      "ringheizkörper",
-      "türmanschette",
-      "thermostat",
-      "00651956",
-      "00654575",
-      "e09",
-      "e18",
-      "f11",
-      "bosch",
-      "siemens",
-      "miele",
-      "aeg",
-    ],
-    inquiryTopic: "spare_parts",
-    inquiryPreset:
-      "Ersatzteil-Anfrage / Reservierung: Original-Ersatzteil nach Typenschild E-Nr. / PNC (Neu · Originalteil)",
-  },
-];
+// Production real-stock-only catalog: zero seeded demo items
+export const INITIAL_MARKETPLACE_DEMO_ITEMS: MarketplaceItem[] = [];
 
-export const MARKETPLACE_ITEMS = INITIAL_MARKETPLACE_DEMO_ITEMS;
+export const MARKETPLACE_ITEMS: MarketplaceItem[] = [];
+
+export function stripDemoMarketplaceItems(items: MarketplaceItem[]): MarketplaceItem[] {
+  if (!Array.isArray(items)) return [];
+  return items.filter(
+    (item) =>
+      Boolean(item) &&
+      !item.isDemo &&
+      typeof item.id === "string" &&
+      !item.id.startsWith("demo-")
+  );
+}
 
 export const MARKETPLACE_STORAGE_KEY = "hannachi_marketplace_inventory_v2";
 export const MARKETPLACE_SETTINGS_KEY = "hannachi_marketplace_settings_v1";
@@ -607,32 +362,28 @@ export const MARKETPLACE_QUICK_PRESETS: MarketplaceQuickPreset[] = [
     bullets: [
       "Original- / Erstausrüsterqualität für alle Marken",
       "Kostenloser Passgenauigkeits-Abgleich nach E-Nr. oder PNC",
-      "Mobiler Vor-Ort-Service nach Terminvereinbarung in Osnabrück",
+      "Übergabe oder Lieferung nach Terminvereinbarung in Osnabrück & Umgebung",
     ],
   },
 ];
 
 export function loadLocalMarketplaceItems(): MarketplaceItem[] {
-  if (typeof window === "undefined") return INITIAL_MARKETPLACE_DEMO_ITEMS;
+  if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(MARKETPLACE_STORAGE_KEY);
-    if (!raw) return INITIAL_MARKETPLACE_DEMO_ITEMS;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed as MarketplaceItem[];
-    }
+    window.localStorage.removeItem(MARKETPLACE_STORAGE_KEY);
   } catch {
-    // Fallback to initial 5 demos
+    // Ignore storage cleanup errors
   }
-  return INITIAL_MARKETPLACE_DEMO_ITEMS;
+  return [];
 }
 
 export function saveLocalMarketplaceItems(items: MarketplaceItem[]): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(MARKETPLACE_STORAGE_KEY, JSON.stringify(items));
-    window.dispatchEvent(new CustomEvent("hannachi:marketplace-updated", { detail: items }));
+    const cleaned = stripDemoMarketplaceItems(items);
+    window.localStorage.removeItem(MARKETPLACE_STORAGE_KEY);
+    window.dispatchEvent(new CustomEvent("hannachi:marketplace-updated", { detail: cleaned }));
   } catch {
-    // Ignore storage quota errors
+    // Ignore storage errors
   }
 }

@@ -159,7 +159,7 @@ function ServiceAreaMarkerWithInfo({
               PLZ {area.zip} · ca. {Math.max(1, distanceKm)} km ab Osnabrück
             </p>
             <p className="text-[11px] font-bold text-sky-700 mt-1">
-              Vor-Ort-Service nach Termin
+              Lieferung &amp; Übergabe nach Termin
             </p>
           </div>
         </InfoWindow>
@@ -307,7 +307,7 @@ function MapLazyPlaceholder({
         )}
         <span>
           {mode === "service-area"
-            ? "Einsatzgebiet-Karte laden"
+            ? "Regionskarte (25 km) laden"
             : "Standort-Karte laden"}
         </span>
       </button>
@@ -330,7 +330,7 @@ function MapLoadingBackdrop({ mode }: { mode: ContactMapViewMode }) {
         <span className="h-2 w-2 rounded-full bg-sky-500 animate-pulse" aria-hidden="true" />
         <span>
           {mode === "service-area"
-            ? "Einsatzgebiet wird geladen …"
+            ? "Regionskarte wird geladen …"
             : "Standortkarte wird geladen …"}
         </span>
       </div>
@@ -382,8 +382,8 @@ function MapTimeoutFallbackCard({
         <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">
           {mode === "service-area"
             ? selectedArea
-              ? `Vor-Ort-Service in ${selectedArea.zip} ${selectedArea.city} (Region Osnabrück)`
-              : "Vor-Ort-Service im 25 km Radius um Osnabrück & Landkreis"
+              ? `Lieferung & Übergabe in ${selectedArea.zip} ${selectedArea.city} (Region Osnabrück)`
+              : "Lieferung & Übergabe im 25 km Radius um Osnabrück & Landkreis"
             : placeAddress}
         </p>
 
@@ -426,7 +426,6 @@ function InteractiveGoogleMapsView({
   placeDisplayName,
   placeAddress,
   placeHoursSummary,
-  placeOpenNow,
   mapsExternalHref,
   retryNonce,
   onRetry,
@@ -447,7 +446,6 @@ function InteractiveGoogleMapsView({
   placeDisplayName: string;
   placeAddress: string;
   placeHoursSummary: string;
-  placeOpenNow: boolean | null;
   mapsExternalHref: string;
   retryNonce: number;
   onRetry: () => void;
@@ -623,9 +621,6 @@ function InteractiveGoogleMapsView({
               <p className="text-[11px] text-slate-600 mt-0.5">{placeAddress}</p>
               <p className="text-[11px] font-semibold text-sky-700 mt-1">
                 {placeHoursSummary}
-                {placeOpenNow !== null
-                  ? ` · ${placeOpenNow ? "Jetzt geöffnet" : "Aktuell geschlossen"}`
-                  : ""}
               </p>
             </div>
           </InfoWindow>
@@ -659,7 +654,7 @@ function InteractiveGoogleMapsView({
                     ca. {Math.max(1, userDistanceKm ?? 1)} km ab Osnabrück
                   </p>
                   <p className="text-[11px] font-bold text-emerald-700 mt-1">
-                    Im 25-km-Vor-Ort-Einsatzgebiet
+                    In der Region Osnabrück (25 km)
                   </p>
                 </div>
               </InfoWindow>
@@ -800,9 +795,9 @@ function IframeMapFallbackView({
           <iframe
             title={
               userCoordinates
-                ? "Ihr aktueller Standort im Einsatzgebiet Osnabrück auf Google Maps"
+                ? "Ihr aktueller Standort in der Region Osnabrück auf Google Maps"
                 : mode === "service-area"
-                ? "Hannachi Einsatzgebiet Osnabrück & Umgebung auf Google Maps"
+                ? "Hannachi Region Osnabrück & Umgebung auf Google Maps"
                 : "Hannachi Standort Osnabrück auf Google Maps"
             }
             src={iframeSrc}
@@ -1189,7 +1184,7 @@ export default function GoogleMapsEmbed({
                 />
               )}
               <Radar size={13} aria-hidden="true" className="relative z-10 shrink-0" />
-              <span className="relative z-10 truncate">Einsatzgebiet (25 km)</span>
+              <span className="relative z-10 truncate">Region (25 km)</span>
             </button>
             <button
               type="button"
@@ -1258,10 +1253,9 @@ export default function GoogleMapsEmbed({
                   : null
               }
               hqCoordinates={hqCoordinates}
-              placeDisplayName={place.displayName}
+              placeDisplayName={`${business.name} ${business.tagline}`}
               placeAddress={placeAddress}
               placeHoursSummary={place.hoursSummary}
-              placeOpenNow={place.openNow}
               mapsExternalHref={mapsExternalHref}
               retryNonce={retryNonce}
               onRetry={handleRetryMapLoad}
@@ -1341,7 +1335,7 @@ export default function GoogleMapsEmbed({
                 <span className="truncate">
                   {selectedArea
                     ? `${selectedArea.label} · ca. ${activeAreaDistance} km`
-                    : "Einsatzgebiet · ca. 25 km Radius"}
+                    : "Region Osnabrück · ca. 25 km"}
                 </span>
               </motion.span>
             ) : (
@@ -1483,7 +1477,7 @@ export default function GoogleMapsEmbed({
                     aria-hidden="true"
                   />
                   <span className="truncate">
-                    Vor-Ort-Service verfügbar (Nähe {userLocation.nearestArea.city})
+                    Lieferung &amp; Übergabe verfügbar (Nähe {userLocation.nearestArea.city})
                   </span>
                 </>
               ) : activeMode === "service-area" ? (
@@ -1495,7 +1489,7 @@ export default function GoogleMapsEmbed({
                   />
                   <span className="truncate">
                     {selectedArea
-                      ? `Vor-Ort-Service in ${selectedArea.zip} ${selectedArea.city}`
+                      ? `Lieferung & Übergabe in ${selectedArea.zip} ${selectedArea.city}`
                       : "Osnabrück & Landkreis (12 Städte/Gemeinden)"}
                   </span>
                 </>
@@ -1583,10 +1577,10 @@ export default function GoogleMapsEmbed({
                 <Compass size={14} className="text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="min-w-0 flex-1 leading-snug">
                   <p className="font-extrabold">
-                    Außerhalb des 25-km-Gebiets (ca. {userLocation.distanceFromHqKm} km)
+                    Außerhalb der 25-km-Region (ca. {userLocation.distanceFromHqKm} km)
                   </p>
                   <p className="mt-0.5 opacity-90">
-                    Zeige Osnabrück-Einsatzgebiet · Nächster Ort:{" "}
+                    Zeige Region Osnabrück · Nächster Ort:{" "}
                     <button
                       type="button"
                       onClick={() => handleSelectArea(userLocation.nearestArea, true)}
@@ -1686,7 +1680,7 @@ export default function GoogleMapsEmbed({
             <div className="px-3 py-2.5 space-y-2">
               <div className="flex items-center justify-between gap-2 text-[11px]">
                 <span className="font-extrabold text-primary dark:text-slate-200 truncate">
-                  Mobiler Vor-Ort-Service in Ihrem Ort:
+                  Lieferung &amp; Übergabe in Ihrem Ort:
                 </span>
                 {selectedArea && (
                   <button

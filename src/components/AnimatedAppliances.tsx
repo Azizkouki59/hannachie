@@ -869,7 +869,7 @@ export function InteractiveApplianceShowcase({
           ) : (
             <div className="mt-5 rounded-2xl border border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-800/70 p-4 sm:p-5">
               <p className="text-xs font-bold text-ink-muted dark:text-slate-400 mb-3">
-                Klicken Sie auf Ihr Fehlerbild, um es direkt in das Anfrageformular zu übernehmen:
+                Klicken Sie auf Ihr gesuchtes Anliegen, um es direkt in das Anfrageformular zu übernehmen:
               </p>
               <div className="grid gap-2">
                 {(issuesByTab[activeTab] || []).map((issue) => {
@@ -921,7 +921,7 @@ export function InteractiveApplianceShowcase({
                 >
                   <span>
                     {selectedIssue
-                      ? `Mit Fehlerbild anfragen`
+                      ? `Mit Auswahl anfragen`
                       : `${currentTabObj.label} jetzt anfragen`}
                   </span>
                   <ArrowRight size={16} className="shrink-0" />

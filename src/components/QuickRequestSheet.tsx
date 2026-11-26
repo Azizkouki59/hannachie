@@ -18,8 +18,9 @@ import {
   useTransform,
   type PanInfo,
 } from "framer-motion";
-import { X, Wrench, Phone } from "lucide-react";
+import { X, Phone } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
+import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 import type { InquiryMode } from "@/lib/repairRequest";
 import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
 import { business } from "@/data/site";
@@ -55,18 +56,25 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
   const [brand, setBrand] = useState("");
   const [mode, setMode] = useState<InquiryMode>("repair");
   const [mounted, setMounted] = useState(false);
+  const [isMobileSheet, setIsMobileSheet] = useState(false);
   const [isDraggingSheet, setIsDraggingSheet] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const dragControls = useDragControls();
   const dragY = useMotionValue(0);
-  const backdropFade = useTransform(dragY, [0, 280], [1, 0.18]);
+  const backdropFade = useTransform(dragY, [0, 280], [1, 0.16]);
+  const sheetDragScale = useTransform(dragY, [0, 280], [1, 0.965]);
   const formBodyRef = useRef<HTMLDivElement>(null);
   const mobileScrollTimerRef = useRef<number | null>(null);
   const mobileRetryTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    const mq = window.matchMedia("(max-width: 639px)");
+    const syncViewport = () => setIsMobileSheet(mq.matches);
+    syncViewport();
+    mq.addEventListener("change", syncViewport);
     return () => {
+      mq.removeEventListener("change", syncViewport);
       if (mobileScrollTimerRef.current) window.clearTimeout(mobileScrollTimerRef.current);
       if (mobileRetryTimerRef.current) window.clearTimeout(mobileRetryTimerRef.current);
     };
@@ -235,18 +243,24 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
             role="dialog"
             aria-modal="true"
             aria-label="Schnellanfrage stellen"
-            style={prefersReducedMotion ? undefined : { y: dragY }}
-            drag={prefersReducedMotion ? false : "y"}
+            style={
+              prefersReducedMotion || !isMobileSheet
+                ? undefined
+                : { y: dragY, scale: sheetDragScale }
+            }
+            drag={prefersReducedMotion || !isMobileSheet ? false : "y"}
             dragControls={dragControls}
             dragListener={false}
             dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0.04, bottom: 0.95 }}
+            dragElastic={{ top: 0.05, bottom: 0.88 }}
             onDragStart={() => setIsDraggingSheet(true)}
             onDragEnd={handleSheetDragEnd}
             initial={
               prefersReducedMotion
                 ? { opacity: 0 }
-                : { y: 64, opacity: 0, scale: 0.985 }
+                : isMobileSheet
+                ? { y: "100%", opacity: 0.9 }
+                : { y: 14, opacity: 0, scale: 0.955 }
             }
             animate={
               prefersReducedMotion
@@ -256,18 +270,28 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
             exit={
               prefersReducedMotion
                 ? { opacity: 0 }
-                : { y: 80, opacity: 0, scale: 0.985 }
+                : isMobileSheet
+                ? { y: "100%", opacity: 0.6 }
+                : { y: 10, opacity: 0, scale: 0.96 }
             }
             transition={
               prefersReducedMotion
-                ? { duration: 0.12 }
-                : { type: "spring", stiffness: 390, damping: 34, mass: 0.85 }
+                ? { duration: 0.1 }
+                : isMobileSheet
+                ? { type: "spring", stiffness: 360, damping: 34, mass: 0.85 }
+                : {
+                    type: "spring",
+                    stiffness: 420,
+                    damping: 32,
+                    mass: 0.72,
+                    opacity: { duration: 0.16, ease: [0.16, 1, 0.3, 1] },
+                  }
             }
             className="relative z-10 flex max-h-[88dvh] sm:max-h-[90dvh] w-full max-w-2xl mx-auto flex-col rounded-t-3xl sm:rounded-3xl bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden border border-white/15 will-change-transform"
           >
             <div
               onPointerDown={(e) => {
-                if (!prefersReducedMotion) {
+                if (!prefersReducedMotion && isMobileSheet) {
                   dragControls.start(e);
                 }
               }}
@@ -283,17 +307,13 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
               />
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
-                    <Wrench size={16} />
-                  </div>
+                  <HannachiBrandLogo size={36} />
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-extrabold leading-tight truncate">
-                      {mode === "question"
-                        ? "Direkte Frage an Herrn Hannachi"
-                        : "Vor-Ort-Termin & Ersatzteil anfragen"}
+                      {mode === "question" ? "Direkte Frage" : "Kurze Anfrage"}
                     </p>
                     <p className="text-[11px] text-white/65 truncate">
-                      Mobiler Vor-Ort-Service · Osnabrück
+                      Osnabrück · Termine nach Vereinbarung
                     </p>
                   </div>
                 </div>

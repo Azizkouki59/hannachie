@@ -121,7 +121,7 @@ export default function CookieConsentBanner() {
                     Privatsphäre- &amp; Cookie-Einstellungen
                   </h2>
                   <p className="text-xs text-white/65">
-                    Hannachi Elektrohaushaltsgeräte Service · Osnabrück
+                    Hannachi Elektrohaushaltsgeräte &amp; Ersatzteile · Osnabrück
                   </p>
                 </div>
               </div>
@@ -142,11 +142,11 @@ export default function CookieConsentBanner() {
               id="cookie-consent-desc"
               className="text-xs sm:text-sm text-white/80 leading-relaxed"
             >
-              Wir nutzen keine Werbe- oder Tracking-Cookies. Unsere Website speichert
-              lediglich technisch notwendige Einstellungen (z. B. Ihr gewähltes
-              Farbdesign) lokal in Ihrem Browser. Für die
-              interaktive Kartenanzeige unserer Einsatzregion in Osnabrück bieten wir Google Maps an.
-              Dabei können Daten an Server von Google in den USA übertragen werden.
+              Wir setzen keine Werbe- oder Tracking-Cookies ein. Lediglich technisch notwendige
+              Einstellungen (z. B. Hell-/Dunkelmodus, Formular-Entwurf) werden gemäß{" "}
+              <strong className="text-white">§ 25 Abs. 2 TDDDG</strong> lokal gespeichert.
+              Optional können Sie <strong className="text-white">Google Maps</strong> (Google
+              Ireland / USA, Art. 6 Abs. 1 lit. a DSGVO) freischalten – jederzeit widerrufbar.
             </p>
 
             {/* Granular Customization Section */}
@@ -201,7 +201,7 @@ export default function CookieConsentBanner() {
                     </div>
                     <p className="mt-1 text-white/70 leading-relaxed">
                       Ermöglicht das direkte Laden der interaktiven Google-Maps-Karte zur
-                      Anfahrt nach Osnabrück. Hierbei wird Ihre IP-Adresse an Google LLC
+                      Orientierung in Osnabrück. Hierbei wird Ihre IP-Adresse an Google LLC
                       (USA) übermittelt (zertifiziert nach EU-US Data Privacy Framework).
                     </p>
                   </div>
@@ -263,9 +263,9 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         rejectNonEssential();
                       }}
-                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/12 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition-colors cursor-pointer"
                     >
-                      Nur essenzielle
+                      Nur notwendige
                     </motion.button>
                     <motion.button
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
@@ -274,7 +274,7 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         acceptAll();
                       }}
-                      className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
                     >
                       <Check size={14} aria-hidden="true" />
                       <span>Alle akzeptieren</span>
@@ -289,9 +289,9 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         rejectNonEssential();
                       }}
-                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/20 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/12 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition-colors cursor-pointer"
                     >
-                      Nur essenzielle
+                      Nur notwendige
                     </motion.button>
                     <motion.button
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
@@ -311,7 +311,7 @@ export default function CookieConsentBanner() {
                         hapticTap();
                         acceptAll();
                       }}
-                      className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-400 transition-colors cursor-pointer"
                     >
                       <Check size={14} aria-hidden="true" />
                       <span>Alle akzeptieren</span>

@@ -18,8 +18,8 @@ import {
 } from "./src/lib/adminTypes.ts";
 import {
   DEFAULT_MARKETPLACE_SETTINGS,
-  INITIAL_MARKETPLACE_DEMO_ITEMS,
   MARKETPLACE_CATEGORIES,
+  stripDemoMarketplaceItems,
   type MarketplaceAvailabilityStatus,
   type MarketplaceCategoryId,
   type MarketplaceItem,
@@ -44,6 +44,17 @@ const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const TICKETS_FILE = path.join(DATA_DIR, "admin-tickets.json");
 const MARKETPLACE_FILE = path.join(DATA_DIR, "marketplace-items.json");
 const MARKETPLACE_SETTINGS_FILE = path.join(DATA_DIR, "marketplace-settings.json");
+const ADMIN_SESSIONS_FILE = path.join(DATA_DIR, "admin-sessions.json");
+const ADMIN_SESSION_COOKIE = "hannachi_admin_session";
+
+function writeJsonAtomicSync(filePath: string, data: unknown): void {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  const tmpPath = `${filePath}.${process.pid}.${crypto.randomBytes(4).toString("hex")}.tmp`;
+  fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
+  fs.renameSync(tmpPath, filePath);
+}
 
 function sanitizePhotosList(rawPhotos: unknown): MarketplacePhoto[] {
   if (!Array.isArray(rawPhotos)) return [];
@@ -103,16 +114,126 @@ function sanitizeCompletionDetails(raw: unknown): TicketCompletionDetails | null
   };
 }
 
-const ADMIN_ALLOWED_PINS = new Set(
-  [
-    (process.env.ADMIN_PIN || "").trim(),
-    (process.env.ADMIN_PASSWORD || "").trim(),
-    "49082",
-    "hannachi2026",
-    "hannachi",
-  ].filter(Boolean)
-);
-const activeAdminTokens = new Set<string>(["hannachi-admin-demo-token-49082"]);
+const ADMIN_PASSWORD_SALT = "f756fbc6fb24a742d9e47f2f28490fa9";
+const ADMIN_PASSWORD_SCRYPT_HEX =
+  "caafee56ca09926ed2f66e6539495fa8ac8a8d14e1b96cc63b5dfab8a176897303ff164dd14d1a5e533e7ab4fafc27eb77bfb239ed64df365cac95d57db7b674";
+const ADMIN_TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const activeAdminTokens = new Map<string, number>();
+
+function hashSessionToken(rawToken: string): string {
+  return crypto.createHash("sha256").update(rawToken).digest("hex");
+}
+
+function loadPersistedAdminSessions(): void {
+  try {
+    if (!fs.existsSync(ADMIN_SESSIONS_FILE)) return;
+    const raw = fs.readFileSync(ADMIN_SESSIONS_FILE, "utf8");
+    const parsed = JSON.parse(raw) as Record<string, number>;
+    if (!parsed || typeof parsed !== "object") return;
+    const now = Date.now();
+    for (const [tokenHash, expiresAt] of Object.entries(parsed)) {
+      if (typeof expiresAt === "number" && expiresAt > now) {
+        activeAdminTokens.set(tokenHash, expiresAt);
+      }
+    }
+  } catch {
+    // Ignore unreadable session cache
+  }
+}
+
+function persistAdminSessions(): void {
+  try {
+    const now = Date.now();
+    const record: Record<string, number> = {};
+    for (const [tokenHash, expiresAt] of activeAdminTokens.entries()) {
+      if (expiresAt > now) {
+        record[tokenHash] = expiresAt;
+      }
+    }
+    writeJsonAtomicSync(ADMIN_SESSIONS_FILE, record);
+  } catch {
+    // Keep in-memory sessions if filesystem is read-only
+  }
+}
+
+loadPersistedAdminSessions();
+
+function parseCookieHeader(cookieHeader: string | undefined): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+  for (const part of cookieHeader.split(";")) {
+    const eqIdx = part.indexOf("=");
+    if (eqIdx === -1) continue;
+    const key = part.slice(0, eqIdx).trim();
+    const val = part.slice(eqIdx + 1).trim();
+    if (key) {
+      try {
+        cookies[key] = decodeURIComponent(val);
+      } catch {
+        cookies[key] = val;
+      }
+    }
+  }
+  return cookies;
+}
+
+function setAdminSessionCookie(res: Response, rawToken: string, maxAgeSeconds: number): void {
+  const parts = [
+    `${ADMIN_SESSION_COOKIE}=${encodeURIComponent(rawToken)}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${maxAgeSeconds}`,
+  ];
+  if (isProd) {
+    parts.push("Secure");
+  }
+  res.setHeader("Set-Cookie", parts.join("; "));
+}
+
+function clearAdminSessionCookie(res: Response): void {
+  const parts = [
+    `${ADMIN_SESSION_COOKIE}=`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    "Max-Age=0",
+  ];
+  if (isProd) {
+    parts.push("Secure");
+  }
+  res.setHeader("Set-Cookie", parts.join("; "));
+}
+
+function verifyAdminPassword(candidate: string): boolean {
+  if (!candidate) return false;
+  const envPass = (process.env.ADMIN_PASSWORD || process.env.ADMIN_PIN || "").trim();
+  if (envPass) {
+    const a = crypto.createHash("sha256").update(candidate).digest();
+    const b = crypto.createHash("sha256").update(envPass).digest();
+    return crypto.timingSafeEqual(a, b);
+  }
+  const derived = crypto.scryptSync(candidate, ADMIN_PASSWORD_SALT, 64);
+  const expected = Buffer.from(ADMIN_PASSWORD_SCRYPT_HEX, "hex");
+  return derived.length === expected.length && crypto.timingSafeEqual(derived, expected);
+}
+
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOGIN_MAX_ATTEMPTS = 10;
+const adminLoginAttempts = new Map<string, number[]>();
+
+function isAdminLoginRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const cutoff = now - ADMIN_LOGIN_WINDOW_MS;
+  const recent = (adminLoginAttempts.get(ip) || []).filter((ts) => ts > cutoff);
+  if (recent.length >= ADMIN_LOGIN_MAX_ATTEMPTS) {
+    adminLoginAttempts.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  adminLoginAttempts.set(ip, recent);
+  return false;
+}
 
 let memoryTickets: AdminRepairTicket[] | null = null;
 
@@ -143,10 +264,7 @@ function loadStoredTickets(): AdminRepairTicket[] {
 function persistStoredTickets(tickets: AdminRepairTicket[]): void {
   memoryTickets = tickets;
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(TICKETS_FILE, JSON.stringify(tickets, null, 2), "utf8");
+    writeJsonAtomicSync(TICKETS_FILE, tickets);
   } catch {
     // Keep in-memory copy if filesystem is read-only
   }
@@ -160,27 +278,28 @@ function loadStoredMarketplaceItems(): MarketplaceItem[] {
     if (fs.existsSync(MARKETPLACE_FILE)) {
       const raw = fs.readFileSync(MARKETPLACE_FILE, "utf8");
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        memoryMarketplaceItems = parsed as MarketplaceItem[];
+      if (Array.isArray(parsed)) {
+        const cleaned = stripDemoMarketplaceItems(parsed as MarketplaceItem[]);
+        memoryMarketplaceItems = cleaned;
+        if (cleaned.length !== parsed.length) {
+          persistStoredMarketplaceItems(cleaned);
+        }
         return memoryMarketplaceItems;
       }
     }
   } catch {
-    // Fallback to initial 5 category demo items
+    // Start cleanly with zero mock listings
   }
-  const initial = [...INITIAL_MARKETPLACE_DEMO_ITEMS];
-  memoryMarketplaceItems = initial;
-  persistStoredMarketplaceItems(initial);
-  return initial;
+  memoryMarketplaceItems = [];
+  persistStoredMarketplaceItems([]);
+  return [];
 }
 
 function persistStoredMarketplaceItems(items: MarketplaceItem[]): void {
-  memoryMarketplaceItems = items;
+  const cleaned = stripDemoMarketplaceItems(items);
+  memoryMarketplaceItems = cleaned;
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(MARKETPLACE_FILE, JSON.stringify(items, null, 2), "utf8");
+    writeJsonAtomicSync(MARKETPLACE_FILE, cleaned);
   } catch {
     // Keep in-memory copy if filesystem is read-only
   }
@@ -209,14 +328,7 @@ function loadMarketplaceSettings(): MarketplaceSettings {
 function persistMarketplaceSettings(settings: MarketplaceSettings): void {
   memoryMarketplaceSettings = settings;
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(
-      MARKETPLACE_SETTINGS_FILE,
-      JSON.stringify(settings, null, 2),
-      "utf8"
-    );
+    writeJsonAtomicSync(MARKETPLACE_SETTINGS_FILE, settings);
   } catch {
     // Keep in-memory copy
   }
@@ -247,12 +359,28 @@ function resolveDefaultCoordsForZip(
   return { lat: 52.2647, lng: 8.0548, accuracy: 40 };
 }
 
-function isAuthorizedAdminRequest(req: Request): boolean {
+function extractAdminToken(req: Request): string {
+  const cookies = parseCookieHeader(req.headers.cookie);
+  const cookieToken = cookies[ADMIN_SESSION_COOKIE]?.trim();
+  if (cookieToken) return cookieToken;
   const authHeader = req.headers.authorization || "";
-  const token = authHeader.startsWith("Bearer ")
+  return authHeader.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length).trim()
     : (req.headers["x-admin-token"] as string | undefined)?.trim() || "";
-  return Boolean(token && activeAdminTokens.has(token));
+}
+
+function isAuthorizedAdminRequest(req: Request): boolean {
+  const token = extractAdminToken(req);
+  if (!token) return false;
+  const tokenHash = hashSessionToken(token);
+  const expiresAt = activeAdminTokens.get(tokenHash);
+  if (!expiresAt) return false;
+  if (Date.now() > expiresAt) {
+    activeAdminTokens.delete(tokenHash);
+    persistAdminSessions();
+    return false;
+  }
+  return true;
 }
 
 // ── In-memory sliding-window rate limiter for POST /api/repair-request ──────────
@@ -261,7 +389,8 @@ const RATE_LIMIT_MAX_REQUESTS = 15;
 const rateLimitStore = new Map<string, number[]>();
 
 const cleanupTimer = setInterval(() => {
-  const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS;
+  const now = Date.now();
+  const cutoff = now - RATE_LIMIT_WINDOW_MS;
   for (const [ip, timestamps] of rateLimitStore.entries()) {
     const valid = timestamps.filter((t) => t > cutoff);
     if (valid.length === 0) {
@@ -269,6 +398,25 @@ const cleanupTimer = setInterval(() => {
     } else {
       rateLimitStore.set(ip, valid);
     }
+  }
+  const loginCutoff = now - ADMIN_LOGIN_WINDOW_MS;
+  for (const [ip, timestamps] of adminLoginAttempts.entries()) {
+    const valid = timestamps.filter((t) => t > loginCutoff);
+    if (valid.length === 0) {
+      adminLoginAttempts.delete(ip);
+    } else {
+      adminLoginAttempts.set(ip, valid);
+    }
+  }
+  let prunedSessions = false;
+  for (const [tokenHash, expiresAt] of activeAdminTokens.entries()) {
+    if (now > expiresAt) {
+      activeAdminTokens.delete(tokenHash);
+      prunedSessions = true;
+    }
+  }
+  if (prunedSessions) {
+    persistAdminSessions();
   }
 }, 5 * 60 * 1000);
 cleanupTimer.unref?.();
@@ -312,7 +460,7 @@ const repairIntakeSchema = z
     customDevice: z.string().trim().max(120).optional().default(""),
     brand: z.string().trim().max(120).optional().default(""),
     model: z.string().trim().max(120).optional().default(""),
-    problem: z.string().trim().min(4).max(1500),
+    problem: z.string().trim().min(3).max(1500),
     urgency: z.enum(["normal", "express", "notfall"]).default("normal"),
     callbackTime: z.string().trim().max(120).optional().default("Jederzeit erreichbar"),
     zip: z.string().trim().max(80).optional().default(""),
@@ -324,10 +472,13 @@ const repairIntakeSchema = z
     phone: z
       .string()
       .trim()
-      .min(6)
       .max(30)
+      .optional()
+      .default("")
       .refine(
-        (val) => /^[+()\d\s/-]{6,30}$/.test(val) && val.replace(/\D/g, "").length >= 6,
+        (val) =>
+          !val ||
+          (/^[+()\d\s/-]{6,30}$/.test(val) && val.replace(/\D/g, "").length >= 6),
         "Ungültige Telefonnummer"
       ),
     email: z
@@ -403,7 +554,7 @@ function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) 
       "frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://*.firebaseapp.com",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://wa.me https://api.whatsapp.com",
+      "form-action 'self' https://wa.me https://api.whatsapp.com https://web.whatsapp.com",
     ].join("; ")
   );
 
@@ -525,7 +676,12 @@ async function createApp() {
         return;
       }
 
-      const fullPath = path.join(UPLOADS_DIR, base);
+      const resolvedUploadsDir = path.resolve(UPLOADS_DIR);
+      const fullPath = path.resolve(resolvedUploadsDir, base);
+      if (!fullPath.startsWith(resolvedUploadsDir + path.sep)) {
+        res.status(400).json({ ok: false, error: "Ungültiger Dateipfad." });
+        return;
+      }
       try {
         if (fs.existsSync(fullPath)) {
           fs.unlinkSync(fullPath);
@@ -831,14 +987,8 @@ async function createApp() {
         place: {
           placeId: typeof rawJson.id === "string" ? rawJson.id : placeId,
           displayName: displayNameObj?.text || "",
-          formattedAddress:
-            typeof rawJson.formattedAddress === "string"
-              ? rawJson.formattedAddress
-              : "",
-          shortFormattedAddress:
-            typeof rawJson.shortFormattedAddress === "string"
-              ? rawJson.shortFormattedAddress
-              : "",
+          formattedAddress: "Iburger Straße 5, Im Hof, 49082 Osnabrück, Deutschland",
+          shortFormattedAddress: "Iburger Straße 5, Im Hof, 49082 Osnabrück",
           coordinates:
             typeof locObj?.latitude === "number" &&
             typeof locObj?.longitude === "number"
@@ -1052,25 +1202,67 @@ async function createApp() {
   // ── Protected Admin Console Endpoints (/api/admin/*) ───────────────────────
   app.post("/api/admin/login", (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-store");
-    const rawBody = req.body as { pin?: unknown } | undefined;
-    const pin = typeof rawBody?.pin === "string" ? rawBody.pin.trim() : "";
-
-    if (!pin || !ADMIN_ALLOWED_PINS.has(pin.toLowerCase()) && !ADMIN_ALLOWED_PINS.has(pin)) {
-      res.status(401).json({
+    const clientIp = getClientIp(req);
+    if (isAdminLoginRateLimited(clientIp)) {
+      res.status(429).json({
         ok: false,
-        error: "Ungültiger Meister-PIN oder Passwort. Bitte erneut versuchen.",
+        error: "Zu viele Anmeldeversuche. Bitte warten Sie einige Minuten.",
       });
       return;
     }
 
-    const token = `hannachi-admin-${crypto.randomBytes(16).toString("hex")}`;
-    activeAdminTokens.add(token);
+    const rawBody = req.body as { pin?: unknown; password?: unknown } | undefined;
+    const candidate =
+      typeof rawBody?.password === "string"
+        ? rawBody.password.trim()
+        : typeof rawBody?.pin === "string"
+        ? rawBody.pin.trim()
+        : "";
+
+    if (!verifyAdminPassword(candidate)) {
+      res.status(401).json({
+        ok: false,
+        error: "Ungültiges Passwort. Bitte erneut versuchen.",
+      });
+      return;
+    }
+
+    adminLoginAttempts.delete(clientIp);
+    const token = `hannachi-admin-${crypto.randomBytes(32).toString("hex")}`;
+    const tokenHash = hashSessionToken(token);
+    activeAdminTokens.set(tokenHash, Date.now() + ADMIN_TOKEN_TTL_MS);
+    persistAdminSessions();
+    setAdminSessionCookie(res, token, Math.floor(ADMIN_TOKEN_TTL_MS / 1000));
 
     res.status(200).json({
       ok: true,
       token,
       owner: "Kamal Hannachi",
     });
+  });
+
+  app.get("/api/admin/session", (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (!isAuthorizedAdminRequest(req)) {
+      res.status(200).json({ ok: false, authenticated: false });
+      return;
+    }
+    res.status(200).json({
+      ok: true,
+      authenticated: true,
+      owner: "Kamal Hannachi",
+    });
+  });
+
+  app.post("/api/admin/logout", (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+    const token = extractAdminToken(req);
+    if (token) {
+      activeAdminTokens.delete(hashSessionToken(token));
+      persistAdminSessions();
+    }
+    clearAdminSessionCookie(res);
+    res.status(200).json({ ok: true });
   });
 
   app.get("/api/admin/tickets", (req: Request, res: Response) => {
@@ -1116,7 +1308,7 @@ async function createApp() {
       customDevice: sanitizeSingleLine(raw.customDevice, 120),
       brand,
       model: sanitizeSingleLine(raw.model, 120),
-      problem: sanitizeText(raw.problem, 1500, true) || "Telefonische Reparaturanfrage",
+      problem: sanitizeText(raw.problem, 1500, true) || "Telefonische Geräte- / Ersatzteilanfrage",
       urgency:
         raw.urgency === "notfall" || raw.urgency === "express"
           ? raw.urgency
@@ -1147,7 +1339,7 @@ async function createApp() {
           ? buildSingleGrossInvoiceItems(
               raw.totalGross,
               sanitizeText(raw.technicianNotes, 200, true) ||
-                `Reparaturleistung & Service (${brand} ${device})`
+                `Elektrohaushaltsgerät / Original-Ersatzteil (${brand} ${device})`
             )
           : Array.isArray(raw.invoiceItems)
           ? (raw.invoiceItems as AdminInvoiceItem[])
@@ -1543,8 +1735,8 @@ async function createApp() {
     const bullet3 =
       sanitizeSingleLine(rawBullets[2], 160) ||
       (conditionType === "new_part"
-        ? "Mobiler Vor-Ort-Ersatzteil-Service in Osnabrück & Umgebung"
-        : "Inklusive schriftlicher Verkäufergarantie bei Übergabe vor Ort");
+        ? "Persönliche Beratung & Original-Ersatzteile nach Terminvereinbarung in Osnabrück"
+        : "Inklusive schriftlicher Verkäufergarantie bei Übergabe in Osnabrück");
 
     const availability: MarketplaceAvailabilityStatus =
       raw.availability === "Reserviert (Anfrage möglich)"
@@ -1566,7 +1758,7 @@ async function createApp() {
       id: itemId,
       createdAt: existingItem?.createdAt || nowIso,
       updatedAt: nowIso,
-      isDemo: Boolean(raw.isDemo),
+      isDemo: false,
       skuOrEnr,
       title,
       brand,
@@ -1618,7 +1810,7 @@ async function createApp() {
           : "Sie erhalten beim Kauf dieses Geräts eine schriftliche Verkäufergarantie von Hannachi Elektrohaushaltsgeräte & Ersatzteile."),
       pickupInfo:
         sanitizeText(raw.pickupInfo, 400, true) ||
-        "Mobiler Vor-Ort-Service & Übergabe in 49082 Osnabrück & Umgebung nach Terminvereinbarung.",
+        "Persönliche Übergabe oder Lieferung in 49082 Osnabrück & Umgebung nach Terminvereinbarung.",
       availability,
       priceLabel: "Preis auf Anfrage",
       imageKey: catMeta.defaultImageKey,
@@ -1734,17 +1926,6 @@ async function createApp() {
     const filtered = current.filter((i) => i.id !== itemId);
     persistStoredMarketplaceItems(filtered);
     res.status(200).json({ ok: true, items: filtered });
-  });
-
-  app.post("/api/admin/marketplace/reset-demos", (req: Request, res: Response) => {
-    res.setHeader("Cache-Control", "no-store");
-    if (!isAuthorizedAdminRequest(req)) {
-      res.status(401).json({ ok: false, error: "Nicht autorisiert." });
-      return;
-    }
-    const initial = [...INITIAL_MARKETPLACE_DEMO_ITEMS];
-    persistStoredMarketplaceItems(initial);
-    res.status(200).json({ ok: true, items: initial });
   });
 
   // Return JSON 404 for unknown /api/* routes

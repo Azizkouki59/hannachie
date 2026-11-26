@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   AlertCircle,
@@ -45,6 +46,7 @@ import ApplianceLogo from "@/components/ApplianceLogo";
 import { getBrowserPositionWithFallback } from "@/lib/geolocation";
 import { hapticSuccess, hapticTap, triggerHapticFeedback } from "@/lib/haptics";
 import {
+  buildWhatsAppWebUrl,
   createHannachiWhatsAppPayload,
   type WhatsAppValidationErrors,
   type WhatsAppValidationField,
@@ -66,38 +68,38 @@ type RequestTypeOption = {
 const REQUEST_TYPES: RequestTypeOption[] = [
   {
     id: "check_parts",
-    shortLabel: "Vor-Ort & Teil",
-    tagPrefix: "[Vor-Ort-Check / Ersatzteil]",
-    placeholder: "Kurz beschreiben (z. B. pumpt nicht ab, Fehlercode E15)...",
+    shortLabel: "Beratung & Teile",
+    tagPrefix: "[Beratung & Teile]",
+    placeholder: "Kurz beschreiben oder E-Nr. vom Typenschild eingeben…",
     quickHints: [
-      "Pumpt nicht ab / Wasser steht",
-      "Heizt / kühlt nicht mehr",
-      "Macht laute Geräusche",
-      "Ersatzteil nach E-Nr.",
+      "Persönliche Beratung",
+      "Originalteil (E-Nr.)",
+      "Pumpe / Dichtung / Teil",
+      "Termin vereinbaren",
     ],
     icon: Wrench,
   },
   {
     id: "replacement_offer",
-    shortLabel: "Ersatzgerät",
-    tagPrefix: "[Ersatzgerät mit Garantie]",
-    placeholder: "Welches geprüfte Ersatzgerät mit Garantie suchen Sie?",
+    shortLabel: "Gerät auf Anfrage",
+    tagPrefix: "[Gerät auf Anfrage]",
+    placeholder: "Gesuchtes Markengerät kurz nennen (z. B. Miele, Bosch)…",
     quickHints: [
-      "Geprüftes Ersatzgerät gesucht",
-      "Altgerät lohnt nicht mehr",
-      "Inkl. Lieferung in Osnabrück",
+      "Markengerät auf Anfrage",
+      "Verfügbarkeit prüfen",
+      "Mit Verkäufergarantie",
     ],
     icon: ShieldCheck,
   },
   {
     id: "warranty",
     shortLabel: "Garantie",
-    tagPrefix: "[Garantie-Anfrage]",
-    placeholder: "Kurz Problem mit Ihrem bei Hannachi gekauften Gerät nennen...",
+    tagPrefix: "[Garantie]",
+    placeholder: "Kaufdatum & kurzes Anliegen (bei Hannachi gekauft)…",
     quickHints: [
-      "Gerät bei Hannachi gekauft",
+      "Bei Hannachi gekauft",
       "Garantiebeleg liegt vor",
-      "Vor-Ort-Garantietermin",
+      "Kurze Rückfrage",
     ],
     icon: Shield,
   },
@@ -244,17 +246,17 @@ const PHONE_VALID_REGEX = /^[+()\d\s/-]{6,30}$/;
 function validatePhoneRealtime(rawPhone: string): string | undefined {
   const trimmed = rawPhone.trim();
   if (!trimmed) {
-    return "Bitte geben Sie Ihre Telefon- oder WhatsApp-Nummer ein.";
+    return undefined;
   }
   if (!PHONE_ALLOWED_REGEX.test(trimmed)) {
-    return "Bitte nur Ziffern sowie +, -, ( ) und Leerzeichen verwenden.";
+    return "Nur Ziffern sowie +, -, ( ) verwenden.";
   }
   const digitCount = trimmed.replace(/\D/g, "").length;
   if (digitCount < 6 || !PHONE_VALID_REGEX.test(trimmed)) {
     const remaining = Math.max(0, 6 - digitCount);
     return remaining > 0
-      ? `Noch ${remaining} ${remaining === 1 ? "Ziffer" : "Ziffern"} für gültige Nummer.`
-      : "Bitte eine gültige Telefonnummer (6–30 Zeichen) eingeben.";
+      ? `Noch ${remaining} ${remaining === 1 ? "Ziffer" : "Ziffern"}.`
+      : "Bitte gültige Nummer eingeben.";
   }
   return undefined;
 }
@@ -267,22 +269,20 @@ function validateRepairValuesRealtime(v: RepairValues): RepairErrors {
   const cleanZip = v.zip.trim();
 
   if (!cleanDevice) {
-    nextErrors.device = "Bitte wählen Sie ein Gerät aus.";
+    nextErrors.device = "Bitte Gerät wählen.";
   } else if (
     (cleanDevice === "Sonstiges" || cleanDevice.includes("Anderes")) &&
     cleanCustom.length < 2
   ) {
-    nextErrors.customDevice =
-      "Bitte nennen Sie kurz das Gerät (z. B. Trockner).";
+    nextErrors.customDevice = "Bitte Gerät kurz nennen (z. B. Trockner).";
   }
 
-  if (cleanProblem.length < 4) {
-    nextErrors.problem =
-      "Bitte wählen Sie oben ein Problem oder schreiben Sie kurz 1–2 Worte.";
+  if (cleanProblem.length < 3) {
+    nextErrors.problem = "Bitte Anliegen antippen oder kurz eingeben.";
   }
 
   if (cleanZip.length < 3) {
-    nextErrors.zip = "Bitte geben Sie PLZ / Ort in Osnabrück & Umgebung an.";
+    nextErrors.zip = "Bitte PLZ / Ort angeben.";
   }
 
   const phoneErr = validatePhoneRealtime(v.phone);
@@ -308,6 +308,7 @@ export default function RepairForm({
   defaultBrand = "",
   defaultMode = "repair",
   defaultRequestType = "check_parts",
+  selectionSeq = 0,
   compact = false,
   showPhotoGuideLink = false,
 }: {
@@ -316,6 +317,7 @@ export default function RepairForm({
   defaultBrand?: string;
   defaultMode?: InquiryMode;
   defaultRequestType?: RequestTypeId;
+  selectionSeq?: number;
   compact?: boolean;
   showPhotoGuideLink?: boolean;
 }) {
@@ -331,14 +333,18 @@ export default function RepairForm({
   const inferRequestTypeFromSymptom = (symptomText?: string): RequestTypeId | null => {
     if (!symptomText) return null;
     const lower = symptomText.toLowerCase();
-    if (lower.includes("garantieabwicklung") || lower.includes("garantie-anfrage")) {
+    if (
+      lower.includes("garantie") ||
+      lower.includes("gewährleistung") ||
+      lower.includes("bei hannachi gekauft")
+    ) {
       return "warranty";
     }
     if (
       lower.includes("geprüft") ||
-      lower.includes("altgerät lohnt") ||
-      lower.includes("ersatzgerät") ||
-      lower.includes("ersatz-")
+      lower.includes("gebraucht") ||
+      lower.includes("ankauf") ||
+      lower.includes("ersatzgerät")
     ) {
       return "replacement_offer";
     }
@@ -408,10 +414,18 @@ export default function RepairForm({
   const [honeypot, setHoneypot] = useState("");
   const [submitErrorMsg, setSubmitErrorMsg] = useState<string | null>(null);
   const [serviceDoneRated, setServiceDoneRated] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyError, setPrivacyError] = useState<string | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
-  const prevDefaultsRef = useRef({ defaultDevice, defaultSymptom, defaultBrand });
+  const prevDefaultsRef = useRef({
+    defaultDevice,
+    defaultSymptom,
+    defaultBrand,
+    defaultRequestType,
+    selectionSeq,
+  });
   const isFirstSyncRef = useRef(true);
 
   useEffect(() => {
@@ -458,6 +472,7 @@ export default function RepairForm({
 
   useEffect(() => {
     if (prevDefaultsRef.current.defaultSymptom === defaultSymptom) return;
+    const previousSymptom = prevDefaultsRef.current.defaultSymptom;
     prevDefaultsRef.current.defaultSymptom = defaultSymptom;
     if (defaultSymptom) {
       const inferred = inferRequestTypeFromSymptom(defaultSymptom);
@@ -466,6 +481,10 @@ export default function RepairForm({
       }
       setValues((prev) => ({ ...prev, problem: defaultSymptom }));
       setStatus("idle");
+    } else if (previousSymptom) {
+      setValues((prev) =>
+        prev.problem === previousSymptom ? { ...prev, problem: "" } : prev
+      );
     }
   }, [defaultSymptom]);
 
@@ -480,9 +499,17 @@ export default function RepairForm({
   }, [defaultBrand]);
 
   useEffect(() => {
+    if (
+      prevDefaultsRef.current.defaultRequestType === defaultRequestType &&
+      prevDefaultsRef.current.selectionSeq === selectionSeq
+    ) {
+      return;
+    }
+    prevDefaultsRef.current.defaultRequestType = defaultRequestType;
+    prevDefaultsRef.current.selectionSeq = selectionSeq;
     setRequestType(defaultRequestType);
     setStatus("idle");
-  }, [defaultRequestType]);
+  }, [defaultRequestType, selectionSeq]);
 
   const id = (k: string) => `${uid}-${k}`;
   const activeType = REQUEST_TYPES.find((t) => t.id === requestType) || REQUEST_TYPES[0];
@@ -494,7 +521,8 @@ export default function RepairForm({
   const isDeviceReady = !realtimeErrors.device && !realtimeErrors.customDevice;
   const isProblemReady = !realtimeErrors.problem;
   const isZipReady = !realtimeErrors.zip;
-  const isPhoneReady = !realtimeErrors.phone;
+  const isPhoneEntered = values.phone.trim().length > 0;
+  const isPhoneValid = isPhoneEntered && !realtimeErrors.phone;
   const isReadyForWhatsApp = Object.keys(realtimeErrors).length === 0;
 
   const liveWhatsAppPayload = useMemo(() => {
@@ -727,7 +755,7 @@ export default function RepairForm({
       customDevice: cleanCustomDevice,
       brand: values.brand.trim(),
       model: "",
-      problem: cleanProblemBase.length >= 4 ? formattedProblem : cleanProblemBase,
+      problem: cleanProblemBase.length >= 3 ? formattedProblem : cleanProblemBase,
       zip: values.zip.trim(),
       streetAddress: values.streetAddress?.trim() || "",
       name: values.name.trim() || "Interessent (Osnabrück)",
@@ -757,6 +785,21 @@ export default function RepairForm({
       return;
     }
 
+    if (!privacyAccepted) {
+      setPrivacyError(
+        "Bitte bestätigen Sie kurz den Datenschutzhinweis vor dem Absenden."
+      );
+      window.setTimeout(() => {
+        const el = formRef.current?.querySelector<HTMLElement>(
+          '[data-field="privacy"]'
+        );
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus({ preventScroll: true });
+      }, 60);
+      return;
+    }
+
+    setPrivacyError(null);
     setErrors({});
     setToastErrors(null);
     setSubmitErrorMsg(null);
@@ -764,7 +807,7 @@ export default function RepairForm({
     const immediateHandoff = prepareImmediateWhatsAppHandoff(submissionPayload);
     if (!immediateHandoff.whatsappUrl) {
       setSubmitErrorMsg(
-        "Bitte prüfen Sie Gerät, Problem-Auswahl, Ort & Telefonnummer."
+        "Bitte prüfen Sie Gerät, Anliegen, Ort & Telefonnummer."
       );
       setStatus("error");
       return;
@@ -799,12 +842,35 @@ export default function RepairForm({
 
   async function copyMessage() {
     if (!messageText) return;
+    let didCopy = false;
     try {
-      await navigator.clipboard?.writeText(messageText);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(messageText);
+        didCopy = true;
+      }
+    } catch {
+      didCopy = false;
+    }
+
+    if (!didCopy && typeof document !== "undefined") {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = messageText;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        didCopy = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch {
+        didCopy = false;
+      }
+    }
+
+    if (didCopy) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-    } catch {
-      // Clipboard blocked in restricted frame
     }
   }
 
@@ -828,6 +894,8 @@ export default function RepairForm({
     setMessageText("");
     setHasSentWhatsApp(false);
     setServiceDoneRated(false);
+    setPrivacyAccepted(false);
+    setPrivacyError(null);
     clearRepairDraft();
   }
 
@@ -838,9 +906,11 @@ export default function RepairForm({
     values.urgency === "express"
       ? "Dringend"
       : values.urgency === "notfall"
-      ? "Notfall"
+      ? "Sehr dringend"
       : "",
   ].filter(Boolean);
+
+  const whatsappWebUrl = messageText ? buildWhatsAppWebUrl(messageText) : "";
 
   if (status === "success") {
     return (
@@ -856,18 +926,18 @@ export default function RepairForm({
             </div>
             <div className="min-w-0">
               <span className="font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                WhatsApp geöffnet · #{referenceId}
+                Bereit · #{referenceId}
               </span>
               <h3 className="mt-0.5 text-base sm:text-xl font-extrabold text-primary dark:text-white">
-                Ihre Anfrage ist bereit in WhatsApp
+                In WhatsApp auf „Senden“ tippen
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-ink-muted">
-                Tippen Sie im WhatsApp-Chat einfach auf <strong>Senden</strong>. Falls sich WhatsApp nicht geöffnet hat, nutzen Sie den Button unten:
+                App nicht geöffnet? Direkt über die Buttons starten oder Text kopieren.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
             {whatsappUrl && (
               <a
                 href={whatsappUrl}
@@ -878,11 +948,23 @@ export default function RepairForm({
                   setHasSentWhatsApp(true);
                   clearRepairDraft();
                 }}
-                className="flex-1 min-w-0 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white text-center shadow-md transition-all"
+                className="flex-1 min-w-[200px] inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white text-center shadow-md transition-all"
               >
                 <MessageCircle size={18} className="shrink-0" />
-                <span>WhatsApp jetzt öffnen / senden</span>
+                <span>WhatsApp öffnen</span>
                 <ArrowRight size={15} className="shrink-0" />
+              </a>
+            )}
+            {whatsappWebUrl && (
+              <a
+                href={whatsappWebUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => triggerHapticFeedback(35)}
+                className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.98] transition-all shrink-0"
+              >
+                <MessageCircle size={15} className="shrink-0" />
+                <span>WhatsApp Web</span>
               </a>
             )}
             <button
@@ -898,7 +980,7 @@ export default function RepairForm({
               ) : (
                 <>
                   <Copy size={15} />
-                  <span>Text kopieren</span>
+                  <span>Kopieren</span>
                 </>
               )}
             </button>
@@ -912,7 +994,7 @@ export default function RepairForm({
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-800/50 px-3 sm:px-3.5 py-2 text-xs">
               <span className="inline-flex items-center gap-1.5 text-ink-muted min-w-0">
                 <MapPin size={14} className="text-accent shrink-0" />
-                <span className="truncate">Einsatzort: {values.zip}</span>
+                <span className="truncate">{values.zip}</span>
               </span>
               <a
                 href={sharedMapsUrl}
@@ -935,9 +1017,7 @@ export default function RepairForm({
             >
               <Star size={14} />
               <span>
-                {serviceDoneRated
-                  ? "Vielen Dank für Ihre Bewertung!"
-                  : "Zufrieden? Auf Google bewerten"}
+                {serviceDoneRated ? "Danke!" : "Auf Google bewerten"}
               </span>
             </a>
             <button
@@ -945,7 +1025,7 @@ export default function RepairForm({
               onClick={resetForm}
               className="inline-flex min-h-[44px] items-center font-bold text-accent hover:underline cursor-pointer"
             >
-              Weitere Anfrage stellen →
+              Neue Anfrage →
             </button>
           </div>
         </div>
@@ -981,7 +1061,7 @@ export default function RepairForm({
           <div className="min-w-0 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-white">
-                1. Gerät &amp; Service wählen
+                1. Gerät &amp; Anliegen wählen
               </span>
               <div
                 role="group"
@@ -1000,14 +1080,26 @@ export default function RepairForm({
                         setRequestType(option.id);
                       }}
                       aria-pressed={active}
-                      className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                      className={`relative inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
                         active
-                          ? "bg-accent text-white shadow-xs"
+                          ? "text-white"
                           : "text-ink-muted hover:text-primary dark:hover:text-white"
                       }`}
                     >
-                      <Icon size={13} aria-hidden="true" className="shrink-0" />
-                      <span className="truncate">{option.shortLabel}</span>
+                      {active && (
+                        <motion.span
+                          layoutId={`${uid}-request-type-pill`}
+                          transition={
+                            prefersReducedMotion
+                              ? { duration: 0.1 }
+                              : { type: "spring", stiffness: 460, damping: 32 }
+                          }
+                          aria-hidden="true"
+                          className="absolute inset-0 rounded-lg bg-accent shadow-xs"
+                        />
+                      )}
+                      <Icon size={13} aria-hidden="true" className="relative z-10 shrink-0" />
+                      <span className="relative z-10 truncate">{option.shortLabel}</span>
                     </button>
                   );
                 })}
@@ -1110,7 +1202,7 @@ export default function RepairForm({
                 htmlFor={id("problem")}
                 className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-primary dark:text-white"
               >
-                <span>2. Was ist passiert? *</span>
+                <span>2. Was benötigen Sie? *</span>
                 {isProblemReady && (
                   <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                 )}
@@ -1124,9 +1216,12 @@ export default function RepairForm({
                   .toLowerCase()
                   .includes(hint.toLowerCase());
                 return (
-                  <button
+                  <motion.button
                     key={hint}
                     type="button"
+                    whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 520, damping: 28 }}
                     onClick={() => toggleHint(hint)}
                     aria-pressed={isSelected}
                     className={`inline-flex min-h-[38px] max-w-full items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold text-left leading-snug transition-colors cursor-pointer ${
@@ -1139,7 +1234,7 @@ export default function RepairForm({
                       <Check size={12} strokeWidth={3} className="shrink-0" />
                     )}
                     <span>{hint}</span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -1172,11 +1267,11 @@ export default function RepairForm({
             )}
           </div>
 
-          {/* STEP 3: Rückrufnummer & Ort */}
+          {/* STEP 3: Ort & Kontakt */}
           <div className="min-w-0 pt-3 border-t border-primary/8 dark:border-white/8 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs sm:text-sm font-extrabold text-primary dark:text-white">
-                3. Rückrufnummer &amp; Ort *
+                3. Ort &amp; Rückruf <span className="font-semibold text-ink-faint">(Telefon optional)</span>
               </span>
               <div className="flex items-center gap-1.5">
                 <button
@@ -1185,7 +1280,7 @@ export default function RepairForm({
                   className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
                 >
                   <Navigation size={12} className="text-accent shrink-0" />
-                  <span>{gpsStatus === "locating" ? "Suche..." : "GPS"}</span>
+                  <span>{gpsStatus === "locating" ? "Suche…" : "GPS"}</span>
                 </button>
                 <button
                   type="button"
@@ -1202,17 +1297,17 @@ export default function RepairForm({
             </div>
 
             <div className="grid gap-2.5 sm:grid-cols-2">
-              {/* Primary Input: Phone / WhatsApp */}
+              {/* Optional Input: Phone / Callback */}
               <div className="min-w-0">
                 <label
                   htmlFor={id("phone")}
                   className="flex items-center justify-between gap-2 text-[11px] font-bold text-ink-muted mb-1"
                 >
-                  <span>Telefon / WhatsApp-Nummer *</span>
-                  {isPhoneReady && (
+                  <span>Telefon (optional)</span>
+                  {isPhoneValid && (
                     <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 size={12} />
-                      <span>Gültig</span>
+                      <span>OK</span>
                     </span>
                   )}
                 </label>
@@ -1222,7 +1317,7 @@ export default function RepairForm({
                     className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
                       errors.phone
                         ? "text-red-500"
-                        : isPhoneReady
+                        : isPhoneValid
                         ? "text-emerald-500"
                         : "text-ink-faint"
                     }`}
@@ -1238,16 +1333,16 @@ export default function RepairForm({
                     value={values.phone}
                     onChange={(e) => set("phone", e.target.value)}
                     onBlur={() => handleBlur("phone")}
-                    placeholder="z. B. 0170 1234567"
+                    placeholder="Für Rückruf (z. B. 0170…)"
                     className={`w-full min-h-[48px] rounded-xl border bg-white dark:bg-slate-900 pl-10 pr-9 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:outline-none transition-colors ${
                       errors.phone
                         ? "border-red-500 focus:border-red-500"
-                        : isPhoneReady
+                        : isPhoneValid
                         ? "border-emerald-500/60 focus:border-emerald-500"
                         : "border-primary/15 dark:border-white/15 focus:border-accent"
                     }`}
                   />
-                  {isPhoneReady && (
+                  {isPhoneValid && (
                     <CheckCircle2
                       size={16}
                       aria-hidden="true"
@@ -1264,8 +1359,8 @@ export default function RepairForm({
                     <span>{errors.phone}</span>
                   </p>
                 ) : (
-                  values.phone.trim().length > 0 &&
-                  !isPhoneReady && (
+                  isPhoneEntered &&
+                  !isPhoneValid && (
                     <p className="mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
                       {realtimeErrors.phone}
                     </p>
@@ -1325,9 +1420,12 @@ export default function RepairForm({
                   values.zip.includes(area.zip) ||
                   values.zip.toLowerCase().includes(area.city.toLowerCase());
                 return (
-                  <button
+                  <motion.button
                     key={area.zip}
                     type="button"
+                    whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 520, damping: 28 }}
                     onClick={() => {
                       hapticTap();
                       set("zip", area.value);
@@ -1339,7 +1437,7 @@ export default function RepairForm({
                     }`}
                   >
                     {area.label}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -1544,19 +1642,73 @@ export default function RepairForm({
                   ? "customDevice"
                   : "device") as keyof RepairValues,
               },
-              { label: "Problem", ready: isProblemReady, target: "problem" },
-              { label: "PLZ / Ort", ready: isZipReady, target: "zip" },
-              { label: "Telefon", ready: isPhoneReady, target: "phone" },
+              { label: "Anliegen", ready: isProblemReady, target: "problem" },
+              { label: "Ort", ready: isZipReady, target: "zip" },
+              ...(isPhoneEntered && !isPhoneValid
+                ? [{ label: "Telefon", ready: false, target: "phone" as keyof RepairValues }]
+                : []),
             ]}
             onFocusField={(field) => focusField(field)}
           />
 
+          {/* GDPR & WhatsApp Consent Acknowledgement (Art. 13 DSGVO) */}
+          <div className="pt-1 space-y-1.5">
+            <label
+              htmlFor={id("privacy")}
+              className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-[11px] sm:text-xs leading-relaxed cursor-pointer transition-colors ${
+                privacyError
+                  ? "border-red-500/60 bg-red-500/[0.06] text-primary dark:text-slate-200"
+                  : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted dark:text-slate-300"
+              }`}
+            >
+              <input
+                id={id("privacy")}
+                data-field="privacy"
+                type="checkbox"
+                checked={privacyAccepted}
+                onChange={(e) => {
+                  setPrivacyAccepted(e.target.checked);
+                  if (e.target.checked) setPrivacyError(null);
+                }}
+                aria-invalid={Boolean(privacyError)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded accent-accent cursor-pointer"
+              />
+              <span>
+                Ich habe die{" "}
+                <Link
+                  href="/datenschutz"
+                  className="font-semibold text-accent underline underline-offset-2"
+                >
+                  Datenschutzerklärung
+                </Link>{" "}
+                zur Verarbeitung meiner Angaben zur Bearbeitung meiner unverbindlichen Anfrage zur
+                Kenntnis genommen. Mit dem Klick öffnet freiwillig{" "}
+                <Link
+                  href="/datenschutz#whatsapp"
+                  className="font-semibold text-accent underline underline-offset-2"
+                >
+                  WhatsApp (Meta)
+                </Link>{" "}
+                (Alternative: Telefon / E-Mail).
+              </span>
+            </label>
+            {privacyError && (
+              <p
+                role="alert"
+                className="flex items-center gap-1 text-xs font-semibold text-red-500"
+              >
+                <AlertCircle size={13} aria-hidden="true" />
+                <span>{privacyError}</span>
+              </p>
+            )}
+          </div>
+
           {/* Primary Submit CTA */}
           <div className="pt-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
             <p className="text-[11px] text-ink-muted leading-snug">
-              {isReadyForWhatsApp
-                ? `Öffnet WhatsApp mit Ihrer Anfrage direkt an ${business.owner}.`
-                : "Nur Problem antippen & Telefonnummer eingeben."}
+              {isReadyForWhatsApp && privacyAccepted
+                ? "Fertig · öffnet direkt im WhatsApp-Chat."
+                : "Kurz Anliegen antippen & Datenschutz bestätigen."}
             </p>
             <motion.button
               whileTap={prefersReducedMotion || isSubmitting ? undefined : { scale: 0.97 }}
@@ -1564,20 +1716,20 @@ export default function RepairForm({
               type="submit"
               disabled={isSubmitting}
               className={`inline-flex min-h-[50px] w-full sm:w-auto max-w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold text-white text-center shadow-md transition-colors disabled:opacity-60 cursor-pointer sm:whitespace-nowrap ${
-                isReadyForWhatsApp
-                  ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25"
+                isReadyForWhatsApp && privacyAccepted
+                  ? "btn-shimmer-beam bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/25"
                   : "bg-slate-700 hover:bg-slate-600 shadow-slate-900/15"
               }`}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 size={17} className="animate-spin" />
-                  <span>WhatsApp wird geöffnet...</span>
+                  <span>Wird geöffnet…</span>
                 </>
               ) : (
                 <>
                   <MessageCircle size={18} className="shrink-0" />
-                  <span>Jetzt per WhatsApp anfragen</span>
+                  <span>Per WhatsApp senden</span>
                   <ArrowRight size={15} className="shrink-0" />
                 </>
               )}

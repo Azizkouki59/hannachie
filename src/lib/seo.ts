@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { business, services } from "@/data/site";
+import { business, services, yearsOfExperience } from "@/data/site";
 
 export type RouteSeoConfig = {
   title: string;
@@ -11,18 +11,17 @@ export type RouteSeoConfig = {
   canonicalUrl: string;
 };
 
-const BASE_TITLE = "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Mobiler Vor-Ort-Service Osnabrück";
+const BASE_TITLE = "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück seit 1990";
 const BASE_DESCRIPTION =
-  "Ihr mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile in Osnabrück: Vor-Ort-Termin bei Ihnen zu Hause, passende Ersatzteile & geprüfte Ersatzgeräte mit schriftlicher Verkäufergarantie.";
+  "Hausgeräte-Spezialist in Osnabrück seit 1990: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage.";
 export const BASE_KEYWORDS = [
-  "Mobiler Vor-Ort-Service Elektrohaushaltsgeräte Osnabrück",
-  "Ersatzteile Haushaltsgeräte Osnabrück",
-  "Geprüfte Ersatzgeräte mit schriftlicher Verkäufergarantie Osnabrück",
-  "An- und Verkauf Elektrohaushaltsgeräte Osnabrück",
-  "Waschmaschine Geschirrspüler Kühlschrank Herd Backofen Osnabrück",
+  "Hausgeräte Spezialist Osnabrück",
+  "Elektrohaushaltsgeräte Beratung Osnabrück",
+  "Original-Ersatzteile Haushaltsgeräte E-Nr Osnabrück",
+  "Ausgewählte Markengeräte auf Anfrage Osnabrück",
+  "Ersatzteile Waschmaschine Geschirrspüler Kühlschrank Backofen Osnabrück",
   "Kamal Hannachi",
   "Hannachi Elektrohaushaltsgeräte & Ersatzteile Osnabrück",
-  "Iburger Straße 5",
   "49082 Osnabrück",
 ];
 
@@ -66,11 +65,10 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     };
   }
 
-  if (normalizedPath === "/leistungen") {
+  if (normalizedPath === "/leistungen" || normalizedPath === "/geraete") {
     return {
-      title: "Vor-Ort-Service, Ersatzteile & Ersatzgeräte | Hannachi Osnabrück",
-      description:
-        "Mobiler Vor-Ort-Service nach Terminvereinbarung in Osnabrück: Gerätecheck & passende Ersatzteile bei Ihnen zu Hause sowie geprüfte Ersatzgeräte inkl. schriftlicher Verkäufergarantie.",
+      title: "Geräte, Beratung & Original-Ersatzteile | Hannachi Osnabrück",
+      description: `${yearsOfExperience}+ Jahre Erfahrung in Osnabrück: Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
       robots: "index,follow",
       index: true,
       follow: true,
@@ -87,8 +85,8 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     if (service) {
       const canonicalPath = `/leistungen/${service.slug}`;
       return {
-        title: `${service.title} – Vor-Ort-Service & Ersatzteile Osnabrück | Hannachi`,
-        description: `${service.short} Mobiler Vor-Ort-Termin nach Vereinbarung in Osnabrück & Umgebung.`,
+        title: `${service.title} – Beratung & Original-Ersatzteile | Hannachi Osnabrück`,
+        description: `${service.short} Persönlich in Osnabrück seit 1990 – Termine nach Vereinbarung.`,
         robots: "index,follow",
         index: true,
         follow: true,
@@ -100,9 +98,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/anfrage") {
     return {
-      title: "Vor-Ort-Termin, Ersatzteil & Ersatzgerät anfragen | Hannachi Osnabrück",
+      title: "Persönliche Anfrage & Original-Ersatzteile | Hannachi Osnabrück",
       description:
-        "Schnelle Online-Anfrage für einen Vor-Ort-Termin bei Ihnen zu Hause in Osnabrück, passende Ersatzteile, ein geprüftes Ersatzgerät mit schriftlicher Garantie oder einen Garantiefall.",
+        "Direkte Anfrage an Kamal Hannachi: Persönliche Hausgeräte-Beratung, Original-Ersatzteile nach Typenschild & ausgewählte Markengeräte auf Anfrage.",
       robots: "index,follow",
       index: true,
       follow: true,
@@ -113,9 +111,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/ueber-uns") {
     return {
-      title: "Über uns | Mobiler Vor-Ort-Service seit 1990 in Osnabrück – Hannachi",
+      title: "Über uns | Kamal Hannachi – Hausgeräte-Spezialist seit 1990",
       description:
-        "Kamal Hannachi in Osnabrück: Mobiler Vor-Ort-Service für Elektrohaushaltsgeräte & Ersatzteile sowie geprüfte Ersatzgeräte mit schriftlicher Garantie seit 1990.",
+        "Seit 1990 in Osnabrück: Inhaber Kamal Hannachi steht für ehrliche Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Markengeräte auf Anfrage.",
       robots: "index,follow",
       index: true,
       follow: true,
@@ -124,11 +122,11 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     };
   }
 
-  if (normalizedPath === "/kundenbewertungen") {
+  if (normalizedPath === "/kundenbewertungen" || normalizedPath === "/bewertungen") {
     return {
-      title: "Kundenbewertungen auf Google Maps | Hannachi Osnabrück",
+      title: "Verifizierte Google-Bewertungen | Hannachi Osnabrück",
       description:
-        "Verifizierte Google Maps Kundenstimmen und Live-Bewertungen aus Osnabrück für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
+        "Echte Kundenstimmen aus Osnabrück & Umgebung: Über 80 Google-Bewertungen für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
       robots: "index,follow",
       index: true,
       follow: true,
@@ -139,9 +137,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/kontakt") {
     return {
-      title: "Kontakt & Vor-Ort-Terminvereinbarung | Hannachi Osnabrück",
+      title: "Kontakt & Termine nach Vereinbarung | Hannachi Osnabrück",
       description:
-        "Telefon, WhatsApp und Terminvereinbarung für unseren mobilen Vor-Ort-Service bei Ihnen zu Hause in Osnabrück & Umgebung.",
+        "Direkt per WhatsApp oder Telefon erreichbar: Persönliche Beratung, Original-Ersatzteile nach E-Nr. & Termine nach Vereinbarung in Osnabrück.",
       robots: "index,follow",
       index: true,
       follow: true,
@@ -152,9 +150,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/impressum") {
     return {
-      title: "Impressum | Hannachi Osnabrück",
+      title: "Impressum & Rechtliche Hinweise (§ 5 DDG / § 14 GewO) | Hannachi",
       description:
-        "Impressum, Kontaktdaten und Geschäftsanschrift (Iburger Straße 5, 49082 Osnabrück) von Inhaber Kamal Hannachi.",
+        "Impressum gemäß § 5 DDG, gewerberechtliche Hinweise (§ 14 GewO / HwO) und Anschrift von Inhaber Kamal Hannachi in Osnabrück.",
       robots: "noindex,follow",
       index: false,
       follow: true,
@@ -167,7 +165,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     return {
       title: "Datenschutzerklärung (DSGVO) | Hannachi Osnabrück",
       description:
-        "Datenschutzhinweise gemäß DSGVO zur Nutzung der Website, der lokalen Anfragevorbereitung für WhatsApp und optionaler Standortfunktionen bei Hannachi.",
+        "DSGVO-Datenschutzhinweise von Kamal Hannachi zur Website-Nutzung, lokalen Anfragevorbereitung für WhatsApp und optionalen Google-Maps-Karten.",
       robots: "noindex,follow",
       index: false,
       follow: true,
@@ -192,7 +190,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
   return {
     title: "Seite nicht gefunden (404) | Hannachi Osnabrück",
     description:
-      "Die angeforderte Seite existiert nicht. Kehren Sie zur Startseite oder zu unserem Angebot für Elektrohaushaltsgeräte & Ersatzteile in Osnabrück zurück.",
+      "Die angeforderte Seite wurde nicht gefunden. Kehren Sie zur Startseite von Hannachi Elektrohaushaltsgeräte & Ersatzteile in Osnabrück zurück.",
     robots: "noindex,follow",
     index: false,
     follow: true,
