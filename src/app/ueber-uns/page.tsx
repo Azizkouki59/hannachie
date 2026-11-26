@@ -140,8 +140,7 @@ export default function UeberUns() {
                       { text: `${yearsOfExperience} Jahre ` },
                       {
                         text: "Persönlichkeit, Erfahrung & Präzision.",
-                        className:
-                          "bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent",
+                        className: "text-sky-300",
                       },
                     ]}
                   />

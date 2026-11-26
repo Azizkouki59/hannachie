@@ -1193,3 +1193,16 @@
   }
 }
 
+
+/* ── Readability on phones ────────────────────────────────────────────────
+   Many labels were set at 8–11 px, which is hard to read for older customers.
+   On phones every tiny size is raised to a legible minimum. (Desktop keeps its
+   original typography; prefixed sm:/md:/lg: sizes are unaffected.) */
+@media (max-width: 639px) {
+  .text-\[8px\], .text-\[9px\], .text-\[9\.5px\] { font-size: 11px !important; }
+  .text-\[10px\], .text-\[10\.5px\] { font-size: 11.5px !important; }
+  .text-\[11px\], .text-\[11\.5px\] { font-size: 12.5px !important; }
+  .text-xs { font-size: 13px; }
+  .text-\[13px\] { font-size: 14px !important; }
+  .text-\[13\.5px\] { font-size: 15px !important; }
+}

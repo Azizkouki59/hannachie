@@ -21,7 +21,7 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
-  Wrench,
+  PackageSearch,
   X,
 } from "lucide-react";
 import { business } from "@/data/site";
@@ -402,7 +402,7 @@ export default function MobileBottomDock({
               transition={tabSpring}
               className="relative z-10 inline-flex shrink-0"
             >
-              <Wrench
+              <PackageSearch
                 size={18}
                 strokeWidth={isServiceActive ? 2.25 : 1.85}
                 className={isServiceActive ? "text-sky-300" : ""}

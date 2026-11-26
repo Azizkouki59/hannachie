@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarClock, Info, Wrench, X } from "lucide-react";
+import { CalendarClock, Info, PackageSearch, X } from "lucide-react";
 import { business, type ServiceNotice } from "@/data/site";
 
 export type ServiceNoticeBannerProps = {
@@ -54,7 +54,7 @@ export default function ServiceNoticeBanner({
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
               <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-300">
                 {isMaintenance ? (
-                  <Wrench size={11} aria-hidden="true" />
+                  <PackageSearch size={11} aria-hidden="true" />
                 ) : (
                   <CalendarClock size={11} aria-hidden="true" />
                 )}

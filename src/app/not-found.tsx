@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Home, MessageSquareText, SearchX, Wrench } from "lucide-react";
+import { ArrowRight, Home, MessageSquareText, SearchX, PackageSearch } from "lucide-react";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 
 export default function NotFound() {
@@ -30,7 +30,7 @@ export default function NotFound() {
             Zur Startseite
           </Link>
           <Link href="/leistungen" className="btn-ghost w-full sm:w-auto">
-            <Wrench size={16} aria-hidden />
+            <PackageSearch size={16} aria-hidden />
             Geräte &amp; Ersatzteile
           </Link>
           <button

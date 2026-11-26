@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
 import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
+import AvailabilityBadge from "@/components/AvailabilityBadge";
 import GoogleMapsEmbed, { type ContactMapViewMode } from "@/components/GoogleMapsEmbed";
 import PhotoAnleitungGuide from "@/components/PhotoAnleitungGuide";
 import { Spatial3DCard } from "@/components/animations";
@@ -194,7 +195,7 @@ export default function Kontakt({
       <section className="py-7 sm:py-11 bg-surface dark:bg-slate-950">
         <div className="container-page grid gap-6 lg:gap-7 lg:grid-cols-12 lg:items-start">
           {/* Compact Sticky Contact & Map Sidebar */}
-          <aside className="min-w-0 space-y-4 lg:col-span-4 lg:sticky lg:top-20">
+          <aside className="min-w-0 self-start space-y-4 lg:col-span-4 lg:sticky lg:top-20">
             <Spatial3DCard maxTilt={4} className="rounded-2xl">
               <div className="card p-4 sm:p-5 space-y-4">
                 <ContactItem icon={MessageCircle} title="WhatsApp (Direkt)">
@@ -229,6 +230,7 @@ export default function Kontakt({
                     <p className="text-[11px] text-ink-muted">
                       Termine nach Vereinbarung
                     </p>
+                    <AvailabilityBadge tone="light" className="mt-1 text-[11px]" />
                   </ContactItem>
 
                   <ContactItem icon={MapPin} title="Standort">

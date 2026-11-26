@@ -51,6 +51,7 @@ import { generatedPhotos, type GeneratedPhotoAsset } from "@/data/generatedPhoto
 import { usePreloadHeroImages } from "@/lib/usePreloadHeroImages";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { hapticTap, triggerHapticFeedback } from "@/lib/haptics";
+import AvailabilityBadge from "@/components/AvailabilityBadge";
 import { HeroAnimatedBackdrop, SectionAmbientMesh } from "@/components/HeroAnimatedBackdrop";
 import SparePartsExplorer3D from "@/components/SparePartsExplorer3D";
 import {
@@ -387,7 +388,7 @@ export default function HomepageClient() {
                   <span aria-hidden="true" className="text-white/30">·</span>
                   <span className="font-bold text-white/90">Seit {business.founded} in Osnabrück</span>
                   <span aria-hidden="true" className="text-white/30">·</span>
-                  <span className="text-white/80">Termine nach Vereinbarung</span>
+                  <AvailabilityBadge />
                 </motion.div>
               </div>
 
@@ -400,8 +401,7 @@ export default function HomepageClient() {
                       { text: "Ihr Hausgeräte-Spezialist " },
                       {
                         text: "für Beratung & Original-Ersatzteile",
-                        className:
-                          "bg-gradient-to-r from-sky-300 via-sky-100 to-white bg-clip-text text-transparent",
+                        className: "text-sky-300",
                       },
                     ]}
                   />

@@ -13,7 +13,7 @@ import {
   MessageCircle,
   Phone,
   ShieldCheck,
-  Wrench,
+  PackageSearch,
 } from "lucide-react";
 import ContactCta from "@/components/ContactCta";
 import ApplianceLogo from "@/components/ApplianceLogo";
@@ -263,7 +263,7 @@ export default function ServicePage({ params }: Props) {
                     </div>
                   </div>
                   <div className="py-3 flex items-start gap-2.5">
-                    <Wrench
+                    <PackageSearch
                       size={15}
                       className="mt-0.5 shrink-0 text-accent"
                       aria-hidden="true"

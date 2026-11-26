@@ -13,7 +13,7 @@ import {
   Package,
   Phone,
   ShieldCheck,
-  Wrench,
+  PackageSearch,
 } from "lucide-react";
 import ContactCta from "@/components/ContactCta";
 import ApplianceLogo from "@/components/ApplianceLogo";
@@ -76,7 +76,7 @@ const SERVICE_TABS: Array<{
     id: "kernbereiche",
     label: "Kernbereiche & Anliegen",
     shortLabel: "Kernbereiche",
-    icon: Wrench,
+    icon: PackageSearch,
   },
   {
     id: "marken_ablauf",
@@ -154,7 +154,7 @@ export default function LeistungenPage() {
               }}
               className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-extrabold text-white hover:bg-accent-dark transition-colors whitespace-nowrap cursor-pointer"
             >
-              <Wrench size={14} aria-hidden="true" />
+              <PackageSearch size={14} aria-hidden="true" />
               <span>Anfrage starten</span>
             </button>
             <Link

@@ -1,6 +1,6 @@
 "use client";
 import type { Metadata } from "next";
-import { CheckCircle2, ArrowRight, Phone, MessageCircle, Wrench } from "lucide-react";
+import { CheckCircle2, ArrowRight, Phone, MessageCircle, PackageSearch } from "lucide-react";
 import { PageHeader } from "@/components/ui";
 import { InteractiveApplianceShowcase } from "@/components/AnimatedAppliances";
 import {
@@ -160,7 +160,7 @@ export default function SimulatorPage() {
                   onClick={() => openQuickRequest("Waschmaschine", "Ersatzteilanfrage mit Typenschild", "", "repair")}
                   className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-center text-xs font-bold text-white hover:bg-accent-dark transition-all sm:whitespace-nowrap cursor-pointer"
                 >
-                  <Wrench size={14} className="shrink-0" />
+                  <PackageSearch size={14} className="shrink-0" />
                   <span>Komplette Ersatzteilanfrage</span>
                 </button>
                 <button

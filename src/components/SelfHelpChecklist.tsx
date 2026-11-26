@@ -15,7 +15,7 @@ import {
   ShieldAlert,
   Snowflake,
   Sparkles,
-  Wrench,
+  PackageSearch,
 } from "lucide-react";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 
@@ -36,7 +36,7 @@ type ChecklistItem = {
 type ApplianceChecklistGroup = {
   key: ApplianceKey;
   label: string;
-  icon: typeof Wrench;
+  icon: typeof PackageSearch;
   items: ChecklistItem[];
 };
 
