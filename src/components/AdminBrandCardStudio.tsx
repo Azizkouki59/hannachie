@@ -266,7 +266,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
           ctx.fillStyle = "#0284c7";
           ctx.font = "800 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-          ctx.fillText("ELEKTROHAUSHALTSGERÄTE SERVICE", padX + 150, 128);
+          ctx.fillText("HAUSGERÄTE & ERSATZTEILE", padX + 150, 128);
 
           // Divider
           ctx.fillStyle = "#e2e8f0";
@@ -385,7 +385,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
           ctx.fillStyle = skyLightHex;
           ctx.font = "700 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-          ctx.fillText("ELEKTROHAUSHALTSGERÄTE SERVICE", padX + 142, 128);
+          ctx.fillText("HAUSGERÄTE & ERSATZTEILE", padX + 142, 128);
 
           ctx.fillStyle = "rgba(255,255,255,0.15)";
           ctx.fillRect(padX, 174, 570, 2);
@@ -507,7 +507,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
         ctx.fillStyle = "#ffffff";
         ctx.font = "700 22px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
         ctx.fillText(
-          "ELEKTROHAUSHALTSGERÄTE SERVICE",
+          "HAUSGERÄTE & ERSATZTEILE",
           width / 2,
           144
         );
@@ -572,7 +572,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
       {/* Header Banner */}
       <div className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+          <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
             <Sparkles className="w-4 h-4" />
             <span>Für Frau Hannachi · Professionelle Visitenkarten-Vorlage &amp; 4 Logos</span>
           </div>
@@ -590,7 +590,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             disabled={exportingSide !== null}
             onClick={() => void exportBusinessCardPng("front")}
             data-testid="download-card-front-png-btn"
-            className="min-h-[44px] px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            className="min-h-[44px] px-4 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
           >
             <ImageDown className="w-4 h-4 shrink-0" />
             <span>Visitenkarte Vorderseite (PNG)</span>
@@ -628,7 +628,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
               onClick={() => setCardTheme("mrs_hannachi_split")}
               className={`min-h-[38px] px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
                 cardTheme === "mrs_hannachi_split"
-                  ? "bg-sky-600 text-white"
+                  ? "bg-sky-700 text-white"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
@@ -640,7 +640,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
               onClick={() => setCardTheme("navy_sky_dark")}
               className={`min-h-[38px] px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
                 cardTheme === "navy_sky_dark"
-                  ? "bg-sky-600 text-white"
+                  ? "bg-sky-700 text-white"
                   : "text-ink-muted hover:text-ink"
               }`}
             >
@@ -687,7 +687,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                       className="w-12 h-10 object-contain rounded bg-white p-0.5"
                     />
                     <span className="text-[11px] font-bold text-ink text-center leading-tight flex items-center gap-1">
-                      {isSelected && <Check className="w-3 h-3 text-sky-600 shrink-0" />}
+                      {isSelected && <Check className="w-3 h-3 text-sky-700 shrink-0" />}
                       <span>{logo.shortLabel}</span>
                     </span>
                   </button>
@@ -706,7 +706,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                 onClick={() => applyPresetPerson("mrs")}
                 className={`min-h-[44px] px-3 py-2 rounded-lg border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
                   personName.toLowerCase().includes("frau")
-                    ? "bg-sky-600 text-white border-sky-600"
+                    ? "bg-sky-700 text-white border-sky-600"
                     : "bg-surface dark:bg-slate-900 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
                 }`}
               >
@@ -718,7 +718,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                 onClick={() => applyPresetPerson("mr")}
                 className={`min-h-[44px] px-3 py-2 rounded-lg border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
                   personName.toLowerCase().includes("mohamed")
-                    ? "bg-sky-600 text-white border-sky-600"
+                    ? "bg-sky-700 text-white border-sky-600"
                     : "bg-surface dark:bg-slate-900 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
                 }`}
               >
@@ -856,8 +856,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                           <div className="text-lg sm:text-2xl font-black tracking-tight text-slate-900 leading-none">
                             HANNACHI
                           </div>
-                          <div className="text-[9px] sm:text-[11px] font-extrabold tracking-wide text-sky-600 mt-0.5 truncate">
-                            ELEKTROHAUSHALTSGERÄTE SERVICE
+                          <div className="text-[9px] sm:text-[11px] font-extrabold tracking-wide text-sky-700 mt-0.5 leading-tight">
+                            HAUSGERÄTE & ERSATZTEILE
                           </div>
                         </div>
                       </div>
@@ -866,7 +866,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                         <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight">
                           {personName}
                         </div>
-                        <div className="text-[11px] sm:text-xs font-extrabold text-sky-600">
+                        <div className="text-[11px] sm:text-xs font-extrabold text-sky-700">
                           {personRole}
                         </div>
                         <div className="text-[9px] sm:text-[11px] font-medium text-slate-500 line-clamp-1 mt-0.5">
@@ -891,7 +891,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
                   {/* Right 4 Cols: Sky-Blue Vertical QR Dock */}
                   <div className="col-span-5 sm:col-span-4 flex flex-col justify-end h-full">
-                    <div className="bg-sky-600 text-white rounded-t-2xl p-2.5 sm:p-3.5 flex flex-col items-center justify-between shadow-md h-[92%] -mb-4 sm:-mb-6 pb-5 sm:pb-7">
+                    <div className="bg-sky-700 text-white rounded-t-2xl p-2.5 sm:p-3.5 flex flex-col items-center justify-between shadow-md h-[92%] -mb-4 sm:-mb-6 pb-5 sm:pb-7">
                       <div className="bg-white p-1.5 sm:p-2 rounded-xl shadow-xs">
                         <QRCodeSVG
                           value={qrUrl || "https://hannachi.de"}
@@ -946,13 +946,13 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                             HANNACHI
                           </div>
                           <div
-                            className={`text-[9px] sm:text-[11px] font-extrabold tracking-wide mt-0.5 truncate ${
+                            className={`text-[9px] sm:text-[11px] font-extrabold tracking-wide mt-0.5 leading-tight ${
                               cardTheme === "navy_gold"
                                 ? "text-amber-400"
                                 : "text-sky-400"
                             }`}
                           >
-                            ELEKTROHAUSHALTSGERÄTE SERVICE
+                            HAUSGERÄTE & ERSATZTEILE
                           </div>
                         </div>
                       </div>
@@ -1024,7 +1024,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             <button
               type="button"
               onClick={() => void exportBusinessCardPng("front")}
-              className="w-full min-h-[44px] px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full min-h-[44px] px-4 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer"
             >
               <ImageDown className="w-4 h-4" />
               <span>Vorderseite für {personName} als Druck-PNG herunterladen</span>
@@ -1062,7 +1062,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   HANNACHI
                 </div>
                 <div className="text-[10px] sm:text-xs font-bold tracking-wider text-white">
-                  ELEKTROHAUSHALTSGERÄTE SERVICE
+                  HAUSGERÄTE & ERSATZTEILE
                 </div>
               </div>
 
@@ -1159,7 +1159,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     />
                   </div>
                   <div className="p-4">
-                    <div className="text-[11px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                    <div className="text-[11px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">
                       {logo.badge}
                     </div>
                     <h4 className="text-sm sm:text-base font-extrabold text-ink mt-0.5">
@@ -1180,7 +1180,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     }}
                     className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
                       isSelected
-                        ? "bg-emerald-600 text-white"
+                        ? "bg-emerald-700 text-white"
                         : "bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-ink hover:border-sky-500"
                     }`}
                   >
@@ -1190,7 +1190,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   <button
                     type="button"
                     onClick={() => handleDownloadAssetImage(logo.src, logo.filename)}
-                    className="flex-1 min-h-[44px] px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    className="flex-1 min-h-[44px] px-4 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs sm:text-sm font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <Download className="w-4 h-4 shrink-0" />
                     <span>Bild herunterladen</span>
