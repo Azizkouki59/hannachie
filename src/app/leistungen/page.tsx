@@ -46,17 +46,17 @@ const serviceSteps = [
   {
     step: "01",
     title: "Gerät wählen",
-    desc: "Gerät & Anliegen antippen – Foto vom Typenschild optional per WhatsApp.",
+    desc: "Gerät & Anliegen antippen, Foto vom Typenschild optional per WhatsApp.",
   },
   {
     step: "02",
     title: "Ersatzteil-Check",
-    desc: "Prüfung nach E-Nr. / PNC direkt durch Herrn Hannachi.",
+    desc: "Persönliche Prüfung nach Typenschild direkt durch Herrn Hannachi.",
   },
   {
     step: "03",
     title: "Termin vereinbaren",
-    desc: "Persönliche Übergabe in Osnabrück – Termine nach Vereinbarung.",
+    desc: "Persönliche Übergabe in Osnabrück, Termine nach Vereinbarung.",
   },
 ] as const;
 

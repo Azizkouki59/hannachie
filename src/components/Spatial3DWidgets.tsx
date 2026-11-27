@@ -1,15 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   AnimatePresence,
   motion,
-  useMotionTemplate,
-  useMotionValue,
   useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
 } from "framer-motion";
 import {
   ArrowRight,
@@ -283,8 +278,7 @@ export function Appliance3DShowcaseCarousel({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   2. 3D GYROSCOPIC HERITAGE MEDALLION (For /ueber-uns — Mobile + PC)
-   True multi-layer CSS 3D depth card with floating orbital rings & Z-layers.
+   2. HERITAGE MEDALLION (For /ueber-uns — Zero-Lag Crisp Architectural Card)
 ═══════════════════════════════════════════════════════════════════════════ */
 export function Heritage3DOrbitalBadge({
   ratingFormatted,
@@ -293,100 +287,23 @@ export function Heritage3DOrbitalBadge({
   ratingFormatted: string;
   reviewCount: number;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = useReducedMotion();
-
-  const { scrollYProgress } = useScroll({
-    target: cardRef,
-    offset: ["start end", "end start"],
-  });
-  const smoothScroll = useSpring(scrollYProgress, { stiffness: 140, damping: 24 });
-  const scrollTiltX = useTransform(smoothScroll, [0, 0.5, 1], [10, 0, -9]);
-  const scrollRingRotate = useTransform(smoothScroll, [0, 1], [-24, 36]);
-
-  const rawX = useMotionValue(0);
-  const rawY = useMotionValue(0);
-  const rawGlareX = useMotionValue(50);
-  const rawGlareY = useMotionValue(50);
-  const rawHover = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(rawY, [-0.5, 0.5], [11, -11]), {
-    stiffness: 180,
-    damping: 22,
-  });
-  const rotateY = useSpring(useTransform(rawX, [-0.5, 0.5], [-13, 13]), {
-    stiffness: 180,
-    damping: 22,
-  });
-  const glareX = useSpring(rawGlareX, { stiffness: 160, damping: 24 });
-  const glareY = useSpring(rawGlareY, { stiffness: 160, damping: 24 });
-  const glareOpacity = useSpring(rawHover, { stiffness: 180, damping: 24 });
-  const glareBg = useMotionTemplate`radial-gradient(320px circle at ${glareX}% ${glareY}%, rgba(125, 211, 252, 0.28), transparent 70%)`;
-
-  const handleMove = (clientX: number, clientY: number) => {
-    if (prefersReduced || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    const nx = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    const ny = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
-    rawX.set(nx - 0.5);
-    rawY.set(ny - 0.5);
-    rawGlareX.set(nx * 100);
-    rawGlareY.set(ny * 100);
-    rawHover.set(1);
-  };
-
-  const handleReset = () => {
-    rawX.set(0);
-    rawY.set(0);
-    rawHover.set(0);
-  };
-
   return (
-    <div ref={cardRef} style={{ perspective: 1100 }} className="w-full h-full">
-      <motion.div
-        onPointerMove={(e) => {
-          if (e.pointerType === "mouse") handleMove(e.clientX, e.clientY);
-        }}
-        onPointerLeave={handleReset}
-        onPointerDown={(e) => {
-          if (e.pointerType === "touch") handleMove(e.clientX, e.clientY);
-        }}
-        onPointerUp={handleReset}
-        onPointerCancel={handleReset}
-        style={
-          prefersReduced
-            ? undefined
-            : {
-                rotateX: scrollTiltX,
-                rotateY,
-                transformStyle: "preserve-3d",
-              }
-        }
-        className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 p-5 sm:p-6 text-white shadow-[0_24px_60px_-16px_rgba(2,6,23,0.75)]"
-      >
-        <motion.div
-          style={prefersReduced ? undefined : { rotateX, transformStyle: "preserve-3d" }}
-          className="relative"
-        >
-          {/* Depth Layer 1: Rotating 3D Precision Orbital Ring */}
-          <motion.svg
+    <div className="w-full h-full">
+      <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-sky-400/25 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 p-5 sm:p-6 text-white shadow-[0_24px_60px_-16px_rgba(2,6,23,0.75)] transition-transform duration-200 lg:hover:-translate-y-0.5">
+        <div className="relative">
+          {/* Precision Architectural Ring */}
+          <svg
             aria-hidden="true"
             viewBox="0 0 220 220"
-            style={prefersReduced ? undefined : { rotate: scrollRingRotate }}
             className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 text-sky-400/25"
             fill="none"
           >
             <circle cx="110" cy="110" r="96" stroke="currentColor" strokeWidth="1" strokeDasharray="4 8" />
             <circle cx="110" cy="110" r="74" stroke="rgba(56,189,248,0.45)" strokeWidth="1.2" />
             <path d="M 110 14 A 96 96 0 0 1 206 110" stroke="rgba(186,230,253,0.7)" strokeWidth="1.8" strokeLinecap="round" />
-          </motion.svg>
+          </svg>
 
-          {/* Depth Layer 2: Elevated 3D Emblem */}
-          <div
-            style={prefersReduced ? undefined : { transform: "translateZ(26px)" }}
-            className="relative z-10 flex items-center justify-between gap-3"
-          >
+          <div className="relative z-10 flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-accent-light">
               <Award size={15} className="shrink-0" aria-hidden="true" />
               <span>Seit {business.founded} · {business.city}</span>
@@ -397,11 +314,7 @@ export function Heritage3DOrbitalBadge({
             </span>
           </div>
 
-          {/* Depth Layer 3: Prominent Metallic Years Counter */}
-          <div
-            style={prefersReduced ? undefined : { transform: "translateZ(38px)" }}
-            className="relative z-10 mt-4 flex items-baseline gap-3"
-          >
+          <div className="relative z-10 mt-4 flex items-baseline gap-3">
             <span className="bg-gradient-to-b from-white via-sky-100 to-sky-300 bg-clip-text text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent tabular-nums">
               {yearsOfExperience}+ Jahre
             </span>
@@ -410,29 +323,17 @@ export function Heritage3DOrbitalBadge({
             </span>
           </div>
 
-          <p
-            style={prefersReduced ? undefined : { transform: "translateZ(20px)" }}
-            className="relative z-10 mt-2.5 text-xs sm:text-[13px] leading-relaxed text-white/80"
-          >
+          <p className="relative z-10 mt-2.5 text-xs sm:text-[13px] leading-relaxed text-white/80">
             Inhaber <strong className="text-white">{business.owner}</strong> · Persönliche Beratung, Originalteile &amp; ausgewählte Markengeräte.
           </p>
-        </motion.div>
-
-        {!prefersReduced && (
-          <motion.div
-            aria-hidden="true"
-            style={{ background: glareBg, opacity: glareOpacity }}
-            className="pointer-events-none absolute inset-0 rounded-2xl"
-          />
-        )}
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   3. 3D FLOATING RATING PRISM BANNER (For /kundenbewertungen — Mobile + PC)
-   Five Z-layered 3D golden stars & spatial prism reacting to scroll & pointer.
+   3. VERIFIED RATING BANNER (For /kundenbewertungen — Zero Infinite Loops)
 ═══════════════════════════════════════════════════════════════════════════ */
 export function Rating3DPrismBanner({
   ratingFormatted,
@@ -443,73 +344,13 @@ export function Rating3DPrismBanner({
   reviewCount: number;
   mapsUrl: string;
 }) {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = useReducedMotion();
-
-  const { scrollYProgress } = useScroll({
-    target: stageRef,
-    offset: ["start end", "end start"],
-  });
-  const smoothScroll = useSpring(scrollYProgress, { stiffness: 150, damping: 26 });
-  const prismScrollTilt = useTransform(smoothScroll, [0, 0.5, 1], [6, 0, -5]);
-
-  const rawX = useMotionValue(0);
-  const rawY = useMotionValue(0);
-  const rotateY = useSpring(useTransform(rawX, [-0.5, 0.5], [-8, 8]), {
-    stiffness: 180,
-    damping: 22,
-  });
-  const rotateX = useSpring(useTransform(rawY, [-0.5, 0.5], [7, -7]), {
-    stiffness: 180,
-    damping: 22,
-  });
-
-  const handlePoint = (clientX: number, clientY: number) => {
-    if (prefersReduced || !stageRef.current) return;
-    const rect = stageRef.current.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    rawX.set((clientX - rect.left) / rect.width - 0.5);
-    rawY.set((clientY - rect.top) / rect.height - 0.5);
-  };
-
-  const reset = () => {
-    rawX.set(0);
-    rawY.set(0);
-  };
-
   return (
     <section className="border-b border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-900/70 py-7 sm:py-10">
-      <div ref={stageRef} className="container-page" style={{ perspective: 1200 }}>
-        <motion.div
-          onPointerMove={(e) => {
-            if (e.pointerType === "mouse") handlePoint(e.clientX, e.clientY);
-          }}
-          onPointerLeave={reset}
-          onPointerDown={(e) => {
-            if (e.pointerType === "touch") handlePoint(e.clientX, e.clientY);
-          }}
-          onPointerUp={reset}
-          onPointerCancel={reset}
-          style={
-            prefersReduced
-              ? undefined
-              : {
-                  rotateX: prismScrollTilt,
-                  rotateY,
-                  transformStyle: "preserve-3d",
-                }
-          }
-          className="relative overflow-hidden rounded-2xl border border-sky-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-sky-950 p-5 sm:p-7 text-white shadow-[0_24px_60px_-18px_rgba(2,6,23,0.7)]"
-        >
-          <motion.div
-            style={prefersReduced ? undefined : { rotateX, transformStyle: "preserve-3d" }}
-            className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5"
-          >
+      <div className="container-page">
+        <div className="relative overflow-hidden rounded-2xl border border-sky-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-sky-950 p-5 sm:p-7 text-white shadow-[0_24px_60px_-18px_rgba(2,6,23,0.7)]">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="flex items-center gap-4 sm:gap-5">
-              <div
-                style={prefersReduced ? undefined : { transform: "translateZ(34px)" }}
-                className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 flex-col items-center justify-center rounded-2xl border border-amber-300/35 bg-gradient-to-b from-amber-400/20 to-amber-500/5 shadow-[0_12px_30px_-8px_rgba(251,191,36,0.35)]"
-              >
+              <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 flex-col items-center justify-center rounded-2xl border border-amber-300/35 bg-gradient-to-b from-amber-400/20 to-amber-500/5 shadow-[0_12px_30px_-8px_rgba(251,191,36,0.35)]">
                 <span className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums leading-none">
                   {ratingFormatted}
                 </span>
@@ -518,30 +359,15 @@ export function Rating3DPrismBanner({
                 </span>
               </div>
 
-              <div style={prefersReduced ? undefined : { transform: "translateZ(24px)" }}>
+              <div>
                 <div className="flex items-center gap-1 mb-1.5" aria-label="5 Sterne Bewertung">
                   {[0, 1, 2, 3, 4].map((starIdx) => (
-                    <motion.span
+                    <Star
                       key={starIdx}
-                      animate={
-                        prefersReduced
-                          ? undefined
-                          : { y: [0, -3.5, 0] }
-                      }
-                      transition={{
-                        duration: 2.6,
-                        repeat: Infinity,
-                        delay: starIdx * 0.16,
-                        ease: "easeInOut",
-                      }}
-                      className="inline-flex"
-                    >
-                      <Star
-                        size={18}
-                        className="fill-amber-400 text-amber-400 drop-shadow-[0_4px_10px_rgba(251,191,36,0.45)]"
-                        aria-hidden="true"
-                      />
-                    </motion.span>
+                      size={18}
+                      className="fill-amber-400 text-amber-400"
+                      aria-hidden="true"
+                    />
                   ))}
                 </div>
                 <p className="text-base sm:text-lg font-extrabold text-white leading-snug">
@@ -553,10 +379,7 @@ export function Rating3DPrismBanner({
               </div>
             </div>
 
-            <div
-              style={prefersReduced ? undefined : { transform: "translateZ(28px)" }}
-              className="flex items-center gap-3 w-full md:w-auto shrink-0"
-            >
+            <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
               <a
                 href={mapsUrl}
                 target="_blank"
@@ -568,16 +391,15 @@ export function Rating3DPrismBanner({
                 <ArrowRight size={14} aria-hidden="true" />
               </a>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   4. 3D SPATIAL OSNABRÜCK RADAR PLANE (For /kontakt — Mobile + PC)
-   Architectural isometric 3D distance plane showing Osnabrück + 25 km region.
+   4. OSNABRÜCK REGION COMPASS (For /kontakt — Zero Infinite Loops)
 ═══════════════════════════════════════════════════════════════════════════ */
 const SERVICE_TOWNS = [
   { name: "Osnabrück", x: "50%", y: "50%", primary: true, km: "Zentrum" },
@@ -588,41 +410,18 @@ const SERVICE_TOWNS = [
 ] as const;
 
 export function Contact3DCompassCard() {
-  const wrapRef = useRef<HTMLDivElement>(null);
   const prefersReduced = useReducedMotion();
   const [selectedTown, setSelectedTown] = useState<string>("Osnabrück");
-
-  const { scrollYProgress } = useScroll({
-    target: wrapRef,
-    offset: ["start end", "end start"],
-  });
-  const smoothScroll = useSpring(scrollYProgress, { stiffness: 140, damping: 24 });
-  const planePitch = useTransform(smoothScroll, [0, 0.5, 1], [54, 44, 36]);
-
-  const rawX = useMotionValue(0);
-  const rotateZ = useSpring(useTransform(rawX, [-0.5, 0.5], [-10, 10]), {
-    stiffness: 160,
-    damping: 24,
-  });
 
   const activeTownObj =
     SERVICE_TOWNS.find((t) => t.name === selectedTown) || SERVICE_TOWNS[0];
 
   return (
-    <div
-      ref={wrapRef}
-      onPointerMove={(e) => {
-        if (prefersReduced || e.pointerType !== "mouse" || !wrapRef.current) return;
-        const rect = wrapRef.current.getBoundingClientRect();
-        if (rect.width > 0) rawX.set((e.clientX - rect.left) / rect.width - 0.5);
-      }}
-      onPointerLeave={() => rawX.set(0)}
-      className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-slate-950 via-slate-900 to-sky-950/95 p-4 sm:p-5 text-white shadow-[0_20px_48px_-14px_rgba(2,6,23,0.75)]"
-    >
+    <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-sky-400/20 bg-gradient-to-b from-slate-950 via-slate-900 to-sky-950/95 p-4 sm:p-5 text-white shadow-[0_20px_48px_-14px_rgba(2,6,23,0.75)]">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-accent-light">
-            3D Region · Osnabrück
+            Region · Osnabrück
           </p>
           <h3 className="text-sm font-extrabold text-white">
             Osnabrück &amp; 25 km Umgebung
@@ -634,7 +433,7 @@ export function Contact3DCompassCard() {
             initial={prefersReduced ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={prefersReduced ? undefined : { opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.16 }}
             className="text-[11px] font-bold text-sky-300 tabular-nums shrink-0"
           >
             {activeTownObj.name} · {activeTownObj.km}
@@ -642,36 +441,17 @@ export function Contact3DCompassCard() {
         </AnimatePresence>
       </div>
 
-      {/* Isometric 3D Plane */}
+      {/* Isometric Region Plane */}
       <div className="relative flex-1 min-h-[11rem] w-full overflow-hidden rounded-xl border border-white/10 bg-slate-950/70" style={{ perspective: 700 }}>
-        <motion.div
-          style={
-            prefersReduced
-              ? { transform: "rotateX(44deg)" }
-              : {
-                  rotateX: planePitch,
-                  rotateZ,
-                  transformStyle: "preserve-3d",
-                }
-          }
+        <div
+          style={{ transform: "rotateX(38deg)" }}
           className="relative mx-auto h-full w-full"
         >
-          {/* Concentric 3D radar rings */}
+          {/* Concentric distance rings */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="h-44 w-44 rounded-full border border-sky-400/18" />
             <div className="absolute h-28 w-28 rounded-full border border-sky-400/30" />
             <div className="absolute h-14 w-14 rounded-full border border-sky-300/45 bg-sky-400/10" />
-            {!prefersReduced && (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute h-44 w-44 rounded-full"
-                style={{
-                  background:
-                    "conic-gradient(from 0deg, rgba(56,189,248,0.28) 0deg, transparent 70deg, transparent 360deg)",
-                }}
-              />
-            )}
           </div>
 
           {/* Interactive Town Beacons */}
@@ -690,11 +470,11 @@ export function Contact3DCompassCard() {
                 className="group/pin absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer"
               >
                 <span
-                  className={`flex items-center justify-center rounded-full transition-transform duration-200 ${
+                  className={`flex items-center justify-center rounded-full transition-transform duration-150 ${
                     town.primary
-                      ? "h-6 w-6 bg-sky-500 text-white shadow-[0_0_18px_rgba(56,189,248,0.85)]"
+                      ? "h-6 w-6 bg-sky-500 text-white shadow-[0_0_16px_rgba(56,189,248,0.75)]"
                       : isSelected
-                        ? "h-4 w-4 bg-emerald-400 text-slate-950 scale-125 shadow-[0_0_14px_rgba(52,211,153,0.8)]"
+                        ? "h-4 w-4 bg-emerald-400 text-slate-950 scale-125 shadow-[0_0_12px_rgba(52,211,153,0.75)]"
                         : "h-3 w-3 bg-sky-300/80 hover:scale-125"
                   }`}
                 >
@@ -706,7 +486,7 @@ export function Contact3DCompassCard() {
               </button>
             );
           })}
-        </motion.div>
+        </div>
       </div>
 
       <p className="mt-2.5 text-[11px] text-white/65">

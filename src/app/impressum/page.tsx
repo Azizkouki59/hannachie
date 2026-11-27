@@ -346,7 +346,7 @@ export default function Impressum() {
                 Anfrage und kein autorisierter Werkskundendienst der genannten Hersteller. Alle
                 aufgeführten Marken-, Produkt- und Herstellerbezeichnungen sind Eigentum der
                 jeweiligen Rechteinhaber und dienen ausschließlich der eindeutigen Identifikation
-                passender Original-Ersatzteile (z. B. nach E-Nr. / PNC) sowie ausgewählter
+                passender Original-Ersatzteile (z. B. nach Typenschild) sowie ausgewählter
                 Markengeräte auf Anfrage.
               </p>
             </div>
@@ -373,7 +373,7 @@ export default function Impressum() {
                 <p className="mt-1">
                   Als Diensteanbieter sind wir gemäß den allgemeinen Gesetzen für eigene Inhalte auf
                   diesen Seiten verantwortlich. Für Inhalte externer Websites Dritter (z. B. Google
-                  Maps, Google Kalender, WhatsApp oder Facebook), auf die direkt oder indirekt
+                  Maps, WhatsApp oder Facebook), auf die direkt oder indirekt
                   verwiesen wird, übernehmen wir keine Gewähr; verantwortlich ist stets der
                   jeweilige Anbieter.
                 </p>

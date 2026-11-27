@@ -4,15 +4,13 @@ import {
   motion,
   AnimatePresence,
   useInView,
-  useMotionTemplate,
-  useMotionValue,
   useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
   type Variants,
 } from "framer-motion";
-import { Phone, MessageCircle, PackageSearch, X, ArrowRight, Sparkles, Info, Clock } from "lucide-react";
+import { MessageCircle, PackageSearch, X, ArrowRight, Sparkles, Info, Clock } from "lucide-react";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { business, type ServiceNotice } from "@/data/site";
 
@@ -169,11 +167,10 @@ export function ScrollRevealCard({
   );
 }
 
-/* ── Studio Spotlight & Calibrated CSS 3D Micro-Tilt Card (Desktop Pointer Only) ── */
+/* ── Zero-Lag Studio Card Wrapper (CSS GPU-composited lift, desktop fine-pointer only) ── */
 export function Spatial3DCard({
   children,
   className = "",
-  maxTilt = 2.8,
 }: {
   children: ReactNode;
   className?: string;
@@ -181,105 +178,17 @@ export function Spatial3DCard({
   enableScrollTilt?: boolean;
   scrollYaw?: number;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = useReducedMotion();
-  // Cap tilt at a calm, studio-grade ±2.8deg maximum
-  const clampedMaxTilt = Math.min(Math.max(maxTilt, 0), 2.8);
-
-  const rawSpotX = useMotionValue(180);
-  const rawSpotY = useMotionValue(120);
-  const rawHover = useMotionValue(0);
-  const rawRotateX = useMotionValue(0);
-  const rawRotateY = useMotionValue(0);
-
-  const spotX = useSpring(rawSpotX, { stiffness: 260, damping: 28, mass: 0.5 });
-  const spotY = useSpring(rawSpotY, { stiffness: 260, damping: 28, mass: 0.5 });
-  const spotOpacity = useSpring(rawHover, { stiffness: 240, damping: 26 });
-  const rotateX = useSpring(rawRotateX, { stiffness: 240, damping: 26, mass: 0.65 });
-  const rotateY = useSpring(rawRotateY, { stiffness: 240, damping: 26, mass: 0.65 });
-
-  const surfaceSpotlight = useMotionTemplate`radial-gradient(320px circle at ${spotX}px ${spotY}px, rgba(2, 132, 199, 0.12), rgba(16, 185, 129, 0.04) 44%, transparent 74%)`;
-  const hairlineSpotlight = useMotionTemplate`radial-gradient(230px circle at ${spotX}px ${spotY}px, rgba(56, 189, 248, 0.65), rgba(16, 185, 129, 0.22) 48%, transparent 76%)`;
-
-  const updatePointer = (clientX: number, clientY: number) => {
-    const el = containerRef.current;
-    if (!el || prefersReduced) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    const localX = clientX - rect.left;
-    const localY = clientY - rect.top;
-    const nx = localX / rect.width - 0.5;
-    const ny = localY / rect.height - 0.5;
-    rawSpotX.set(localX);
-    rawSpotY.set(localY);
-    rawRotateY.set(nx * clampedMaxTilt * 2);
-    rawRotateX.set(-ny * clampedMaxTilt * 2);
-    rawHover.set(1);
-  };
-
-  const resetPointer = () => {
-    rawHover.set(0);
-    rawRotateX.set(0);
-    rawRotateY.set(0);
-  };
-
-  if (prefersReduced) {
-    return (
-      <div data-spatial-3d="true" className={`relative h-full ${className}`}>
-        {children}
-      </div>
-    );
-  }
-
   return (
-    <motion.div
-      ref={containerRef}
+    <div
       data-spatial-3d="true"
-      whileHover={{ y: -2 }}
-      style={{
-        rotateX,
-        rotateY,
-        transformPerspective: 1100,
-      }}
-      transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.75 }}
-      onPointerMove={(e) => {
-        if (e.pointerType === "mouse") {
-          updatePointer(e.clientX, e.clientY);
-        }
-      }}
-      onPointerLeave={resetPointer}
-      className={`relative h-full ${className}`}
+      className={`relative h-full transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hover:-translate-y-0.5 ${className}`}
     >
       {children}
-
-      {/* Aceternity-style cursor radial spotlight overlay (zero React re-renders) */}
-      <motion.div
-        aria-hidden="true"
-        style={{
-          background: surfaceSpotlight,
-          opacity: spotOpacity,
-        }}
-        className="pointer-events-none absolute inset-0 z-10 rounded-[inherit]"
-      />
-
-      {/* Crisp hairline border glow tracking cursor around the rim */}
-      <motion.div
-        aria-hidden="true"
-        style={{
-          background: hairlineSpotlight,
-          opacity: spotOpacity,
-          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-          WebkitMaskComposite: "xor",
-          maskComposite: "exclude",
-          padding: "1px",
-        }}
-        className="pointer-events-none absolute -inset-px z-20 rounded-[inherit]"
-      />
-    </motion.div>
+    </div>
   );
 }
 
-/* ── Recessed 3D Parallax Photography Frame (Works on BOTH Mobile & PC with Fallback) ── */
+/* ── Crisp Studio Photography Frame (Zero scroll listeners, zero curtain-wipe delay) ── */
 export function Spatial3DPhoto({
   src,
   alt,
@@ -297,72 +206,21 @@ export function Spatial3DPhoto({
   className?: string;
   children?: ReactNode;
 }) {
-  const frameRef = useRef<HTMLDivElement>(null);
-  const prefersReduced = useReducedMotion();
   const [imgFailed, setImgFailed] = useState(false);
-
-  const { scrollYProgress } = useScroll({
-    target: frameRef,
-    offset: ["start end", "end start"],
-  });
-  const smoothScroll = useSpring(scrollYProgress, {
-    stiffness: 145,
-    damping: 26,
-    mass: 0.55,
-  });
-  const imgY = useTransform(smoothScroll, [0, 1], [-14, 14]);
-  const sheenX = useTransform(smoothScroll, [0, 1], ["-35%", "135%"]);
 
   return (
     <div
-      ref={frameRef}
       className={`relative overflow-hidden bg-gradient-to-br ${fallbackGradient} ${aspectClass} ${className}`}
     >
       {!imgFailed && (
-        <motion.div
-          style={prefersReduced ? undefined : { y: imgY }}
-          className="absolute -inset-4 will-change-transform"
-        >
-          <motion.div
-            initial={prefersReduced ? false : { scale: 1.14 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: 1.25, ease: smooth }}
-            className="h-full w-full"
-          >
-          <img
-            src={src}
-            alt={alt}
-            referrerPolicy="no-referrer"
-            loading={priority ? "eager" : "lazy"}
-            decoding={priority ? "sync" : "async"}
-            onError={() => setImgFailed(true)}
-            className="h-full w-full object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-          />
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Premium curtain wipe that uncovers the photo once it scrolls into view */}
-      {!prefersReduced && (
-        <motion.div
-          aria-hidden="true"
-          initial={{ y: "0%" }}
-          whileInView={{ y: "-101%" }}
-          viewport={{ once: true, amount: 0.35 }}
-          transition={{ duration: 0.95, ease: [0.76, 0, 0.24, 1] }}
-          className="pointer-events-none absolute inset-0 z-[8] bg-primary-dark"
-        >
-          <span className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-sky-400 via-sky-300 to-emerald-400" />
-        </motion.div>
-      )}
-
-      {/* Subtle scroll-driven diagonal studio glass sheen (visible on Mobile & PC scroll!) */}
-      {!prefersReduced && (
-        <motion.div
-          aria-hidden="true"
-          style={{ x: sheenX }}
-          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/[0.11] to-transparent z-[3]"
+        <img
+          src={src}
+          alt={alt}
+          referrerPolicy="no-referrer"
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          onError={() => setImgFailed(true)}
+          className="h-full w-full object-cover object-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.035]"
         />
       )}
 
@@ -530,22 +388,17 @@ export function MagneticHover({ children, className = "" }: { children: ReactNod
   );
 }
 
-/* ── Scroll progress bar (Spring-damped for buttery wheel & touch momentum) ── */
+/* ── Scroll progress bar (Direct 1:1 GPU scaleX, zero spring loop lag) ── */
 export function ScrollProgressBar() {
   const prefersReduced = useReducedMotion();
   const { scrollYProgress } = useScroll();
-  const smoothScaleX = useSpring(scrollYProgress, {
-    stiffness: 260,
-    damping: 32,
-    restDelta: 0.001,
-  });
 
   if (prefersReduced) return null;
 
   return (
     <motion.div
-      style={{ scaleX: smoothScaleX }}
-      className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-accent via-sky-400 to-cyan-300 origin-left z-50 pointer-events-none"
+      style={{ scaleX: scrollYProgress }}
+      className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-accent via-sky-400 to-cyan-300 origin-left z-50 pointer-events-none"
     />
   );
 }
@@ -943,8 +796,8 @@ const LAUNCHER_DISMISSED_SESSION_KEY = "hannachi-support-launcher-dismissed";
 
 export function FloatingSupportLauncher({
   phone,
-  phoneHref,
-  whatsappHref,
+  phoneHref: _phoneHref,
+  whatsappHref: _whatsappHref,
   serviceNotice = business.serviceNotice,
   variant = "glassmorphism",
 }: {
@@ -1183,7 +1036,7 @@ export function FloatingSupportLauncher({
             </div>
 
             <p className="mt-2.5 text-xs text-white/70 leading-relaxed">
-              Formular ausfüllen &amp; fertig an Herrn Hannachi senden – ausschließlich per WhatsApp:
+              Formular ausfüllen &amp; direkt per WhatsApp an Herrn Hannachi senden:
             </p>
 
             {isServiceNoticeActive && serviceNotice && (
@@ -1478,18 +1331,30 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
     };
 
     const rafId = window.requestAnimationFrame(registerCards);
-    const settleTimer = window.setTimeout(registerCards, 260);
+    const settleTimer = window.setTimeout(registerCards, 320);
     activeTimers.add(settleTimer);
 
+    // Coalesce MutationObserver scans via rAF so rapid typing/toggles never thrash layout
+    let mutRaf = 0;
     const mainEl = document.getElementById("main") || document.body;
-    const mutationObserver = new MutationObserver(() => {
-      registerCards();
+    const mutationObserver = new MutationObserver((records) => {
+      if (mutRaf) return;
+      const hasAddedElements = records.some((r) => r.addedNodes.length > 0);
+      if (!hasAddedElements) return;
+      mutRaf = window.requestAnimationFrame(() => {
+        mutRaf = 0;
+        registerCards();
+      });
     });
     mutationObserver.observe(mainEl, { childList: true, subtree: true });
 
-    // ── Studio Cursor Spotlight & Hairline Glow Controller (Zero 3D Warp, Zero React Re-Renders) ──
+    // ── Studio Cursor Spotlight Controller (Cached DOMRect, rAF-coalesced, zero layout thrashing) ──
     const isFinePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
     let activeCard: HTMLElement | null = null;
+    let activeRect: DOMRect | null = null;
+    let moveRaf = 0;
+    let pendingClientX = 0;
+    let pendingClientY = 0;
 
     const resetCardSpotlight = (card: HTMLElement | null) => {
       if (!card) return;
@@ -1504,12 +1369,21 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
       if (
         card.closest('[data-spatial-3d="true"]') ||
         card.classList.contains("animate-pulse") ||
-        card.querySelector("iframe") ||
-        card.offsetHeight > 680
+        card.querySelector("iframe")
       ) {
         return null;
       }
       return card;
+    };
+
+    const commitSpotlight = () => {
+      moveRaf = 0;
+      if (!activeCard || !activeRect || activeRect.width <= 0 || activeRect.height <= 0) return;
+      const relX = Math.max(0, Math.min(1, (pendingClientX - activeRect.left) / activeRect.width));
+      const relY = Math.max(0, Math.min(1, (pendingClientY - activeRect.top) / activeRect.height));
+      activeCard.style.setProperty("--sheen-x", `${(relX * 100).toFixed(1)}%`);
+      activeCard.style.setProperty("--sheen-y", `${(relY * 100).toFixed(1)}%`);
+      activeCard.style.setProperty("--sheen-opacity", "1");
     };
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -1519,23 +1393,37 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
       if (card !== activeCard) {
         resetCardSpotlight(activeCard);
         activeCard = card;
+        if (card) {
+          const rect = card.getBoundingClientRect();
+          if (rect.height > 680) {
+            activeCard = null;
+            activeRect = null;
+            return;
+          }
+          activeRect = rect;
+        } else {
+          activeRect = null;
+        }
       }
-      if (!card) return;
+      if (!activeCard || !activeRect) return;
 
-      const rect = card.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-
-      const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const relY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-
-      card.style.setProperty("--sheen-x", `${(relX * 100).toFixed(1)}%`);
-      card.style.setProperty("--sheen-y", `${(relY * 100).toFixed(1)}%`);
-      card.style.setProperty("--sheen-opacity", "1");
+      pendingClientX = e.clientX;
+      pendingClientY = e.clientY;
+      if (!moveRaf) {
+        moveRaf = window.requestAnimationFrame(commitSpotlight);
+      }
     };
 
     const handlePointerLeaveDoc = () => {
       resetCardSpotlight(activeCard);
       activeCard = null;
+      activeRect = null;
+    };
+
+    const invalidateActiveRect = () => {
+      if (activeCard) {
+        activeRect = activeCard.getBoundingClientRect();
+      }
     };
 
     let pressedTouchCard: HTMLElement | null = null;
@@ -1553,15 +1441,26 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
       pressedTouchCard = null;
     };
 
-    document.addEventListener("pointermove", handlePointerMove, { passive: true });
-    document.addEventListener("pointerleave", handlePointerLeaveDoc, { passive: true });
-    document.addEventListener("pointerdown", handlePointerDown, { passive: true });
-    document.addEventListener("pointerup", releaseTouchCard, { passive: true });
-    document.addEventListener("pointercancel", releaseTouchCard, { passive: true });
-    window.addEventListener("scroll", releaseTouchCard, { passive: true });
+    const onScrollOrResize = () => {
+      releaseTouchCard();
+      invalidateActiveRect();
+    };
+
+    if (isFinePointer) {
+      document.addEventListener("pointermove", handlePointerMove, { passive: true });
+      document.addEventListener("pointerleave", handlePointerLeaveDoc, { passive: true });
+    } else {
+      document.addEventListener("pointerdown", handlePointerDown, { passive: true });
+      document.addEventListener("pointerup", releaseTouchCard, { passive: true });
+      document.addEventListener("pointercancel", releaseTouchCard, { passive: true });
+    }
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", invalidateActiveRect, { passive: true });
 
     return () => {
       window.cancelAnimationFrame(rafId);
+      if (mutRaf) window.cancelAnimationFrame(mutRaf);
+      if (moveRaf) window.cancelAnimationFrame(moveRaf);
       resetCardSpotlight(activeCard);
       resetCardSpotlight(pressedTouchCard);
       activeTimers.forEach((t) => window.clearTimeout(t));
@@ -1573,7 +1472,8 @@ export function CardScrollRevealObserver({ routeKey }: { routeKey: string }) {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("pointerup", releaseTouchCard);
       document.removeEventListener("pointercancel", releaseTouchCard);
-      window.removeEventListener("scroll", releaseTouchCard);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", invalidateActiveRect);
     };
   }, [routeKey]);
 
@@ -1670,12 +1570,12 @@ export function WordmarkReveal({
       initial={prefersReduced ? false : "hidden"}
       whileInView="shown"
       viewport={{ once: true, amount: 0.4 }}
-      className={`select-none overflow-hidden leading-[0.82] ${className}`}
+      className={`flex w-full items-center justify-center whitespace-nowrap select-none overflow-hidden leading-[0.88] ${className}`}
     >
       {text.split("").map((ch, i) => (
         <motion.span
           key={i}
-          className={`inline-block ${letterClassName}`}
+          className={`inline-block shrink-0 ${letterClassName}`}
           variants={{
             hidden: { y: "100%" },
             shown: { y: "0%", transition: { duration: 0.9, delay: i * 0.05, ease: smooth } },

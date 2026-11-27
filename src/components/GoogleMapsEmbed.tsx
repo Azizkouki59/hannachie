@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   APIProvider,
@@ -33,8 +33,14 @@ import {
 } from "lucide-react";
 import { business } from "@/data/site";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
-import { getBrowserPositionWithFallback } from "@/lib/geolocation";
-import { osnabrueckServiceAreas } from "@/lib/repairRequest";
+import {
+  osnabrueckServiceAreas,
+  type VerifiedLocationInfo,
+} from "@/lib/repairRequest";
+import {
+  formatDetectedPlaceLabel,
+  useUserPlace,
+} from "@/lib/userPlace";
 import { triggerHapticFeedback } from "@/lib/haptics";
 
 export type ContactMapViewMode = "service-area" | "pin";
@@ -66,6 +72,8 @@ type UserLocationState =
       distanceFromHqKm: number;
       inServiceZone: boolean;
       nearestArea: ServiceAreaItem;
+      placeLabel: string;
+      detectedPlace: VerifiedLocationInfo;
     }
   | { status: "denied" | "unavailable" | "error"; message: string };
 
@@ -422,6 +430,8 @@ function InteractiveGoogleMapsView({
   areaInfoOpen,
   userCoordinates,
   userDistanceKm,
+  userPlaceLabel,
+  userInServiceZone,
   hqCoordinates,
   placeDisplayName,
   placeAddress,
@@ -442,6 +452,8 @@ function InteractiveGoogleMapsView({
   areaInfoOpen: boolean;
   userCoordinates: { lat: number; lng: number } | null;
   userDistanceKm: number | null;
+  userPlaceLabel: string | null;
+  userInServiceZone: boolean;
   hqCoordinates: { lat: number; lng: number };
   placeDisplayName: string;
   placeAddress: string;
@@ -626,13 +638,17 @@ function InteractiveGoogleMapsView({
           </InfoWindow>
         )}
 
-        {/* User's Current Position Marker (when located inside the Osnabrück service area) */}
+        {/* User's Current Position Marker (always shown when detected) */}
         {userCoordinates && (
           <>
             <AdvancedMarker
               ref={userMarkerRef}
               position={userCoordinates}
-              title="Ihr aktueller Standort"
+              title={
+                userPlaceLabel
+                  ? `Ihr Standort: ${userPlaceLabel}`
+                  : "Ihr aktueller Standort"
+              }
               onClick={() => setUserInfoOpen((prev) => !prev)}
             >
               <Pin
@@ -645,16 +661,24 @@ function InteractiveGoogleMapsView({
             {userInfoOpen && userMarker && (
               <InfoWindow
                 anchor={userMarker}
-                maxWidth={210}
+                maxWidth={230}
                 onCloseClick={() => setUserInfoOpen(false)}
               >
                 <div className="p-0.5 text-slate-900">
-                  <p className="text-xs font-extrabold">Ihr aktueller Standort</p>
+                  <p className="text-xs font-extrabold">
+                    {userPlaceLabel || "Ihr aktueller Standort"}
+                  </p>
                   <p className="text-[11px] text-slate-600 mt-0.5">
                     ca. {Math.max(1, userDistanceKm ?? 1)} km ab Osnabrück
                   </p>
-                  <p className="text-[11px] font-bold text-emerald-700 mt-1">
-                    In der Region Osnabrück (25 km)
+                  <p
+                    className={`text-[11px] font-bold mt-1 ${
+                      userInServiceZone ? "text-emerald-700" : "text-amber-700"
+                    }`}
+                  >
+                    {userInServiceZone
+                      ? "In der Region Osnabrück (25 km)"
+                      : "Außerhalb der 25-km-Region"}
                   </p>
                 </div>
               </InfoWindow>
@@ -893,11 +917,13 @@ export default function GoogleMapsEmbed({
   showModeToggle = false,
 }: GoogleMapsEmbedProps) {
   const { place } = useGoogleLivePlace();
+  const { detectedPlace, detectMyPlace } = useUserPlace();
   const hqCoordinates = place.coordinates;
   const placeAddress = place.shortFormattedAddress;
   const toggleGroupId = useId();
   const prefersReducedMotion = useReducedMotion();
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const lastSyncedPlaceKeyRef = useRef<string | null>(null);
   const [hasEnteredViewport, setHasEnteredViewport] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return typeof IntersectionObserver === "undefined";
@@ -914,7 +940,7 @@ export default function GoogleMapsEmbed({
     status: "idle",
   });
   const activeUserCoordinates =
-    userLocation.status === "located" && userLocation.inServiceZone
+    userLocation.status === "located"
       ? { lat: userLocation.lat, lng: userLocation.lng }
       : null;
 
@@ -975,6 +1001,36 @@ export default function GoogleMapsEmbed({
     return () => observer.disconnect();
   }, [hasEnteredViewport]);
 
+  // Sync previously detected/confirmed place across the website when in regional view
+  useEffect(() => {
+    if (!detectedPlace || activeMode !== "service-area") return;
+    const key = `${detectedPlace.lat.toFixed(5)},${detectedPlace.lng.toFixed(5)}`;
+    if (lastSyncedPlaceKeyRef.current === key) return;
+    lastSyncedPlaceKeyRef.current = key;
+
+    const exactKm = computeExactDistanceKm(
+      hqCoordinates.lat,
+      hqCoordinates.lng,
+      detectedPlace.lat,
+      detectedPlace.lng
+    );
+    const inServiceZone = exactKm <= SERVICE_RADIUS_KM;
+    setUserLocation({
+      status: "located",
+      lat: detectedPlace.lat,
+      lng: detectedPlace.lng,
+      distanceFromHqKm: Math.round(exactKm),
+      inServiceZone,
+      nearestArea: findNearestServiceArea(detectedPlace.lat, detectedPlace.lng),
+      placeLabel: formatDetectedPlaceLabel(detectedPlace),
+      detectedPlace,
+    });
+    setSelectedArea(null);
+    setAreaInfoOpen(false);
+    setZoom(inServiceZone ? 14 : 11);
+    setCameraCommandTick((t) => t + 1);
+  }, [detectedPlace, activeMode, hqCoordinates.lat, hqCoordinates.lng]);
+
   // Sync camera cleanly when controlled viewMode prop changes externally
   const prevActiveModeRef = useRef(activeMode);
   useEffect(() => {
@@ -983,7 +1039,7 @@ export default function GoogleMapsEmbed({
       if (activeMode === "pin") {
         setSelectedArea(null);
         setAreaInfoOpen(false);
-        if (userLocation.status === "located" && userLocation.inServiceZone) {
+        if (userLocation.status === "located") {
           setUserLocation({ status: "idle" });
         }
       }
@@ -1015,10 +1071,10 @@ export default function GoogleMapsEmbed({
     triggerHapticFeedback(25);
     setHasEnteredViewport(true);
     if (activeMode === "service-area" && (selectedArea || activeUserCoordinates)) {
-      // Re-fit active point first, or return cleanly to full 25 km overview
+      // Return cleanly to full 25 km overview
       setSelectedArea(null);
       setAreaInfoOpen(false);
-      if (userLocation.status === "located" && userLocation.inServiceZone) {
+      if (userLocation.status === "located") {
         setUserLocation({ status: "idle" });
       }
       setZoom(getOverviewZoom());
@@ -1048,7 +1104,7 @@ export default function GoogleMapsEmbed({
     triggerHapticFeedback(25);
     setHasEnteredViewport(true);
 
-    if (userLocation.status === "located" && userLocation.inServiceZone) {
+    if (userLocation.status === "located") {
       setUserLocation({ status: "idle" });
       setZoom(computeTargetZoom(activeMode, selectedArea, false));
       setCameraCommandTick((t) => t + 1);
@@ -1056,22 +1112,24 @@ export default function GoogleMapsEmbed({
     }
 
     setUserLocation({ status: "locating" });
-    const result = await getBrowserPositionWithFallback();
+    const outcome = await detectMyPlace();
 
-    if (!result.ok) {
+    if (!outcome.ok) {
       setUserLocation({
         status:
-          result.reason === "denied" || result.reason === "policy_blocked"
+          outcome.reason === "denied" || outcome.reason === "policy_blocked"
             ? "denied"
-            : result.reason === "unsupported"
+            : outcome.reason === "unsupported"
             ? "unavailable"
             : "error",
-        message: result.message,
+        message: outcome.message,
       });
       return;
     }
 
-    const { lat, lng } = result;
+    const detected = outcome.place;
+    const { lat, lng } = detected;
+    lastSyncedPlaceKeyRef.current = `${lat.toFixed(5)},${lng.toFixed(5)}`;
     const exactKm = computeExactDistanceKm(
       hqCoordinates.lat,
       hqCoordinates.lng,
@@ -1089,11 +1147,13 @@ export default function GoogleMapsEmbed({
       distanceFromHqKm,
       inServiceZone,
       nearestArea,
+      placeLabel: formatDetectedPlaceLabel(detected),
+      detectedPlace: detected,
     });
 
     setSelectedArea(null);
     setAreaInfoOpen(false);
-    setZoom(inServiceZone ? 14 : getOverviewZoom());
+    setZoom(inServiceZone ? 14 : 11);
     setCameraCommandTick((t) => t + 1);
   };
 
@@ -1105,7 +1165,7 @@ export default function GoogleMapsEmbed({
     if (next === "pin") {
       setSelectedArea(null);
       setAreaInfoOpen(false);
-      if (userLocation.status === "located" && userLocation.inServiceZone) {
+      if (userLocation.status === "located") {
         setUserLocation({ status: "idle" });
       }
     }
@@ -1252,6 +1312,16 @@ export default function GoogleMapsEmbed({
                   ? userLocation.distanceFromHqKm
                   : null
               }
+              userPlaceLabel={
+                userLocation.status === "located"
+                  ? userLocation.placeLabel
+                  : null
+              }
+              userInServiceZone={
+                userLocation.status === "located"
+                  ? userLocation.inServiceZone
+                  : true
+              }
               hqCoordinates={hqCoordinates}
               placeDisplayName={`${business.name} ${business.tagline}`}
               placeAddress={placeAddress}
@@ -1306,7 +1376,7 @@ export default function GoogleMapsEmbed({
                   aria-hidden="true"
                 />
                 <span className="truncate">
-                  Ihr Standort · ca. {Math.max(1, userLocation.distanceFromHqKm)} km ab Osnabrück
+                  {userLocation.placeLabel} · ca. {Math.max(1, userLocation.distanceFromHqKm)} km
                 </span>
               </motion.span>
             ) : activeMode === "service-area" ? (
@@ -1379,7 +1449,7 @@ export default function GoogleMapsEmbed({
             data-testid="map-touch-nav-toggle"
             title={
               touchNavUnlocked
-                ? "1-Finger-Kartensteuerung aktiv – tippen um Seitenscrollen wieder freizugeben"
+                ? "1-Finger-Kartensteuerung aktiv. Tippen, um Seitenscrollen wieder freizugeben."
                 : "Tippen für 1-Finger-Kartensteuerung (sonst 2 Finger zum Verschieben)"
             }
             className={`absolute bottom-2.5 left-2.5 z-10 inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-extrabold shadow-md backdrop-blur-xs active:scale-95 transition-all cursor-pointer touch-manipulation ${
@@ -1470,16 +1540,29 @@ export default function GoogleMapsEmbed({
               className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-slate-100 min-w-0"
             >
               {activeUserCoordinates && userLocation.status === "located" ? (
-                <>
-                  <CheckCircle2
-                    size={14}
-                    className="text-emerald-600 dark:text-emerald-400 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span className="truncate">
-                    Lieferung &amp; Übergabe verfügbar (Nähe {userLocation.nearestArea.city})
-                  </span>
-                </>
+                userLocation.inServiceZone ? (
+                  <>
+                    <CheckCircle2
+                      size={14}
+                      className="text-emerald-600 dark:text-emerald-400 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">
+                      Lieferung &amp; Übergabe verfügbar · {userLocation.placeLabel}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Compass
+                      size={14}
+                      className="text-amber-600 dark:text-amber-400 shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">
+                      {userLocation.placeLabel} (ca. {userLocation.distanceFromHqKm} km ab Osnabrück)
+                    </span>
+                  </>
+                )
               ) : activeMode === "service-area" ? (
                 <>
                   <CheckCircle2
@@ -1523,14 +1606,12 @@ export default function GoogleMapsEmbed({
             >
               {userLocation.status === "locating" ? (
                 <Loader2 size={13} className="animate-spin shrink-0" aria-hidden="true" />
+              ) : activeUserCoordinates ? (
+                <CheckCircle2 size={13} className="text-white shrink-0" aria-hidden="true" />
               ) : (
                 <LocateFixed
                   size={13}
-                  className={
-                    activeUserCoordinates
-                      ? "text-white shrink-0"
-                      : "text-sky-600 dark:text-sky-400 shrink-0"
-                  }
+                  className="text-sky-600 dark:text-sky-400 shrink-0"
                   aria-hidden="true"
                 />
               )}
@@ -1538,7 +1619,7 @@ export default function GoogleMapsEmbed({
                 {userLocation.status === "locating"
                   ? "Suche …"
                   : activeUserCoordinates
-                  ? "Mein Standort ✓"
+                  ? "Standort aktiv"
                   : "Mein Standort"}
               </span>
             </button>
@@ -1577,7 +1658,7 @@ export default function GoogleMapsEmbed({
                 <Compass size={14} className="text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="min-w-0 flex-1 leading-snug">
                   <p className="font-extrabold">
-                    Außerhalb der 25-km-Region (ca. {userLocation.distanceFromHqKm} km)
+                    Ihr Standort: {userLocation.placeLabel} (ca. {userLocation.distanceFromHqKm} km ab Osnabrück)
                   </p>
                   <p className="mt-0.5 opacity-90">
                     Zeige Region Osnabrück · Nächster Ort:{" "}

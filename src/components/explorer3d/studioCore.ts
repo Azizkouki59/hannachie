@@ -335,6 +335,32 @@ export function createMaterialLibrary(
           clearcoat: 0.3,
         }),
       ),
+    warmAmberPart: () =>
+      trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0xea580c,
+          emissive: new THREE.Color(0xc2410c),
+          emissiveIntensity: 0.22,
+          metalness: 0.62,
+          roughness: 0.28,
+        }),
+      ),
+    mattePolymer: () =>
+      trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0xe2e8f0,
+          metalness: 0.04,
+          roughness: 0.64,
+        }),
+      ),
+    brassFitting: () =>
+      trackMat(
+        new THREE.MeshStandardMaterial({
+          color: 0xcba135,
+          metalness: 0.88,
+          roughness: 0.24,
+        }),
+      ),
     edgeLine: () =>
       trackMat(
         new THREE.LineBasicMaterial({
@@ -357,9 +383,107 @@ export function createMaterialLibrary(
 }
 
 /**
+ * Creates a Braun / Apple precision showroom turntable pedestal ring with
+ * instanced degree tick marks (1 draw call, polygonOffset to prevent Z-fighting).
+ */
+export function createTurntablePedestal(
+  trackGeo: <T extends THREE.BufferGeometry>(g: T) => T,
+  trackMat: <T extends THREE.Material>(m: T) => T,
+) {
+  const group = new THREE.Group();
+  group.position.y = -1.168;
+
+  const outerRingMat = trackMat(
+    new THREE.MeshBasicMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.22,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    }),
+  );
+  const outerRing = new THREE.Mesh(
+    trackGeo(new THREE.RingGeometry(1.16, 1.205, 72)),
+    outerRingMat,
+  );
+  outerRing.rotation.x = -Math.PI / 2;
+
+  const innerRingMat = trackMat(
+    new THREE.MeshBasicMaterial({
+      color: 0x64748b,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    }),
+  );
+  const innerRing = new THREE.Mesh(
+    trackGeo(new THREE.RingGeometry(0.84, 0.858, 64)),
+    innerRingMat,
+  );
+  innerRing.rotation.x = -Math.PI / 2;
+
+  // 24 precision radial calibration ticks (single InstancedMesh draw call)
+  const tickCount = 24;
+  const tickMat = trackMat(
+    new THREE.MeshBasicMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.24,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    }),
+  );
+  const tickGeo = trackGeo(new THREE.PlaneGeometry(0.014, 0.068));
+  tickGeo.rotateX(-Math.PI / 2);
+  const ticks = new THREE.InstancedMesh(tickGeo, tickMat, tickCount);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < tickCount; i++) {
+    const angle = (i / tickCount) * Math.PI * 2;
+    const isCardinal = i % 6 === 0;
+    const rad = isCardinal ? 1.275 : 1.265;
+    dummy.position.set(Math.sin(angle) * rad, 0.001, Math.cos(angle) * rad);
+    dummy.rotation.set(0, angle, 0);
+    dummy.scale.set(isCardinal ? 1.45 : 1, 1, isCardinal ? 1.45 : 0.85);
+    dummy.updateMatrix();
+    ticks.setMatrixAt(i, dummy.matrix);
+  }
+  ticks.instanceMatrix.needsUpdate = true;
+  ticks.computeBoundingSphere();
+
+  group.add(outerRing, innerRing, ticks);
+
+  const lightRingCol = new THREE.Color(0x0284c7);
+  const darkRingCol = new THREE.Color(0x38bdf8);
+  const lightInnerCol = new THREE.Color(0x64748b);
+  const darkInnerCol = new THREE.Color(0x94a3b8);
+
+  const updateTheme = (darkMix: number, explode: number) => {
+    const boost = 1 + explode * 0.45;
+    outerRingMat.color.copy(lightRingCol).lerp(darkRingCol, darkMix);
+    outerRingMat.opacity = THREE.MathUtils.lerp(0.18, 0.28, darkMix) * boost;
+    innerRingMat.color.copy(lightInnerCol).lerp(darkInnerCol, darkMix);
+    innerRingMat.opacity = THREE.MathUtils.lerp(0.14, 0.22, darkMix) * boost;
+    tickMat.color.copy(lightRingCol).lerp(darkRingCol, darkMix);
+    tickMat.opacity = THREE.MathUtils.lerp(0.2, 0.32, darkMix) * boost;
+  };
+
+  return { group, updateTheme };
+}
+
+/**
  * Dual-Theme GLSL Studio Cyclorama & Subtle Architectural Radial Floor Shader.
- * Smoothly blends between porcelain-slate Light Mode (uDarkMix = 0)
- * and deep #0F2A4A navy Dark Mode (uDarkMix = 1).
+ * Aspect-normalized so lighting and studio arcs look balanced from 320px portrait
+ * mobile through 2560px ultrawide displays.
  */
 export const EXPLORER_BG_VERT = /* glsl */ `
   varying vec2 vUv;
@@ -378,45 +502,51 @@ export const EXPLORER_BG_FRAG = /* glsl */ `
   uniform vec2 uResolution;
 
   void main() {
-    float aspect = uResolution.x / max(uResolution.y, 1.0);
-    vec2 p = (vUv - 0.5) * vec2(aspect, 1.0);
+    float rawAspect = uResolution.x / max(uResolution.y, 1.0);
+    float normAspect = clamp(rawAspect, 0.82, 2.05);
+    vec2 p = (vUv - 0.5) * vec2(normAspect, 1.0);
     float dist = length(p);
-    float horizon = smoothstep(-0.52, 0.48, p.y);
+    float horizon = smoothstep(-0.54, 0.48, p.y);
 
     // Light Mode: clean Braun/Apple porcelain-slate architectural studio
-    vec3 lightBot = vec3(0.905, 0.930, 0.962);
-    vec3 lightTop = vec3(0.972, 0.984, 0.996);
+    vec3 lightBot = vec3(0.895, 0.924, 0.958);
+    vec3 lightTop = vec3(0.976, 0.986, 0.997);
     vec3 lightCol = mix(lightBot, lightTop, horizon);
-    float lightSpot = exp(-dot(p - vec2(0.0, 0.06), p - vec2(0.0, 0.06)) * 2.2);
-    lightCol += vec3(0.01, 0.035, 0.055) * lightSpot;
+    float lightSpot = exp(-dot(p - vec2(0.0, 0.07), p - vec2(0.0, 0.07)) * 2.15);
+    lightCol += vec3(0.012, 0.038, 0.058) * lightSpot;
 
     // Dark Mode: #0F2A4A navy precision bay with subtle cerulean/emerald sheen
-    vec3 darkBot = vec3(0.031, 0.075, 0.145);
-    vec3 darkTop = vec3(0.058, 0.145, 0.265);
+    vec3 darkBot = vec3(0.028, 0.071, 0.138);
+    vec3 darkTop = vec3(0.056, 0.142, 0.262);
     vec3 darkCol = mix(darkBot, darkTop, horizon);
-    float darkSpot = exp(-dot(p - vec2(sin(uTime * 0.25) * 0.1, 0.08), p - vec2(sin(uTime * 0.25) * 0.1, 0.08)) * 2.1);
-    darkCol += vec3(0.008, 0.21, 0.36) * darkSpot * 0.38;
-    darkCol += vec3(0.02, 0.22, 0.16) * exp(-dot(p - vec2(0.45, -0.25), p - vec2(0.45, -0.25)) * 3.0) * 0.18;
+    vec2 keyCenter = vec2(sin(uTime * 0.22) * 0.09, 0.08);
+    float darkSpot = exp(-dot(p - keyCenter, p - keyCenter) * 2.05);
+    darkCol += vec3(0.008, 0.215, 0.365) * darkSpot * 0.40;
+    darkCol += vec3(0.018, 0.225, 0.165) * exp(-dot(p - vec2(0.42, -0.24), p - vec2(0.42, -0.24)) * 2.8) * 0.19;
 
     vec3 col = mix(lightCol, darkCol, uDarkMix);
 
-    // Precision architectural radial rings on lower studio plane (brighten slightly on explode)
-    vec2 floorP = (vUv - vec2(0.5, 0.20)) * vec2(aspect, 2.35);
+    // Subtle studio floor cyclorama horizon rings (aspect-clamped so never oval-distorted)
+    vec2 floorP = (vUv - vec2(0.5, 0.21)) * vec2(normAspect, 2.25);
     float r = length(floorP);
-    float ringA = smoothstep(0.009, 0.0, abs(r - 0.52));
-    float ringB = smoothstep(0.008, 0.0, abs(r - 0.84));
-    float ringC = smoothstep(0.007, 0.0, abs(r - 1.16));
-    float ringFade = smoothstep(1.35, 0.22, r);
-    float rings = (ringA + ringB * 0.72 + ringC * 0.45) * ringFade;
-    float ringBoost = mix(0.06, 0.16, uExplode);
+    float ringA = smoothstep(0.010, 0.0, abs(r - 0.56));
+    float ringB = smoothstep(0.009, 0.0, abs(r - 0.90));
+    float ringC = smoothstep(0.008, 0.0, abs(r - 1.24));
+    float ringFade = smoothstep(1.48, 0.24, r);
+    float rings = (ringA + ringB * 0.68 + ringC * 0.40) * ringFade;
+    float ringBoost = mix(0.055, 0.145, uExplode);
 
     vec3 ringLightTint = vec3(0.01, 0.42, 0.68);
     vec3 ringDarkTint  = vec3(0.22, 0.74, 0.97);
-    col = mix(col, mix(ringLightTint, ringDarkTint, uDarkMix), clamp(rings * ringBoost * mix(0.85, 1.35, uDarkMix), 0.0, 0.24));
+    col = mix(
+      col,
+      mix(ringLightTint, ringDarkTint, uDarkMix),
+      clamp(rings * ringBoost * mix(0.82, 1.32, uDarkMix), 0.0, 0.22)
+    );
 
-    // Gentle vignette for center focus
-    float vig = mix(0.90, 1.02, smoothstep(1.42, 0.24, dist));
-    col *= mix(mix(0.95, 1.0, vig), vig, uDarkMix);
+    // Gentle radial studio vignette for center focus
+    float vig = mix(0.90, 1.02, smoothstep(1.46, 0.24, dist));
+    col *= mix(mix(0.955, 1.0, vig), vig, uDarkMix);
 
     gl_FragColor = vec4(col, 1.0);
   }

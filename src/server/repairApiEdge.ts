@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sanitizeSingleLine, sanitizeText } from "../utils/sanitize.ts";
+import { forwardGeocodeQuery, reverseGeocodeCoords } from "./geocode.ts";
 import { fetchGooglePlace } from "./googlePlace.ts";
 
 // ── Isolate-scoped sliding-window rate limiter for POST /api/repair-request ──
@@ -68,7 +69,7 @@ const repairIntakeSchema = z
     customDevice: z.string().trim().max(120).optional().default(""),
     brand: z.string().trim().max(120).optional().default(""),
     model: z.string().trim().max(120).optional().default(""),
-    problem: z.string().trim().min(4).max(1500),
+    problem: z.string().trim().min(3).max(1500),
     urgency: z.enum(["normal", "express", "notfall"]).default("normal"),
     callbackTime: z.string().trim().max(120).optional().default("Jederzeit erreichbar"),
     zip: z.string().trim().max(80).optional().default(""),
@@ -80,10 +81,13 @@ const repairIntakeSchema = z
     phone: z
       .string()
       .trim()
-      .min(6)
       .max(30)
+      .optional()
+      .default("")
       .refine(
-        (val) => /^[+()\d\s/-]{6,30}$/.test(val) && val.replace(/\D/g, "").length >= 6,
+        (val) =>
+          !val ||
+          (/^[+()\d\s/-]{6,30}$/.test(val) && val.replace(/\D/g, "").length >= 6),
         "Ungültige Telefonnummer"
       ),
     email: z
@@ -123,15 +127,15 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy":
-    "microphone=(), payment=(), usb=(), interest-cohort=()",
+    "camera=(), microphone=(), payment=(), usb=(), interest-cohort=()",
   "X-XSS-Protection": "0",
   "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   "Content-Security-Policy": [
     "default-src 'self'",
     "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://apis.google.com https://accounts.google.com",
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://hannachi.de https://maps.gstatic.com https://maps.googleapis.com https://*.ggpht.com https://*.googleusercontent.com",
     "connect-src 'self' https://nominatim.openstreetmap.org https://maps.googleapis.com https://places.googleapis.com https://*.googleapis.com https://maps.gstatic.com https://accounts.google.com",
     "worker-src 'self' blob:",
@@ -194,12 +198,52 @@ export async function handleApiRequest(request: Request, env: EdgeApiEnv = {}): 
     return handleGooglePlace(request, env);
   }
 
+  if (pathname === "/api/reverse-geocode" && request.method === "GET") {
+    const lat = Number(url.searchParams.get("lat"));
+    const lng = Number(url.searchParams.get("lng"));
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      return jsonResponse({ ok: false, error: "Invalid coordinates" }, 400);
+    }
+    const payload = await reverseGeocodeCoords(lat, lng, env.GOOGLE_MAPS_API_KEY || "");
+    return jsonResponse(payload, 200);
+  }
+
+  if (pathname === "/api/geocode" && request.method === "GET") {
+    const rawQuery = sanitizeSingleLine(url.searchParams.get("q") || "", 160);
+    if (rawQuery.length < 2) {
+      return jsonResponse(
+        { ok: false, error: "Bitte geben Sie einen Ort, eine PLZ oder Straße ein." },
+        400
+      );
+    }
+    const payload = await forwardGeocodeQuery(rawQuery, env.GOOGLE_MAPS_API_KEY || "");
+    return jsonResponse(payload, 200);
+  }
+
   if (pathname === "/api/health" && request.method === "GET") {
     return jsonResponse(
       {
         ok: true,
         service: "hannachi-web",
         timestamp: new Date().toISOString(),
+      },
+      200
+    );
+  }
+
+  if (pathname === "/api/marketplace" && request.method === "GET") {
+    return jsonResponse(
+      {
+        ok: true,
+        items: [],
+        settings: { hideSoldPublicly: false },
       },
       200
     );

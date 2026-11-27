@@ -11,7 +11,7 @@ import {
   fridgeModernImage,
   ovenKitchenImage,
   toolsWorkbenchImage,
-  werkstattImage,
+  showroomImage,
   type StaticImageData,
 } from "./images";
 
@@ -80,7 +80,7 @@ export const MARKETPLACE_IMAGE_BY_KEY: Record<MarketplaceImageKey, StaticImageDa
   dishwasher: dishwasherImage,
   oven: ovenKitchenImage,
   parts: toolsWorkbenchImage,
-  werkstatt: werkstattImage,
+  werkstatt: showroomImage,
 };
 
 export function resolveMarketplaceItemImage(item: {

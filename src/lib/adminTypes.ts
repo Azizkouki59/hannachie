@@ -141,7 +141,7 @@ export const SIMPLE_STATUS_OPTIONS: Array<{
   {
     value: "new",
     label: "Neu",
-    description: "Neue Kundenanfrage – noch offen",
+    description: "Neue Kundenanfrage, noch offen",
   },
   {
     value: "in_progress",

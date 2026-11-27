@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Phone,
+  Mail,
   MapPin,
   Clock,
   Sliders,
@@ -18,7 +19,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <footer className="cv-auto bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         <div className="container-page grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-7 sm:gap-8 lg:gap-10 py-10 sm:py-14">
           {/* Brand & Legal Positioning */}
           <div className="sm:col-span-2 lg:col-span-4">
@@ -50,15 +51,17 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label="Hannachi Elektrohaushaltsgeräte & Ersatzteile auf Facebook besuchen"
                 data-testid="footer-facebook-link"
-                className="group inline-flex min-h-[44px] items-center gap-2.5 rounded-xl border border-sky-400/30 bg-[#1877F2]/15 hover:bg-[#1877F2] px-3.5 py-2 text-xs font-bold text-white transition-all shadow-sm"
+                className="group inline-flex w-full sm:w-auto min-h-[46px] items-center justify-between sm:justify-start gap-2.5 rounded-xl border border-sky-400/30 bg-[#1877F2]/15 hover:bg-[#1877F2] px-3.5 py-2 text-xs font-bold text-white transition-all shadow-sm"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1877F2] text-white group-hover:bg-white group-hover:text-[#1877F2] transition-colors">
-                  <FacebookIcon className="h-4 w-4" />
-                </span>
-                <span className="leading-tight">
-                  <span className="block font-extrabold text-white">Auf Facebook folgen</span>
-                  <span className="block text-[11px] font-medium text-sky-200 group-hover:text-white/90">
-                    @{business.facebookHandle}
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1877F2] text-white group-hover:bg-white group-hover:text-[#1877F2] transition-colors">
+                    <FacebookIcon className="h-4 w-4" />
+                  </span>
+                  <span className="leading-tight min-w-0">
+                    <span className="block font-extrabold text-white truncate">Auf Facebook folgen</span>
+                    <span className="block text-[11px] font-medium text-sky-200 group-hover:text-white/90 truncate">
+                      @{business.facebookHandle}
+                    </span>
                   </span>
                 </span>
                 <ExternalLink
@@ -132,10 +135,19 @@ export default function Footer() {
                   {business.phoneDisplay}
                 </a>
               </p>
+              <p className="flex items-center gap-2">
+                <Mail size={15} className="shrink-0 text-accent" aria-hidden="true" />
+                <a
+                  href={`mailto:${business.email}`}
+                  className="inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-medium text-white/90 break-all"
+                >
+                  {business.email}
+                </a>
+              </p>
               <div className="flex items-start gap-2 text-white/60 text-xs">
                 <Clock size={14} className="shrink-0 text-accent/70 mt-0.5" />
                 <div>
-                  <span>Mo–Sa 08:00–18:00 Uhr</span>
+                  <span>Mo. bis Sa., 08:00 bis 18:00 Uhr</span>
                   <span className="block text-[11px] font-semibold text-accent-light">
                     Termine nach Vereinbarung · Telefon &amp; WhatsApp
                   </span>
@@ -157,22 +169,22 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Oversized signature wordmark */}
-        <div className="container-page overflow-hidden">
+        {/* Oversized signature wordmark — mathematically centered & never clips on any phone */}
+        <div className="container-page overflow-hidden py-1 sm:py-2">
           <WordmarkReveal
             text="HANNACHI"
-            className="pt-2 text-center font-extrabold tracking-[-0.04em] text-[17vw] lg:text-[12.5rem]"
+            className="pt-1 pb-1 text-center font-extrabold tracking-[-0.03em] text-[clamp(2.4rem,13.4vw,12rem)]"
             letterClassName="bg-gradient-to-b from-white/[0.18] to-white/[0.02] bg-clip-text text-transparent"
           />
         </div>
 
         {/* Bottom bar with clean standard legal links */}
         <div className="border-t border-white/10">
-          <div className="container-page flex flex-col gap-3 py-6 text-[13px] text-white/60 lg:flex-row lg:items-center lg:justify-between">
-            <p>
+          <div className="container-page flex flex-col items-center text-center gap-3 py-5 sm:py-6 text-[13px] text-white/60 lg:flex-row lg:items-center lg:justify-between lg:text-left">
+            <p className="leading-relaxed">
               © {new Date().getFullYear()} {business.name} {business.tagline} · {business.city}
             </p>
-            <ul className="flex flex-wrap items-center gap-x-5 gap-y-1 sm:gap-x-6">
+            <ul className="flex flex-wrap items-center justify-center lg:justify-end gap-x-4 gap-y-1 sm:gap-x-6">
               <li>
                 <a
                   href={business.facebookUrl}

@@ -47,10 +47,10 @@ const FILM_CHAPTERS: FilmChapter[] = [
     endSec: 8,
     shortLabel: "01 Wäsche",
     cinemaKicker: "Szene 01 · Waschmaschinen & Trockner",
-    cinemaHeadline: "Waschen & Trocknen – Beratung & Originalteile",
+    cinemaHeadline: "Waschen & Trocknen: Beratung & Originalteile",
     appliance: "Waschmaschinen & Wäschetrockner",
     label: "Waschmaschinen, Wärmepumpen- & Kondenstrockner",
-    subtitle: "Originalteile nach E-Nr. / PNC & ausgewählte Geräte auf Anfrage",
+    subtitle: "Originalteile nach Typenschild & ausgewählte Geräte auf Anfrage",
     description:
       "Laugenpumpen, Türmanschetten, Heizstäbe, Kondensatpumpen, Stoßdämpfer und Flusensiebe: Anhand Ihres Typenschilds ordnet Kamal Hannachi jedes Bauteil zweifelsfrei zu.",
     specs: [
@@ -59,7 +59,7 @@ const FILM_CHAPTERS: FilmChapter[] = [
       { label: "Ansprechpartner", value: "Direkt Inhaber Kamal Hannachi" },
     ],
     quickRequestCategory: "Waschmaschine",
-    quickRequestPart: "Original-Ersatzteil für Waschmaschine / Trockner nach E-Nr.",
+    quickRequestPart: "Original-Ersatzteil für Waschmaschine / Trockner nach Typenschild",
   },
   {
     id: "kueche",
@@ -70,10 +70,10 @@ const FILM_CHAPTERS: FilmChapter[] = [
     cinemaKicker: "Szene 02 · Spülen, Kochen, Backen & Lüften",
     cinemaHeadline: "Geschirrspüler, Backofen, Kochfeld & Dunstabzug",
     appliance: "Spüler, Herd, Kochfeld & Haube",
-    label: "Die gesamte Küche – exakt nach Typenschild",
+    label: "Die gesamte Küche exakt nach Typenschild",
     subtitle: "Umwälzpumpen, Ringheizkörper, Schalter & Metallfettfilter",
     description:
-      "Vom Geschirrspüler-Korb über Backofen-Heizelemente und Induktions-Ersatzteile bis zu Original-Filtern für Dunstabzugshauben – persönliche Prüfung statt Fehlbestellung.",
+      "Vom Geschirrspüler-Korb über Backofen-Heizelemente und Induktions-Ersatzteile bis zu Original-Filtern für Dunstabzugshauben: persönliche Prüfung statt Fehlbestellung.",
     specs: [
       { label: "Geschirrspüler", value: "Heizpumpe, Aquastop, Sprüharm, Körbe" },
       { label: "Backofen & Kochfeld", value: "Heizkörper, Schalter, Dichtung" },
@@ -94,7 +94,7 @@ const FILM_CHAPTERS: FilmChapter[] = [
     label: "Brühgruppen, Dichtungen, Drehteller & Zubehör",
     subtitle: "Original-Ersatzteile nach Modellnummer für Jura, DeLonghi, Siemens & mehr",
     description:
-      "Ob Brühgruppe, Drainageventil und O-Ringe für Kaffeevollautomaten oder Drehteller, Rollenring und Glimmerplatte für Mikrowellen – kurz per WhatsApp-Foto anfragen.",
+      "Ob Brühgruppe, Drainageventil und O-Ringe für Kaffeevollautomaten oder Drehteller, Rollenring und Glimmerplatte für Mikrowellen: einfach kurz per WhatsApp-Foto anfragen.",
     specs: [
       { label: "Kaffeevollautomaten", value: "Brühgruppe, O-Ringe, Pumpe, Mahlwerk" },
       { label: "Mikrowellen", value: "Drehteller, Rollenring, Glimmerplatte" },
@@ -110,12 +110,12 @@ const FILM_CHAPTERS: FilmChapter[] = [
     endSec: 32,
     shortLabel: "04 Kühlen",
     cinemaKicker: "Szene 04 · Kühlschränke, Gefriergeräte & Marken",
-    cinemaHeadline: "Kühl- & Gefriertechnik – plus Markengeräte auf Anfrage",
+    cinemaHeadline: "Kühl- & Gefriertechnik sowie Markengeräte auf Anfrage",
     appliance: "Kühlschränke, Gefrierschränke & Familie",
-    label: "Kühlen & Gefrieren – plus geprüfte Markengeräte",
+    label: "Kühlen & Gefrieren sowie geprüfte Markengeräte",
     subtitle: "Thermostate, Magnet-Türdichtungen & Geräte inkl. Verkäufergarantie",
     description:
-      "Magnet-Türdichtungen, NTC-Fühler, Schleppscharniere und Gefrierschubladen – sowie ausgewählte geprüfte Markengeräte auf Anfrage inklusive schriftlicher Verkäufergarantie.",
+      "Magnet-Türdichtungen, NTC-Fühler, Schleppscharniere und Gefrierschubladen sowie ausgewählte geprüfte Markengeräte auf Anfrage inklusive schriftlicher Verkäufergarantie.",
     specs: [
       { label: "Kühl- & Gefriergeräte", value: "Thermostat, Dichtung, Scharnier, Schublade" },
       { label: "Markengeräte", value: "Ausgewählte Geräte auf Anfrage inkl. Garantie" },
@@ -248,7 +248,8 @@ const STUDIO_BG_FRAG = /* glsl */ `
   uniform vec2 uResolution;
 
   void main() {
-    float aspect = uResolution.x / max(uResolution.y, 1.0);
+    float rawAspect = uResolution.x / max(uResolution.y, 1.0);
+    float aspect = clamp(rawAspect, 0.85, 2.05);
     vec2 p = (vUv - 0.5) * vec2(aspect, 1.0);
     float r = length(p);
     float horizon = smoothstep(-0.55, 0.45, p.y);
@@ -275,9 +276,9 @@ const STUDIO_BG_FRAG = /* glsl */ `
 
     vec3 col = col0 * uMix.x + col1 * uMix.y + col2 * uMix.z + col3 * uMix.w;
 
-    float floorRing = smoothstep(0.06, 0.0, abs(length((vUv - vec2(0.5, 0.22)) * vec2(aspect, 2.4)) - 0.58));
+    float floorRing = smoothstep(0.06, 0.0, abs(length((vUv - vec2(0.5, 0.22)) * vec2(aspect, 2.35)) - 0.60));
     col += vec3(0.35, 0.75, 1.0) * floorRing * 0.075;
-    col *= mix(0.62, 1.05, smoothstep(1.38, 0.25, r));
+    col *= mix(0.62, 1.05, smoothstep(1.42, 0.25, r));
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -327,7 +328,10 @@ interface AboutPrecisionStudio3DProps {
 }
 
 export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3DProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  // Latch WebGL mount once when nearing viewport so scrolling away never destroys/recompiles GPU state
+  const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
+  const [webglUnavailable, setWebglUnavailable] = useState(false);
+  const [canvasReady, setCanvasReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedDeviceHint, setSelectedDeviceHint] = useState<string | null>(null);
@@ -346,22 +350,26 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
   useEffect(() => {
     const el = containerRef.current;
+    if (hasEnteredViewport) return;
     if (!el || typeof IntersectionObserver === "undefined") {
-      setIsVisible(true);
+      setHasEnteredViewport(true);
       return;
     }
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0]) setIsVisible(entries[0].isIntersecting);
+        if (entries[0]?.isIntersecting) {
+          setHasEnteredViewport(true);
+          obs.disconnect();
+        }
       },
-      { rootMargin: "220px 0px" },
+      { rootMargin: "260px 0px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [hasEnteredViewport]);
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!hasEnteredViewport) return;
     const mount = mountRef.current;
     if (!mount || typeof window === "undefined") return;
 
@@ -377,20 +385,24 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
-        antialias: !isSoftwareGl && !(window.matchMedia?.("(pointer: coarse)").matches ?? false),
+        antialias: !isSoftwareGl,
         alpha: false,
         powerPreference: "high-performance",
+        stencil: false,
+        depth: true,
       });
     } catch {
+      setWebglUnavailable(true);
       return;
     }
 
     renderer.debug.checkShaderErrors = import.meta.env.DEV;
-    const isCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
-    const getPr = () =>
-      isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, isCoarsePointer ? 1.5 : 2);
-    const w0 = Math.max(mount.clientWidth, 320);
-    const h0 = Math.max(mount.clientHeight, 220);
+    const getPr = () => {
+      const coarse = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+      return isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, coarse || window.innerWidth < 768 ? 1.5 : 2);
+    };
+    const w0 = Math.max(mount.clientWidth, 260);
+    const h0 = Math.max(mount.clientHeight, 200);
     const pr0 = getPr();
 
     renderer.setPixelRatio(pr0);
@@ -399,12 +411,16 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.12;
     renderer.autoClear = false;
-    renderer.domElement.style.display = "block";
-    renderer.domElement.style.width = "100%";
-    renderer.domElement.style.height = "100%";
+
+    const domEl = renderer.domElement;
+    domEl.style.display = "block";
+    domEl.style.width = "100%";
+    domEl.style.height = "100%";
+    domEl.style.touchAction = "pan-y";
+    domEl.style.cursor = "grab";
 
     mount.innerHTML = "";
-    mount.appendChild(renderer.domElement);
+    mount.appendChild(domEl);
 
     const geos: THREE.BufferGeometry[] = [];
     const mats: THREE.Material[] = [];
@@ -595,7 +611,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
     const shadowTex = trackTex(createStudioFloorShadow());
     const floorShadow = new THREE.Mesh(
-      trackGeo(new THREE.PlaneGeometry(4.8, 4.4)),
+      trackGeo(new THREE.PlaneGeometry(5.0, 4.4)),
       trackMat(
         new THREE.MeshBasicMaterial({
           map: shadowTex,
@@ -608,6 +624,26 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
     floorShadow.rotation.x = -Math.PI / 2;
     floorShadow.position.y = -1.16;
     scene.add(floorShadow);
+
+    // Subtle precision architectural studio stage ring grounded beneath duo
+    const stageRing = new THREE.Mesh(
+      trackGeo(new THREE.RingGeometry(1.76, 1.805, 72)),
+      trackMat(
+        new THREE.MeshBasicMaterial({
+          color: 0x38bdf8,
+          transparent: true,
+          opacity: 0.22,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          polygonOffset: true,
+          polygonOffsetFactor: -1,
+          polygonOffsetUnits: -1,
+        }),
+      ),
+    );
+    stageRing.rotation.x = -Math.PI / 2;
+    stageRing.position.y = -1.152;
+    scene.add(stageRing);
 
     /* ── BUILDERS FOR ALL ELECTROMÉNAGER ── */
 
@@ -1118,10 +1154,6 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
     act4.visible = false;
     scene.add(act4);
 
-    if (!isSoftwareGl) {
-      renderer.compile(scene, camera);
-    }
-
     const handleResize = () => {
       if (!mount) return;
       const w = Math.max(mount.clientWidth, 240);
@@ -1138,14 +1170,109 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
     const ro = new ResizeObserver(handleResize);
     ro.observe(mount);
+    const onOrientationChange = () => window.setTimeout(handleResize, 120);
+    window.addEventListener("orientationchange", onOrientationChange);
+
+    // Subtle interactive touch-safe horizontal peek drag (never traps vertical page scroll)
+    let peekTargetYaw = 0;
+    let peekCurYaw = 0;
+    let dragPointerId: number | null = null;
+    let dragPointerType = "mouse";
+    let dragDownX = 0;
+    let dragDownY = 0;
+    let dragLastX = 0;
+    let dragIntent: "undecided" | "peek" | "scroll" = "undecided";
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (dragPointerId !== null) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      dragPointerId = e.pointerId;
+      dragPointerType = e.pointerType;
+      dragDownX = e.clientX;
+      dragDownY = e.clientY;
+      dragLastX = e.clientX;
+      dragIntent = e.pointerType === "mouse" ? "peek" : "undecided";
+      if (e.pointerType === "mouse") {
+        domEl.style.cursor = "grabbing";
+        try {
+          domEl.setPointerCapture(e.pointerId);
+        } catch {
+          // Ignore
+        }
+      }
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerId !== dragPointerId) return;
+      const dx = e.clientX - dragLastX;
+      dragLastX = e.clientX;
+      if (dragPointerType === "touch" && dragIntent === "undecided") {
+        const netDx = Math.abs(e.clientX - dragDownX);
+        const netDy = Math.abs(e.clientY - dragDownY);
+        if (netDx > 7 || netDy > 7) {
+          dragIntent = netDx > netDy * 1.15 ? "peek" : "scroll";
+        } else {
+          return;
+        }
+      }
+      if (dragIntent === "scroll") return;
+      peekTargetYaw = Math.max(-0.46, Math.min(0.46, peekTargetYaw - dx * 0.0055));
+    };
+
+    const endDrag = (e: PointerEvent) => {
+      if (e.pointerId !== dragPointerId) return;
+      if (dragPointerType === "mouse") {
+        try {
+          if (domEl.hasPointerCapture(e.pointerId)) {
+            domEl.releasePointerCapture(e.pointerId);
+          }
+        } catch {
+          // Ignore
+        }
+        domEl.style.cursor = "grab";
+      }
+      dragPointerId = null;
+      dragIntent = "undecided";
+      peekTargetYaw = 0;
+    };
+
+    domEl.addEventListener("pointerdown", onPointerDown, { passive: true });
+    domEl.addEventListener("pointermove", onPointerMove, { passive: true });
+    domEl.addEventListener("pointerup", endDrag, { passive: true });
+    domEl.addEventListener("pointercancel", endDrag, { passive: true });
+
+    let contextLost = false;
+    const onContextLost = (ev: Event) => {
+      ev.preventDefault();
+      contextLost = true;
+      setWebglUnavailable(true);
+    };
+    const onContextRestored = () => {
+      contextLost = false;
+      setWebglUnavailable(false);
+      handleResize();
+    };
+    domEl.addEventListener("webglcontextlost", onContextLost, false);
+    domEl.addEventListener("webglcontextrestored", onContextRestored, false);
 
     let disposed = false;
     let rafId = 0;
     let timerId = 0;
     let lastUiSync = 0;
+    let firstFrameDrawn = false;
     const clock = new THREE.Clock();
     const _dummy = new THREE.Object3D();
     const _lookAt = new THREE.Vector3(0, -0.1, 0);
+    const tanHalfV = Math.tan(THREE.MathUtils.degToRad(camera.fov) * 0.5);
+
+    const computeCinemaDist = (baseDist: number, sceneHalfW: number, sceneHalfH: number) => {
+      const safeAspect = Math.max(camera.aspect, 0.62);
+      const tanHalfH = tanHalfV * safeAspect;
+      // Guarantee both side-by-side appliances + tall range hood stay inside frame above bottom caption
+      const distW = sceneHalfW / (tanHalfH * 0.87) + 0.62;
+      const distH = sceneHalfH / (tanHalfV * 0.78) + 0.54;
+      return Math.max(baseDist, distW, distH);
+    };
 
     const afterDraw = (next: () => void) => {
       if (disposed) return;
@@ -1177,11 +1304,13 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
       timerId = window.setTimeout(next, 90);
     };
 
-    const renderFilmAt = (t: number) => {
+    const renderFilmAt = (t: number, dt: number) => {
       const wrapped = ((t % FILM_DURATION) + FILM_DURATION) % FILM_DURATION;
       const chapterIdx = Math.min(3, Math.floor(wrapped / 8));
       const localT = wrapped - chapterIdx * 8;
       const localNorm = localT / 8;
+
+      peekCurYaw = THREE.MathUtils.damp(peekCurYaw, peekTargetYaw, dragPointerId !== null ? 14 : 4.5, dt);
 
       bgUniforms.uTime.value = wrapped;
       const nextBlend = smoothstep(7.1, 8.0, localT);
@@ -1201,9 +1330,11 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
       if (chapterIdx === 0) {
         // Scene 01: Washer & Dryer spinning harmoniously with live bubbles
-        const angle = -0.34 + localNorm * 0.68;
-        const dist = 5.15 - Math.sin(localNorm * Math.PI) * 0.4;
-        camera.position.set(Math.sin(angle) * dist, 0.25, Math.cos(angle) * dist);
+        const angle = -0.32 + localNorm * 0.64 + peekCurYaw;
+        const baseDist = 5.15 - Math.sin(localNorm * Math.PI) * 0.34;
+        const dist = computeCinemaDist(baseDist, 1.66, 1.14);
+        _lookAt.set(0, -0.14, 0);
+        camera.position.set(Math.sin(angle) * dist, 0.24, Math.cos(angle) * dist);
         camera.lookAt(_lookAt);
 
         act1.scale.setScalar(0.88 + envelope * 0.12);
@@ -1217,11 +1348,12 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         accentLightWarm.intensity = 1.2 * envelope;
       } else if (chapterIdx === 1) {
         // Scene 02: Dishwasher gliding rack + Oven door arc + Cooktop glow + Range Hood
-        const panX = -0.45 + localNorm * 0.9;
-        camera.position.set(panX, 0.5, 5.55 - Math.sin(localNorm * Math.PI) * 0.35);
-        _lookAt.set(0, 0.05, 0);
+        const angle = -0.16 + localNorm * 0.32 + peekCurYaw;
+        const baseDist = 5.55 - Math.sin(localNorm * Math.PI) * 0.28;
+        const dist = computeCinemaDist(baseDist, 1.72, 1.56);
+        _lookAt.set(0, 0.12, 0);
+        camera.position.set(Math.sin(angle) * dist, 0.56, Math.cos(angle) * dist);
         camera.lookAt(_lookAt);
-        _lookAt.set(0, -0.1, 0);
 
         act2.scale.setScalar(0.88 + envelope * 0.12);
         const slideWave = Math.sin(localNorm * Math.PI);
@@ -1238,8 +1370,10 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         accentLightCool.intensity = 0.9 * envelope;
       } else if (chapterIdx === 2) {
         // Scene 03: Coffee Machine pouring espresso + Microwave spinning turntable
-        const angle = 0.32 - localNorm * 0.64;
-        const dist = 5.05 - Math.sin(localNorm * Math.PI) * 0.35;
+        const angle = 0.3 - localNorm * 0.6 + peekCurYaw;
+        const baseDist = 5.05 - Math.sin(localNorm * Math.PI) * 0.3;
+        const dist = computeCinemaDist(baseDist, 1.74, 1.16);
+        _lookAt.set(0, -0.18, 0);
         camera.position.set(Math.sin(angle) * dist, 0.24, Math.cos(angle) * dist);
         camera.lookAt(_lookAt);
 
@@ -1256,8 +1390,10 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         accentLightCool.intensity = 0.5 * envelope;
       } else {
         // Scene 04: Refrigerator swinging door + Freezer gliding drawers + Frost crystals
-        const angle = -0.3 + localNorm * 0.6;
-        const dist = 5.2 + localNorm * 0.45;
+        const angle = -0.28 + localNorm * 0.56 + peekCurYaw;
+        const baseDist = 5.2 + localNorm * 0.4;
+        const dist = computeCinemaDist(baseDist, 1.64, 1.24);
+        _lookAt.set(0, -0.08, 0);
         camera.position.set(Math.sin(angle) * dist, 0.24, Math.cos(angle) * dist);
         camera.lookAt(_lookAt);
 
@@ -1289,9 +1425,14 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
       renderer.render(bgScene, bgCam);
       renderer.clearDepth();
       renderer.render(scene, camera);
+
+      if (!firstFrameDrawn) {
+        firstFrameDrawn = true;
+        setCanvasReady(true);
+      }
     };
 
-    // Pause rendering while the studio is scrolled out of view.
+    // Pause rendering while the studio is scrolled out of view (zero WebGL teardown!)
     let isOnScreen = true;
     const onScreenObserver =
       typeof IntersectionObserver !== "undefined"
@@ -1303,7 +1444,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
     const tick = () => {
       if (disposed) return;
-      if (document.hidden || !isOnScreen) {
+      if (document.hidden || !isOnScreen || contextLost) {
         clock.getDelta();
         timerId = window.setTimeout(tick, 240);
         return;
@@ -1324,7 +1465,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         }
       }
 
-      renderFilmAt(filmTimeRef.current);
+      renderFilmAt(filmTimeRef.current, dt);
 
       if (isSoftwareGl) {
         afterDraw(tick);
@@ -1346,6 +1487,13 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(timerId);
       ro.disconnect();
+      window.removeEventListener("orientationchange", onOrientationChange);
+      domEl.removeEventListener("pointerdown", onPointerDown);
+      domEl.removeEventListener("pointermove", onPointerMove);
+      domEl.removeEventListener("pointerup", endDrag);
+      domEl.removeEventListener("pointercancel", endDrag);
+      domEl.removeEventListener("webglcontextlost", onContextLost);
+      domEl.removeEventListener("webglcontextrestored", onContextRestored);
       geos.forEach((g) => g.dispose());
       mats.forEach((m) => m.dispose());
       texs.forEach((t) => t.dispose());
@@ -1353,11 +1501,11 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
       envRT.dispose();
       pmrem.dispose();
       renderer.dispose();
-      if (renderer.domElement.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
+      if (domEl.parentNode === mount) {
+        mount.removeChild(domEl);
       }
     };
-  }, [isVisible]);
+  }, [hasEnteredViewport]);
 
   const handleSeek = (sec: number, deviceOverride?: string) => {
     const clamped = Math.max(0, Math.min(FILM_DURATION - 0.05, sec));
@@ -1395,18 +1543,34 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         </div>
 
         {/* Real-Time 3D Cinema Viewport */}
-        <div className="relative flex-1 min-h-[260px] sm:min-h-[360px] lg:min-h-[420px] bg-slate-950 overflow-hidden">
-          <div
-            ref={mountRef}
-            className="absolute inset-0"
-            aria-label={`3D-Animationsfilm: ${activeChapter.cinemaHeadline}`}
-          />
+        <div className="relative flex-1 min-h-[clamp(240px,38dvh,320px)] sm:min-h-[360px] lg:min-h-[430px] bg-slate-950 overflow-hidden">
+          {webglUnavailable ? (
+            <div className="flex h-full min-h-[240px] w-full flex-col items-center justify-center bg-gradient-to-b from-[#0b203a] to-slate-950 px-6 text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-400">
+                {activeChapter.cinemaKicker}
+              </p>
+              <p className="mt-2 max-w-md text-sm font-bold text-white">
+                {activeChapter.cinemaHeadline}
+              </p>
+              <p className="mt-1 max-w-sm text-xs text-slate-400">
+                Wählen Sie rechts einfach Ihr Haushaltsgerät für eine direkte persönliche Anfrage.
+              </p>
+            </div>
+          ) : (
+            <div
+              ref={mountRef}
+              className={`absolute inset-0 transition-opacity duration-300 ${
+                canvasReady ? "opacity-100" : "opacity-0"
+              }`}
+              aria-label={`3D-Animationsfilm: ${activeChapter.cinemaHeadline}`}
+            />
+          )}
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/92 via-slate-950/42 to-transparent px-4 sm:px-6 pt-12 pb-4 sm:pb-5">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/92 via-slate-950/42 to-transparent px-4 sm:px-6 pt-12 pb-3.5 sm:pb-5">
             <p className="text-[11px] sm:text-xs font-semibold text-sky-300">
               {activeChapter.cinemaKicker}
             </p>
-            <p className="mt-0.5 text-base sm:text-xl font-extrabold text-white tracking-tight">
+            <p className="mt-0.5 text-sm sm:text-xl font-extrabold text-white tracking-tight">
               {activeChapter.cinemaHeadline}
             </p>
           </div>
@@ -1508,8 +1672,8 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
       {/* Right 5 Columns: Complete 10-Appliance Visual Selector + Synchronized Details */}
       <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl border border-white/12 bg-slate-900/90 p-5 sm:p-6">
         <div className="space-y-5">
-          {/* Complete Flaticon-Inspired 10-Appliance Jump Grid (5 x 2 on desktop, clean symmetry) */}
-          <div className="grid grid-cols-5 gap-1.5 sm:gap-2 border-b border-white/10 pb-4">
+          {/* Complete 10-Appliance Jump Grid (2-col on ultra-narrow <360px, 5 x 2 on standard mobile/desktop) */}
+          <div className="grid grid-cols-2 min-[360px]:grid-cols-5 gap-1.5 sm:gap-2 border-b border-white/10 pb-4">
             {QUICK_APPLIANCES.map(({ label, sec, chapter, device, Icon }) => {
               const active = activeChapterIndex === chapter;
               return (
@@ -1521,13 +1685,13 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
                     handleSeek(sec, device);
                     setIsPlaying(true);
                   }}
-                  className={`group flex flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 transition-all cursor-pointer ${
+                  className={`group flex flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 min-h-[54px] transition-all cursor-pointer ${
                     active
                       ? "border-sky-400/55 bg-sky-500/12 text-white"
                       : "border-white/8 bg-slate-950/70 text-slate-300 hover:border-white/25 hover:text-white"
                   }`}
                 >
-                  <Icon className="h-8 w-8 text-slate-200 transition-transform duration-300 group-hover:-translate-y-0.5" />
+                  <Icon className="h-7 w-7 sm:h-8 sm:w-8 text-slate-200 transition-transform duration-300 group-hover:-translate-y-0.5 shrink-0" />
                   <span className="text-[10px] font-semibold whitespace-nowrap truncate max-w-full">
                     {label}
                   </span>
@@ -1569,8 +1733,8 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
         <div className="pt-5 mt-5 border-t border-white/10 space-y-3">
           <p className="text-xs leading-relaxed text-slate-400">
-            Typenschild abfotografieren und direkt an Kamal Hannachi senden – schnelle,
-            persönliche Rückmeldung für jedes Hausgerät.
+            Typenschild abfotografieren und direkt an Kamal Hannachi senden für eine schnelle,
+            persönliche Rückmeldung zu jedem Hausgerät.
           </p>
           <button
             type="button"

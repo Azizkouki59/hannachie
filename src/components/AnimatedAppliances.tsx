@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Zap, RotateCw, Wind, Flame, Snowflake, Play, CheckCircle, PackageSearch, ArrowRight, HelpCircle } from "lucide-react";
+import { Sparkles, Zap, RotateCw, Flame, Snowflake, CheckCircle, PackageSearch, ArrowRight } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════
    1. CARTOON ANIMATED WASHING MACHINE (Waschmaschine)
@@ -18,7 +18,7 @@ export function AnimatedWasher({
   className?: string;
 }) {
   const [isSpinningFast, setIsSpinningFast] = useState(false);
-  const [bubbles, setBubbles] = useState([
+  const [bubbles] = useState([
     { id: 1, x: 20, y: 40, size: 10, delay: 0 },
     { id: 2, x: 70, y: 30, size: 14, delay: 0.8 },
     { id: 3, x: 35, y: 15, size: 8, delay: 1.4 },
@@ -999,8 +999,6 @@ export function ApplianceGraphic({
    7. FLOATING HERO WASHER MASCOT
    ═══════════════════════════════════════════════════════════ */
 export function FloatingHeroMascot() {
-  const [wobble, setWobble] = useState(false);
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -1026,11 +1024,7 @@ export function FloatingHeroMascot() {
       </motion.div>
 
       {/* Mini Animated Washer */}
-      <div
-        onMouseEnter={() => setWobble(true)}
-        onMouseLeave={() => setWobble(false)}
-        className="cursor-pointer"
-      >
+      <div className="cursor-pointer">
         <AnimatedWasher size="sm" interactive />
       </div>
     </motion.div>

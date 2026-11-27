@@ -10,6 +10,7 @@ import {
 } from "./adminTypes";
 import { osnabrueckServiceAreas } from "./repairRequest";
 import { business } from "@/data/site";
+import { buildWhatsAppDirectUrl } from "@/utils/whatsapp";
 
 const LEGACY_ADMIN_TOKEN_STORAGE_KEY = "hannachi_admin_session_token_v1";
 const ADMIN_LOCAL_TICKETS_KEY = "hannachi_admin_local_tickets_v2";
@@ -235,23 +236,23 @@ export function buildAdminWhatsAppReplyUrl(
     .join(", ");
 
   const message = [
-    `Guten Tag ${ticket.name},`,
+    `✨ Guten Tag ${ticket.name},`,
     "",
-    `hier ist *Hannachi Elektrohaushaltsgeräte & Ersatzteile (Osnabrück)* – ${statusText}`,
+    `hier ist *Hannachi Elektrohaushaltsgeräte & Ersatzteile (Osnabrück)*: ${statusText}`,
     "",
-    `• *Vorgangs-Nr.:* ${ticket.id}`,
-    `• *Gerät:* ${ticket.brand} ${deviceName}${ticket.model ? ` (${ticket.model})` : ""}`,
+    `✅ *Vorgangs-Nr.:* ${ticket.id}`,
+    `⚙️ *Gerät:* ${ticket.brand} ${deviceName}${ticket.model ? ` (${ticket.model})` : ""}`,
     addressLine
-      ? `• *Liefer- / Übergabeort:* ${addressLine}`
-      : `• *Übergabe:* Fachhandel nach Terminvereinbarung (Osnabrück & Umgebung)`,
-    ...(priceText ? [`• *Betrag (inkl. MwSt.):* ${priceText}`] : []),
+      ? `➡️ *Liefer- / Übergabeort:* ${addressLine}`
+      : `➡️ *Übergabe:* Fachhandel nach Terminvereinbarung (Osnabrück & Umgebung)`,
+    ...(priceText ? [`⭐ *Betrag (inkl. MwSt.):* ${priceText}`] : []),
     "",
     `Herzliche Grüße`,
     `Kamal Hannachi · Elektrohaushaltsgeräte & Ersatzteile`,
-    `Tel.: 0170 3493494`,
+    `☎️ Tel.: 0170 3493494`,
   ].join("\n");
 
-  return `https://wa.me/${intlPhone}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppDirectUrl(message, intlPhone);
 }
 
 function escapeCsvCell(value: unknown): string {

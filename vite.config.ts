@@ -32,7 +32,25 @@ export default defineConfig(() => {
       },
     },
     build: {
-      chunkSizeWarningLimit: 1600,
+      target: 'es2020',
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 900,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            if (id.includes('/three/')) return 'vendor-three';
+            if (id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('/lucide-react/')) return 'vendor-icons';
+            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+              return 'vendor-react';
+            }
+            return undefined;
+          },
+        },
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

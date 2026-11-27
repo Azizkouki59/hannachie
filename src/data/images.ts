@@ -65,45 +65,50 @@ export const herrHannachiImage = createImageAsset(
   "pro2"
 );
 
-// Showroom photo (no tools / no repair scene) used on "Über uns".
+// Showroom photo (bright Fachhandel consultation & spare parts space) used on "Über uns" & Marketplace.
 export const showroomImage = createImageAsset(
   "showroom",
-  1200,
-  896,
+  1264,
+  848,
   "(min-width: 1024px) 46vw, 96vw",
-  "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADQAQCdASoQAAwAA4BaJZwAAh5YFTMR4AD+bE2xbc0pq73USAY0g5wyDcQ8hxhVFmi/QC7zjGX2yZPAec03IzYXrnn1kBQA"
+  "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAABQAgCdASoQAAsAAwBSJZQAD5DvGNW/NOMkMAAA/mn+2jLrhKVgbhE8weJzoEWGz6bEfF520m5Ug6IOkhR7KovNiryVHRMGp3QUs6ptFZqD8XesryvLl3+toE15DcAA",
+  "pro3"
 );
 
 export const washerModernImage = createImageAsset(
   "washer-modern",
-  1600,
-  1066,
+  1264,
+  848,
   "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px",
-  "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAADQAQCdASoQAAsAA8BgJZQCdAEO5Xz/0AD+5+l7ovo3ERqiI2xA8lUGh+gVNlIfrg7gAA=="
+  "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADwAQCdASoQAAsAAwBSJZwAAtpBCdPJilAA/vZ7Ftv06l/1jFlGyxxx30mbwrvkNvozROsNa/xlFGB53gOpKtfxrJQdEN2XlBMgAA==",
+  "pro3"
 );
 
 export const dishwasherImage = createImageAsset(
   "dishwasher",
-  1600,
-  2182,
+  1264,
+  848,
   "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px",
-  "data:image/webp;base64,UklGRjgAAABXRUJQVlA4ICwAAADQAQCdASoMABAAA8BgJaQAAub6kbLGQAD+h8K5QUSai3b0G9phaKskDaoAAA=="
+  "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADQAQCdASoQAAsAAwBSJQAAYpcA2FyqwAD+9SRZ+9OW83/dAzVI2ixs7kzAgcNO9ZJbIGi0Srh75KsmxtCtTWPIY8b8oannrT+AAA==",
+  "pro3"
 );
 
 export const fridgeModernImage = createImageAsset(
   "fridge-modern",
-  1600,
-  2400,
+  1264,
+  848,
   "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px",
-  "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAACwAQCdASoLABAAA8BgJQAASvOz/UmAAMLOCrD5lGZSoL1R0NbMPjFK0+/e//orxAAAAA=="
+  "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADQAQCdASoQAAsAAwBSJZwAAh4gZJLxAAD+4MVFlKffH5uf3C1PTZLapiFUwha0pa1Vgo5QMM8qBt3ffMvKQMi5me+P1QGjJEkgvAvXZAA=",
+  "pro3"
 );
 
 export const ovenKitchenImage = createImageAsset(
   "oven-kitchen",
-  1600,
-  1066,
+  1264,
+  848,
   "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px",
-  "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAADwAQCdASoQAAsAA8BgJZQCsAD0it3CaEgA/utmt1nZN7ZyXIPbc7hOfmEqUmR4bc0YAA=="
+  "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADQAQCdASoQAAsAAwBSJZwAAhZ9QIJ8AAD+9DhxWO7sbHA+kF+SOVkxRbo8DERTlNCGwpQhzbxSZheSocFCramlzKAAAA==",
+  "pro3"
 );
 
 export const heroRepairImage = createImageAsset(
@@ -125,10 +130,11 @@ export const technicianImage = createImageAsset(
 
 export const toolsWorkbenchImage = createImageAsset(
   "tools-workbench",
-  2400,
-  3360,
+  1200,
+  896,
   "(max-width: 768px) 100vw, 640px",
-  "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAADQAQCdASoLABAAA8BgJZQAAlxTfhCiUAD+9xFQuX9s0xCyNAAc1LByEurGbQUygoAAAA=="
+  "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAQCdASoQAAwAAwBSJZQCdAEQ+LG4AAD7pODTJgtCkhk8Zr6vzfT7uxThsDrbIsAQje6t2JvK9+dc8iEOkKQWucbnXh0zR6NWfMCRFKVlTqbkv6SXAAAA",
+  "pro3"
 );
 
 export const IMAGE_ASSETS_BY_PATH: Record<string, StaticImageData> = {

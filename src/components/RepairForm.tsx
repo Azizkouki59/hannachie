@@ -5,9 +5,12 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
+  Camera,
   Check,
+  CheckCheck,
   CheckCircle2,
   ChevronDown,
+  Clock,
   Copy,
   Loader2,
   MapPin,
@@ -18,6 +21,7 @@ import {
   ShieldCheck,
   Star,
   PackageSearch,
+  X,
 } from "lucide-react";
 import { business } from "@/data/site";
 import {
@@ -27,8 +31,6 @@ import {
   osnabrueckServiceAreas,
   popularBrands,
   prepareImmediateWhatsAppHandoff,
-  resolveVerifiedFallbackLocation,
-  reverseGeocodePosition,
   saveRepairDraft,
   clearRepairDraft,
   submitRepairRequest,
@@ -41,9 +43,11 @@ import {
 } from "@/lib/repairRequest";
 import GoogleMapsPinModal from "@/components/GoogleMapsPinModal";
 import ValidationToast from "@/components/ValidationToast";
-import WhatsAppPreview from "@/components/WhatsAppPreview";
+import WhatsAppPreview, {
+  renderWhatsAppFormattedMessage,
+} from "@/components/WhatsAppPreview";
 import ApplianceLogo from "@/components/ApplianceLogo";
-import { getBrowserPositionWithFallback } from "@/lib/geolocation";
+import { useUserPlace } from "@/lib/userPlace";
 import { hapticSuccess, hapticTap, triggerHapticFeedback } from "@/lib/haptics";
 import {
   buildWhatsAppWebUrl,
@@ -111,6 +115,14 @@ const CORE_DEVICES = [
   { label: "Geschirrspüler", value: "Geschirrspüler", badgeClass: "bg-teal-500/12 text-teal-600 dark:text-teal-400" },
   { label: "Herd / Backofen", value: "Backofen / Herd", badgeClass: "bg-amber-500/12 text-amber-600 dark:text-amber-400" },
   { label: "Sonstiges", value: "Sonstiges", badgeClass: "bg-indigo-500/12 text-indigo-600 dark:text-indigo-400" },
+] as const;
+
+const CALLBACK_TIME_CHIPS = [
+  { label: "Jederzeit", value: "Jederzeit erreichbar" },
+  { label: "Vormittags (09–12)", value: "Vormittags (09:00–12:00 Uhr)" },
+  { label: "Nachmittags (13–17)", value: "Nachmittags (13:00–17:00 Uhr)" },
+  { label: "Ab 17 Uhr", value: "Ab 17:00 Uhr" },
+  { label: "Nur WhatsApp", value: "Nur per WhatsApp" },
 ] as const;
 
 const CONFETTI_COLORS = [
@@ -310,7 +322,6 @@ export default function RepairForm({
   defaultRequestType = "check_parts",
   selectionSeq = 0,
   compact = false,
-  showPhotoGuideLink = false,
 }: {
   defaultDevice?: string;
   defaultSymptom?: string;
@@ -319,10 +330,10 @@ export default function RepairForm({
   defaultRequestType?: RequestTypeId;
   selectionSeq?: number;
   compact?: boolean;
-  showPhotoGuideLink?: boolean;
 }) {
   const uid = useId();
   const prefersReducedMotion = useReducedMotion();
+  const { detectedPlace, detectMyPlace, setDetectedPlace } = useUserPlace();
   const initial = resolveInitialDevice(defaultDevice);
   const initialDraftRef = useRef<ReturnType<typeof loadRepairDraft> | undefined>(undefined);
   if (initialDraftRef.current === undefined) {
@@ -410,6 +421,7 @@ export default function RepairForm({
   const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocationInfo | null>(
     () => (restoredDraft ? restoredDraft.verifiedLocation : null)
   );
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [submitErrorMsg, setSubmitErrorMsg] = useState<string | null>(null);
@@ -419,6 +431,8 @@ export default function RepairForm({
 
   const formRef = useRef<HTMLFormElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const userManuallyEditedZipRef = useRef(false);
+  const lastSyncedPlaceKeyRef = useRef<string | null>(null);
   const prevDefaultsRef = useRef({
     defaultDevice,
     defaultSymptom,
@@ -427,6 +441,33 @@ export default function RepairForm({
     selectionSeq,
   });
   const isFirstSyncRef = useRef(true);
+
+  useEffect(() => {
+    if (!detectedPlace || userManuallyEditedZipRef.current) return;
+    const key = `${detectedPlace.lat.toFixed(5)},${detectedPlace.lng.toFixed(5)}`;
+    if (lastSyncedPlaceKeyRef.current === key) return;
+    lastSyncedPlaceKeyRef.current = key;
+
+    setVerifiedLocation(detectedPlace);
+    setGpsStatus("shared");
+    setGpsError(null);
+    if (detectedPlace.streetAddress) {
+      setShowOptionalFields(true);
+    }
+    setValues((prev) => ({
+      ...prev,
+      mapsLocationUrl: detectedPlace.mapsUrl,
+      zip: detectedPlace.zipAndCity || prev.zip,
+      streetAddress: detectedPlace.streetAddress || prev.streetAddress || "",
+      locationVerified: true,
+      coordinates: {
+        lat: detectedPlace.lat,
+        lng: detectedPlace.lng,
+        accuracy: detectedPlace.accuracy,
+      },
+    }));
+    setErrors((prev) => ({ ...prev, zip: undefined }));
+  }, [detectedPlace]);
 
   useEffect(() => {
     if (status === "success" && successRef.current) {
@@ -540,7 +581,9 @@ export default function RepairForm({
         device: values.device || "Waschmaschine",
         customDevice: isCustomDeviceRequired ? values.customDevice?.trim() || "" : "",
         brand: values.brand.trim(),
-        model: "",
+        model: values.model.trim(),
+        callbackTime: values.callbackTime.trim() || "Jederzeit erreichbar",
+        hasTypeplatePhoto: Boolean(values.hasTypeplatePhoto),
         problem: formattedProblem,
         zip: values.zip.trim(),
         streetAddress: values.streetAddress?.trim() || "",
@@ -554,6 +597,10 @@ export default function RepairForm({
   }, [isReadyForWhatsApp, values, activeType.tagPrefix, isCustomDeviceRequired]);
 
   const set = <K extends keyof RepairValues>(k: K, val: RepairValues[K]) => {
+    if (k === "zip") {
+      userManuallyEditedZipRef.current = true;
+      setGpsError(null);
+    }
     const nextValues = { ...values, [k]: val };
     setValues(nextValues);
 
@@ -601,6 +648,8 @@ export default function RepairForm({
     const targetName = field === "symptom" ? "problem" : field;
     if (
       targetName === "brand" ||
+      targetName === "model" ||
+      targetName === "callbackTime" ||
       targetName === "name" ||
       targetName === "streetAddress"
     ) {
@@ -612,7 +661,7 @@ export default function RepairForm({
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.focus({ preventScroll: true });
       }
-    }, 60);
+    }, 120);
   };
 
   function toggleHint(hint: string) {
@@ -632,8 +681,12 @@ export default function RepairForm({
   }
 
   function handleConfirmMapPin(verified: VerifiedLocationInfo) {
+    userManuallyEditedZipRef.current = false;
+    lastSyncedPlaceKeyRef.current = `${verified.lat.toFixed(5)},${verified.lng.toFixed(5)}`;
+    setDetectedPlace(verified);
     setVerifiedLocation(verified);
     setGpsStatus("shared");
+    setGpsError(null);
     if (verified.streetAddress) {
       setShowOptionalFields(true);
     }
@@ -655,66 +708,41 @@ export default function RepairForm({
   }
 
   async function shareGpsLocation() {
+    if (gpsStatus === "locating") return;
     triggerHapticFeedback(40);
     setGpsStatus("locating");
+    setGpsError(null);
 
-    const applyFallback = () => {
-      const fallback = resolveVerifiedFallbackLocation(
-        values.zip || "49082 Osnabrück",
-        values.streetAddress
-      );
-      setVerifiedLocation(fallback);
-      setGpsStatus("fallback");
-      setValues((prev) => ({
-        ...prev,
-        mapsLocationUrl: fallback.mapsUrl,
-        zip: prev.zip.trim() ? prev.zip : fallback.zipAndCity,
-        streetAddress: prev.streetAddress?.trim()
-          ? prev.streetAddress
-          : fallback.streetAddress,
-        locationVerified: true,
-        coordinates: {
-          lat: fallback.lat,
-          lng: fallback.lng,
-          accuracy: fallback.accuracy,
-        },
-      }));
-      setErrors((prev) => ({ ...prev, zip: undefined }));
-    };
-
-    const result = await getBrowserPositionWithFallback();
-    if (!result.ok) {
-      applyFallback();
+    const outcome = await detectMyPlace();
+    if (!outcome.ok) {
+      setGpsStatus("idle");
+      setGpsError(outcome.message);
       return;
     }
 
-    try {
-      const info = await reverseGeocodePosition(
-        result.lat,
-        result.lng,
-        result.accuracy
-      );
-      setVerifiedLocation(info);
-      setGpsStatus("shared");
-      if (info.streetAddress) {
-        setShowOptionalFields(true);
-      }
-      setValues((prev) => ({
-        ...prev,
-        mapsLocationUrl: info.mapsUrl,
-        zip: info.zipAndCity || prev.zip || "49082 Osnabrück",
-        streetAddress: info.streetAddress || prev.streetAddress || "",
-        locationVerified: true,
-        coordinates: {
-          lat: info.lat,
-          lng: info.lng,
-          accuracy: info.accuracy,
-        },
-      }));
-      setErrors((prev) => ({ ...prev, zip: undefined }));
-    } catch {
-      applyFallback();
+    const info = outcome.place;
+    userManuallyEditedZipRef.current = false;
+    lastSyncedPlaceKeyRef.current = `${info.lat.toFixed(5)},${info.lng.toFixed(5)}`;
+    setVerifiedLocation(info);
+    setGpsStatus("shared");
+    setGpsError(null);
+    if (info.streetAddress) {
+      setShowOptionalFields(true);
     }
+    setValues((prev) => ({
+      ...prev,
+      mapsLocationUrl: info.mapsUrl,
+      zip: info.zipAndCity || prev.zip,
+      streetAddress: info.streetAddress || prev.streetAddress || "",
+      locationVerified: true,
+      coordinates: {
+        lat: info.lat,
+        lng: info.lng,
+        accuracy: info.accuracy,
+      },
+    }));
+    setErrors((prev) => ({ ...prev, zip: undefined }));
+    hapticSuccess();
   }
 
   function launchWhatsAppAutomatically(url: string) {
@@ -754,7 +782,9 @@ export default function RepairForm({
       device: cleanDevice,
       customDevice: cleanCustomDevice,
       brand: values.brand.trim(),
-      model: "",
+      model: values.model.trim(),
+      callbackTime: values.callbackTime.trim() || "Jederzeit erreichbar",
+      hasTypeplatePhoto: Boolean(values.hasTypeplatePhoto),
       problem: cleanProblemBase.length >= 3 ? formattedProblem : cleanProblemBase,
       zip: values.zip.trim(),
       streetAddress: values.streetAddress?.trim() || "",
@@ -901,6 +931,11 @@ export default function RepairForm({
 
   const optionalSummaryParts = [
     values.brand.trim() && `Marke: ${values.brand.trim()}`,
+    values.model.trim() && `E-Nr.: ${values.model.trim()}`,
+    values.hasTypeplatePhoto && "Typenschild-Foto",
+    values.callbackTime &&
+      values.callbackTime !== "Jederzeit erreichbar" &&
+      values.callbackTime,
     values.name.trim() && values.name.trim(),
     values.streetAddress?.trim() && values.streetAddress.trim(),
     values.urgency === "express"
@@ -932,12 +967,12 @@ export default function RepairForm({
                 In WhatsApp auf „Senden“ tippen
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-ink-muted">
-                App nicht geöffnet? Direkt über die Buttons starten oder Text kopieren.
+                Ihre strukturierte Nachricht für Herrn Hannachi ist startklar. App nicht geöffnet? Direkt starten oder Text kopieren.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row flex-wrap gap-2">
             {whatsappUrl && (
               <a
                 href={whatsappUrl}
@@ -948,7 +983,7 @@ export default function RepairForm({
                   setHasSentWhatsApp(true);
                   clearRepairDraft();
                 }}
-                className="flex-1 min-w-[200px] inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white text-center shadow-md transition-all"
+                className="col-span-2 sm:col-span-1 sm:flex-1 sm:min-w-[200px] inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white text-center shadow-md transition-all"
               >
                 <MessageCircle size={18} className="shrink-0" />
                 <span>WhatsApp öffnen</span>
@@ -961,33 +996,54 @@ export default function RepairForm({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => triggerHapticFeedback(35)}
-                className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.98] transition-all shrink-0"
+                className="col-span-1 inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 sm:px-4 py-3 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.98] transition-all shrink-0"
               >
                 <MessageCircle size={15} className="shrink-0" />
-                <span>WhatsApp Web</span>
+                <span className="truncate">WhatsApp Web</span>
               </a>
             )}
             <button
               type="button"
               onClick={copyMessage}
-              className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-4 py-3 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.98] transition-all cursor-pointer shrink-0"
+              className={`${
+                whatsappWebUrl ? "col-span-1" : "col-span-2 sm:col-span-1"
+              } inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 sm:px-4 py-3 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.98] transition-all cursor-pointer shrink-0`}
             >
               {copied ? (
                 <>
-                  <Check size={15} className="text-emerald-500" />
+                  <Check size={15} className="text-emerald-500 shrink-0" />
                   <span>Kopiert</span>
                 </>
               ) : (
                 <>
-                  <Copy size={15} />
+                  <Copy size={15} className="shrink-0" />
                   <span>Kopieren</span>
                 </>
               )}
             </button>
           </div>
 
-          <div className="rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 p-3 text-xs text-ink-muted whitespace-pre-wrap break-words font-sans leading-relaxed max-h-40 sm:max-h-48 overflow-y-auto">
-            {messageText}
+          {(values.hasTypeplatePhoto || requestType === "check_parts") && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-sky-500/25 bg-sky-50/80 dark:bg-sky-950/30 px-3.5 py-2.5 text-xs text-primary dark:text-slate-200">
+              <Camera size={16} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="leading-relaxed">
+                <strong className="font-bold">Tipp für sofortige Auskunft:</strong> Tippen Sie im WhatsApp-Chat kurz auf die Kamera / Büroklammer und senden Sie ein Foto vom Typenschild direkt mit.
+              </p>
+            </div>
+          )}
+
+          {/* Genuine styled WhatsApp chat bubble preview */}
+          <div className="rounded-2xl rounded-tr-sm border border-emerald-500/25 bg-[#e7ffdb]/80 dark:bg-emerald-950/45 p-3.5 text-xs text-slate-800 dark:text-slate-100">
+            <div className="space-y-0.5 max-h-52 overflow-y-auto pr-1">
+              {renderWhatsAppFormattedMessage(messageText)}
+            </div>
+            <div className="mt-2 pt-1.5 border-t border-emerald-600/15 flex items-center justify-between text-[10.5px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
+              <span>Fertige Nachricht an {business.owner}</span>
+              <span className="inline-flex items-center gap-1 shrink-0">
+                <span>Bereit</span>
+                <CheckCheck size={13} className="text-sky-600 dark:text-sky-400" />
+              </span>
+            </div>
           </div>
 
           {sharedMapsUrl && (
@@ -1008,18 +1064,27 @@ export default function RepairForm({
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-primary/10 dark:border-white/10 text-xs">
-            <a
-              href={business.mapsWriteReviewUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setServiceDoneRated(true)}
-              className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400 hover:underline"
-            >
-              <Star size={14} />
-              <span>
-                {serviceDoneRated ? "Danke!" : "Auf Google bewerten"}
-              </span>
-            </a>
+            <div className="flex flex-wrap items-center gap-3">
+              <a
+                href={business.phoneHref}
+                className="inline-flex min-h-[44px] items-center gap-1.5 font-bold text-primary dark:text-slate-200 hover:text-accent transition-colors"
+              >
+                <Phone size={14} className="text-accent" />
+                <span>Lieber anrufen ({business.phoneDisplay})</span>
+              </a>
+              <a
+                href={business.mapsWriteReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setServiceDoneRated(true)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400 hover:underline"
+              >
+                <Star size={14} />
+                <span>
+                  {serviceDoneRated ? "Danke!" : "Auf Google bewerten"}
+                </span>
+              </a>
+            </div>
             <button
               type="button"
               onClick={resetForm}
@@ -1075,12 +1140,13 @@ export default function RepairForm({
                     <button
                       key={option.id}
                       type="button"
+                      data-compact-label="true"
                       onClick={() => {
                         hapticTap();
                         setRequestType(option.id);
                       }}
                       aria-pressed={active}
-                      className={`relative inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                      className={`relative inline-flex min-h-[42px] sm:min-h-[38px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-lg px-1.5 sm:px-2.5 py-2 sm:py-1.5 text-[10.5px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap min-w-0 ${
                         active
                           ? "text-white"
                           : "text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1099,7 +1165,9 @@ export default function RepairForm({
                         />
                       )}
                       <Icon size={13} aria-hidden="true" className="relative z-10 shrink-0" />
-                      <span className="relative z-10 truncate">{option.shortLabel}</span>
+                      <span data-compact-label="true" className="relative z-10 max-w-full truncate leading-tight">
+                        {option.shortLabel}
+                      </span>
                     </button>
                   );
                 })}
@@ -1114,33 +1182,36 @@ export default function RepairForm({
               {CORE_DEVICES.map((d, idx) => {
                 const isSelected = values.device === d.value;
                 return (
-                  <motion.button
-                    key={d.value}
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 520, damping: 25 }}
-                    type="button"
-                    onClick={() => {
-                      hapticTap();
-                      set("device", d.value);
-                    }}
-                    aria-pressed={isSelected}
-                    className={`${
-                      idx < 3 ? "col-span-2 sm:col-span-1" : "col-span-3 sm:col-span-1"
-                    } flex min-h-[60px] sm:min-h-[64px] w-full min-w-0 flex-col items-center justify-center text-center gap-1 rounded-xl border px-1.5 py-2 text-[11px] font-bold transition-all cursor-pointer ${
-                      isSelected
-                        ? "border-accent bg-accent text-white shadow-sm shadow-accent/20"
-                        : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-primary dark:text-slate-200 hover:border-accent/50"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                        isSelected ? "bg-white/20 text-white" : d.badgeClass
+                    <motion.button
+                      key={d.value}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 520, damping: 25 }}
+                      type="button"
+                      data-compact-label="true"
+                      onClick={() => {
+                        hapticTap();
+                        set("device", d.value);
+                      }}
+                      aria-pressed={isSelected}
+                      className={`${
+                        idx < 3 ? "col-span-2 sm:col-span-1" : "col-span-3 sm:col-span-1"
+                      } flex min-h-[64px] w-full min-w-0 flex-col items-center justify-center text-center gap-1 rounded-xl border px-1.5 py-2 text-[11px] font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-accent bg-accent text-white shadow-sm shadow-accent/20"
+                          : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-primary dark:text-slate-200 hover:border-accent/50"
                       }`}
                     >
-                      <ApplianceLogo device={d.value} size={18} />
-                    </span>
-                    <span className="w-full truncate tracking-[-0.01em]">{d.label}</span>
-                  </motion.button>
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                          isSelected ? "bg-white/20 text-white" : d.badgeClass
+                        }`}
+                      >
+                        <ApplianceLogo device={d.value} size={18} />
+                      </span>
+                      <span data-compact-label="true" className="w-full truncate tracking-[-0.01em]">
+                        {d.label}
+                      </span>
+                    </motion.button>
                 );
               })}
             </div>
@@ -1210,11 +1281,14 @@ export default function RepairForm({
               <span className="text-[11px] text-ink-muted">Antippen reicht</span>
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
-              {activeType.quickHints.map((hint) => {
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
+              {activeType.quickHints.map((hint, idx) => {
                 const isSelected = values.problem
                   .toLowerCase()
                   .includes(hint.toLowerCase());
+                const isOddLast =
+                  activeType.quickHints.length % 2 === 1 &&
+                  idx === activeType.quickHints.length - 1;
                 return (
                   <motion.button
                     key={hint}
@@ -1224,7 +1298,9 @@ export default function RepairForm({
                     transition={{ type: "spring", stiffness: 520, damping: 28 }}
                     onClick={() => toggleHint(hint)}
                     aria-pressed={isSelected}
-                    className={`inline-flex min-h-[38px] max-w-full items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold text-left leading-snug transition-colors cursor-pointer ${
+                    className={`${
+                      isOddLast ? "col-span-2 sm:col-span-1" : ""
+                    } inline-flex min-h-[40px] sm:min-h-[38px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-center sm:text-left leading-snug transition-colors cursor-pointer ${
                       isSelected
                         ? "border-emerald-500/60 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300"
                         : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted hover:border-accent/50 hover:text-primary dark:hover:text-white"
@@ -1277,10 +1353,16 @@ export default function RepairForm({
                 <button
                   type="button"
                   onClick={shareGpsLocation}
-                  className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
+                  disabled={gpsStatus === "locating"}
+                  aria-busy={gpsStatus === "locating"}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors disabled:opacity-65 disabled:cursor-wait cursor-pointer"
                 >
-                  <Navigation size={12} className="text-accent shrink-0" />
-                  <span>{gpsStatus === "locating" ? "Suche…" : "GPS"}</span>
+                  {gpsStatus === "locating" ? (
+                    <Loader2 size={12} className="animate-spin text-accent shrink-0" />
+                  ) : (
+                    <Navigation size={12} className="text-accent shrink-0" />
+                  )}
+                  <span>{gpsStatus === "locating" ? "Suche…" : "Mein Ort"}</span>
                 </button>
                 <button
                   type="button"
@@ -1413,8 +1495,8 @@ export default function RepairForm({
               </div>
             </div>
 
-            {/* Quick Area Pills */}
-            <div className="flex flex-wrap gap-1.5">
+            {/* Quick Area Pills (Native Horizontal Snap Rail on Mobile) */}
+            <div className="flex sm:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1 px-1 pb-0.5">
               {osnabrueckServiceAreas.slice(0, 5).map((area) => {
                 const active =
                   values.zip.includes(area.zip) ||
@@ -1430,7 +1512,7 @@ export default function RepairForm({
                       hapticTap();
                       set("zip", area.value);
                     }}
-                    className={`min-h-[34px] rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer ${
+                    className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer ${
                       active
                         ? "border-accent bg-accent/12 text-accent"
                         : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1441,6 +1523,50 @@ export default function RepairForm({
                 );
               })}
             </div>
+
+            {gpsError && (
+              <div
+                role="status"
+                className="flex items-start gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-[11px] font-semibold text-amber-900 dark:text-amber-100"
+              >
+                <AlertCircle
+                  size={14}
+                  className="text-amber-600 dark:text-amber-300 shrink-0 mt-0.5"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0 flex-1 leading-snug">
+                  <p>{gpsError}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void shareGpsLocation()}
+                      className="font-bold text-amber-950 dark:text-white underline underline-offset-2 hover:text-accent cursor-pointer"
+                    >
+                      Erneut versuchen
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHapticFeedback(30);
+                        setGpsError(null);
+                        setIsMapModalOpen(true);
+                      }}
+                      className="font-bold text-accent underline underline-offset-2 hover:opacity-80 cursor-pointer"
+                    >
+                      Auf Karte wählen
+                    </button>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGpsError(null)}
+                  aria-label="Hinweis schließen"
+                  className="p-0.5 hover:opacity-75 cursor-pointer shrink-0"
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
+              </div>
+            )}
 
             {verifiedLocation && (
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
@@ -1484,7 +1610,7 @@ export default function RepairForm({
                   ? "Optionale Angaben ausblenden"
                   : optionalSummaryParts.length > 0
                   ? `Optional: ${optionalSummaryParts.join(" · ")}`
-                  : "+ Optional: Marke, Name & Straße ergänzen"}
+                  : "+ Optional: Marke, E-Nr., Erreichbarkeit & Name"}
               </span>
               <ChevronDown
                 size={15}
@@ -1506,22 +1632,12 @@ export default function RepairForm({
                   <div className="mt-3 space-y-3 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-3 sm:p-4">
                     {/* Optional Brand + Quick Chips */}
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
                         <label
                           htmlFor={id("brand")}
-                          className="text-[11px] font-bold text-ink-muted"
+                          className="block text-[11px] font-bold text-ink-muted"
                         >
                           Marke / Modell (optional)
                         </label>
-                        {showPhotoGuideLink && (
-                          <a
-                            href="#photo-anleitung"
-                            className="text-[11px] font-bold text-accent hover:underline"
-                          >
-                            E-Nr. finden ↓
-                          </a>
-                        )}
-                      </div>
                       <input
                         id={id("brand")}
                         data-field="brand"
@@ -1532,7 +1648,7 @@ export default function RepairForm({
                         placeholder="z. B. Miele, Bosch Serie 6, Siemens..."
                         className="w-full min-h-[42px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-950 px-3.5 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
                       />
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex sm:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1 px-1 pb-0.5">
                         {popularBrands.slice(0, 7).map((b) => {
                           const active = values.brand
                             .toLowerCase()
@@ -1552,13 +1668,99 @@ export default function RepairForm({
                                     : b
                                 );
                               }}
-                              className={`min-h-[32px] rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
+                              className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] sm:min-h-[32px] rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
                                 active
                                   ? "border-accent bg-accent/15 text-accent"
                                   : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:text-primary dark:hover:text-white"
                               }`}
                             >
                               {b}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* E-Nr. / Modellnummer + 1-Tap Typenschild-Foto Toggle */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor={id("model")}
+                        className="block text-[11px] font-bold text-ink-muted"
+                      >
+                        E-Nr. / Modellnummer vom Typenschild (für schnelle Teile-Prüfung)
+                      </label>
+                      <input
+                        id={id("model")}
+                        data-field="model"
+                        type="text"
+                        enterKeyHint="next"
+                        value={values.model}
+                        onChange={(e) => set("model", e.target.value)}
+                        placeholder="z. B. WM14T420/01 oder W1 WCD 120"
+                        className="w-full min-h-[42px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-950 px-3.5 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          hapticTap();
+                          set("hasTypeplatePhoto", !values.hasTypeplatePhoto);
+                        }}
+                        aria-pressed={Boolean(values.hasTypeplatePhoto)}
+                        className={`w-full flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                          values.hasTypeplatePhoto
+                            ? "border-emerald-500/45 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
+                            : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:border-accent/40 hover:text-primary dark:hover:text-white"
+                        }`}
+                      >
+                        <span className="inline-flex items-center gap-2 min-w-0">
+                          <Camera size={14} className="shrink-0" aria-hidden="true" />
+                          <span className="truncate">
+                            Foto vom Typenschild sende ich direkt im WhatsApp-Chat
+                          </span>
+                        </span>
+                        <span
+                          className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[10px] ${
+                            values.hasTypeplatePhoto
+                              ? "border-emerald-500 bg-emerald-500 text-white"
+                              : "border-primary/20 dark:border-white/20"
+                          }`}
+                        >
+                          {values.hasTypeplatePhoto && <Check size={12} aria-hidden="true" />}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Wunsch-Erreichbarkeit */}
+                    <div className="space-y-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-ink-muted">
+                        <Clock size={12} className="text-accent" aria-hidden="true" />
+                        <span>Wunsch-Erreichbarkeit (optional)</span>
+                      </span>
+                      <div className="flex sm:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1 px-1 pb-0.5">
+                        {CALLBACK_TIME_CHIPS.map((slot) => {
+                          const active =
+                            (values.callbackTime || "Jederzeit erreichbar") === slot.value;
+                          return (
+                            <button
+                              key={slot.value}
+                              type="button"
+                              data-field={
+                                slot.value === CALLBACK_TIME_CHIPS[0].value
+                                  ? "callbackTime"
+                                  : undefined
+                              }
+                              onClick={() => {
+                                hapticTap();
+                                set("callbackTime", slot.value);
+                              }}
+                              aria-pressed={active}
+                              className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] sm:min-h-[32px] rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
+                                active
+                                  ? "border-accent bg-accent/15 text-accent"
+                                  : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:text-primary dark:hover:text-white"
+                              }`}
+                            >
+                              {slot.label}
                             </button>
                           );
                         })}
@@ -1625,6 +1827,8 @@ export default function RepairForm({
             device={values.device}
             customDevice={values.customDevice}
             brand={values.brand}
+            model={values.model}
+            hasTypeplatePhoto={Boolean(values.hasTypeplatePhoto)}
             problem={values.problem}
             urgency={values.urgency}
             onUrgencyChange={(urgency) => set("urgency", urgency)}
@@ -1649,6 +1853,7 @@ export default function RepairForm({
                 : []),
             ]}
             onFocusField={(field) => focusField(field)}
+            onAddTypeplateInfo={() => focusField("model")}
           />
 
           {/* GDPR & WhatsApp Consent Acknowledgement (Art. 13 DSGVO) */}

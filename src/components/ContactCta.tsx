@@ -49,8 +49,8 @@ export default function ContactCta() {
         </div>
 
         {/* Direct WhatsApp + Structured Form + Phone */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5 lg:col-span-5">
-          <div className="space-y-1.5">
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2.5 lg:col-span-5">
+          <div className="col-span-2 lg:col-span-1 space-y-1.5">
             <a
               href={business.whatsappHref}
               target="_blank"
@@ -79,20 +79,26 @@ export default function ContactCta() {
           <button
             type="button"
             onClick={() => openQuickRequest("Waschmaschine", "", "", "repair")}
-            className="group inline-flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl bg-accent px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-accent-dark hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+            className="col-span-1 group inline-flex min-h-[48px] w-full items-center justify-center sm:justify-between gap-1.5 sm:gap-2 rounded-xl bg-accent px-3 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white shadow-sm transition-all duration-200 hover:bg-accent-dark hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer min-w-0"
           >
-            <span className="inline-flex items-center gap-2 min-w-0">
-              <PackageSearch size={16} className="shrink-0" />
-              <span className="truncate">Kurzformular ausfüllen</span>
+            <span className="inline-flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <PackageSearch size={15} className="shrink-0" />
+              <span className="truncate sm:hidden">Kurzformular</span>
+              <span className="hidden sm:inline truncate">Kurzformular ausfüllen</span>
             </span>
-            <ArrowRight size={15} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight size={14} className="hidden sm:block shrink-0 transition-transform group-hover:translate-x-0.5" />
           </button>
           <a
             href={business.phoneHref}
-            className="sm:col-span-2 lg:col-span-1 flex min-h-[44px] w-full flex-wrap items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-accent-light/40 px-4 py-2.5 text-center text-xs font-semibold text-white/85 transition-colors"
+            className="col-span-1 flex min-h-[48px] lg:min-h-[44px] w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-accent-light/40 px-2.5 sm:px-4 py-2.5 text-center text-xs font-semibold text-white/85 transition-colors min-w-0"
           >
             <Phone size={13} className="text-accent-light shrink-0" />
-            <span>Anrufen: <strong className="text-white tabular-nums">{business.phoneDisplay}</strong></span>
+            <span className="truncate sm:hidden">
+              <strong className="text-white tabular-nums">{business.phoneDisplay}</strong>
+            </span>
+            <span className="hidden sm:inline truncate">
+              Anrufen: <strong className="text-white tabular-nums">{business.phoneDisplay}</strong>
+            </span>
           </a>
         </div>
       </div>

@@ -118,14 +118,15 @@ export default function MarktplatzPage() {
 
   const getItemWhatsAppUrl = (item: MarketplaceItem): string => {
     const msg = [
+      `⭐ *Bestandsanfrage · Hannachi Osnabrück*`,
       `Hallo Herr Hannachi,`,
       ``,
-      `ich interessiere mich für folgenden Artikel aus Ihrem aktuellen Bestand:`,
-      `• *Artikel:* ${item.title}`,
-      `• *Marke / E-Nr.:* ${item.brand} · ${item.skuOrEnr}`,
-      `• *Zustand:* ${item.conditionBadge}`,
+      `⚙️ *Artikel:* ${item.title}`,
+      `ℹ️ *Marke / E-Nr.:* ${item.brand} · ${item.skuOrEnr}`,
+      `✅ *Zustand:* ${item.conditionBadge}`,
+      `➡️ *Region:* Osnabrück`,
       ``,
-      `Ist der Artikel noch verfügbar und wann wäre eine Übergabe in Osnabrück möglich?`,
+      `Ist der Artikel noch verfügbar und wann wäre eine persönliche Übergabe oder Besichtigung möglich?`,
     ].join("\n");
     return buildWhatsAppDirectUrl(msg);
   };
@@ -134,7 +135,7 @@ export default function MarktplatzPage() {
     <>
       <PageHeader
         title="Aktueller Bestand & Originalteile"
-        intro="Ausgewählte geprüfte Markengeräte & Original-Ersatzteile in Osnabrück – persönliche Übergabe und Preis auf Anfrage."
+        intro="Ausgewählte geprüfte Markengeräte & Original-Ersatzteile in Osnabrück, persönliche Übergabe und Preis auf Anfrage."
       />
 
       <section className="py-8 sm:py-12 bg-surface dark:bg-slate-950 min-h-[460px]">
@@ -164,7 +165,7 @@ export default function MarktplatzPage() {
                 <p className="mx-auto max-w-xl text-sm text-ink-muted leading-relaxed">
                   Unser Bestand an geprüften Markengeräten und Original-Ersatzteilen (Miele,
                   Bosch, Siemens, AEG, Liebherr) wechselt täglich. Senden Sie uns kurz Ihr
-                  Wunschgerät oder ein Foto vom Typenschild (E-Nr.) – Herr Hannachi prüft
+                  Wunschgerät oder ein Foto vom Typenschild. Herr Hannachi prüft
                   die Verfügbarkeit direkt für Sie.
                 </p>
               </div>

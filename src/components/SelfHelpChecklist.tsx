@@ -68,7 +68,7 @@ const CHECKLIST_GROUPS: ApplianceChecklistGroup[] = [
         description:
           "Prüfen, ob der Abwasserschlauch hinter dem Gerät geknickt oder der Siphonanschluss verstopft ist.",
         duration: "ca. 3 Min.",
-        hint: "Gerät beim Vorschieben vorsichtig bewegen – Stromstecker zuvor ziehen.",
+        hint: "Gerät beim Vorschieben vorsichtig bewegen und Stromstecker zuvor ziehen.",
       },
       {
         id: "wm-reset",
@@ -167,7 +167,7 @@ const CHECKLIST_GROUPS: ApplianceChecklistGroup[] = [
         id: "bo-fuse",
         title: "Sicherungen im Sicherungskasten prüfen",
         description:
-          "Herdanschlüsse laufen meist über drei gekoppelte Sicherungen – schon eine ausgelöste Phase stoppt Ofen oder Kochfeld.",
+          "Herdanschlüsse laufen meist über drei gekoppelte Sicherungen. Schon eine ausgelöste Phase stoppt Ofen oder Kochfeld.",
         duration: "ca. 2 Min.",
         hint: "Alle drei Herd-Sicherungen einmal sauber aus- und wieder einschalten.",
       },
@@ -237,8 +237,8 @@ export default function SelfHelpChecklist() {
 
     const symptomSummary =
       checkedTitles.length > 0
-        ? `Selbst-Checkliste vorab geprüft (${checkedTitles.join(", ")}) – Fehler besteht weiterhin.`
-        : "Einfache Fehler vorab geprüft – benötige fachliche Unterstützung.";
+        ? `Selbst-Checkliste vorab geprüft (${checkedTitles.join(", ")}), Fehler besteht weiterhin.`
+        : "Einfache Fehler vorab geprüft, benötige fachliche Unterstützung.";
 
     openQuickRequest(activeGroup.key, symptomSummary, "", "repair");
   }
@@ -265,7 +265,7 @@ export default function SelfHelpChecklist() {
                 Bevor Sie eine Anfrage senden: Einfache Fehler selbst prüfen
               </h2>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">
-                Oft lässt sich eine Störung in wenigen Minuten selbst beheben – z. B. durch
+                Oft lässt sich eine Störung in wenigen Minuten selbst beheben, z. B. durch
                 Reinigen des Flusensiebs oder Prüfen des Wasserzulaufs. Haken Sie die Schritte ab:
               </p>
             </div>
@@ -448,7 +448,7 @@ export default function SelfHelpChecklist() {
                     </span>
                     <div>
                       <p className="text-sm font-extrabold text-emerald-800 dark:text-emerald-300">
-                        Perfekt – Ihr Gerät funktioniert wieder!
+                        Perfekt, Ihr Gerät funktioniert wieder!
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">
                         Schön, dass unser Kurz-Check geholfen hat. Bei Bedarf an Original-Ersatzteilen oder einem geprüften Ersatzgerät in Osnabrück helfen wir Ihnen jederzeit weiter.
@@ -479,7 +479,7 @@ export default function SelfHelpChecklist() {
                     </p>
                     <p className="mt-0.5 text-xs text-ink-muted">
                       Falls der Fehler weiter besteht, übernehmen wir Ihre geprüften Schritte direkt in
-                      Ihre Ersatzteil- oder Beratungsanfrage – Herr Hannachi sieht sofort, was bereits ausgeschlossen wurde.
+                      Ihre Ersatzteil- oder Beratungsanfrage. Herr Hannachi sieht sofort, was bereits ausgeschlossen wurde.
                     </p>
                   </div>
 
@@ -490,7 +490,7 @@ export default function SelfHelpChecklist() {
                       className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3.5 py-2.5 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer sm:whitespace-nowrap"
                     >
                       <CheckCircle2 size={15} className="shrink-0" aria-hidden="true" />
-                      <span>Problem behoben ✓</span>
+                      <span>Problem behoben</span>
                     </button>
                     <button
                       type="button"

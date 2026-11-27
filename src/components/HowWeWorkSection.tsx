@@ -32,7 +32,7 @@ const HOW_WE_WORK_STEPS: HowWeWorkStep[] = [
     stepTag: "Telefon · WhatsApp",
     title: "1. Beratung",
     description:
-      "Kurz melden – ehrliche Einschätzung direkt vom Inhaber.",
+      "Kurz melden für eine ehrliche Einschätzung direkt vom Inhaber.",
     highlight: `${yearsOfExperience}+ Jahre Erfahrung`,
     ctaLabel: "Anfragen",
     requestType: "check_parts",
@@ -43,10 +43,10 @@ const HOW_WE_WORK_STEPS: HowWeWorkStep[] = [
   },
   {
     num: "02",
-    stepTag: "E-Nr. / Typenschild",
+    stepTag: "Typenschild",
     title: "2. Ersatzteilsuche",
     description:
-      "Typenschild senden – wir finden das passende Originalteil.",
+      "Typenschild senden, wir finden das passende Originalteil.",
     highlight: "Alle Marken",
     ctaLabel: "Teil prüfen",
     requestType: "check_parts",
@@ -60,7 +60,7 @@ const HOW_WE_WORK_STEPS: HowWeWorkStep[] = [
     stepTag: "Raum Osnabrück",
     title: "3. Termin",
     description:
-      "Alles vorab geklärt – ruhiger Termin nach Vereinbarung.",
+      "Alles vorab geklärt für einen ruhigen Termin nach Vereinbarung.",
     highlight: "Nach Vereinbarung",
     ctaLabel: "Termin wählen",
     requestType: "check_parts",
@@ -94,7 +94,7 @@ export default function HowWeWorkSection({
     <section
       id="so-arbeiten-wir"
       aria-labelledby="how-we-work-heading"
-      className="section relative overflow-hidden bg-surface dark:bg-slate-950 border-b border-primary/8 dark:border-white/10"
+      className="section cv-auto relative overflow-hidden bg-surface dark:bg-slate-950 border-b border-primary/8 dark:border-white/10"
     >
       <SectionAmbientMesh variant="process" />
       <div className="container-page relative z-10">
@@ -113,50 +113,24 @@ export default function HowWeWorkSection({
         </FadeUp>
 
         <div className="relative">
-          {/* Animated Architectural Connector Track + Traveling Beam Pulse on Desktop */}
+          {/* Clean Architectural Hairline Connector Track on Desktop */}
           <motion.div
             aria-hidden="true"
             initial={prefersReducedMotion ? false : { scaleX: 0, opacity: 0 }}
             whileInView={{ scaleX: 1, opacity: 1 }}
             viewport={{ once: true, amount: "some" }}
-            transition={{ duration: 0.72, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-none hidden md:block origin-left absolute top-[3rem] left-[16%] right-[16%] h-[2px] overflow-hidden rounded-full bg-gradient-to-r from-sky-500/30 via-sky-400/45 to-emerald-500/35"
-          >
-            {!prefersReducedMotion && (
-              <motion.span
-                animate={{ x: ["-25%", "125%"] }}
-                transition={{
-                  duration: 3.4,
-                  repeat: Infinity,
-                  repeatDelay: 1.3,
-                  ease: [0.4, 0, 0.2, 1],
-                }}
-                className="block h-full w-32 bg-gradient-to-r from-transparent via-sky-400 to-emerald-400/80"
-              />
-            )}
-          </motion.div>
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="pointer-events-none hidden md:block origin-left absolute top-[3rem] left-[16%] right-[16%] h-[2px] rounded-full bg-gradient-to-r from-sky-500/30 via-sky-400/50 to-emerald-500/35"
+          />
 
-          {/* Mobile Vertical Animated 3D Light-Beam Connector Spine (Centered on 48px Step Medallions) */}
+          {/* Mobile Vertical Hairline Connector Spine */}
           <div
             aria-hidden="true"
-            className="pointer-events-none md:hidden absolute top-11 bottom-11 left-[2.7rem] sm:left-[2.95rem] w-[2px] overflow-hidden rounded-full bg-gradient-to-b from-sky-500/35 via-amber-500/35 to-emerald-500/35"
-          >
-            {!prefersReducedMotion && (
-              <motion.span
-                animate={{ y: ["-25%", "125%"] }}
-                transition={{
-                  duration: 3.4,
-                  repeat: Infinity,
-                  repeatDelay: 1.1,
-                  ease: [0.4, 0, 0.2, 1],
-                }}
-                className="block w-full h-24 bg-gradient-to-b from-transparent via-sky-400 to-transparent"
-              />
-            )}
-          </div>
+            className="pointer-events-none md:hidden absolute top-11 bottom-11 left-[2.7rem] sm:left-[2.95rem] w-[2px] rounded-full bg-gradient-to-b from-sky-500/35 via-amber-500/35 to-emerald-500/35"
+          />
 
           <StaggerContainer className="relative z-10 grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
-            {HOW_WE_WORK_STEPS.map((step, idx) => {
+            {HOW_WE_WORK_STEPS.map((step) => {
               const Icon = step.icon;
               return (
                 <StaggerItem key={step.num} className="h-full">

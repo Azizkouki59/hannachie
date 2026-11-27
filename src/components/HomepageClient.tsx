@@ -1,16 +1,11 @@
 "use client";
-import { useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   motion,
   AnimatePresence,
   useReducedMotion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  useMotionTemplate,
-  useScroll,
 } from "framer-motion";
 import {
   Phone,
@@ -25,6 +20,7 @@ import {
   ShieldCheck,
   Zap,
   Check,
+  ChevronDown,
 } from "lucide-react";
 import {
   FadeUp,
@@ -38,12 +34,11 @@ import {
   BrandLogoTicker,
 } from "@/components/animations";
 import { business, yearsOfExperience } from "@/data/site";
-import RepairForm, { type RequestTypeId } from "@/components/RepairForm";
+import type { RequestTypeId } from "@/components/RepairForm";
 import type { InquiryMode } from "@/lib/repairRequest";
 import HowWeWorkSection from "@/components/HowWeWorkSection";
-import { GoogleReviewsSection } from "@/components/GoogleReviewsSection";
 import ApplianceLogo from "@/components/ApplianceLogo";
-import { buildWhatsAppDirectUrl, getDeviceEmoji } from "@/utils/whatsapp";
+import { buildWhatsAppDirectUrl, formatQuickWhatsAppMessage } from "@/utils/whatsapp";
 import {
   herrHannachiImage,
 } from "@/data/images";
@@ -53,11 +48,19 @@ import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { hapticTap, triggerHapticFeedback } from "@/lib/haptics";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import { HeroAnimatedBackdrop, SectionAmbientMesh } from "@/components/HeroAnimatedBackdrop";
-import SparePartsExplorer3D from "@/components/SparePartsExplorer3D";
+import { HOMEPAGE_FAQ_ITEMS } from "@/lib/seo";
 import {
   resolveExplorerAppliance,
   type ExplorerApplianceId,
 } from "@/components/explorer3d/types";
+
+const SparePartsExplorer3D = lazy(() => import("@/components/SparePartsExplorer3D"));
+const GoogleReviewsSection = lazy(() =>
+  import("@/components/GoogleReviewsSection").then((m) => ({
+    default: m.GoogleReviewsSection,
+  }))
+);
+const RepairForm = lazy(() => import("@/components/RepairForm"));
 
 const FEATURED_APPLIANCE_BRANDS = [
   "Miele",
@@ -170,63 +173,47 @@ export default function HomepageClient() {
   const prefersReducedMotion = useReducedMotion();
   const heroSectionRef = useRef<HTMLElement>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
+  const consoleRectRef = useRef<DOMRect | null>(null);
+  const consoleRafRef = useRef<number>(0);
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
 
-  // Scroll-linked calm studio depth inside the Hero section
-  const { scrollYProgress: heroScrollProgress } = useScroll({
-    target: heroSectionRef,
-    offset: ["start start", "end start"],
-  });
-  const smoothHeroScroll = useSpring(heroScrollProgress, {
-    stiffness: 160,
-    damping: 28,
-    mass: 0.5,
-  });
-  const desktopPhotoScrollY = useTransform(smoothHeroScroll, [0, 1], [0, 24]);
+  useEffect(() => {
+    return () => {
+      if (consoleRafRef.current) {
+        window.cancelAnimationFrame(consoleRafRef.current);
+      }
+    };
+  }, []);
 
-  // Desktop cursor-tracked optical glare + calibrated CSS 3D micro-tilt on portrait stage (zero React re-renders)
-  const portraitRawGlareX = useMotionValue(50);
-  const portraitRawGlareY = useMotionValue(50);
-  const portraitRawHover = useMotionValue(0);
-  const portraitRawRotateX = useMotionValue(0);
-  const portraitRawRotateY = useMotionValue(0);
-
-  const glareX = useSpring(portraitRawGlareX, { stiffness: 180, damping: 24 });
-  const glareY = useSpring(portraitRawGlareY, { stiffness: 180, damping: 24 });
-  const glareOpacity = useSpring(portraitRawHover, { stiffness: 180, damping: 26 });
-  const portraitRotateX = useSpring(portraitRawRotateX, { stiffness: 210, damping: 26, mass: 0.7 });
-  const portraitRotateY = useSpring(portraitRawRotateY, { stiffness: 210, damping: 26, mass: 0.7 });
-  const portraitGlareBg = useMotionTemplate`radial-gradient(380px circle at ${glareX}% ${glareY}%, rgba(224, 242, 254, 0.18), rgba(2, 132, 199, 0.06) 44%, transparent 72%)`;
+  const handleConsolePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion || e.pointerType !== "mouse" || !consoleRef.current) return;
+    consoleRectRef.current = consoleRef.current.getBoundingClientRect();
+  };
 
   const handleConsolePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || e.pointerType !== "mouse" || !consoleRef.current) return;
-    const rect = consoleRef.current.getBoundingClientRect();
-    consoleRef.current.style.setProperty("--console-x", `${(e.clientX - rect.left).toFixed(1)}px`);
-    consoleRef.current.style.setProperty("--console-y", `${(e.clientY - rect.top).toFixed(1)}px`);
-    consoleRef.current.style.setProperty("--console-glow", "1");
+    const rect = consoleRectRef.current ?? consoleRef.current.getBoundingClientRect();
+    consoleRectRef.current = rect;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (consoleRafRef.current) return;
+    consoleRafRef.current = window.requestAnimationFrame(() => {
+      consoleRafRef.current = 0;
+      if (!consoleRef.current) return;
+      consoleRef.current.style.setProperty("--console-x", `${x.toFixed(1)}px`);
+      consoleRef.current.style.setProperty("--console-y", `${y.toFixed(1)}px`);
+      consoleRef.current.style.setProperty("--console-glow", "1");
+    });
   };
 
   const handleConsolePointerLeave = () => {
+    consoleRectRef.current = null;
+    if (consoleRafRef.current) {
+      window.cancelAnimationFrame(consoleRafRef.current);
+      consoleRafRef.current = 0;
+    }
     if (!consoleRef.current) return;
     consoleRef.current.style.setProperty("--console-glow", "0");
-  };
-
-  const handlePortraitPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion || e.pointerType !== "mouse") return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    portraitRawGlareX.set(nx * 100);
-    portraitRawGlareY.set(ny * 100);
-    portraitRawRotateY.set((nx - 0.5) * 6.4); // ±3.2deg max calibrated tilt
-    portraitRawRotateX.set((0.5 - ny) * 6.4); // ±3.2deg max calibrated tilt
-    portraitRawHover.set(1);
-  };
-
-  const handlePortraitPointerLeave = () => {
-    portraitRawHover.set(0);
-    portraitRawRotateX.set(0);
-    portraitRawRotateY.set(0);
   };
 
   const [selectedDevice, setSelectedDevice] = useState<string>("Waschmaschine");
@@ -246,6 +233,7 @@ export default function HomepageClient() {
       : selectedDevice;
 
   const stats: Array<{
+    prefix?: string;
     value: number;
     decimals?: number;
     suffix: string;
@@ -261,7 +249,7 @@ export default function HomepageClient() {
       icon: Star,
     },
     { value: 1, suffix: " : 1", label: "Direkt mit Inhaber", icon: Shield },
-    { value: 24, suffix: " h", label: "Schnelle Antwort", icon: Zap },
+    { prefix: "24–", value: 48, suffix: " h", label: "Schnelle Antwort", icon: Zap },
   ];
 
   const handleSelectDevice = (device: string) => {
@@ -302,14 +290,15 @@ export default function HomepageClient() {
       ? customOtherDevice.trim()
       : activeHeroDeviceObj.label;
 
-  const heroWhatsAppMessage = [
-    `👋 *Kurze Anfrage*`,
-    `Hallo Herr Hannachi,`,
-    ``,
-    `${getDeviceEmoji(whatsappDeviceLabel)} *Gerät:* ${whatsappDeviceLabel}`,
-    ...(selectedSymptom ? [`🔹 *Anliegen:* ${selectedSymptom}`] : []),
-    `📍 *Region:* Osnabrück`,
-  ].join("\n");
+  const heroWhatsAppMessage = formatQuickWhatsAppMessage({
+    title: "Kurze Anfrage",
+    device: whatsappDeviceLabel,
+    brand: selectedBrand || undefined,
+    detail:
+      selectedSymptom ||
+      "Fachberatung, Original-Ersatzteil oder ausgewähltes Markengerät auf Anfrage",
+    photoHint: true,
+  });
 
   const heroDirectWhatsappHref = buildWhatsAppDirectUrl(heroWhatsAppMessage);
 
@@ -328,7 +317,18 @@ export default function HomepageClient() {
   };
 
   const handleRequestPartFromExplorer = (deviceValue: string, symptomText: string) => {
-    setSelectedDevice(deviceValue);
+    const isCoreHeroDevice =
+      deviceValue === "Waschmaschine" ||
+      deviceValue === "Kühlschrank / Gefriergerät" ||
+      deviceValue === "Geschirrspüler" ||
+      deviceValue === "Backofen / Herd";
+    if (isCoreHeroDevice) {
+      setSelectedDevice(deviceValue);
+      setCustomOtherDevice("");
+    } else {
+      setSelectedDevice(deviceValue);
+      setCustomOtherDevice(deviceValue);
+    }
     setSelectedSymptom(symptomText);
     setSelectedRequestType("check_parts");
     setSelectionSeq((n) => n + 1);
@@ -337,6 +337,7 @@ export default function HomepageClient() {
 
   const handleRequestOtherDeviceFromExplorer = () => {
     setSelectedDevice("Sonstiges");
+    setCustomOtherDevice("");
     setSelectedSymptom("");
     setSelectedRequestType("check_parts");
     setSelectionSeq((n) => n + 1);
@@ -345,7 +346,11 @@ export default function HomepageClient() {
 
   const handleScrollToExplorer = () => {
     hapticTap();
-    const resolved = resolveExplorerAppliance(selectedDevice);
+    const lookupValue =
+      selectedDevice === "Sonstiges" && customOtherDevice.trim()
+        ? customOtherDevice.trim()
+        : selectedDevice;
+    const resolved = resolveExplorerAppliance(lookupValue);
     if (resolved) {
       setExplorerAppliance(resolved);
     }
@@ -398,9 +403,9 @@ export default function HomepageClient() {
                     trigger="mount"
                     delay={0.05}
                     segments={[
-                      { text: "Ihr Hausgeräte-Spezialist " },
+                      { text: "Ihr Fachhandel für Hausgeräte " },
                       {
-                        text: "für Beratung & Original-Ersatzteile",
+                        text: "& Original-Ersatzteile in Osnabrück",
                         className: "text-sky-300",
                       },
                     ]}
@@ -412,26 +417,28 @@ export default function HomepageClient() {
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-2.5 sm:mt-3.5 max-w-[56ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.58] text-white/82"
+                className="mt-2.5 sm:mt-3.5 max-w-[58ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.6] text-white/85"
               >
-                Persönliche Fachberatung von Inhaber{" "}
-                <strong className="text-white font-semibold">{business.owner}</strong> in{" "}
-                {business.city} – seit über{" "}
-                <strong className="text-white font-semibold">{yearsOfExperience} Jahren</strong>{" "}
-                für passgenaue Original-Ersatzteile nach Typenschild (E-Nr.) und ausgewählte
-                Markengeräte auf Anfrage.
+                Unabhängiger Fachhandel von Inhaber{" "}
+                <strong className="text-white font-semibold">{business.owner}</strong> seit{" "}
+                <strong className="text-white font-semibold">{business.founded}</strong>:
+                persönliche Fachberatung, passgenaue Original- und Qualitäts-Ersatzteile nach
+                Typenschild für Waschmaschinen, Geschirrspüler, Kühlgeräte und Herde aller
+                gängigen Marken sowie ausgewählte Markengeräte auf Anfrage, direkt in{" "}
+                {business.city} nach Terminvereinbarung.
               </motion.p>
 
               {/* Interactive Specular Glass Console: 1-Tap Appliance Selector + Quick Topics + Direct Contact */}
               <motion.div
                 ref={consoleRef}
+                onPointerEnter={handleConsolePointerEnter}
                 onPointerMove={handleConsolePointerMove}
                 onPointerLeave={handleConsolePointerLeave}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.58,
-                  delay: 0.18,
+                  duration: 0.42,
+                  delay: 0.12,
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 className="hero-glass-console mt-3.5 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.035] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-[0_24px_56px_-18px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
@@ -470,7 +477,7 @@ export default function HomepageClient() {
                         aria-pressed={isSelected}
                         className={`${
                           idx < 3 ? "col-span-2 sm:col-span-1" : "col-span-3 sm:col-span-1"
-                        } relative overflow-hidden min-w-0 min-h-[70px] sm:min-h-0 w-full flex flex-col items-center text-center justify-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl border px-1.5 py-2 sm:py-3 transition-colors duration-200 cursor-pointer ${
+                        } relative overflow-hidden min-w-0 min-h-[72px] sm:min-h-0 w-full flex flex-col items-center text-center justify-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl border px-1.5 py-2 sm:py-3 transition-colors duration-200 cursor-pointer ${
                           isSelected
                             ? "border-sky-300/70 text-white shadow-[0_10px_24px_-6px_rgba(2,132,199,0.55)]"
                             : "border-white/12 bg-white/[0.045] text-white/90 hover:border-white/28 hover:bg-white/[0.095]"
@@ -482,33 +489,11 @@ export default function HomepageClient() {
                             transition={
                               prefersReducedMotion
                                 ? { duration: 0.1 }
-                                : { type: "spring", stiffness: 380, damping: 32, mass: 0.8 }
+                                : { type: "spring", stiffness: 420, damping: 34, mass: 0.75 }
                             }
                             aria-hidden="true"
-                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-500 to-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
-                          >
-                            {/* Magic UI-inspired animated hairline border beam on active device pill */}
-                            {!prefersReducedMotion && (
-                              <span
-                                aria-hidden="true"
-                                className="pointer-events-none absolute -inset-[1px] rounded-[inherit] p-[1.5px]"
-                                style={{
-                                  WebkitMask:
-                                    "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                                  WebkitMaskComposite: "xor",
-                                  maskComposite: "exclude",
-                                }}
-                              >
-                                <span
-                                  className="active-border-beam-rotor block h-[220%] w-[220%] -translate-x-[27%] -translate-y-[27%]"
-                                  style={{
-                                    background:
-                                      "conic-gradient(from 0deg, transparent 0deg, transparent 220deg, rgba(224,242,254,0.95) 285deg, rgba(16,185,129,0.9) 330deg, transparent 360deg)",
-                                  }}
-                                />
-                              </span>
-                            )}
-                          </motion.span>
+                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-500 to-sky-600 ring-1 ring-inset ring-sky-200/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
+                          />
                         )}
                         <AnimatePresence>
                           {isSelected && (
@@ -541,7 +526,10 @@ export default function HomepageClient() {
                           <ApplianceLogo device={item.device} size={22} />
                         </motion.span>
                         <div className="relative z-10 w-full min-w-0">
-                          <span className="block truncate text-[10.5px] min-[375px]:text-[11px] xl:text-xs font-extrabold leading-tight tracking-[-0.01em]">
+                          <span
+                            data-compact-label="true"
+                            className="block truncate text-[10.5px] min-[375px]:text-[11px] xl:text-xs font-extrabold leading-tight tracking-[-0.01em]"
+                          >
                             {item.label}
                           </span>
                           <span
@@ -594,9 +582,12 @@ export default function HomepageClient() {
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {activeHeroDeviceObj.quickProblems.map((problem) => {
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
+                    {activeHeroDeviceObj.quickProblems.map((problem, idx) => {
                       const active = selectedSymptom === problem;
+                      const isOddLast =
+                        activeHeroDeviceObj.quickProblems.length % 2 === 1 &&
+                        idx === activeHeroDeviceObj.quickProblems.length - 1;
                       return (
                         <motion.button
                           key={`${selectedDevice}-${problem}`}
@@ -606,7 +597,9 @@ export default function HomepageClient() {
                           transition={{ type: "spring", stiffness: 480, damping: 26 }}
                           onClick={() => handleToggleSymptom(problem)}
                           aria-pressed={active}
-                          className={`inline-flex min-h-[42px] sm:min-h-[34px] max-w-full items-center gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1.5 sm:py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-left leading-tight cursor-pointer ${
+                          className={`${
+                            isOddLast ? "col-span-2 sm:col-span-1" : ""
+                          } inline-flex min-h-[42px] sm:min-h-[34px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1.5 sm:py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-center sm:text-left leading-tight cursor-pointer ${
                             active
                               ? "border-emerald-400/80 bg-emerald-500/25 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                               : "border-white/15 bg-white/[0.045] text-white/85 hover:border-white/30 hover:bg-white/[0.09] hover:text-white"
@@ -671,7 +664,7 @@ export default function HomepageClient() {
                     href={place.phoneHref}
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-call-btn"
-                    className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
+                    className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
                   >
                     <Phone size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
                     <span className="truncate">{place.phoneDisplay}</span>
@@ -683,7 +676,7 @@ export default function HomepageClient() {
                     type="button"
                     onClick={handleScrollToRequest}
                     data-testid="hero-direct-form-btn"
-                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[44px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
+                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
                   >
                     <span className="truncate">
                       {selectedSymptom ? "Formular" : "Termin"}
@@ -695,6 +688,15 @@ export default function HomepageClient() {
                     />
                   </motion.button>
                 </div>
+                <p className="relative z-10 text-[10.5px] leading-snug text-white/60">
+                  Freiwilliger Chat über WhatsApp (Meta) ·{" "}
+                  <Link
+                    href="/datenschutz"
+                    className="underline underline-offset-2 text-white/75 hover:text-white transition-colors"
+                  >
+                    Datenschutz
+                  </Link>
+                </p>
               </motion.div>
 
               {/* Mobile Calm Studio Photo Frame with Mr. Hannachi's Real Photo */}
@@ -702,33 +704,33 @@ export default function HomepageClient() {
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.56, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-3.5 lg:hidden"
+                className="mt-3.5 mx-auto w-full max-w-[440px] lg:hidden"
               >
-                <div className="relative overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
                   <motion.div
-                    initial={prefersReducedMotion ? false : { scale: 1.06 }}
-                    animate={{ scale: 1.02 }}
-                    transition={{ duration: 0.85, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full"
+                    initial={prefersReducedMotion ? false : { scale: 1.04 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute inset-0"
                   >
                     <Image
                       src={herrHannachiImage}
-                      alt="Kamal Hannachi – Fachhandel für Elektrohaushaltsgeräte & Original-Ersatzteile in Osnabrück"
-                      width={900}
-                      height={540}
+                      alt="Kamal Hannachi: Fachhandel für Elektrohaushaltsgeräte & Original-Ersatzteile in Osnabrück"
+                      fill
                       mobilePriority
                       preload
+                      quality={95}
                       placeholder="blur"
                       blurDataURL={herrHannachiImage.blurDataURL}
-                      sizes="(max-width: 640px) 94vw, (max-width: 1023px) 92vw, 520px"
-                      className="aspect-[16/10] w-full object-cover object-[50%_18%]"
+                      sizes="(max-width: 640px) 94vw, 440px"
+                      className="object-cover object-[50%_10%]"
                     />
                   </motion.div>
 
-                  <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/95 via-slate-950/28 to-slate-950/15" />
+                  <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent" />
 
                   <div className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1.5 rounded-lg border border-white/22 bg-slate-950/78 px-2.5 py-1 text-[10.5px] font-bold text-sky-200 backdrop-blur-md shadow-md">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    <ShieldCheck size={12} className="text-emerald-400 shrink-0" aria-hidden="true" />
                     <span>Fachberatung · Seit {business.founded}</span>
                   </div>
 
@@ -753,74 +755,34 @@ export default function HomepageClient() {
 
             {/* Right Column (5 cols): Desktop Studio Portrait Stage with Mr. Hannachi's Real Photo */}
             <motion.div
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{
-                duration: 0.62,
-                delay: 0.14,
+                duration: 0.48,
+                delay: 0.1,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="relative hidden lg:flex lg:col-span-5 flex-col"
             >
-              <motion.div
-                onPointerMove={handlePortraitPointerMove}
-                onPointerLeave={handlePortraitPointerLeave}
-                style={
-                  prefersReducedMotion
-                    ? undefined
-                    : {
-                        rotateX: portraitRotateX,
-                        rotateY: portraitRotateY,
-                        transformPerspective: 1100,
-                      }
-                }
-                className="relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/18 bg-slate-900/90 shadow-[0_26px_64px_-18px_rgba(2,6,23,0.84),0_0_0_1px_rgba(255,255,255,0.08)] will-change-transform"
-              >
-                <motion.div
-                  initial={prefersReducedMotion ? false : { scale: 1.07 }}
-                  animate={{ scale: 1.03 }}
-                  transition={{ duration: 0.95, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute inset-0"
-                >
-                  <motion.div
-                    style={prefersReducedMotion ? undefined : { y: desktopPhotoScrollY }}
-                    className="relative h-full w-full"
-                  >
-                    <Image
-                      src={herrHannachiImage}
-                      alt="Kamal Hannachi – Persönliche Hausgeräte-Beratung & Ersatzteile in Osnabrück"
-                      fill
-                      priority={!isMobileViewport}
-                      preload={!isMobileViewport}
-                      quality={95}
-                      placeholder="blur"
-                      blurDataURL={herrHannachiImage.blurDataURL}
-                      sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
-                      className="object-cover object-[50%_20%]"
-                    />
-                  </motion.div>
-                </motion.div>
-
-                {/* Subtle cursor-tracked studio optical sheen */}
-                {!prefersReducedMotion && (
-                  <motion.div
-                    aria-hidden="true"
-                    style={{
-                      background: portraitGlareBg,
-                      opacity: glareOpacity,
-                    }}
-                    className="pointer-events-none absolute inset-0 z-[5]"
+              <div className="group/portrait relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/18 bg-slate-900/90 shadow-[0_26px_64px_-18px_rgba(2,6,23,0.84),0_0_0_1px_rgba(255,255,255,0.08)]">
+                <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/portrait:scale-[1.02]">
+                  <Image
+                    src={herrHannachiImage}
+                    alt="Kamal Hannachi: Persönliche Hausgeräte-Beratung & Ersatzteile in Osnabrück"
+                    fill
+                    priority={!isMobileViewport}
+                    preload={!isMobileViewport}
+                    quality={95}
+                    placeholder="blur"
+                    blurDataURL={herrHannachiImage.blurDataURL}
+                    sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
+                    className="object-cover object-[50%_15%]"
                   />
-                )}
+                </div>
 
                 <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/92 via-slate-950/24 to-slate-950/12" />
 
-                <motion.div
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                  className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/22 bg-slate-950/86 px-4 py-3.5 backdrop-blur-md"
-                >
+                <div className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/22 bg-slate-950/86 px-4 py-3.5 backdrop-blur-md">
                   <div className="flex items-center justify-between gap-2 text-xs text-accent-light font-bold">
                     <span>Hausgeräte-Spezialist seit {business.founded}</span>
                     <span className="inline-flex items-center gap-1">
@@ -838,14 +800,14 @@ export default function HomepageClient() {
                       <span>{ratingFormatted} Google ({place.userRatingCount})</span>
                     </span>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             </motion.div>
           </div>
 
           {/* Interactive Spotlight KPI Tiles with Viewport Count-Up */}
           <div className="mt-3.5 sm:mt-7 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
-            {stats.map(({ value, decimals, suffix, label, icon: Icon }, idx) => (
+            {stats.map(({ prefix, value, decimals, suffix, label, icon: Icon }, idx) => (
               <motion.div
                 key={label}
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
@@ -858,14 +820,14 @@ export default function HomepageClient() {
                 className="h-full"
               >
                 <Spatial3DCard className="rounded-2xl">
-                  <div className="group/kpi relative h-full overflow-hidden rounded-2xl border border-white/14 bg-gradient-to-b from-white/[0.08] via-white/[0.045] to-slate-950/30 p-3 sm:p-4 flex flex-col justify-between min-w-0 shadow-[0_14px_30px_-14px_rgba(2,6,23,0.75),inset_0_1px_0_rgba(255,255,255,0.16)] transition-colors duration-200 hover:border-sky-400/45 hover:bg-white/[0.09]">
+                  <div className="group/kpi relative h-full min-h-[86px] overflow-hidden rounded-2xl border border-white/14 bg-gradient-to-b from-white/[0.08] via-white/[0.045] to-slate-950/30 p-3.5 sm:p-4 flex flex-col justify-between min-w-0 shadow-[0_14px_30px_-14px_rgba(2,6,23,0.75),inset_0_1px_0_rgba(255,255,255,0.16)] transition-colors duration-200 hover:border-sky-400/45 hover:bg-white/[0.09]">
                     <div
                       aria-hidden="true"
                       className="pointer-events-none absolute top-0 inset-x-4 h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent"
                     />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-base min-[375px]:text-lg sm:text-xl lg:text-2xl font-extrabold text-white tabular-nums">
-                        <CountUp target={value} decimals={decimals} suffix={suffix} />
+                        <CountUp prefix={prefix} target={value} decimals={decimals} suffix={suffix} />
                       </p>
                       <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl border border-sky-300/25 bg-gradient-to-br from-sky-400/20 to-sky-600/10 text-accent-light shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/kpi:-translate-y-0.5">
                         <Icon size={14} aria-hidden="true" />
@@ -906,14 +868,28 @@ export default function HomepageClient() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 1.75: FLAGSHIP INTERACTIVE 3D SPARE-PARTS EXPLORER
+          SECTION 1.75: FLAGSHIP INTERACTIVE 3D SPARE-PARTS EXPLORER (LAZY)
       ══════════════════════════════════════════════════════════════════ */}
-      <SparePartsExplorer3D
-        activeAppliance={explorerAppliance}
-        onChangeAppliance={setExplorerAppliance}
-        onRequestPart={handleRequestPartFromExplorer}
-        onRequestOtherDevice={handleRequestOtherDeviceFromExplorer}
-      />
+      <Suspense
+        fallback={
+          <section
+            id="3d-explorer"
+            aria-busy="true"
+            className="border-b border-primary/8 dark:border-white/10 bg-slate-950 py-14 sm:py-20"
+          >
+            <div className="container-page">
+              <div className="h-[520px] sm:h-[620px] w-full rounded-2xl border border-white/10 bg-slate-900/70" />
+            </div>
+          </section>
+        }
+      >
+        <SparePartsExplorer3D
+          activeAppliance={explorerAppliance}
+          onChangeAppliance={setExplorerAppliance}
+          onRequestPart={handleRequestPartFromExplorer}
+          onRequestOtherDevice={handleRequestOtherDeviceFromExplorer}
+        />
+      </Suspense>
 
       {/* ══════════════════════════════════════════════════════════════════
           SECTION 2: 3-PILLAR VALUE PROPOSITION (CRISP & SYMBOL-LED)
@@ -921,7 +897,7 @@ export default function HomepageClient() {
       <section
         id="leistungen"
         aria-labelledby="how-we-help-heading"
-        className="section relative overflow-hidden bg-white dark:bg-slate-900 border-b border-primary/8 dark:border-white/10"
+        className="cv-auto section relative overflow-hidden bg-white dark:bg-slate-900 border-b border-primary/8 dark:border-white/10"
       >
         <SectionAmbientMesh variant="pillars" />
         <div className="container-page relative z-10">
@@ -1040,16 +1016,110 @@ export default function HomepageClient() {
       <HowWeWorkSection onSelectStep={handleSelectPillar} />
 
       {/* ══════════════════════════════════════════════════════════════════
-          SECTION 4: VERIFIED GOOGLE CUSTOMER REVIEWS (4,8 ★ · 82 Reviews)
+          SECTION 4: VERIFIED GOOGLE CUSTOMER REVIEWS (LAZY)
       ══════════════════════════════════════════════════════════════════ */}
-      <GoogleReviewsSection />
+      <Suspense
+        fallback={
+          <section
+            id="kundenstimmen"
+            aria-busy="true"
+            className="border-t border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-950 py-10 sm:py-14"
+          >
+            <div className="container-page">
+              <div className="h-[340px] w-full rounded-2xl border border-primary/10 dark:border-white/10 bg-white/80 dark:bg-slate-900/70" />
+            </div>
+          </section>
+        }
+      >
+        <GoogleReviewsSection />
+      </Suspense>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SECTION 4.5: HÄUFIGE FRAGEN (FAQ) — VISIBLE & SYNCED WITH FAQPage JSON-LD
+      ══════════════════════════════════════════════════════════════════ */}
+      <section
+        id="faq"
+        aria-labelledby="faq-heading"
+        className="cv-auto section relative overflow-hidden bg-surface dark:bg-slate-950 border-t border-primary/8 dark:border-white/10"
+      >
+        <div className="container-page relative z-10">
+          <div className="grid gap-6 lg:grid-cols-12 lg:gap-10 items-start">
+            <div className="lg:col-span-4">
+              <p className="eyebrow">Häufige Fragen · {business.city}</p>
+              <h2
+                id="faq-heading"
+                className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl text-balance"
+              >
+                Antworten zu Beratung &amp; Ersatzteilen
+              </h2>
+              <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-ink-muted">
+                Alle wichtigen Hinweise zu Typenschild, Original-Ersatzteilen, ausgewählten
+                Markengeräten und Terminen bei {business.owner} in {business.city}.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/leistungen"
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
+                >
+                  <span>Alle Gerätebereiche</span>
+                  <ArrowRight size={13} aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/kontakt"
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
+                >
+                  <span>Kontakt &amp; Anfahrt</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 divide-y divide-primary/10 dark:divide-white/10 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+              {HOMEPAGE_FAQ_ITEMS.map((item, idx) => {
+                const isOpen = openFaqIdx === idx;
+                return (
+                  <div key={item.question}>
+                    <h3 className="m-0">
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        aria-controls={`faq-panel-${idx}`}
+                        onClick={() => {
+                          hapticTap();
+                          setOpenFaqIdx((prev) => (prev === idx ? null : idx));
+                        }}
+                        className="flex w-full min-h-[54px] items-center justify-between gap-4 px-4 sm:px-6 py-4 text-left text-sm sm:text-[15px] font-bold text-primary dark:text-slate-100 hover:bg-primary/[0.025] dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
+                      >
+                        <span className="leading-snug">{item.question}</span>
+                        <ChevronDown
+                          size={17}
+                          aria-hidden="true"
+                          className={`shrink-0 text-accent transition-transform duration-200 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    </h3>
+                    <div
+                      id={`faq-panel-${idx}`}
+                      hidden={!isOpen}
+                      className="px-4 sm:px-6 pb-4 sm:pb-5 text-xs sm:text-[14px] leading-relaxed text-ink-muted"
+                    >
+                      {item.answer}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════════════
           SECTION 5: STREAMLINED INQUIRY FORM (#anfrage) & OWNER CARD
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="anfrage"
-        className="section relative scroll-mt-16 lg:scroll-mt-20 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
+        className="cv-auto section relative scroll-mt-16 lg:scroll-mt-20 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
       >
         <SectionAmbientMesh variant="inquiry" />
         <div className="container-page relative z-10">
@@ -1060,21 +1130,30 @@ export default function HomepageClient() {
                 <RevealText segments={[{ text: "Direkt per WhatsApp anfragen" }]} />
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
-                Gerät &amp; Anliegen antippen – Nachricht öffnet direkt im Chat.
+                Gerät &amp; Anliegen antippen, Ihre Nachricht öffnet direkt im Chat.
               </p>
             </div>
           </FadeUp>
 
           <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-12 lg:items-start">
             <div className="lg:col-span-8 min-w-0 w-full max-w-full">
-              <RepairForm
-                defaultDevice={resolvedHeroDeviceForForm}
-                defaultSymptom={selectedSymptom}
-                defaultBrand={selectedBrand}
-                defaultMode={inquiryMode}
-                defaultRequestType={selectedRequestType}
-                selectionSeq={selectionSeq}
-              />
+              <Suspense
+                fallback={
+                  <div
+                    aria-busy="true"
+                    className="min-h-[420px] w-full rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950/60"
+                  />
+                }
+              >
+                <RepairForm
+                  defaultDevice={resolvedHeroDeviceForForm}
+                  defaultSymptom={selectedSymptom}
+                  defaultBrand={selectedBrand}
+                  defaultMode={inquiryMode}
+                  defaultRequestType={selectedRequestType}
+                  selectionSeq={selectionSeq}
+                />
+              </Suspense>
             </div>
 
             <aside className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-stretch lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-20">
@@ -1096,14 +1175,10 @@ export default function HomepageClient() {
                             decoding="async"
                             placeholder="blur"
                             blurDataURL={herrHannachiImage.blurDataURL}
-                            className="object-cover object-top"
+                            className="object-cover object-[50%_20%]"
                             sizes="64px"
                           />
                         </div>
-                        <span
-                          aria-hidden="true"
-                          className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-slate-950 bg-emerald-400 shadow-sm"
-                        />
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-accent-light">
@@ -1164,7 +1239,7 @@ export default function HomepageClient() {
                 <dl className="mt-3 space-y-2 text-xs text-ink-muted border-t border-primary/8 dark:border-white/10 pt-3">
                   <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
                     <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Erreichbarkeit</dt>
-                    <dd className="text-right min-w-0 break-words">Mo–Sa 08:00–18:00 Uhr</dd>
+                    <dd className="text-right min-w-0 break-words">Mo. bis Sa., 08:00 bis 18:00 Uhr</dd>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-primary/8 dark:border-white/10 pb-2">
                     <dt className="font-semibold text-primary dark:text-slate-200 shrink-0">Region</dt>

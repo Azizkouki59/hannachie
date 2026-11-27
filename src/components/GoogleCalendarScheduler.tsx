@@ -474,7 +474,7 @@ export default function GoogleCalendarScheduler({
             <p className="text-xs text-ink-muted mt-0.5">
               {mode === "admin"
                 ? "Synchronisieren Sie Ihre geplanten Übergabe- und Beratungstermine mit 1 Klick in Ihren Google Kalender."
-                : "Nicht erforderlich – für Ihre Anfrage genügt das Formular oben. Optional können Sie den Termin hier zusätzlich in Ihrem Google Kalender speichern."}
+                : "Nicht erforderlich: Für Ihre Anfrage genügt das Formular oben. Optional können Sie den Termin hier zusätzlich in Ihrem Google Kalender speichern."}
             </p>
           </div>
         </div>

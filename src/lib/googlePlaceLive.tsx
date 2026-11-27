@@ -81,7 +81,7 @@ const DEFAULT_PLACE_DATA: LiveGooglePlaceData = {
   todayHours: business.hours,
   hoursSummary: business.hours,
   rating: 4.8,
-  userRatingCount: 84,
+  userRatingCount: 82,
   googleMapsUri: business.mapsUrl,
   reviewsUri: business.mapsReviewsUrl,
   writeAReviewUri: business.mapsWriteReviewUrl,
@@ -191,12 +191,7 @@ export function GoogleLivePlaceProvider({
           shortFormattedAddress: `${business.street}, ${business.zip} ${business.city}`,
           streetLine: business.street,
           zipCityLine: `${business.zip} ${business.city}`,
-          coordinates:
-            p.coordinates &&
-            typeof p.coordinates.lat === "number" &&
-            typeof p.coordinates.lng === "number"
-              ? p.coordinates
-              : business.coordinates,
+          coordinates: business.coordinates,
           phoneDisplay: livePhone,
           internationalPhoneNumber: liveIntlPhone,
           phoneHref: normalizeTelHref(

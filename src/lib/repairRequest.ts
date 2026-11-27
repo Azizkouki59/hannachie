@@ -11,7 +11,7 @@ import {
   sanitizeSingleLine,
   sanitizeText,
 } from "@/utils/sanitize";
-import { getTodayIsoDate, type AdminRepairTicket } from "@/lib/adminTypes";
+import { type AdminRepairTicket } from "@/lib/adminTypes";
 import { recordClientSubmittedTicket, resolveCoordinatesForZip } from "@/lib/adminClient";
 
 export const deviceTypes = [
@@ -84,6 +84,9 @@ export type VerifiedLocationInfo = {
   formattedCoords: string;
   streetAddress: string;
   zipAndCity: string;
+  postalCode?: string;
+  city?: string;
+  formattedAddress?: string;
   mapsUrl: string;
   source: "gps" | "map-pin" | "region-verified";
 };
@@ -105,9 +108,24 @@ export function formatCoordinatesDisplay(lat: number, lng: number): string {
   return `${Math.abs(lat).toFixed(5)}° ${latDir}, ${Math.abs(lng).toFixed(5)}° ${lngDir}`;
 }
 
+type ServerGeocodeResponse = {
+  ok?: boolean;
+  source?: "google" | "nominatim";
+  lat?: number;
+  lng?: number;
+  streetAddress?: string;
+  postalCode?: string;
+  city?: string;
+  zipAndCity?: string;
+  formattedAddress?: string;
+  quotaExceeded?: boolean;
+  error?: string;
+};
+
 /**
- * Reverse-geocodes GPS coordinates via OpenStreetMap Nominatim to resolve the user's
- * street address and postal code/town in Osnabrück & Umgebung, with an instant nearest-municipality fallback.
+ * Reverse-geocodes GPS coordinates via the server-side /api/reverse-geocode proxy
+ * (Google Geocoding API v4 -> classic Geocoding -> Nominatim), with a safe fallback
+ * that never fabricates "49082 Osnabrück" for coordinates outside the Osnabrück region.
  */
 export async function reverseGeocodePosition(
   lat: number,
@@ -119,7 +137,7 @@ export async function reverseGeocodePosition(
   const mapsUrl = `https://www.google.com/maps?q=${cleanLat},${cleanLng}`;
   const formattedCoords = formatCoordinatesDisplay(cleanLat, cleanLng);
 
-  // Find nearest municipality in Osnabrück & Landkreis Osnabrück as a fast fallback
+  // Find nearest Osnabrück municipality only for local fallback when truly within 35 km
   let nearestArea: (typeof osnabrueckServiceAreas)[number] = osnabrueckServiceAreas[0];
   let minDistance = Infinity;
   for (const area of osnabrueckServiceAreas) {
@@ -129,17 +147,68 @@ export async function reverseGeocodePosition(
       nearestArea = area;
     }
   }
+  const isNearOsnabrueck = minDistance <= 35;
 
+  // 1) Primary: Server-side proxy (Google Geocoding API + Nominatim fallback, zero CORS issues)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+    const response = await fetch(
+      `/api/reverse-geocode?lat=${encodeURIComponent(String(cleanLat))}&lng=${encodeURIComponent(
+        String(cleanLng)
+      )}`,
+      {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = (await response.json().catch(() => null)) as ServerGeocodeResponse | null;
+      if (data?.quotaExceeded && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("gmp-quota-exceeded"));
+      }
+      if (data?.ok) {
+        const streetAddress = sanitizeSingleLine(data.streetAddress || "", 120);
+        const postalCode = sanitizeSingleLine(data.postalCode || "", 20);
+        const city = sanitizeSingleLine(data.city || "", 80);
+        const zipAndCity =
+          sanitizeSingleLine(data.zipAndCity || "", 100) ||
+          [postalCode, city].filter(Boolean).join(" ").trim() ||
+          (isNearOsnabrueck ? nearestArea.value : formattedCoords);
+        const formattedAddress =
+          sanitizeSingleLine(data.formattedAddress || "", 220) ||
+          [streetAddress, zipAndCity].filter(Boolean).join(", ");
+
+        return {
+          lat: cleanLat,
+          lng: cleanLng,
+          accuracy: Math.max(5, Math.round(accuracy)),
+          formattedCoords,
+          streetAddress,
+          zipAndCity,
+          postalCode: postalCode || undefined,
+          city: city || undefined,
+          formattedAddress,
+          mapsUrl,
+          source: "gps",
+        };
+      }
+    }
+  } catch {
+    // Fall through to direct Nominatim fallback if server proxy is temporarily unavailable
+  }
+
+  // 2) Secondary fallback: Direct Nominatim (only if backend proxy failed)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${cleanLat}&lon=${cleanLng}&accept-language=de&addressdetails=1`,
       {
         signal: controller.signal,
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       }
     );
     clearTimeout(timeoutId);
@@ -169,18 +238,26 @@ export async function reverseGeocodePosition(
           ? ` ${sanitizeSingleLine(addr.house_number, 20)}`
           : "";
         const cleanSuburb = sanitizeSingleLine(addr.suburb || "", 80);
-        const resolvedStreet = streetName
-          ? `${streetName}${houseNum}`
-          : cleanSuburb
-          ? `Ortsteil ${cleanSuburb}`
-          : "";
-
         const resolvedCity = sanitizeSingleLine(
-          addr.city || addr.town || addr.village || addr.municipality || nearestArea.city,
+          addr.city ||
+            addr.town ||
+            addr.village ||
+            addr.municipality ||
+            (isNearOsnabrueck ? nearestArea.city : ""),
           80
         );
-        const resolvedZip = sanitizeSingleLine(addr.postcode || nearestArea.zip, 20);
-        const zipAndCity = `${resolvedZip} ${resolvedCity}`.trim();
+        const resolvedZip = sanitizeSingleLine(
+          addr.postcode || (isNearOsnabrueck && !resolvedCity ? nearestArea.zip : ""),
+          20
+        );
+        const resolvedStreet = streetName
+          ? `${streetName}${houseNum}`
+          : cleanSuburb && cleanSuburb.toLowerCase() !== resolvedCity.toLowerCase()
+          ? cleanSuburb
+          : "";
+        const zipAndCity =
+          [resolvedZip, resolvedCity].filter(Boolean).join(" ").trim() ||
+          (isNearOsnabrueck ? nearestArea.value : formattedCoords);
 
         return {
           lat: cleanLat,
@@ -189,13 +266,16 @@ export async function reverseGeocodePosition(
           formattedCoords,
           streetAddress: resolvedStreet,
           zipAndCity,
+          postalCode: resolvedZip || undefined,
+          city: resolvedCity || undefined,
+          formattedAddress: [resolvedStreet, zipAndCity].filter(Boolean).join(", "),
           mapsUrl,
           source: "gps",
         };
       }
     }
   } catch {
-    // Fallback to nearest municipality if network/CORS is restricted
+    // Fall through to safe coordinate/local fallback
   }
 
   return {
@@ -204,10 +284,89 @@ export async function reverseGeocodePosition(
     accuracy: Math.max(5, Math.round(accuracy)),
     formattedCoords,
     streetAddress: "",
-    zipAndCity: nearestArea.value,
+    zipAndCity: isNearOsnabrueck ? nearestArea.value : formattedCoords,
+    formattedAddress: isNearOsnabrueck ? nearestArea.value : formattedCoords,
     mapsUrl,
     source: "gps",
   };
+}
+
+/**
+ * Forward-geocodes a user-entered street, postal code, or town via /api/geocode.
+ */
+export async function geocodePlaceQuery(
+  query: string
+): Promise<
+  | { ok: true; location: VerifiedLocationInfo }
+  | { ok: false; error: string }
+> {
+  const cleaned = sanitizeSingleLine(query, 160);
+  if (cleaned.length < 2) {
+    return {
+      ok: false,
+      error: "Bitte geben Sie einen Ort, eine PLZ oder Straße ein.",
+    };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(cleaned)}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+    clearTimeout(timeoutId);
+    const data = (await res.json().catch(() => null)) as ServerGeocodeResponse | null;
+    if (data?.quotaExceeded && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("gmp-quota-exceeded"));
+    }
+    if (
+      res.ok &&
+      data?.ok &&
+      typeof data.lat === "number" &&
+      typeof data.lng === "number"
+    ) {
+      const cleanLat = Number(data.lat.toFixed(6));
+      const cleanLng = Number(data.lng.toFixed(6));
+      const streetAddress = sanitizeSingleLine(data.streetAddress || "", 120);
+      const postalCode = sanitizeSingleLine(data.postalCode || "", 20);
+      const city = sanitizeSingleLine(data.city || "", 80);
+      const zipAndCity =
+        sanitizeSingleLine(data.zipAndCity || "", 100) ||
+        [postalCode, city].filter(Boolean).join(" ").trim() ||
+        cleaned;
+      return {
+        ok: true,
+        location: {
+          lat: cleanLat,
+          lng: cleanLng,
+          accuracy: 12,
+          formattedCoords: formatCoordinatesDisplay(cleanLat, cleanLng),
+          streetAddress,
+          zipAndCity,
+          postalCode: postalCode || undefined,
+          city: city || undefined,
+          formattedAddress:
+            sanitizeSingleLine(data.formattedAddress || "", 220) ||
+            [streetAddress, zipAndCity].filter(Boolean).join(", "),
+          mapsUrl: `https://www.google.com/maps?q=${cleanLat},${cleanLng}`,
+          source: "map-pin",
+        },
+      };
+    }
+
+    return {
+      ok: false,
+      error:
+        data?.error ||
+        "Ort nicht gefunden. Bitte prüfen Sie Schreibweise oder PLZ.",
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Adresssuche ist momentan nicht erreichbar. Bitte Pin manuell setzen.",
+    };
+  }
 }
 
 /**
@@ -319,7 +478,7 @@ export const symptomsByDevice: Record<string, string[]> = {
     "Garantieabwicklung für direkt bei Hannachi gekaufte Geräte",
   ],
   "Anderes Gerät (Sonstiges)": [
-    "Original-Ersatzteil per Typenschild (E-Nr. / PNC) anfragen",
+    "Original-Ersatzteil nach Typenschild anfragen",
     "Geprüftes Haushaltsgerät inkl. schriftlicher Garantie anfragen",
     "Markengerät zum Ankauf anbieten",
     "Garantie- / Gewährleistungsfall (bei Hannachi erworbenes Gerät)",
@@ -332,7 +491,7 @@ export const diagnosticHintByDevice: Record<
 > = {
   "Waschmaschine": {
     title: "Ersatzteilhandel & geprüfte Waschmaschinen",
-    hint: "Passgenaue Original-Ersatzteile nach Typenschild (E-Nr. / PNC) sowie geprüfte Gebraucht-Waschmaschinen inkl. schriftlicher Verkäufergarantie in Osnabrück.",
+    hint: "Passgenaue Original-Ersatzteile nach Typenschild sowie geprüfte Gebraucht-Waschmaschinen inkl. schriftlicher Verkäufergarantie in Osnabrück.",
     typicalTime: "Rückmeldung & Übergabe nach Termin",
   },
   "Wäschetrockner": {
@@ -727,6 +886,7 @@ export type RepairValues = {
   phone: string;
   email: string;
   photo: File | null;
+  hasTypeplatePhoto?: boolean;
   marketplaceItemId?: string;
   marketplaceItemTitle?: string;
 };
@@ -753,6 +913,7 @@ export const emptyValues: RepairValues = {
   phone: "",
   email: "",
   photo: null,
+  hasTypeplatePhoto: false,
 };
 
 function mapZodIssuesToErrors(issues: z.ZodIssue[]): RepairErrors {
@@ -825,6 +986,7 @@ export function toWhatsAppInput(v: RepairValues, referenceId?: string): WhatsApp
     callbackTime: v.callbackTime,
     email: v.email,
     photoName: v.photo ? v.photo.name : null,
+    hasTypeplatePhoto: Boolean(v.hasTypeplatePhoto),
     referenceId,
   };
 }

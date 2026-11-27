@@ -12,7 +12,6 @@ import {
   Check,
   ShieldCheck,
   Upload,
-  Camera,
   Star,
   ArrowLeft,
   ArrowRight,
@@ -137,7 +136,6 @@ export default function AdminMarketplaceManager({
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const syncFromApi = useCallback(async () => {
     try {
@@ -431,9 +429,9 @@ export default function AdminMarketplaceManager({
           return;
         }
       }
-      onToast?.("Speichern fehlgeschlagen – bitte erneut versuchen");
+      onToast?.("Speichern fehlgeschlagen. Bitte erneut versuchen.");
     } catch {
-      onToast?.("Server nicht erreichbar – Angebot konnte nicht gespeichert werden");
+      onToast?.("Server nicht erreichbar. Angebot konnte nicht gespeichert werden.");
     } finally {
       setIsSaving(false);
     }
@@ -745,14 +743,14 @@ export default function AdminMarketplaceManager({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2">
           <button
             type="button"
             onClick={openCreateModal}
             data-testid="admin-add-marketplace-item-btn"
-            className="col-span-2 sm:col-span-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-sky-500 cursor-pointer whitespace-nowrap"
+            className="col-span-2 sm:col-span-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 sm:px-3.5 py-2 text-xs font-extrabold text-white hover:bg-sky-500 cursor-pointer whitespace-nowrap"
           >
-            <Plus size={15} />
+            <Plus size={15} className="shrink-0" />
             <span>Neuer Artikel + Fotos</span>
           </button>
 
@@ -760,13 +758,17 @@ export default function AdminMarketplaceManager({
             type="button"
             onClick={() => void handleToggleHideSoldPublicly()}
             data-testid="admin-toggle-hide-sold-btn"
-            className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold cursor-pointer whitespace-nowrap transition-colors ${
+            className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-3 sm:px-3.5 py-2 text-xs font-bold cursor-pointer whitespace-nowrap transition-colors ${
               mpSettings.hideSoldPublicly
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                 : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             }`}
           >
-            {mpSettings.hideSoldPublicly ? <EyeOff size={13} /> : <Eye size={13} />}
+            {mpSettings.hideSoldPublicly ? (
+              <EyeOff size={13} className="shrink-0" />
+            ) : (
+              <Eye size={13} className="shrink-0" />
+            )}
             <span>
               {mpSettings.hideSoldPublicly
                 ? "Verkaufte versteckt"
@@ -777,7 +779,7 @@ export default function AdminMarketplaceManager({
           <button
             type="button"
             onClick={() => setIsExpanded((v) => !v)}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 px-3 sm:px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap"
           >
             {isExpanded ? "Einklappen" : "Anzeigen"}
           </button>
@@ -915,65 +917,68 @@ export default function AdminMarketplaceManager({
                   <div
                     role="group"
                     aria-label={`Status für ${item.title}`}
-                    className="grid grid-cols-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 p-1 gap-1"
+                    className="grid grid-cols-3 items-stretch rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 p-1 gap-1"
                   >
                     <button
                       type="button"
+                      data-compact-label="true"
                       onClick={() =>
                         void handleSetAvailability(item, "Sofort verfügbar in Osnabrück")
                       }
-                      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
+                      className={`inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-center gap-1 rounded-lg px-2.5 sm:px-3 py-2 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
                         isAvailable
                           ? "bg-emerald-600 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      <CheckCircle2 size={12} />
+                      <CheckCircle2 size={12} className="shrink-0" />
                       <span>Verfügbar</span>
                     </button>
 
                     <button
                       type="button"
+                      data-compact-label="true"
                       onClick={() =>
                         void handleSetAvailability(item, "Reserviert (Anfrage möglich)")
                       }
-                      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
+                      className={`inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-center gap-1 rounded-lg px-2.5 sm:px-3 py-2 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
                         isReserved
                           ? "bg-amber-600 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      <Clock size={12} />
+                      <Clock size={12} className="shrink-0" />
                       <span>Reserviert</span>
                     </button>
 
                     <button
                       type="button"
+                      data-compact-label="true"
                       onClick={() => openSoldQuickModal(item)}
                       data-testid={`mp-mark-sold-btn-${item.id}`}
-                      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
+                      className={`inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-center gap-1 rounded-lg px-2.5 sm:px-3 py-2 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
                         isSold
                           ? "bg-slate-900 dark:bg-sky-600 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
-                      <ShoppingBag size={12} />
+                      <ShoppingBag size={12} className="shrink-0" />
                       <span>Verkauft</span>
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:flex items-center gap-2">
+                  <div className="grid grid-cols-2 sm:flex items-stretch gap-2">
                     <button
                       type="button"
                       onClick={() => openEditModal(item)}
-                      className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-sky-500 cursor-pointer whitespace-nowrap"
+                      className="inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 sm:px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-sky-500 cursor-pointer whitespace-nowrap"
                     >
-                      <Edit3 size={13} />
+                      <Edit3 size={13} className="shrink-0" />
                       <span>Fotos &amp; Daten</span>
                     </button>
 
                   {confirmDeleteId === item.id ? (
-                    <div className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-red-500/35 bg-red-500/10 px-2.5 py-1">
+                    <div className="inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-red-500/35 bg-red-500/10 px-2.5 py-1.5">
                       <span className="text-xs font-bold text-red-700 dark:text-red-300">
                         Löschen?
                       </span>
@@ -1000,9 +1005,9 @@ export default function AdminMarketplaceManager({
                       type="button"
                       onClick={() => setConfirmDeleteId(item.id)}
                       title="Angebot löschen"
-                      className="inline-flex min-h-[40px] sm:w-[40px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-500 hover:border-red-500 hover:text-red-600 cursor-pointer"
+                      className="inline-flex min-h-[44px] sm:min-h-[40px] sm:w-[40px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 sm:px-0 py-2 text-xs font-semibold text-slate-500 hover:border-red-500 hover:text-red-600 cursor-pointer"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} className="shrink-0" />
                       <span className="sm:hidden">Entfernen</span>
                     </button>
                   )}
@@ -1085,7 +1090,7 @@ export default function AdminMarketplaceManager({
                     </p>
                   </div>
 
-                  {/* Quick Upload & Mobile Camera Action Buttons */}
+                  {/* Quick Upload Button */}
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -1097,38 +1102,14 @@ export default function AdminMarketplaceManager({
                       <Upload size={13} />
                       <span>Fotos auswählen</span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => cameraInputRef.current?.click()}
-                      disabled={Boolean(uploadProgress) || form.photos.length >= MAX_PHOTOS_PER_ITEM}
-                      data-testid="admin-camera-photo-btn"
-                      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100 hover:border-sky-500 disabled:opacity-50 cursor-pointer whitespace-nowrap"
-                    >
-                      <Camera size={13} className="text-sky-600 dark:text-sky-400" />
-                      <span>Kamera öffnen</span>
-                    </button>
                   </div>
 
-                  {/* Hidden File & Camera Inputs */}
+                  {/* Hidden File Input */}
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     multiple
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        void handleFilesSelected(e.target.files);
-                      }
-                      e.target.value = "";
-                    }}
-                  />
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
                     className="hidden"
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {

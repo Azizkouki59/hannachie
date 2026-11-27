@@ -178,30 +178,46 @@ function parseCookieHeader(cookieHeader: string | undefined): Record<string, str
   return cookies;
 }
 
-function setAdminSessionCookie(res: Response, rawToken: string, maxAgeSeconds: number): void {
+function isHttpsRequest(req: Request): boolean {
+  if (isProd || req.secure) return true;
+  const proto = req.headers["x-forwarded-proto"];
+  if (typeof proto === "string") {
+    return proto.split(",")[0].trim().toLowerCase() === "https";
+  }
+  return false;
+}
+
+function setAdminSessionCookie(
+  req: Request,
+  res: Response,
+  rawToken: string,
+  maxAgeSeconds: number,
+): void {
+  const https = isHttpsRequest(req);
   const parts = [
     `${ADMIN_SESSION_COOKIE}=${encodeURIComponent(rawToken)}`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    https ? "SameSite=None" : "SameSite=Lax",
     `Max-Age=${maxAgeSeconds}`,
   ];
-  if (isProd) {
-    parts.push("Secure");
+  if (https) {
+    parts.push("Secure", "Partitioned");
   }
   res.setHeader("Set-Cookie", parts.join("; "));
 }
 
-function clearAdminSessionCookie(res: Response): void {
+function clearAdminSessionCookie(req: Request, res: Response): void {
+  const https = isHttpsRequest(req);
   const parts = [
     `${ADMIN_SESSION_COOKIE}=`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    https ? "SameSite=None" : "SameSite=Lax",
     "Max-Age=0",
   ];
-  if (isProd) {
-    parts.push("Secure");
+  if (https) {
+    parts.push("Secure", "Partitioned");
   }
   res.setHeader("Set-Cookie", parts.join("; "));
 }
@@ -357,22 +373,72 @@ function resolveDefaultCoordsForZip(
   if (z.includes("49134") || z.includes("wallenhorst")) return { lat: 52.3489, lng: 8.0197, accuracy: 50 };
   if (z.includes("49170") || z.includes("hagen")) return { lat: 52.1967, lng: 7.9794, accuracy: 50 };
   if (z.includes("49191") || z.includes("belm")) return { lat: 52.3025, lng: 8.1361, accuracy: 50 };
-  return { lat: 52.2647, lng: 8.0548, accuracy: 40 };
+  return { lat: 52.2647082, lng: 8.0567763, accuracy: 40 };
+}
+
+function extractAdminTokenWithSource(
+  req: Request,
+): { token: string; source: "cookie" | "header" | "none" } {
+  const authHeader = req.headers.authorization || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const bearer = authHeader.slice("Bearer ".length).trim();
+    if (bearer) return { token: bearer, source: "header" };
+  }
+  const customHeader = (req.headers["x-admin-token"] as string | undefined)?.trim() || "";
+  if (customHeader) return { token: customHeader, source: "header" };
+
+  const cookies = parseCookieHeader(req.headers.cookie);
+  const cookieToken = cookies[ADMIN_SESSION_COOKIE]?.trim();
+  if (cookieToken) return { token: cookieToken, source: "cookie" };
+
+  return { token: "", source: "none" };
 }
 
 function extractAdminToken(req: Request): string {
-  const cookies = parseCookieHeader(req.headers.cookie);
-  const cookieToken = cookies[ADMIN_SESSION_COOKIE]?.trim();
-  if (cookieToken) return cookieToken;
-  const authHeader = req.headers.authorization || "";
-  return authHeader.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length).trim()
-    : (req.headers["x-admin-token"] as string | undefined)?.trim() || "";
+  return extractAdminTokenWithSource(req).token;
+}
+
+function isSameOriginMutation(req: Request): boolean {
+  const method = req.method.toUpperCase();
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+    return true;
+  }
+  if (req.headers["x-requested-with"]) {
+    return true;
+  }
+  const expectedHost = (
+    (typeof req.headers["x-forwarded-host"] === "string"
+      ? req.headers["x-forwarded-host"].split(",")[0].trim()
+      : "") ||
+    req.headers.host ||
+    ""
+  ).toLowerCase();
+  const originHeader = req.headers.origin;
+  if (typeof originHeader === "string" && originHeader.length > 0) {
+    try {
+      return new URL(originHeader).host.toLowerCase() === expectedHost;
+    } catch {
+      return false;
+    }
+  }
+  const refererHeader = req.headers.referer;
+  if (typeof refererHeader === "string" && refererHeader.length > 0) {
+    try {
+      return new URL(refererHeader).host.toLowerCase() === expectedHost;
+    } catch {
+      return false;
+    }
+  }
+  // Reject cross-site mutations lacking Origin/Referer when relying solely on cookies
+  return false;
 }
 
 function isAuthorizedAdminRequest(req: Request): boolean {
-  const token = extractAdminToken(req);
+  const { token, source } = extractAdminTokenWithSource(req);
   if (!token) return false;
+  if (source === "cookie" && !isSameOriginMutation(req)) {
+    return false;
+  }
   const tokenHash = hashSessionToken(token);
   const expiresAt = activeAdminTokens.get(tokenHash);
   if (!expiresAt) return false;
@@ -520,7 +586,7 @@ function applySecurityHeaders(_req: Request, res: Response, next: NextFunction) 
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader(
     "Permissions-Policy",
-    "microphone=(), payment=(), usb=(), interest-cohort=()"
+    "camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
   );
   res.setHeader("X-XSS-Protection", "0");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
@@ -797,6 +863,588 @@ async function createApp() {
     }
   });
 
+  // ── Server-Side Reverse & Forward Geocoding Proxy (Google Geocoding v4 + fallback) ──
+  const GEOCODE_CACHE_TTL_MS = 5 * 60 * 1000;
+  const GEOCODE_CACHE_MAX_ENTRIES = 400;
+  type GeocodePayload = {
+    ok: boolean;
+    source: "google" | "nominatim";
+    lat: number;
+    lng: number;
+    streetAddress: string;
+    postalCode: string;
+    city: string;
+    zipAndCity: string;
+    formattedAddress: string;
+    country: string;
+    placeId?: string;
+    quotaExceeded: boolean;
+  };
+  const geocodeCache = new Map<string, { expiresAt: number; payload: GeocodePayload }>();
+
+  function setGeocodeCache(key: string, payload: GeocodePayload) {
+    if (geocodeCache.size >= GEOCODE_CACHE_MAX_ENTRIES) {
+      const oldestKey = geocodeCache.keys().next().value;
+      if (oldestKey) geocodeCache.delete(oldestKey);
+    }
+    geocodeCache.set(key, { expiresAt: Date.now() + GEOCODE_CACHE_TTL_MS, payload });
+  }
+
+  function parseGoogleAddressComponents(
+    components: Array<{
+      longText?: string;
+      shortText?: string;
+      long_name?: string;
+      short_name?: string;
+      types?: string[];
+    }> | undefined,
+    postalAddress?: {
+      postalCode?: string;
+      locality?: string;
+      sublocality?: string;
+      addressLines?: string[];
+      regionCode?: string;
+    }
+  ) {
+    const list = Array.isArray(components) ? components : [];
+    const pick = (...wantedTypes: string[]) => {
+      for (const wanted of wantedTypes) {
+        const hit = list.find((c) => Array.isArray(c.types) && c.types.includes(wanted));
+        if (hit) {
+          const val = hit.longText || hit.long_name || hit.shortText || hit.short_name || "";
+          if (val.trim()) return sanitizeSingleLine(val, 120);
+        }
+      }
+      return "";
+    };
+
+    const route = pick("route");
+    const streetNumber = pick("street_number");
+    const sublocality =
+      pick("sublocality_level_1", "sublocality", "neighborhood") ||
+      sanitizeSingleLine(postalAddress?.sublocality || "", 80);
+    const postalCode =
+      pick("postal_code") || sanitizeSingleLine(postalAddress?.postalCode || "", 20);
+    const city =
+      pick("locality", "postal_town", "administrative_area_level_3", "administrative_area_level_2") ||
+      sanitizeSingleLine(postalAddress?.locality || "", 80);
+    const country = pick("country") || sanitizeSingleLine(postalAddress?.regionCode || "", 40);
+
+    let streetAddress = "";
+    if (route) {
+      streetAddress = streetNumber ? `${route} ${streetNumber}` : route;
+    } else if (postalAddress?.addressLines?.[0]) {
+      streetAddress = sanitizeSingleLine(postalAddress.addressLines[0], 120);
+    } else if (sublocality && sublocality.toLowerCase() !== city.toLowerCase()) {
+      streetAddress = sublocality;
+    }
+
+    const zipAndCity = [postalCode, city].filter(Boolean).join(" ").trim();
+    return { streetAddress, postalCode, city, zipAndCity, country };
+  }
+
+  function pickBestGoogleResult<T extends { types?: string[] }>(results: T[]): T | undefined {
+    if (!results.length) return undefined;
+    return (
+      results.find((r) => r.types?.includes("street_address")) ||
+      results.find((r) => r.types?.includes("premise") || r.types?.includes("subpremise")) ||
+      results.find((r) => r.types?.includes("route")) ||
+      results.find((r) => r.types?.includes("postal_code")) ||
+      results[0]
+    );
+  }
+
+  app.get("/api/reverse-geocode", async (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      res.status(400).json({ ok: false, error: "Invalid coordinates" });
+      return;
+    }
+
+    const cleanLat = Number(lat.toFixed(6));
+    const cleanLng = Number(lng.toFixed(6));
+    const cacheKey = `rev:${lat.toFixed(4)},${lng.toFixed(4)}`;
+    const cached = geocodeCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      res.status(200).json({ ...cached.payload, lat: cleanLat, lng: cleanLng, cached: true });
+      return;
+    }
+
+    const apiKey = (
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.VITE_GOOGLE_MAPS_API_KEY ||
+      ""
+    ).trim();
+    let quotaExceeded = false;
+
+    if (apiKey && !apiKey.startsWith("MY_GOOGLE_MAPS")) {
+      // 1) Try Google Geocoding API v4
+      try {
+        const v4Url = new URL("https://geocode.googleapis.com/v4/geocode/location");
+        v4Url.searchParams.set("location.latitude", String(cleanLat));
+        v4Url.searchParams.set("location.longitude", String(cleanLng));
+        v4Url.searchParams.set("languageCode", "de");
+        v4Url.searchParams.set("regionCode", "DE");
+
+        const v4Res = await fetch(v4Url.toString(), {
+          method: "GET",
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            Accept: "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask":
+              "results.placeId,results.formattedAddress,results.addressComponents,results.postalAddress,results.types",
+            "X-Goog-Maps-Solution-ID": "gmp_mcp_codeassist_v1_aistudio",
+          },
+        });
+
+        const v4Json = (await v4Res.json().catch(() => null)) as {
+          results?: Array<{
+            placeId?: string;
+            formattedAddress?: string;
+            types?: string[];
+            addressComponents?: Array<{
+              longText?: string;
+              shortText?: string;
+              types?: string[];
+            }>;
+            postalAddress?: {
+              postalCode?: string;
+              locality?: string;
+              sublocality?: string;
+              addressLines?: string[];
+              regionCode?: string;
+            };
+          }>;
+          error?: { status?: string };
+        } | null;
+
+        if (v4Res.status === 429 || v4Json?.error?.status === "RESOURCE_EXHAUSTED") {
+          quotaExceeded = true;
+        } else if (v4Res.ok && Array.isArray(v4Json?.results) && v4Json.results.length > 0) {
+          const best = pickBestGoogleResult(v4Json.results)!;
+          const parsed = parseGoogleAddressComponents(best.addressComponents, best.postalAddress);
+          const payload: GeocodePayload = {
+            ok: true,
+            source: "google",
+            lat: cleanLat,
+            lng: cleanLng,
+            ...parsed,
+            formattedAddress: sanitizeSingleLine(
+              best.formattedAddress || [parsed.streetAddress, parsed.zipAndCity].filter(Boolean).join(", "),
+              220
+            ),
+            placeId: best.placeId ? sanitizeSingleLine(best.placeId, 120) : undefined,
+            quotaExceeded: false,
+          };
+          setGeocodeCache(cacheKey, payload);
+          res.status(200).json(payload);
+          return;
+        }
+      } catch {
+        // Fall through to classic Google Geocoding REST API
+      }
+
+      // 2) Try classic Google Geocoding REST API (if v4 isn't active on key)
+      if (!quotaExceeded) {
+        try {
+          const v3Url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
+          v3Url.searchParams.set("latlng", `${cleanLat},${cleanLng}`);
+          v3Url.searchParams.set("language", "de");
+          v3Url.searchParams.set("region", "de");
+          v3Url.searchParams.set("key", apiKey);
+
+          const v3Res = await fetch(v3Url.toString(), {
+            method: "GET",
+            signal: AbortSignal.timeout(5000),
+            headers: {
+              Accept: "application/json",
+              "X-Goog-Maps-Solution-ID": "gmp_mcp_codeassist_v1_aistudio",
+            },
+          });
+          const v3Json = (await v3Res.json().catch(() => null)) as {
+            status?: string;
+            results?: Array<{
+              place_id?: string;
+              formatted_address?: string;
+              types?: string[];
+              address_components?: Array<{
+                long_name?: string;
+                short_name?: string;
+                types?: string[];
+              }>;
+            }>;
+          } | null;
+
+          if (v3Res.status === 429 || v3Json?.status === "OVER_QUERY_LIMIT") {
+            quotaExceeded = true;
+          } else if (
+            v3Res.ok &&
+            v3Json?.status === "OK" &&
+            Array.isArray(v3Json.results) &&
+            v3Json.results.length > 0
+          ) {
+            const best = pickBestGoogleResult(v3Json.results)!;
+            const parsed = parseGoogleAddressComponents(best.address_components);
+            const payload: GeocodePayload = {
+              ok: true,
+              source: "google",
+              lat: cleanLat,
+              lng: cleanLng,
+              ...parsed,
+              formattedAddress: sanitizeSingleLine(
+                best.formatted_address || [parsed.streetAddress, parsed.zipAndCity].filter(Boolean).join(", "),
+                220
+              ),
+              placeId: best.place_id ? sanitizeSingleLine(best.place_id, 120) : undefined,
+              quotaExceeded: false,
+            };
+            setGeocodeCache(cacheKey, payload);
+            res.status(200).json(payload);
+            return;
+          }
+        } catch {
+          // Fall through to Nominatim
+        }
+      }
+    }
+
+    // 3) Server-side OpenStreetMap Nominatim fallback (with compliant User-Agent)
+    try {
+      const nomRes = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${cleanLat}&lon=${cleanLng}&accept-language=de&addressdetails=1`,
+        {
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "Hannachi-Osnabrueck-Web/1.0 (+https://hannachi.de)",
+          },
+        }
+      );
+      if (nomRes.ok) {
+        const nomData = (await nomRes.json().catch(() => null)) as {
+          display_name?: string;
+          address?: {
+            road?: string;
+            pedestrian?: string;
+            footway?: string;
+            house_number?: string;
+            postcode?: string;
+            city?: string;
+            town?: string;
+            village?: string;
+            municipality?: string;
+            suburb?: string;
+            country?: string;
+          };
+        } | null;
+        const addr = nomData?.address;
+        if (addr) {
+          const streetName = sanitizeSingleLine(
+            addr.road || addr.pedestrian || addr.footway || "",
+            120
+          );
+          const houseNum = addr.house_number ? ` ${sanitizeSingleLine(addr.house_number, 20)}` : "";
+          const suburb = sanitizeSingleLine(addr.suburb || "", 80);
+          const city = sanitizeSingleLine(
+            addr.city || addr.town || addr.village || addr.municipality || "",
+            80
+          );
+          const postalCode = sanitizeSingleLine(addr.postcode || "", 20);
+          const streetAddress = streetName
+            ? `${streetName}${houseNum}`
+            : suburb && suburb.toLowerCase() !== city.toLowerCase()
+            ? suburb
+            : "";
+          const zipAndCity = [postalCode, city].filter(Boolean).join(" ").trim();
+          const payload: GeocodePayload = {
+            ok: true,
+            source: "nominatim",
+            lat: cleanLat,
+            lng: cleanLng,
+            streetAddress,
+            postalCode,
+            city,
+            zipAndCity,
+            formattedAddress: sanitizeSingleLine(
+              [streetAddress, zipAndCity].filter(Boolean).join(", ") || nomData?.display_name || "",
+              220
+            ),
+            country: sanitizeSingleLine(addr.country || "", 60),
+            quotaExceeded,
+          };
+          setGeocodeCache(cacheKey, payload);
+          res.status(200).json(payload);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to structured error response
+    }
+
+    res.status(200).json({
+      ok: false,
+      quotaExceeded,
+      error: "Adresse konnte nicht automatisch aufgelöst werden.",
+    });
+  });
+
+  app.get("/api/geocode", async (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+    const rawQuery = typeof req.query.q === "string" ? sanitizeSingleLine(req.query.q, 160) : "";
+    if (rawQuery.length < 2) {
+      res.status(400).json({ ok: false, error: "Bitte geben Sie einen Ort, eine PLZ oder Straße ein." });
+      return;
+    }
+
+    const cacheKey = `fwd:${rawQuery.toLowerCase()}`;
+    const cached = geocodeCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      res.status(200).json({ ...cached.payload, cached: true });
+      return;
+    }
+
+    const apiKey = (
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.VITE_GOOGLE_MAPS_API_KEY ||
+      ""
+    ).trim();
+    let quotaExceeded = false;
+
+    if (apiKey && !apiKey.startsWith("MY_GOOGLE_MAPS")) {
+      // 1) Google Geocoding API v4 forward geocode biased toward Osnabrück / DE
+      try {
+        const encodedAddress = encodeURIComponent(rawQuery);
+        const v4Url = new URL(`https://geocode.googleapis.com/v4/geocode/address/${encodedAddress}`);
+        v4Url.searchParams.set("languageCode", "de");
+        v4Url.searchParams.set("regionCode", "DE");
+        v4Url.searchParams.set("locationBias.rectangle.low.latitude", "52.00");
+        v4Url.searchParams.set("locationBias.rectangle.low.longitude", "7.65");
+        v4Url.searchParams.set("locationBias.rectangle.high.latitude", "52.55");
+        v4Url.searchParams.set("locationBias.rectangle.high.longitude", "8.55");
+
+        const v4Res = await fetch(v4Url.toString(), {
+          method: "GET",
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            Accept: "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask":
+              "results.placeId,results.location,results.formattedAddress,results.addressComponents,results.postalAddress,results.types",
+            "X-Goog-Maps-Solution-ID": "gmp_mcp_codeassist_v1_aistudio",
+          },
+        });
+        const v4Json = (await v4Res.json().catch(() => null)) as {
+          results?: Array<{
+            placeId?: string;
+            location?: { latitude?: number; longitude?: number };
+            formattedAddress?: string;
+            types?: string[];
+            addressComponents?: Array<{
+              longText?: string;
+              shortText?: string;
+              types?: string[];
+            }>;
+            postalAddress?: {
+              postalCode?: string;
+              locality?: string;
+              sublocality?: string;
+              addressLines?: string[];
+              regionCode?: string;
+            };
+          }>;
+          error?: { status?: string };
+        } | null;
+
+        if (v4Res.status === 429 || v4Json?.error?.status === "RESOURCE_EXHAUSTED") {
+          quotaExceeded = true;
+        } else if (v4Res.ok && Array.isArray(v4Json?.results) && v4Json.results.length > 0) {
+          const best = v4Json.results[0];
+          const lat = best.location?.latitude;
+          const lng = best.location?.longitude;
+          if (typeof lat === "number" && typeof lng === "number") {
+            const parsed = parseGoogleAddressComponents(best.addressComponents, best.postalAddress);
+            const payload: GeocodePayload = {
+              ok: true,
+              source: "google",
+              lat: Number(lat.toFixed(6)),
+              lng: Number(lng.toFixed(6)),
+              ...parsed,
+              formattedAddress: sanitizeSingleLine(
+                best.formattedAddress || [parsed.streetAddress, parsed.zipAndCity].filter(Boolean).join(", "),
+                220
+              ),
+              placeId: best.placeId ? sanitizeSingleLine(best.placeId, 120) : undefined,
+              quotaExceeded: false,
+            };
+            setGeocodeCache(cacheKey, payload);
+            res.status(200).json(payload);
+            return;
+          }
+        }
+      } catch {
+        // Fall through to classic Google Geocoding API
+      }
+
+      if (!quotaExceeded) {
+        try {
+          const v3Url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
+          v3Url.searchParams.set("address", rawQuery);
+          v3Url.searchParams.set("language", "de");
+          v3Url.searchParams.set("region", "de");
+          v3Url.searchParams.set("bounds", "52.00,7.65|52.55,8.55");
+          v3Url.searchParams.set("key", apiKey);
+
+          const v3Res = await fetch(v3Url.toString(), {
+            method: "GET",
+            signal: AbortSignal.timeout(5000),
+            headers: {
+              Accept: "application/json",
+              "X-Goog-Maps-Solution-ID": "gmp_mcp_codeassist_v1_aistudio",
+            },
+          });
+          const v3Json = (await v3Res.json().catch(() => null)) as {
+            status?: string;
+            results?: Array<{
+              place_id?: string;
+              formatted_address?: string;
+              geometry?: { location?: { lat?: number; lng?: number } };
+              address_components?: Array<{
+                long_name?: string;
+                short_name?: string;
+                types?: string[];
+              }>;
+            }>;
+          } | null;
+
+          if (v3Res.status === 429 || v3Json?.status === "OVER_QUERY_LIMIT") {
+            quotaExceeded = true;
+          } else if (
+            v3Res.ok &&
+            v3Json?.status === "OK" &&
+            Array.isArray(v3Json.results) &&
+            v3Json.results.length > 0
+          ) {
+            const best = v3Json.results[0];
+            const lat = best.geometry?.location?.lat;
+            const lng = best.geometry?.location?.lng;
+            if (typeof lat === "number" && typeof lng === "number") {
+              const parsed = parseGoogleAddressComponents(best.address_components);
+              const payload: GeocodePayload = {
+                ok: true,
+                source: "google",
+                lat: Number(lat.toFixed(6)),
+                lng: Number(lng.toFixed(6)),
+                ...parsed,
+                formattedAddress: sanitizeSingleLine(
+                  best.formatted_address || [parsed.streetAddress, parsed.zipAndCity].filter(Boolean).join(", "),
+                  220
+                ),
+                placeId: best.place_id ? sanitizeSingleLine(best.place_id, 120) : undefined,
+                quotaExceeded: false,
+              };
+              setGeocodeCache(cacheKey, payload);
+              res.status(200).json(payload);
+              return;
+            }
+          }
+        } catch {
+          // Fall through to Nominatim
+        }
+      }
+    }
+
+    // 3) Server-side OpenStreetMap Nominatim search fallback
+    try {
+      const nomUrl = new URL("https://nominatim.openstreetmap.org/search");
+      nomUrl.searchParams.set("format", "jsonv2");
+      nomUrl.searchParams.set("q", rawQuery);
+      nomUrl.searchParams.set("countrycodes", "de");
+      nomUrl.searchParams.set("accept-language", "de");
+      nomUrl.searchParams.set("addressdetails", "1");
+      nomUrl.searchParams.set("limit", "1");
+      nomUrl.searchParams.set("viewbox", "7.65,52.55,8.55,52.00");
+
+      const nomRes = await fetch(nomUrl.toString(), {
+        signal: AbortSignal.timeout(5000),
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Hannachi-Osnabrueck-Web/1.0 (+https://hannachi.de)",
+        },
+      });
+      if (nomRes.ok) {
+        const items = (await nomRes.json().catch(() => [])) as Array<{
+          lat?: string;
+          lon?: string;
+          display_name?: string;
+          address?: {
+            road?: string;
+            pedestrian?: string;
+            house_number?: string;
+            postcode?: string;
+            city?: string;
+            town?: string;
+            village?: string;
+            municipality?: string;
+            suburb?: string;
+            country?: string;
+          };
+        }>;
+        const first = items[0];
+        const lat = Number(first?.lat);
+        const lng = Number(first?.lon);
+        if (first && Number.isFinite(lat) && Number.isFinite(lng)) {
+          const addr = first.address || {};
+          const streetName = sanitizeSingleLine(addr.road || addr.pedestrian || "", 120);
+          const houseNum = addr.house_number ? ` ${sanitizeSingleLine(addr.house_number, 20)}` : "";
+          const city = sanitizeSingleLine(
+            addr.city || addr.town || addr.village || addr.municipality || "",
+            80
+          );
+          const postalCode = sanitizeSingleLine(addr.postcode || "", 20);
+          const streetAddress = streetName ? `${streetName}${houseNum}` : "";
+          const zipAndCity = [postalCode, city].filter(Boolean).join(" ").trim();
+          const payload: GeocodePayload = {
+            ok: true,
+            source: "nominatim",
+            lat: Number(lat.toFixed(6)),
+            lng: Number(lng.toFixed(6)),
+            streetAddress,
+            postalCode,
+            city,
+            zipAndCity,
+            formattedAddress: sanitizeSingleLine(
+              [streetAddress, zipAndCity].filter(Boolean).join(", ") || first.display_name || "",
+              220
+            ),
+            country: sanitizeSingleLine(addr.country || "Deutschland", 60),
+            quotaExceeded,
+          };
+          setGeocodeCache(cacheKey, payload);
+          res.status(200).json(payload);
+          return;
+        }
+      }
+    } catch {
+      // Fall through
+    }
+
+    res.status(200).json({
+      ok: false,
+      quotaExceeded,
+      error: "Kein passender Ort gefunden. Bitte prüfen Sie PLZ, Ort oder Straßenname.",
+    });
+  });
+
   // ── Validated Repair & Question Intake Endpoint ────────────────────────────
   app.post("/api/repair-request", (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-store");
@@ -887,10 +1535,7 @@ async function createApp() {
     const isHomeVisit = parsed.data.visitType === "home_visit";
     const resolvedCoords = isHomeVisit
       ? resolveDefaultCoordsForZip(parsed.data.zip, parsed.data.coordinates || null)
-      : { lat: 52.2647, lng: 8.0548, accuracy: 10 };
-
-    const deviceDisplay =
-      parsed.data.customDevice || parsed.data.device || "Hausgerät";
+      : { lat: 52.2647082, lng: 8.0567763, accuracy: 10 };
 
     const marketplaceItemId = sanitizeSingleLine(rawBody.marketplaceItemId, 60);
     const marketplaceItemTitle = sanitizeSingleLine(rawBody.marketplaceItemTitle, 160);
@@ -982,7 +1627,7 @@ async function createApp() {
     const tokenHash = hashSessionToken(token);
     activeAdminTokens.set(tokenHash, Date.now() + ADMIN_TOKEN_TTL_MS);
     persistAdminSessions();
-    setAdminSessionCookie(res, token, Math.floor(ADMIN_TOKEN_TTL_MS / 1000));
+    setAdminSessionCookie(req, res, token, Math.floor(ADMIN_TOKEN_TTL_MS / 1000));
 
     res.status(200).json({
       ok: true,
@@ -1011,7 +1656,7 @@ async function createApp() {
       activeAdminTokens.delete(hashSessionToken(token));
       persistAdminSessions();
     }
-    clearAdminSessionCookie(res);
+    clearAdminSessionCookie(req, res);
     res.status(200).json({ ok: true });
   });
 

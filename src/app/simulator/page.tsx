@@ -71,7 +71,7 @@ export default function SimulatorPage() {
               Originalersatzteile für alle Marken
             </h2>
             <p className="mt-3 text-sm sm:text-base text-ink-muted">
-              Gängige Original-Ersatzteile nach Typenschild (E-Nr. / PNC) – persönliche Abstimmung und Übergabe nach Terminvereinbarung in Osnabrück.
+              Gängige Original-Ersatzteile nach Typenschild, mit persönlicher Abstimmung und Übergabe nach Terminvereinbarung in Osnabrück.
             </p>
           </div>
 

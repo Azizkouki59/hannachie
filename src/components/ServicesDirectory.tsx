@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -272,7 +272,7 @@ export default function ServicesDirectory() {
   return (
     <div className="w-full">
       {/* Sticky Filter & Search Toolbar */}
-      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/95 dark:bg-slate-950/95 py-2.5 sm:py-3 sticky top-[52px] lg:top-16 z-30 backdrop-blur-md">
+      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/95 dark:bg-slate-950/95 py-2.5 sm:py-3 sticky top-[56px] lg:top-16 z-30 backdrop-blur-md">
         <div className="container-page flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
           <nav
             aria-label="Kategorienavigation"

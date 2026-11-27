@@ -2,12 +2,15 @@
 import { Fragment, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
+  AlertTriangle,
+  Camera,
+  Check,
   CheckCheck,
   CheckCircle2,
   ChevronDown,
   Clock,
+  Copy,
   MessageCircle,
-  AlertTriangle,
   Zap,
 } from "lucide-react";
 import type { RepairValues, UrgencyLevel } from "@/lib/repairRequest";
@@ -23,6 +26,8 @@ export interface WhatsAppPreviewProps {
   device: string;
   customDevice?: string;
   brand: string;
+  model?: string;
+  hasTypeplatePhoto?: boolean;
   problem: string;
   urgency: UrgencyLevel;
   onUrgencyChange?: (urgency: UrgencyLevel) => void;
@@ -34,6 +39,7 @@ export interface WhatsAppPreviewProps {
   isReady: boolean;
   readinessItems: WhatsAppPreviewReadinessItem[];
   onFocusField: (field: keyof RepairValues) => void;
+  onAddTypeplateInfo?: () => void;
 }
 
 const URGENCY_OPTIONS: {
@@ -46,50 +52,85 @@ const URGENCY_OPTIONS: {
   { id: "notfall", label: "Notfall", icon: AlertTriangle },
 ];
 
-function renderWhatsAppLine(line: string, lineIndex: number) {
-  if (!line.trim()) {
-    return <div key={lineIndex} className="h-2" aria-hidden="true" />;
-  }
+/**
+ * Renders WhatsApp native *bold* tokens and https:// links cleanly as real
+ * formatted lines inside both the live preview and post-submit confirmation bubble.
+ */
+export function renderWhatsAppFormattedMessage(message: string) {
+  return message.split("\n").map((line, lineIndex) => {
+    if (!line.trim()) {
+      return <div key={lineIndex} className="h-2" aria-hidden="true" />;
+    }
 
-  const tokens = line.split(/(\*[^*]+\*|https:\/\/\S+)/g);
-  return (
-    <p key={lineIndex} className="leading-relaxed break-words">
-      {tokens.map((part, idx) => {
-        if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
-          return (
-            <strong key={idx} className="font-bold text-slate-950 dark:text-white">
-              {part.slice(1, -1)}
-            </strong>
-          );
-        }
-        if (part.startsWith("https://")) {
-          return (
-            <span
-              key={idx}
-              className="text-sky-700 dark:text-sky-400 underline decoration-sky-500/50 break-all"
-            >
-              {part}
-            </span>
-          );
-        }
-        return <Fragment key={idx}>{part}</Fragment>;
-      })}
-    </p>
-  );
+    const tokens = line.split(/(\*[^*]+\*|https:\/\/\S+)/g);
+    return (
+      <p key={lineIndex} className="leading-relaxed break-words">
+        {tokens.map((part, idx) => {
+          if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+            return (
+              <strong key={idx} className="font-bold text-slate-950 dark:text-white">
+                {part.slice(1, -1)}
+              </strong>
+            );
+          }
+          if (part.startsWith("https://")) {
+            return (
+              <span
+                key={idx}
+                className="text-sky-700 dark:text-sky-400 underline decoration-sky-500/50 break-all"
+              >
+                {part}
+              </span>
+            );
+          }
+          return <Fragment key={idx}>{part}</Fragment>;
+        })}
+      </p>
+    );
+  });
 }
 
 export default function WhatsAppPreview({
+  model,
+  hasTypeplatePhoto,
   urgency,
   onUrgencyChange,
   formattedMessage,
   isReady,
   readinessItems,
   onFocusField,
+  onAddTypeplateInfo,
 }: WhatsAppPreviewProps) {
   const prefersReducedMotion = useReducedMotion();
   const [isBubbleOpen, setIsBubbleOpen] = useState(false);
+  const [copiedPreview, setCopiedPreview] = useState(false);
 
   const missingItems = readinessItems.filter((item) => !item.ready);
+  const needsTypeplateNudge =
+    isReady && !model?.trim() && !hasTypeplatePhoto && Boolean(onAddTypeplateInfo);
+
+  const handleCopyPreview = async () => {
+    if (!formattedMessage) return;
+    hapticTap();
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(formattedMessage);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = formattedMessage;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopiedPreview(true);
+      window.setTimeout(() => setCopiedPreview(false), 2000);
+    } catch {
+      // Ignore clipboard failures gracefully
+    }
+  };
 
   return (
     <div
@@ -112,20 +153,16 @@ export default function WhatsAppPreview({
             )}
           </span>
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-white truncate">
-              {isReady && (
-                <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden="true">
-                  <span className="status-live-ring absolute inset-0 rounded-full bg-emerald-400/70" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-              )}
-              <span className="truncate">
-                {isReady ? "WhatsApp bereit" : "Noch kurz antippen:"}
-              </span>
+            <p className="text-xs font-bold text-primary dark:text-white truncate">
+              {isReady ? "WhatsApp-Nachricht bereit" : "Noch kurz antippen:"}
             </p>
             {isReady ? (
               <p className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate">
-                Startklar · 1 Klick zum Chat
+                {model?.trim()
+                  ? `Mit E-Nr. (${model.trim()}) · startklar`
+                  : hasTypeplatePhoto
+                  ? "Mit Typenschild-Foto-Hinweis · startklar"
+                  : "Startklar · 1 Klick zum Chat"}
               </p>
             ) : (
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
@@ -168,6 +205,28 @@ export default function WhatsAppPreview({
           />
         </motion.button>
       </div>
+
+      {/* Helpful 1-tap E-Nr. / Typenschild nudge for faster answers from Herr Hannachi */}
+      {needsTypeplateNudge && !isBubbleOpen && (
+        <div className="border-t border-primary/8 dark:border-white/8 bg-sky-50/70 dark:bg-sky-950/25 px-3 py-2 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-muted dark:text-slate-300 min-w-0">
+            <Camera size={13} className="text-accent shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              Schnellere Auskunft mit E-Nr. oder Typenschild-Foto
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              hapticTap();
+              onAddTypeplateInfo?.();
+            }}
+            className="shrink-0 text-[11px] font-bold text-accent hover:underline cursor-pointer whitespace-nowrap"
+          >
+            + Ergänzen
+          </button>
+        </div>
+      )}
 
       <AnimatePresence initial={false}>
         {isBubbleOpen && (
@@ -215,24 +274,52 @@ export default function WhatsAppPreview({
               )}
 
               {isReady && formattedMessage ? (
-                <div className="rounded-2xl rounded-tr-sm border border-emerald-500/25 bg-[#e7ffdb]/75 dark:bg-emerald-950/40 p-3 text-xs text-slate-800 dark:text-slate-100">
-                  <div className="space-y-0.5 max-h-40 overflow-y-auto pr-1">
-                    {formattedMessage
-                      .split("\n")
-                      .map((line, idx) => renderWhatsAppLine(line, idx))}
+                <div className="rounded-2xl rounded-tr-sm border border-emerald-500/25 bg-[#e7ffdb]/80 dark:bg-emerald-950/45 p-3 text-xs text-slate-800 dark:text-slate-100">
+                  <div className="space-y-0.5 max-h-48 overflow-y-auto pr-1">
+                    {renderWhatsAppFormattedMessage(formattedMessage)}
                   </div>
-                  <div className="mt-2 pt-1.5 border-t border-emerald-600/15 flex items-center justify-between text-[10px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
-                    <span className="truncate">Nachricht an Herrn Hannachi</span>
+                  <div className="mt-2 pt-1.5 border-t border-emerald-600/15 flex items-center justify-between gap-2 text-[10px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
+                    <button
+                      type="button"
+                      onClick={handleCopyPreview}
+                      className="inline-flex items-center gap-1 font-bold text-emerald-800 dark:text-emerald-300 hover:underline cursor-pointer"
+                    >
+                      {copiedPreview ? (
+                        <>
+                          <Check size={12} aria-hidden="true" />
+                          <span>Text kopiert</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={12} aria-hidden="true" />
+                          <span>Text kopieren</span>
+                        </>
+                      )}
+                    </button>
                     <span className="inline-flex items-center gap-1 shrink-0">
-                      <span>Jetzt</span>
+                      <span>An Herrn Hannachi</span>
                       <CheckCheck size={13} className="text-sky-600 dark:text-sky-400" />
                     </span>
                   </div>
                 </div>
               ) : (
                 <p className="text-xs text-ink-muted">
-                  Oben ein Anliegen antippen – die Nachricht erscheint sofort.
+                  Oben ein Anliegen antippen, die fertige WhatsApp-Nachricht erscheint sofort.
                 </p>
+              )}
+
+              {needsTypeplateNudge && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    hapticTap();
+                    onAddTypeplateInfo?.();
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent/25 bg-accent/8 px-3 py-1.5 text-[11px] font-bold text-accent hover:bg-accent/15 transition-colors cursor-pointer"
+                >
+                  <Camera size={13} aria-hidden="true" />
+                  <span>+ E-Nr. / Typenschild-Foto für schnellere Antwort ergänzen</span>
+                </button>
               )}
             </div>
           </motion.div>

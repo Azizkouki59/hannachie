@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -580,7 +580,7 @@ export function GoogleReviewsSection({
     <section
       id="kundenstimmen"
       aria-labelledby="google-reviews-heading"
-      className="relative overflow-hidden border-t border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-950 py-10 sm:py-14"
+      className="cv-auto relative overflow-hidden border-t border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-950 py-10 sm:py-14"
     >
       <SectionAmbientMesh variant="reviews" />
       <div className="container-page relative z-10">
@@ -626,26 +626,28 @@ export function GoogleReviewsSection({
                   </div>
 
                   {/* Direct Genuine Google Maps Links (Zero Fake Local Submission) */}
-                  <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
                     <a
                       href={writeReviewUri}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => triggerHapticFeedback(30)}
-                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-3.5 py-2 text-xs font-extrabold text-white transition-colors whitespace-nowrap"
+                      data-compact-label="true"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors whitespace-nowrap min-w-0"
                     >
-                      <MessageSquarePlus size={14} aria-hidden="true" />
-                      <span>Auf Google bewerten</span>
-                      <ExternalLink size={12} aria-hidden="true" />
+                      <MessageSquarePlus size={14} className="shrink-0" aria-hidden="true" />
+                      <span className="truncate">Auf Google bewerten</span>
+                      <ExternalLink size={12} className="hidden min-[380px]:inline shrink-0" aria-hidden="true" />
                     </a>
                     <a
                       href={mapsReviewsUri}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors whitespace-nowrap"
+                      data-compact-label="true"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors whitespace-nowrap min-w-0"
                     >
-                      <span>Alle {place.userRatingCount} auf Google</span>
-                      <ExternalLink size={12} aria-hidden="true" />
+                      <span className="truncate">Alle {place.userRatingCount} auf Google</span>
+                      <ExternalLink size={12} className="hidden min-[380px]:inline shrink-0" aria-hidden="true" />
                     </a>
                     {mode === "full" && (
                       <button
@@ -655,20 +657,21 @@ export function GoogleReviewsSection({
                           void refresh();
                         }}
                         aria-label="Google-Bewertungen aktualisieren"
-                        className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-ink-muted hover:text-accent hover:border-accent transition-colors cursor-pointer"
+                        className="col-span-2 sm:col-span-1 inline-flex h-[42px] sm:w-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-xs font-bold text-ink-muted hover:text-accent hover:border-accent transition-colors cursor-pointer"
                       >
                         <RefreshCw size={14} aria-hidden="true" />
+                        <span className="sm:hidden">Aktualisieren</span>
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Compact Filter Bar */}
+                {/* Compact Filter Bar (Native Horizontal Snap Rail on Mobile) */}
                 <div className="mt-4 pt-3.5 border-t border-primary/8 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div
                     role="tablist"
                     aria-label="Bewertungen nach Thema filtern"
-                    className="flex flex-wrap items-center gap-1.5"
+                    className="flex md:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1 px-1 pb-0.5"
                   >
                     <button
                       type="button"
@@ -680,7 +683,7 @@ export function GoogleReviewsSection({
                         setPage(0);
                         setVisibleFullCount(9);
                       }}
-                      className={`min-h-[34px] rounded-lg px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                      className={`shrink-0 snap-start whitespace-nowrap min-h-[36px] sm:min-h-[34px] rounded-lg px-3 sm:px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
                         selectedTopic === "all"
                           ? "bg-primary text-white dark:bg-accent"
                           : "bg-primary/5 dark:bg-white/5 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -702,7 +705,7 @@ export function GoogleReviewsSection({
                             setPage(0);
                             setVisibleFullCount(9);
                           }}
-                          className={`min-h-[34px] rounded-lg px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          className={`shrink-0 snap-start whitespace-nowrap min-h-[36px] sm:min-h-[34px] rounded-lg px-3 sm:px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
                             active
                               ? "bg-primary text-white dark:bg-accent"
                               : "bg-primary/5 dark:bg-white/5 text-ink-muted hover:text-primary dark:hover:text-white"

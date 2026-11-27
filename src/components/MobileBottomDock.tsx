@@ -37,6 +37,7 @@ import {
   buildWhatsAppDirectUrl,
   createHannachiWhatsAppPayload,
   DEFAULT_WHATSAPP_GREETING,
+  formatQuickWhatsAppMessage,
   HANNACHI_WHATSAPP_PHONE,
 } from "@/utils/whatsapp";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
@@ -62,32 +63,41 @@ const ONE_TAP_WHATSAPP_DEMANDS: OneTapWhatsAppDemand[] = [
     title: "Ersatzteil / Typenschild (E-Nr.)",
     subtitle: "Originalteil anfragen oder Foto senden",
     icon: Tag,
-    message:
-      "Hallo Herr Hannachi, ich suche ein Original-Ersatzteil für mein Hausgerät und sende gleich die E-Nr. / ein Foto vom Typenschild.",
+    message: formatQuickWhatsAppMessage({
+      title: "Ersatzteil-Anfrage",
+      detail: "Ich suche ein Original-Ersatzteil für mein Hausgerät.",
+      photoHint: true,
+    }),
   },
   {
     id: "geraet",
     title: "Markengerät auf Anfrage",
     subtitle: "Aktueller Bestand & Preis in Osnabrück",
     icon: Package,
-    message:
-      "Hallo Herr Hannachi, ich interessiere mich für ein ausgewähltes Markengerät in Osnabrück. Was haben Sie aktuell auf Anfrage da?",
+    message: formatQuickWhatsAppMessage({
+      title: "Geräte-Anfrage",
+      detail: "Ich interessiere mich für ein ausgewähltes Markengerät auf Anfrage.",
+    }),
   },
   {
     id: "beratung",
     title: "Kurze Fachberatung",
     subtitle: "Persönliche Einschätzung zum Hausgerät",
     icon: HelpCircle,
-    message:
-      "Hallo Herr Hannachi, ich hätte eine kurze Frage zur Fachberatung für mein Hausgerät.",
+    message: formatQuickWhatsAppMessage({
+      title: "Kurze Fachberatung",
+      detail: "Ich hätte eine kurze Frage zur persönlichen Fachberatung für mein Hausgerät.",
+    }),
   },
   {
     id: "termin",
     title: "Termin vereinbaren",
     subtitle: "Abholung oder Beratung in Osnabrück",
     icon: CalendarDays,
-    message:
-      "Hallo Herr Hannachi, ich möchte gerne einen kurzen Termin nach Vereinbarung in Osnabrück abstimmen.",
+    message: formatQuickWhatsAppMessage({
+      title: "Termin-Anfrage",
+      detail: "Ich möchte gerne einen kurzen Termin nach Vereinbarung in Osnabrück abstimmen.",
+    }),
   },
 ];
 
@@ -227,7 +237,10 @@ export default function MobileBottomDock({
   const customWhatsAppHref = useMemo(() => {
     const trimmed = customWaText.trim();
     const msg = trimmed
-      ? `Hallo Herr Hannachi, ${trimmed}`
+      ? formatQuickWhatsAppMessage({
+          title: "Kurze Nachricht",
+          detail: trimmed,
+        })
       : DEFAULT_WHATSAPP_GREETING;
     return buildWhatsAppDirectUrl(msg, HANNACHI_WHATSAPP_PHONE);
   }, [customWaText]);
@@ -365,7 +378,8 @@ export default function MobileBottomDock({
               />
             </motion.span>
             <span
-              className={`relative z-10 text-[10px] sm:text-xs tracking-tight leading-none truncate ${
+              data-compact-label="true"
+              className={`relative z-10 text-[10.5px] sm:text-xs tracking-tight leading-none truncate ${
                 isHomeActive ? "font-bold text-white" : "font-medium"
               }`}
             >
@@ -410,7 +424,8 @@ export default function MobileBottomDock({
               />
             </motion.span>
             <span
-              className={`relative z-10 text-[10px] sm:text-xs tracking-tight leading-none truncate ${
+              data-compact-label="true"
+              className={`relative z-10 text-[10.5px] sm:text-xs tracking-tight leading-none truncate ${
                 isServiceActive ? "font-bold text-white" : "font-medium"
               }`}
             >
@@ -427,21 +442,24 @@ export default function MobileBottomDock({
             aria-haspopup="dialog"
             aria-label={`Anruf-Widget öffnen: ${effectivePhoneDisplay}`}
             data-testid="mobile-dock-call"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl border px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
+            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
               isCallWidgetOpen
-                ? "border-emerald-300 bg-emerald-500/38 ring-2 ring-emerald-400/40 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
-                : "border-emerald-400/35 bg-emerald-500/18 hover:bg-emerald-500/28"
+                ? "bg-emerald-500/32 ring-1 ring-emerald-300/70 shadow-[0_0_18px_rgba(16,185,129,0.28)]"
+                : "bg-emerald-500/14 ring-1 ring-emerald-400/25 hover:bg-emerald-500/24"
             }`}
           >
             <span className="relative flex items-center justify-center">
               <Phone
                 size={18}
-                strokeWidth={2.2}
+                strokeWidth={2.1}
                 className="text-emerald-300 shrink-0"
                 aria-hidden="true"
               />
             </span>
-            <span className="text-[10px] sm:text-xs font-bold tracking-tight leading-none text-emerald-100 truncate">
+            <span
+              data-compact-label="true"
+              className="text-[10.5px] sm:text-xs font-bold tracking-tight leading-none text-emerald-100 truncate"
+            >
               Anrufen
             </span>
           </a>
@@ -455,18 +473,18 @@ export default function MobileBottomDock({
             aria-haspopup="dialog"
             aria-label="WhatsApp-Schnellauswahl öffnen"
             data-testid="mobile-dock-whatsapp"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl border px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
+            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
               isWhatsAppWidgetOpen
-                ? "border-[#4ADE80] bg-[#25D366]/38 ring-2 ring-[#4ADE80]/40 shadow-[0_0_20px_rgba(37,211,102,0.35)]"
+                ? "bg-[#25D366]/34 ring-1 ring-[#4ADE80]/80 shadow-[0_0_18px_rgba(37,211,102,0.3)]"
                 : draftWhatsAppResult
-                ? "border-[#4ADE80]/65 bg-[#25D366]/28 hover:bg-[#25D366]/36"
-                : "border-[#4ADE80]/35 bg-[#25D366]/18 hover:bg-[#25D366]/26"
+                ? "bg-[#25D366]/24 ring-1 ring-[#4ADE80]/55 hover:bg-[#25D366]/32"
+                : "bg-[#25D366]/14 ring-1 ring-[#4ADE80]/25 hover:bg-[#25D366]/24"
             }`}
           >
             <span className="relative flex items-center justify-center">
               <MessageCircle
                 size={18}
-                strokeWidth={2.2}
+                strokeWidth={2.1}
                 className="text-[#4ADE80] shrink-0"
                 aria-hidden="true"
               />
@@ -477,7 +495,10 @@ export default function MobileBottomDock({
                 />
               )}
             </span>
-            <span className="text-[10px] sm:text-xs font-bold tracking-tight leading-none text-emerald-50 truncate">
+            <span
+              data-compact-label="true"
+              className="text-[10.5px] sm:text-xs font-bold tracking-tight leading-none text-emerald-50 truncate"
+            >
               {draftWhatsAppResult ? "Senden" : "WhatsApp"}
             </span>
           </a>
@@ -526,7 +547,8 @@ export default function MobileBottomDock({
               )}
             </motion.span>
             <span
-              className={`relative z-10 text-[10px] sm:text-xs tracking-tight leading-none truncate ${
+              data-compact-label="true"
+              className={`relative z-10 text-[10.5px] sm:text-xs tracking-tight leading-none truncate ${
                 isContactActive ? "font-bold text-white" : "font-medium"
               }`}
             >
@@ -583,7 +605,11 @@ export default function MobileBottomDock({
               transition={widgetSpring}
               className="fixed inset-x-0 bottom-[calc(4.65rem+env(safe-area-inset-bottom))] z-50 px-2.5 sm:px-4 lg:hidden pointer-events-none"
             >
-              <div className="pointer-events-auto mx-auto w-full max-w-md sm:max-w-lg overflow-hidden rounded-2xl border border-white/15 bg-white/98 dark:bg-slate-900/98 text-primary dark:text-slate-100 shadow-[0_22px_55px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+              <div className="pointer-events-auto mx-auto w-full max-w-md sm:max-w-lg overflow-hidden rounded-3xl border border-primary/12 dark:border-white/15 bg-white/98 dark:bg-slate-900/98 text-primary dark:text-slate-100 shadow-[0_22px_55px_rgba(2,6,23,0.45)] backdrop-blur-xl">
+                {/* Native Sheet Grab Handle */}
+                <div aria-hidden="true" className="flex justify-center pt-2.5 pb-0.5">
+                  <span className="h-1 w-9 rounded-full bg-primary/15 dark:bg-white/20" />
+                </div>
                 {activeWidget === "call" ? (
                   <div className="p-4 space-y-3">
                     {/* Call Widget Header */}
@@ -686,12 +712,8 @@ export default function MobileBottomDock({
                           <h3 className="text-sm font-extrabold text-primary dark:text-white leading-tight truncate">
                             WhatsApp · {business.owner}
                           </h3>
-                          <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-muted truncate">
-                            <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden="true">
-                              <span className="status-live-ring absolute inset-0 rounded-full bg-emerald-400/75" />
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                            </span>
-                            <span className="truncate">1× tippen – Chat öffnet sofort</span>
+                          <p className="mt-0.5 text-[11px] text-ink-muted truncate">
+                            1× tippen, Chat öffnet sofort
                           </p>
                         </div>
                       </div>

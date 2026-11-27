@@ -67,9 +67,6 @@ export async function fetchGooglePlace(placeId: string, apiKey: string): Promise
     const displayNameObj = rawJson.displayName as
       | { text?: string }
       | undefined;
-    const locObj = rawJson.location as
-      | { latitude?: number; longitude?: number }
-      | undefined;
     const currentHours = rawJson.currentOpeningHours as
       | { openNow?: boolean; weekdayDescriptions?: string[] }
       | undefined;
@@ -229,11 +226,7 @@ export async function fetchGooglePlace(placeId: string, apiKey: string): Promise
         displayName: displayNameObj?.text || "",
         formattedAddress: "Iburger Straße 5, Im Hof, 49082 Osnabrück, Deutschland",
         shortFormattedAddress: "Iburger Straße 5, Im Hof, 49082 Osnabrück",
-        coordinates:
-          typeof locObj?.latitude === "number" &&
-          typeof locObj?.longitude === "number"
-            ? { lat: locObj.latitude, lng: locObj.longitude }
-            : null,
+        coordinates: { lat: 52.2647082, lng: 8.0567763 },
         nationalPhoneNumber:
           typeof rawJson.nationalPhoneNumber === "string"
             ? rawJson.nationalPhoneNumber

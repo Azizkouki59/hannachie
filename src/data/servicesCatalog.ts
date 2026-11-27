@@ -32,7 +32,7 @@ export const mainServiceCategories: ServiceCategory[] = [
     title: "Wäsche waschen und trocknen",
     shortTitle: "Waschen & Trocknen",
     description:
-      "Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr. / PNC) & ausgewählte Markengeräte auf Anfrage.",
+      "Persönliche Fachberatung, Original-Ersatzteile nach Typenschild & ausgewählte Markengeräte auf Anfrage.",
     devices: [
       {
         name: "Waschmaschinen",
@@ -246,14 +246,14 @@ export const electronicsWorkshopCategory: ServiceCategory = {
   title: "Ersatzmodule & Verkäufergarantie",
   shortTitle: "Module & Garantie",
   description:
-    "Original-Ersatzmodule nach Typenschild (E-Nr. / PNC) sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
+    "Original-Ersatzmodule nach Typenschild sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
   devices: [
     {
       name: "Steuerungs- & Leistungsmodule",
-      description: "Original-Ersatzmodule und elektronische Ersatzteile nach E-Nr. / PNC.",
+      description: "Original-Ersatzmodule und elektronische Ersatzteile passend nach Typenschild.",
       iconName: "Cpu",
       faults: [
-        "Original-Ersatzmodul per E-Nr. / PNC anfragen",
+        "Original-Ersatzmodul nach Typenschild anfragen",
         "Relais & elektronische Ersatzbauteile",
         "Garantieabwicklung für direkt bei Hannachi erworbene Geräte",
       ],

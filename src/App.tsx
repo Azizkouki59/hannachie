@@ -15,7 +15,13 @@ import {
   GoogleLivePlaceProvider,
   useGoogleLivePlace,
 } from "@/lib/googlePlaceLive";
-import { syncDocumentSeo } from "@/lib/seo";
+import { UserPlaceProvider } from "@/lib/userPlace";
+import {
+  getRouteBreadcrumbs,
+  getRouteSeo,
+  HOMEPAGE_FAQ_ITEMS,
+  syncDocumentSeo,
+} from "@/lib/seo";
 import { useLocationState } from "@/shims/next-navigation";
 import { CardScrollRevealObserver } from "@/components/animations";
 
@@ -32,72 +38,208 @@ const Datenschutz = lazy(() => import("@/app/datenschutz/page"));
 const AdminPage = lazy(() => import("@/app/admin/page"));
 import NotFound from "@/app/not-found";
 
-function LiveBusinessJsonLd() {
+function LiveBusinessJsonLd({ cleanPath }: { cleanPath: string }) {
   const { place } = useGoogleLivePlace();
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: `${business.name} ${business.tagline}`,
-    description: `Hausgeräte-Spezialist in ${business.city} seit ${business.founded}: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
-    url: business.url,
-    image: `${business.url}/images/herr-hannachi.jpg`,
-    telephone: place.internationalPhoneNumber || "+491703493494",
-    email: business.email,
-    founder: {
-      "@type": "Person",
-      name: business.owner,
-    },
-    foundingDate: String(business.founded),
-    areaServed: ["Osnabrück", "Landkreis Osnabrück"],
-    knowsAbout: [
-      "Elektrohaushaltsgeräte",
-      "Original-Ersatzteile nach Typenschild (E-Nr.)",
-      "Fachberatung Haushaltsgeräte",
-      "Miele",
-      "Bosch",
-      "Siemens",
-      "AEG",
-      "Liebherr",
-    ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer service",
+  const routeSeo = getRouteSeo(cleanPath);
+  const breadcrumbs = getRouteBreadcrumbs(cleanPath);
+  const baseUrl = business.url;
+  const businessId = `${baseUrl}/#business`;
+  const websiteId = `${baseUrl}/#website`;
+  const webpageId = `${routeSeo.canonicalUrl}#webpage`;
+
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": ["LocalBusiness", "HomeGoodsStore"],
+      "@id": businessId,
+      name: `${business.name} ${business.tagline}`,
+      alternateName: "Hannachi Osnabrück",
+      description: `Unabhängiger Fachhandel für Elektrohaushaltsgeräte in ${business.city} seit ${business.founded}: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage nach Terminvereinbarung.`,
+      url: baseUrl,
+      logo: `${baseUrl}/favicon.svg`,
+      image: `${baseUrl}/images/herr-hannachi.jpg`,
       telephone: place.internationalPhoneNumber || "+491703493494",
       email: business.email,
-      availableLanguage: ["German"],
-      areaServed: "DE",
+      priceRange: "€€",
+      sameAs: [business.facebookUrl, place.googleMapsUri || business.mapsUrl],
+      founder: {
+        "@type": "Person",
+        name: business.owner,
+      },
+      foundingDate: String(business.founded),
+      areaServed: [
+        { "@type": "City", name: "Osnabrück" },
+        { "@type": "AdministrativeArea", name: "Landkreis Osnabrück" },
+        { "@type": "City", name: "Georgsmarienhütte" },
+        { "@type": "City", name: "Wallenhorst" },
+        { "@type": "City", name: "Belm" },
+        { "@type": "City", name: "Hasbergen" },
+        { "@type": "City", name: "Bissendorf" },
+        { "@type": "City", name: "Melle" },
+      ],
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+          ],
+          opens: "08:00",
+          closes: "18:00",
+        },
+      ],
+      knowsAbout: [
+        "Elektrohaushaltsgeräte",
+        "Original-Ersatzteile nach Typenschild",
+        "Fachberatung Haushaltsgeräte",
+        "Waschmaschinen",
+        "Geschirrspüler",
+        "Kühlschränke",
+        "Backöfen und Herde",
+        "Miele",
+        "Bosch",
+        "Siemens",
+        "AEG",
+        "Liebherr",
+        "Bauknecht",
+        "Neff",
+      ],
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Fachberatung, Original-Ersatzteile & Markengeräte",
+        itemListElement: [
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Persönliche Hausgeräte-Fachberatung",
+              description:
+                "Unabhängige Beratung vom Inhaber Kamal Hannachi zu Waschmaschinen, Geschirrspülern, Kühlgeräten und Herden in Osnabrück.",
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Product",
+              name: "Original- und Qualitäts-Ersatzteile nach Typenschild",
+              description:
+                "Passgenaue Ersatzteile wie Laugenpumpen, Türdichtungen, Heizelemente, Stoßdämpfer und Filter für alle bekannten Marken.",
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Product",
+              name: "Ausgewählte geprüfte Markengeräte auf Anfrage",
+              description:
+                "Individuell verfügbare Markengeräte inklusive persönlicher Empfehlung und schriftlicher Verkäufergarantie.",
+            },
+          },
+        ],
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer service",
+        telephone: place.internationalPhoneNumber || "+491703493494",
+        email: business.email,
+        availableLanguage: ["German"],
+        areaServed: "DE",
+      },
+      hasMap: place.googleMapsUri || business.mapsUrl,
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: place.coordinates.lat,
+        longitude: place.coordinates.lng,
+      },
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: business.street,
+        postalCode: business.zip,
+        addressLocality: business.city,
+        addressRegion: "Niedersachsen",
+        addressCountry: "DE",
+      },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: place.rating.toFixed(1),
+        reviewCount: String(place.userRatingCount),
+        bestRating: "5",
+        worstRating: "1",
+      },
     },
-    hasMap: place.googleMapsUri || business.mapsUrl,
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: place.coordinates.lat,
-      longitude: place.coordinates.lng,
+    {
+      "@type": "WebSite",
+      "@id": websiteId,
+      url: baseUrl,
+      name: `${business.name} ${business.tagline}`,
+      inLanguage: "de-DE",
+      publisher: { "@id": businessId },
     },
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: business.street,
-      postalCode: business.zip,
-      addressLocality: business.city,
-      addressCountry: "DE",
+    {
+      "@type": "WebPage",
+      "@id": webpageId,
+      url: routeSeo.canonicalUrl,
+      name: routeSeo.title,
+      description: routeSeo.description,
+      inLanguage: "de-DE",
+      isPartOf: { "@id": websiteId },
+      about: { "@id": businessId },
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: place.rating.toFixed(1),
-      reviewCount: String(place.userRatingCount),
-      bestRating: "5",
-      worstRating: "1",
-    },
+  ];
+
+  if (breadcrumbs.length > 1) {
+    graph.push({
+      "@type": "BreadcrumbList",
+      "@id": `${routeSeo.canonicalUrl}#breadcrumb`,
+      itemListElement: breadcrumbs.map((crumb, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: crumb.name,
+        item: `${baseUrl}${crumb.path === "/" ? "/" : crumb.path}`,
+      })),
+    });
+  }
+
+  if (cleanPath === "/") {
+    graph.push({
+      "@type": "FAQPage",
+      "@id": `${baseUrl}/#faq`,
+      mainEntity: HOMEPAGE_FAQ_ITEMS.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    });
+  }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": graph,
   };
 
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+      }}
     />
   );
 }
 
-function AppLiveWidgets({ isAdminRoute }: { isAdminRoute: boolean }) {
+function AppLiveWidgets({
+  isAdminRoute,
+  cleanPath,
+}: {
+  isAdminRoute: boolean;
+  cleanPath: string;
+}) {
   const { place } = useGoogleLivePlace();
   return (
     <>
@@ -118,7 +260,7 @@ function AppLiveWidgets({ isAdminRoute }: { isAdminRoute: boolean }) {
           />
         </>
       )}
-      <LiveBusinessJsonLd />
+      {!isAdminRoute && <LiveBusinessJsonLd cleanPath={cleanPath} />}
     </>
   );
 }
@@ -142,28 +284,21 @@ function getRouteOrder(path: string): number {
 const antigravityEase = [0.22, 1, 0.36, 1] as const;
 
 const pageSlideVariants = {
-  enter: (direction: number) => ({
-    x: direction >= 0 ? 18 : -18,
-    y: 12,
-    scale: 0.992,
+  enter: {
+    y: 6,
     opacity: 0,
-  }),
+  },
   center: {
-    x: 0,
     y: 0,
-    scale: 1,
     opacity: 1,
     transitionEnd: {
       transform: "none",
     },
   },
-  exit: (direction: number) => ({
-    x: direction >= 0 ? -12 : 12,
-    y: -8,
-    scale: 0.994,
+  exit: {
     opacity: 0,
-    transition: { duration: 0.12, ease: "easeIn" as const },
-  }),
+    transition: { duration: 0.08, ease: "easeIn" as const },
+  },
 };
 
 function RouteTransferRibbon({ routeKey }: { routeKey: string }) {
@@ -204,25 +339,25 @@ export default function App() {
 
   const [mapsQuotaExceeded, setMapsQuotaExceeded] = useState(false);
 
-  // Warm up the code of the other pages once the current page is idle,
-  // so navigating between pages feels instant.
+  // Gently warm up secondary pages when idle on non-metered connections.
   useEffect(() => {
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (conn?.saveData) return undefined;
     const preload = () => {
       void import("@/app/leistungen/page");
       void import("@/app/kontakt/page");
-      void import("@/app/ueber-uns/page");
-      void import("@/app/kundenbewertungen/page");
-      void import("@/app/leistungen/[slug]/page");
       void import("@/app/anfrage/page");
     };
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
     if (w.requestIdleCallback) {
-      w.requestIdleCallback(preload, { timeout: 4000 });
-    } else {
-      const t = window.setTimeout(preload, 2500);
-      return () => window.clearTimeout(t);
+      const id = w.requestIdleCallback(preload, { timeout: 5000 });
+      return () => w.cancelIdleCallback?.(id);
     }
-    return undefined;
+    const t = window.setTimeout(preload, 3500);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -285,7 +420,8 @@ export default function App() {
 
   return (
     <GoogleLivePlaceProvider>
-      <ConsentProvider>
+      <UserPlaceProvider>
+        <ConsentProvider>
         <ThemeProvider>
           <QuickRequestProvider>
             <div className="min-h-screen flex flex-col font-sans bg-surface text-primary dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
@@ -329,20 +465,18 @@ export default function App() {
                   >
                     <motion.div
                       key={cleanPath}
-                      custom={direction}
                       variants={prefersReducedMotion ? undefined : pageSlideVariants}
                       initial={prefersReducedMotion ? { opacity: 0 } : "enter"}
                       animate={prefersReducedMotion ? { opacity: 1 } : "center"}
                       exit={prefersReducedMotion ? { opacity: 0 } : "exit"}
                       transition={
                         prefersReducedMotion
-                          ? { duration: 0.08 }
+                          ? { duration: 0.06 }
                           : {
-                              duration: 0.24,
+                              duration: 0.16,
                               ease: antigravityEase,
                             }
                       }
-                      className="will-change-transform"
                     >
                       <Suspense fallback={<div className="min-h-[70vh]" aria-busy="true" />}>
                         {renderRoute()}
@@ -352,7 +486,7 @@ export default function App() {
                 </ErrorBoundary>
               </main>
               {!isAdminRoute && <Footer />}
-              <AppLiveWidgets isAdminRoute={isAdminRoute} />
+              <AppLiveWidgets isAdminRoute={isAdminRoute} cleanPath={cleanPath} />
               <CookieConsentBanner />
               <CardScrollRevealObserver routeKey={cleanPath} />
               </div>
@@ -360,6 +494,7 @@ export default function App() {
           </QuickRequestProvider>
         </ThemeProvider>
       </ConsentProvider>
+      </UserPlaceProvider>
     </GoogleLivePlaceProvider>
   );
 }

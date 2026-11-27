@@ -11,18 +11,60 @@ export type RouteSeoConfig = {
   canonicalUrl: string;
 };
 
-const BASE_TITLE = "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück seit 1990";
+export type BreadcrumbItem = {
+  name: string;
+  path: string;
+};
+
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
+const BASE_TITLE = "Hannachi Hausgeräte & Ersatzteile | Osnabrück seit 1990";
 const BASE_DESCRIPTION =
-  "Hausgeräte-Spezialist in Osnabrück seit 1990: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild (E-Nr.) & ausgewählte Markengeräte auf Anfrage.";
+  "Unabhängiger Fachhandel in Osnabrück seit 1990: persönliche Beratung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.";
+const OG_IMAGE_URL = `${business.url}/images/herr-hannachi.jpg`;
+const OG_IMAGE_ALT =
+  "Kamal Hannachi: Fachhandel für Elektrohaushaltsgeräte und Original-Ersatzteile in Osnabrück";
+
 export const BASE_KEYWORDS = [
-  "Hausgeräte Spezialist Osnabrück",
+  "Hausgeräte Fachhandel Osnabrück",
   "Elektrohaushaltsgeräte Beratung Osnabrück",
-  "Original-Ersatzteile Haushaltsgeräte E-Nr Osnabrück",
+  "Original-Ersatzteile Haushaltsgeräte Typenschild Osnabrück",
   "Ausgewählte Markengeräte auf Anfrage Osnabrück",
   "Ersatzteile Waschmaschine Geschirrspüler Kühlschrank Backofen Osnabrück",
   "Kamal Hannachi",
   "Hannachi Elektrohaushaltsgeräte & Ersatzteile Osnabrück",
   "49082 Osnabrück",
+];
+
+export const HOMEPAGE_FAQ_ITEMS: FaqItem[] = [
+  {
+    question: "Wie finde ich das passende Original-Ersatzteil für mein Haushaltsgerät?",
+    answer:
+      "Fotografieren Sie einfach das Typenschild Ihres Geräts (meist im Türrahmen der Waschmaschine, seitlich an der Geschirrspülertür, im Innenraum des Kühlschranks oder im Backofenrahmen) und senden Sie es unverbindlich per WhatsApp oder über das Anfrageformular. Anhand der Gerätedaten prüft Kamal Hannachi die genaue Teilekompatibilität und Verfügbarkeit.",
+  },
+  {
+    question: "Für welche Marken und Haushaltsgeräte bietet Hannachi Beratung und Ersatzteile an?",
+    answer:
+      "Als unabhängiger Fachhandel seit 1990 beraten wir zu Waschmaschinen, Geschirrspülern, Kühl- und Gefriergeräten, Backöfen, Herden, Wäschetrocknern und Kaffeevollautomaten aller gängigen Hersteller wie Miele, Bosch, Siemens, AEG, Bauknecht, Liebherr, Neff, Constructa, Jura und DeLonghi.",
+  },
+  {
+    question: "Wie hilft mir der interaktive 3D-Ersatzteil-Explorer auf hannachi.de?",
+    answer:
+      "Im 3D-Explorer können Sie sechs typische Haushaltsgeräte drehen, öffnen und einzelne Verschleißteile direkt anklicken. So erkennen Sie die genaue Fachbezeichnung des betroffenen Bauteils und können mit einem Tipp direkt eine passende Ersatzteil-Anfrage vorbereiten.",
+  },
+  {
+    question: "Bietet Hannachi auch ausgewählte Markengeräte mit Garantie an?",
+    answer:
+      "Ja. Neben Original- und Qualitäts-Ersatzteilen führen wir auf Anfrage ausgewählte, geprüfte Markengeräte nach aktuellem Bestand. Jedes abgegebene Gerät enthält eine transparente Beratung durch den Inhaber sowie eine schriftliche Verkäufergarantie gemäß unseren Bedingungen im Impressum.",
+  },
+  {
+    question: "Wie erreiche ich Kamal Hannachi und wie laufen Termine in Osnabrück ab?",
+    answer:
+      "Wir arbeiten persönlich und nach vorheriger Terminvereinbarung für Osnabrück und Umgebung (Mo. bis Sa., 08:00 bis 18:00 Uhr). Sie erreichen Kamal Hannachi direkt telefonisch unter 0170 3493494, per WhatsApp oder über das Anfrageformular auf dieser Website.",
+  },
 ];
 
 function toCanonicalUrl(canonicalPath: string): string {
@@ -45,7 +87,7 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     return {
       title: BASE_TITLE,
       description: BASE_DESCRIPTION,
-      robots: "index,follow",
+      robots: "index,follow,max-image-preview:large,max-snippet:-1",
       index: true,
       follow: true,
       canonicalPath: "/",
@@ -53,7 +95,20 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     };
   }
 
-  if (normalizedPath === "/marktplatz" || normalizedPath === "/angebote" || normalizedPath === "/simulator") {
+  if (normalizedPath === "/marktplatz" || normalizedPath === "/angebote") {
+    return {
+      title: "Ausgewählte Markengeräte auf Anfrage | Hannachi Osnabrück",
+      description:
+        "Geprüfte Markengeräte auf Anfrage in Osnabrück: persönliche Empfehlung von Kamal Hannachi inklusive schriftlicher Verkäufergarantie.",
+      robots: "index,follow,max-image-preview:large",
+      index: true,
+      follow: true,
+      canonicalPath: "/marktplatz",
+      canonicalUrl: toCanonicalUrl("/marktplatz"),
+    };
+  }
+
+  if (normalizedPath === "/simulator") {
     return {
       title: BASE_TITLE,
       description: BASE_DESCRIPTION,
@@ -67,9 +122,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/leistungen" || normalizedPath === "/geraete") {
     return {
-      title: "Geräte, Beratung & Original-Ersatzteile | Hannachi Osnabrück",
-      description: `${yearsOfExperience}+ Jahre Erfahrung in Osnabrück: Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.`,
-      robots: "index,follow",
+      title: "Geräte, Beratung & Ersatzteile | Hannachi Osnabrück",
+      description: `Über ${yearsOfExperience} Jahre Erfahrung in Osnabrück: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.`,
+      robots: "index,follow,max-image-preview:large",
       index: true,
       follow: true,
       canonicalPath: "/leistungen",
@@ -85,9 +140,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     if (service) {
       const canonicalPath = `/leistungen/${service.slug}`;
       return {
-        title: `${service.title} – Beratung & Original-Ersatzteile | Hannachi Osnabrück`,
-        description: `${service.short} Persönlich in Osnabrück seit 1990 – Termine nach Vereinbarung.`,
-        robots: "index,follow",
+        title: `${service.title}: Beratung & Teile | Hannachi Osnabrück`,
+        description: `${service.short} Persönliche Fachberatung und Original-Ersatzteile in Osnabrück seit 1990, Termine nach Vereinbarung.`,
+        robots: "index,follow,max-image-preview:large",
         index: true,
         follow: true,
         canonicalPath,
@@ -98,10 +153,10 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/anfrage") {
     return {
-      title: "Persönliche Anfrage & Original-Ersatzteile | Hannachi Osnabrück",
+      title: "Persönliche Anfrage & Ersatzteile | Hannachi Osnabrück",
       description:
-        "Direkte Anfrage an Kamal Hannachi: Persönliche Hausgeräte-Beratung, Original-Ersatzteile nach Typenschild & ausgewählte Markengeräte auf Anfrage.",
-      robots: "index,follow",
+        "Direkte Anfrage an Kamal Hannachi in Osnabrück: Hausgeräte-Beratung, Original-Ersatzteile nach Typenschild oder ausgewählte Markengeräte.",
+      robots: "index,follow,max-image-preview:large",
       index: true,
       follow: true,
       canonicalPath: "/anfrage",
@@ -111,10 +166,10 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/ueber-uns") {
     return {
-      title: "Über uns | Kamal Hannachi – Hausgeräte-Spezialist seit 1990",
+      title: "Über Kamal Hannachi | Hausgeräte-Fachhandel seit 1990",
       description:
-        "Seit 1990 in Osnabrück: Inhaber Kamal Hannachi steht für ehrliche Fachberatung, Original-Ersatzteile nach E-Nr. & ausgewählte Markengeräte auf Anfrage.",
-      robots: "index,follow",
+        "Seit 1990 in Osnabrück: Inhaber Kamal Hannachi steht für ehrliche Fachberatung, Original-Ersatzteile nach Typenschild und Markengeräte auf Anfrage.",
+      robots: "index,follow,max-image-preview:large",
       index: true,
       follow: true,
       canonicalPath: "/ueber-uns",
@@ -124,10 +179,10 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/kundenbewertungen" || normalizedPath === "/bewertungen") {
     return {
-      title: "Verifizierte Google-Bewertungen | Hannachi Osnabrück",
+      title: "Google-Bewertungen & Kundenstimmen | Hannachi Osnabrück",
       description:
-        "Echte Kundenstimmen aus Osnabrück & Umgebung: Über 80 Google-Bewertungen für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
-      robots: "index,follow",
+        "Echte Kundenstimmen aus Osnabrück und Umgebung: Über 80 Google-Bewertungen für Hannachi Elektrohaushaltsgeräte & Ersatzteile.",
+      robots: "index,follow,max-image-preview:large",
       index: true,
       follow: true,
       canonicalPath: "/kundenbewertungen",
@@ -139,8 +194,8 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
     return {
       title: "Kontakt & Termine nach Vereinbarung | Hannachi Osnabrück",
       description:
-        "Direkt per WhatsApp oder Telefon erreichbar: Persönliche Beratung, Original-Ersatzteile nach E-Nr. & Termine nach Vereinbarung in Osnabrück.",
-      robots: "index,follow",
+        "Direkt per WhatsApp oder Telefon erreichbar: Fachberatung, Original-Ersatzteile nach Typenschild und Termine nach Vereinbarung in Osnabrück.",
+      robots: "index,follow,max-image-preview:large",
       index: true,
       follow: true,
       canonicalPath: "/kontakt",
@@ -150,9 +205,9 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
 
   if (normalizedPath === "/impressum") {
     return {
-      title: "Impressum & Rechtliche Hinweise (§ 5 DDG / § 14 GewO) | Hannachi",
+      title: "Impressum & Rechtliche Hinweise (§ 5 DDG) | Hannachi",
       description:
-        "Impressum gemäß § 5 DDG, gewerberechtliche Hinweise (§ 14 GewO / HwO) und Anschrift von Inhaber Kamal Hannachi in Osnabrück.",
+        "Impressum gemäß § 5 DDG, gewerberechtliche Hinweise (§ 14 GewO) und Anschrift von Inhaber Kamal Hannachi in Osnabrück.",
       robots: "noindex,follow",
       index: false,
       follow: true,
@@ -199,6 +254,53 @@ export function getRouteSeo(cleanPath: string): RouteSeoConfig {
   };
 }
 
+export function getRouteBreadcrumbs(cleanPath: string): BreadcrumbItem[] {
+  const normalizedPath =
+    cleanPath.length > 1 && cleanPath.endsWith("/")
+      ? cleanPath.slice(0, -1)
+      : cleanPath || "/";
+
+  const homeCrumb: BreadcrumbItem = { name: "Startseite", path: "/" };
+  if (normalizedPath === "/" || normalizedPath === "/simulator") {
+    return [homeCrumb];
+  }
+
+  if (normalizedPath === "/leistungen" || normalizedPath === "/geraete") {
+    return [homeCrumb, { name: "Geräte & Ersatzteile", path: "/leistungen" }];
+  }
+
+  if (normalizedPath.startsWith("/leistungen/")) {
+    const slug = decodeURIComponent(normalizedPath.slice("/leistungen/".length));
+    const service = services.find((item) => item.slug === slug);
+    if (service) {
+      return [
+        homeCrumb,
+        { name: "Geräte & Ersatzteile", path: "/leistungen" },
+        { name: service.title, path: `/leistungen/${service.slug}` },
+      ];
+    }
+  }
+
+  const routeMap: Record<string, string> = {
+    "/marktplatz": "Markengeräte auf Anfrage",
+    "/angebote": "Markengeräte auf Anfrage",
+    "/anfrage": "Persönliche Anfrage",
+    "/ueber-uns": "Über uns",
+    "/kundenbewertungen": "Kundenbewertungen",
+    "/bewertungen": "Kundenbewertungen",
+    "/kontakt": "Kontakt",
+    "/impressum": "Impressum",
+    "/datenschutz": "Datenschutz",
+  };
+
+  const label = routeMap[normalizedPath];
+  if (label) {
+    return [homeCrumb, { name: label, path: normalizedPath }];
+  }
+
+  return [homeCrumb];
+}
+
 export function buildRouteMetadata(cleanPath: string): Metadata {
   const seo = getRouteSeo(cleanPath);
   return {
@@ -221,8 +323,8 @@ export function buildRouteMetadata(cleanPath: string): Metadata {
       type: "website",
       images: [
         {
-          url: `${business.url}/images/herr-hannachi.jpg`,
-          alt: `${business.name} – Osnabrück`,
+          url: OG_IMAGE_URL,
+          alt: OG_IMAGE_ALT,
         },
       ],
     },
@@ -230,6 +332,7 @@ export function buildRouteMetadata(cleanPath: string): Metadata {
       card: "summary_large_image",
       title: seo.title,
       description: seo.description,
+      images: [OG_IMAGE_URL],
     },
   };
 }
@@ -246,13 +349,17 @@ function upsertMeta(attr: "name" | "property", key: string, content: string) {
   el.setAttribute("content", content);
 }
 
-function upsertCanonical(href: string) {
-  let el = document.head.querySelector<HTMLLinkElement>(
-    'link[rel="canonical"]'
-  );
+function upsertLink(rel: string, href: string, extraAttr?: { name: string; value: string }) {
+  const selector = extraAttr
+    ? `link[rel="${rel}"][${extraAttr.name}="${extraAttr.value}"]`
+    : `link[rel="${rel}"]`;
+  let el = document.head.querySelector<HTMLLinkElement>(selector);
   if (!el) {
     el = document.createElement("link");
-    el.setAttribute("rel", "canonical");
+    el.setAttribute("rel", rel);
+    if (extraAttr) {
+      el.setAttribute(extraAttr.name, extraAttr.value);
+    }
     document.head.appendChild(el);
   }
   el.setAttribute("href", href);
@@ -269,11 +376,17 @@ export function syncDocumentSeo(cleanPath: string) {
   upsertMeta("property", "og:title", seo.title);
   upsertMeta("property", "og:description", seo.description);
   upsertMeta("property", "og:url", seo.canonicalUrl);
+  upsertMeta("property", "og:image", OG_IMAGE_URL);
+  upsertMeta("property", "og:image:alt", OG_IMAGE_ALT);
   upsertMeta("property", "og:type", "website");
   upsertMeta("property", "og:locale", "de_DE");
-  upsertMeta("property", "og:site_name", business.name);
+  upsertMeta("property", "og:site_name", `${business.name} ${business.tagline}`);
   upsertMeta("name", "twitter:card", "summary_large_image");
   upsertMeta("name", "twitter:title", seo.title);
   upsertMeta("name", "twitter:description", seo.description);
-  upsertCanonical(seo.canonicalUrl);
+  upsertMeta("name", "twitter:image", OG_IMAGE_URL);
+  upsertMeta("name", "twitter:image:alt", OG_IMAGE_ALT);
+  upsertLink("canonical", seo.canonicalUrl);
+  upsertLink("alternate", seo.canonicalUrl, { name: "hreflang", value: "de-DE" });
+  upsertLink("alternate", seo.canonicalUrl, { name: "hreflang", value: "x-default" });
 }

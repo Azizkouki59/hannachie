@@ -20,7 +20,7 @@ export default function AnfragePage({
     <>
       <PageHeader
         title="Direkt per WhatsApp anfragen"
-        intro="Gerät & Anliegen antippen – Ihre Nachricht öffnet direkt im WhatsApp-Chat."
+        intro="Gerät & Anliegen antippen, Ihre Nachricht öffnet direkt im WhatsApp-Chat."
       />
 
       <section className="py-8 sm:py-14 bg-surface dark:bg-slate-950">

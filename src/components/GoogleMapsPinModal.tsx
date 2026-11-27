@@ -27,17 +27,19 @@ import {
   Minus,
   Navigation,
   Plus,
+  Search,
   Target,
   X,
 } from "lucide-react";
-import { getBrowserPositionWithFallback } from "@/lib/geolocation";
 import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
 import {
   formatCoordinatesDisplay,
+  geocodePlaceQuery,
   osnabrueckServiceAreas,
   reverseGeocodePosition,
   type VerifiedLocationInfo,
 } from "@/lib/repairRequest";
+import { useUserPlace } from "@/lib/userPlace";
 
 export interface GoogleMapsPinModalProps {
   isOpen: boolean;
@@ -727,6 +729,7 @@ export default function GoogleMapsPinModal({
   onClose,
   onConfirm,
 }: GoogleMapsPinModalProps) {
+  const { detectMyPlace, setDetectedPlace } = useUserPlace();
   const [mounted, setMounted] = useState(false);
   const initialData = resolveInitialPosition(initialLat, initialLng, initialZip);
   const [targetCenter, setTargetCenter] = useState<LatLng>(initialData.pos);
@@ -737,6 +740,8 @@ export default function GoogleMapsPinModal({
   const [resolvedStreet, setResolvedStreet] = useState(initialStreet || "");
   const [resolvedZip, setResolvedZip] = useState(initialData.defaultZip);
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchingPlace, setIsSearchingPlace] = useState(false);
   const [gpsLocating, setGpsLocating] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const lookupSeqRef = useRef(0);
@@ -799,6 +804,8 @@ export default function GoogleMapsPinModal({
     setPinPos(init.pos);
     setResolvedStreet(initialStreet?.trim() || "");
     setResolvedZip(init.defaultZip);
+    setSearchQuery("");
+    setIsSearchingPlace(false);
     setGpsLocating(false);
     setGpsError(null);
 
@@ -848,28 +855,70 @@ export default function GoogleMapsPinModal({
     [resolveCoordinatesToAddress]
   );
 
+  const handleSearchPlace = async () => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setGpsError("Bitte Ort, PLZ oder Straße eingeben.");
+      return;
+    }
+    setIsSearchingPlace(true);
+    setGpsError(null);
+    try {
+      const result = await geocodePlaceQuery(q);
+      if (!result.ok) {
+        setGpsError(
+          result.error ||
+            "Adresse oder Ort nicht gefunden. Bitte Eingabe prüfen oder direkt auf die Karte tippen."
+        );
+        return;
+      }
+      const found = result.location;
+      const next = {
+        lat: Number(found.lat.toFixed(6)),
+        lng: Number(found.lng.toFixed(6)),
+      };
+      lookupSeqRef.current += 1;
+      setPinPos(next);
+      setTargetCenter(next);
+      setTargetZoom(found.streetAddress ? 16 : 14);
+      setCameraCommandTick((t) => t + 1);
+      setResolvedStreet(found.streetAddress);
+      if (found.zipAndCity) {
+        setResolvedZip(found.zipAndCity);
+      }
+      triggerHapticFeedback(40);
+    } finally {
+      setIsSearchingPlace(false);
+    }
+  };
+
   const handleLocateMe = async () => {
     setGpsLocating(true);
     setGpsError(null);
-    const result = await getBrowserPositionWithFallback();
+    const outcome = await detectMyPlace();
 
-    if (!result.ok) {
+    if (!outcome.ok) {
       setGpsLocating(false);
-      setGpsError(result.message);
+      setGpsError(outcome.message);
       return;
     }
 
+    const detected = outcome.place;
     const next = {
-      lat: Number(result.lat.toFixed(6)),
-      lng: Number(result.lng.toFixed(6)),
+      lat: Number(detected.lat.toFixed(6)),
+      lng: Number(detected.lng.toFixed(6)),
     };
+    lookupSeqRef.current += 1;
     setPinPos(next);
     setTargetCenter(next);
     setTargetZoom(16);
     setCameraCommandTick((t) => t + 1);
+    setResolvedStreet(detected.streetAddress);
+    if (detected.zipAndCity) {
+      setResolvedZip(detected.zipAndCity);
+    }
     setGpsLocating(false);
     triggerHapticFeedback(50);
-    void resolveCoordinatesToAddress(next.lat, next.lng, result.accuracy);
   };
 
   const handleConfirmPin = () => {
@@ -885,6 +934,7 @@ export default function GoogleMapsPinModal({
       mapsUrl: `https://www.google.com/maps?q=${cleanLat},${cleanLng}`,
       source: "map-pin",
     };
+    setDetectedPlace(verified);
     onConfirm(verified);
   };
 
@@ -965,6 +1015,51 @@ export default function GoogleMapsPinModal({
 
             {/* Body */}
             <div className="overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+              {/* Place / Address Search Bar (avoids nested form submission across React portals) */}
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex-1 min-w-0">
+                  <Search
+                    size={15}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+                  />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (gpsError) setGpsError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void handleSearchPlace();
+                      }
+                    }}
+                    placeholder="Ort, PLZ oder Straße suchen (z. B. Wallenhorst)…"
+                    aria-label="Ort, PLZ oder Straße suchen"
+                    className="w-full min-h-[42px] rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 pl-9 pr-3 py-2 text-[16px] sm:text-sm font-medium text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHapticFeedback(25);
+                    void handleSearchPlace();
+                  }}
+                  disabled={isSearchingPlace}
+                  className="inline-flex min-h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-primary dark:bg-accent px-3.5 py-2 text-xs font-extrabold text-white shadow-xs hover:opacity-95 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+                >
+                  {isSearchingPlace ? (
+                    <Loader2 size={14} className="animate-spin shrink-0" />
+                  ) : (
+                    <Search size={14} className="shrink-0" />
+                  )}
+                  <span>Suchen</span>
+                </button>
+              </div>
+
               {/* Map Container with Floating GPS Button */}
               <div className="relative">
                 {hasUsableMapsKey ? (

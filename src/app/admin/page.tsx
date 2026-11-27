@@ -682,7 +682,7 @@ export default function AdminPage() {
           return;
         }
       } catch {
-        showToast("Server nicht erreichbar – Auftrag nicht gespeichert");
+        showToast("Server nicht erreichbar. Auftrag nicht gespeichert.");
         return;
       }
     }
@@ -1529,7 +1529,7 @@ export default function AdminPage() {
                     Geplante Übergabe- &amp; Liefertermine ({scheduledTickets.length})
                   </h2>
                   <p className="text-xs text-ink-muted mt-0.5">
-                    Chronologisch sortiert – ideal für unterwegs auf dem Smartphone.
+                    Chronologisch sortiert, ideal für unterwegs auf dem Smartphone.
                   </p>
                 </div>
                 <button
@@ -1658,30 +1658,30 @@ export default function AdminPage() {
                                 </p>
                               </div>
 
-                              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-1">
+                              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2 pt-1">
                                 <a
                                   href={`tel:${cleanTel}`}
-                                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-primary text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
+                                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
                                 >
-                                  <Phone className="w-3.5 h-3.5 text-accent" />
+                                  <Phone className="w-3.5 h-3.5 text-accent shrink-0" />
                                   <span>Anrufen</span>
                                 </a>
                                 <a
                                   href={buildAdminWhatsAppReplyUrl(resolved, "appointment")}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
+                                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
                                 >
-                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                                   <span>Termin bestätigen</span>
                                 </a>
                                 <a
                                   href={buildAdminWhatsAppReplyUrl(resolved, "on_the_way")}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
+                                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5"
                                 >
-                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                                   <span>Auf dem Weg</span>
                                 </a>
                                 {t.visitType === "home_visit" && (
@@ -1696,18 +1696,18 @@ export default function AdminPage() {
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="min-h-[44px] px-3.5 py-2 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-bold text-ink inline-flex items-center justify-center gap-1.5"
+                                    className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-primary/15 dark:border-white/15 text-xs font-bold text-ink inline-flex items-center justify-center gap-1.5"
                                   >
-                                    <MapPin className="w-3.5 h-3.5 text-accent" />
+                                    <MapPin className="w-3.5 h-3.5 text-accent shrink-0" />
                                     <span>Route</span>
                                   </a>
                                 )}
                                 <button
                                   type="button"
                                   onClick={() => handleOpenPrintPreview(t)}
-                                  className="min-h-[44px] px-3.5 py-2 rounded-lg border border-accent/40 bg-accent/10 text-xs font-bold text-ink inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-accent/40 bg-accent/10 text-xs font-bold text-ink inline-flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
-                                  <FileText className="w-3.5 h-3.5 text-accent" />
+                                  <FileText className="w-3.5 h-3.5 text-accent shrink-0" />
                                   <span>Beleg / PDF</span>
                                 </button>
                               </div>
@@ -1722,7 +1722,7 @@ export default function AdminPage() {
               {unscheduledOpenTickets.length > 0 && (
                 <div className="bg-surface dark:bg-slate-900 border border-primary/10 dark:border-white/10 rounded-xl p-4 sm:p-5 space-y-3">
                   <h3 className="text-sm font-extrabold text-ink">
-                    Noch ohne Termin ({unscheduledOpenTickets.length}) – Mit 1 Tipp auf Heute legen:
+                    Noch ohne Termin ({unscheduledOpenTickets.length}): Mit 1 Tipp auf Heute legen.
                   </h3>
                   <div className="divide-y divide-primary/10 dark:divide-white/10">
                     {unscheduledOpenTickets.map((t) => (
@@ -1772,18 +1772,18 @@ export default function AdminPage() {
             <>
 
           {/* Compact 3-Column Mobile / Desktop Status Overview Strip (Clickable to filter) */}
-          <section aria-label="Auftragsübersicht" className="grid grid-cols-3 gap-2 sm:gap-4">
+          <section aria-label="Auftragsübersicht" className="grid grid-cols-3 items-stretch gap-2 sm:gap-4">
             <button
               type="button"
               onClick={() => setStatusFilter(statusFilter === "new" ? "all" : "new")}
-              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`h-full min-h-[76px] sm:min-h-[104px] flex flex-col justify-between text-left px-3 py-2.5 sm:px-5 sm:py-4 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "new"
                   ? "bg-sky-500/12 border-sky-500 ring-1 ring-sky-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-sky-500/40"
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
-                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-sky-800 dark:text-sky-300 truncate">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 w-full">
+                <span data-compact-label="true" className="text-[11px] sm:text-sm font-bold sm:font-semibold text-sky-800 dark:text-sky-300 truncate">
                   <span className="sm:hidden">1. Neu</span>
                   <span className="hidden sm:inline">1. Neu eingegangen</span>
                 </span>
@@ -1801,14 +1801,14 @@ export default function AdminPage() {
               onClick={() =>
                 setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")
               }
-              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`h-full min-h-[76px] sm:min-h-[104px] flex flex-col justify-between text-left px-3 py-2.5 sm:px-5 sm:py-4 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "in_progress"
                   ? "bg-amber-500/14 border-amber-500 ring-1 ring-amber-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-amber-500/40"
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
-                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-amber-900 dark:text-amber-300 truncate">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 w-full">
+                <span data-compact-label="true" className="text-[11px] sm:text-sm font-bold sm:font-semibold text-amber-900 dark:text-amber-300 truncate">
                   <span className="sm:hidden">2. Arbeit</span>
                   <span className="hidden sm:inline">2. In Arbeit / Terminiert</span>
                 </span>
@@ -1826,14 +1826,14 @@ export default function AdminPage() {
               onClick={() =>
                 setStatusFilter(statusFilter === "completed" ? "all" : "completed")
               }
-              className={`text-left p-2.5 sm:p-5 rounded-xl border transition-all cursor-pointer ${
+              className={`h-full min-h-[76px] sm:min-h-[104px] flex flex-col justify-between text-left px-3 py-2.5 sm:px-5 sm:py-4 rounded-xl border transition-all cursor-pointer ${
                 statusFilter === "completed"
                   ? "bg-emerald-500/12 border-emerald-500 ring-1 ring-emerald-500/35"
                   : "bg-surface dark:bg-slate-900 border-primary/10 dark:border-white/10 hover:border-emerald-500/40"
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
-                <span className="text-[11px] sm:text-sm font-bold sm:font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 w-full">
+                <span data-compact-label="true" className="text-[11px] sm:text-sm font-bold sm:font-semibold text-emerald-800 dark:text-emerald-300 truncate">
                   <span className="sm:hidden">3. Erledigt</span>
                   <span className="hidden sm:inline">3. Erledigt</span>
                 </span>
@@ -2296,7 +2296,7 @@ export default function AdminPage() {
                         <span className="hidden sm:inline text-xs font-semibold text-ink-muted">
                           Status mit 1 Klick ändern:
                         </span>
-                        <div className="grid grid-cols-3 w-full lg:w-auto items-center p-1 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 gap-1">
+                        <div className="grid grid-cols-3 w-full lg:w-auto items-stretch p-1 rounded-xl bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 gap-1">
                           {SIMPLE_STATUS_OPTIONS.map((opt) => {
                             const active = simpleStatus === opt.value;
                             const activeClass =
@@ -2310,6 +2310,7 @@ export default function AdminPage() {
                               <button
                                 key={opt.value}
                                 type="button"
+                                data-compact-label="true"
                                 onClick={() => {
                                   if (opt.value === "completed" && simpleStatus !== "completed") {
                                     openCompletionModal(ticket);
@@ -2322,7 +2323,7 @@ export default function AdminPage() {
                                     ticket
                                   );
                                 }}
-                                className={`min-h-[44px] sm:min-h-[40px] px-2 sm:px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center justify-center gap-1 ${
+                                className={`min-h-[44px] sm:min-h-[40px] px-2.5 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center justify-center gap-1 ${
                                   active
                                     ? activeClass
                                     : "text-ink-muted hover:text-ink"
@@ -2645,12 +2646,12 @@ export default function AdminPage() {
                     {/* 4. Bottom 1-Click Everyday Actions + WhatsApp + Sold/Repaired Confirmation */}
                     <div className="pt-3 sm:pt-4 flex flex-col gap-2.5 sm:gap-3">
                       {!isCompleted && (
-                        <div className="grid grid-cols-2 gap-2 p-2 sm:p-2.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/25">
+                        <div className="grid grid-cols-2 items-stretch gap-2 p-2 sm:p-2.5 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/25">
                           <button
                             type="button"
                             onClick={() => openCompletionModal(ticket, "sold")}
                             data-testid={`confirm-sold-btn-${ticket.id}`}
-                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <ShoppingBag className="w-4 h-4 text-accent shrink-0" />
                             <span className="sm:hidden">Verkauft</span>
@@ -2660,7 +2661,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => openCompletionModal(ticket, "repaired")}
                             data-testid={`confirm-repaired-btn-${ticket.id}`}
-                            className="min-h-[44px] px-2.5 sm:px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap"
                           >
                             <Wrench className="w-4 h-4 shrink-0" />
                             <span className="sm:hidden">Übergabe fertig</span>
@@ -2698,11 +2699,11 @@ export default function AdminPage() {
                       </div>
 
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-2.5">
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2">
                           {/* 1-Click Call */}
                           <a
                             href={`tel:${cleanTel}`}
-                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-light text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                           >
                             <Phone className="w-4 h-4 text-accent shrink-0" />
                             <span>Anrufen</span>
@@ -2714,7 +2715,7 @@ export default function AdminPage() {
                               href={whatsappHref}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="min-h-[44px] flex-1 px-2.5 sm:px-3.5 py-2 rounded-l-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                              className="min-h-[44px] flex-1 px-3 sm:px-3.5 py-2 rounded-l-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                             >
                               <MessageCircle className="w-4 h-4 shrink-0" />
                               <span>WhatsApp</span>
@@ -2729,7 +2730,7 @@ export default function AdminPage() {
                               aria-label="WhatsApp-Vorlage wählen"
                               aria-expanded={openWaMenuId === ticket.id}
                               data-testid={`whatsapp-template-toggle-${ticket.id}`}
-                              className="min-h-[44px] min-w-[40px] px-2.5 rounded-r-lg bg-emerald-700 hover:bg-emerald-800 border-l border-emerald-500/40 text-white inline-flex items-center justify-center cursor-pointer"
+                              className="min-h-[44px] min-w-[40px] px-2.5 rounded-r-xl bg-emerald-700 hover:bg-emerald-800 border-l border-emerald-500/40 text-white inline-flex items-center justify-center cursor-pointer"
                               title="Fertige WhatsApp-Textvorlage wählen"
                             >
                               <ChevronDown className="w-4 h-4" />
@@ -2796,7 +2797,7 @@ export default function AdminPage() {
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="col-span-2 sm:col-span-1 min-h-[44px] px-3.5 py-2 rounded-lg border border-primary/15 dark:border-white/15 hover:bg-primary/5 text-xs sm:text-sm font-semibold text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                              className="col-span-2 sm:col-span-1 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-primary/15 dark:border-white/15 hover:bg-primary/5 text-xs sm:text-sm font-semibold text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                             >
                               <MapPin className="w-4 h-4 text-accent shrink-0" />
                               <span>Route starten</span>
@@ -2804,14 +2805,14 @@ export default function AdminPage() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2">
                           {/* Dedicated "Details" Button */}
                           <button
                             type="button"
                             onClick={() => toggleDetailsForTicket(ticket.id)}
                             data-testid={`ticket-details-btn-${ticket.id}`}
                             aria-expanded={isDetailsOpen}
-                            className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg border text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                            className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-extrabold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                               isDetailsOpen
                                 ? "border-emerald-600 bg-emerald-600 text-white"
                                 : "border-primary/20 dark:border-white/20 bg-background dark:bg-slate-950 text-ink hover:border-accent"
@@ -2831,7 +2832,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleOpenPrintPreview(ticket)}
                             data-testid={`export-ticket-btn-${ticket.id}`}
-                            className="min-h-[44px] px-3 sm:px-4 py-2 rounded-lg border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                           >
                             <FileText className="w-4 h-4 text-accent shrink-0" />
                             <span className="sm:hidden">Beleg / PDF</span>
@@ -2848,7 +2849,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => openEditOrderModal(ticket)}
                             title="Kundendaten & Gerät bearbeiten"
-                            className="min-h-[44px] px-3 py-2 rounded-lg border border-primary/15 dark:border-white/15 hover:bg-primary/5 text-xs font-semibold text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                            className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-primary/15 dark:border-white/15 hover:bg-primary/5 text-xs font-semibold text-ink transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5 shrink-0" />
                             <span>Bearbeiten</span>
@@ -2856,21 +2857,21 @@ export default function AdminPage() {
 
                           {/* 2-Step Inline Delete Button */}
                           {confirmDeleteId === ticket.id ? (
-                            <div className="min-h-[44px] inline-flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/30 rounded-lg px-2.5 py-1.5">
+                            <div className="min-h-[44px] inline-flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/30 rounded-xl px-2.5 py-1.5">
                               <span className="text-xs font-bold text-red-700 dark:text-red-300">
                                 Löschen?
                               </span>
                               <button
                                 type="button"
                                 onClick={() => void handleDeleteTicket(ticket.id)}
-                                className="min-h-[34px] px-2.5 py-1 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
+                                className="min-h-[34px] px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
                               >
                                 Ja
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="min-h-[34px] px-2 py-1 rounded text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
+                                className="min-h-[34px] px-2 py-1 rounded-lg text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
                               >
                                 Nein
                               </button>
@@ -2880,7 +2881,7 @@ export default function AdminPage() {
                               type="button"
                               onClick={() => setConfirmDeleteId(ticket.id)}
                               title="Auftrag löschen"
-                              className="min-h-[44px] px-3 py-2 rounded-lg border border-primary/10 sm:border-transparent dark:border-white/10 sm:dark:border-transparent text-ink-muted hover:text-red-600 hover:bg-red-500/10 transition-colors inline-flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
+                              className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-primary/10 sm:border-transparent dark:border-white/10 sm:dark:border-transparent text-ink-muted hover:text-red-600 hover:bg-red-500/10 transition-colors inline-flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4 shrink-0" />
                               <span>Löschen</span>
@@ -3201,15 +3202,16 @@ export default function AdminPage() {
                     <label className="block text-xs font-semibold text-ink mb-1">
                       Übergabe-Art
                     </label>
-                    <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15">
+                    <div className="grid grid-cols-2 items-stretch gap-1 p-1 rounded-xl bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15">
                       <button
                         type="button"
+                        data-compact-label="true"
                         onClick={() =>
                           setOrderForm({ ...orderForm, visitType: "home_visit" })
                         }
-                        className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg text-xs font-bold leading-tight text-center inline-flex items-center justify-center transition-colors cursor-pointer ${
                           orderForm.visitType === "home_visit"
-                            ? "bg-primary text-white dark:bg-white dark:text-slate-900"
+                            ? "bg-primary text-white dark:bg-white dark:text-slate-900 shadow-xs"
                             : "text-ink-muted hover:text-ink"
                         }`}
                       >
@@ -3217,12 +3219,13 @@ export default function AdminPage() {
                       </button>
                       <button
                         type="button"
+                        data-compact-label="true"
                         onClick={() =>
                           setOrderForm({ ...orderForm, visitType: "workshop" })
                         }
-                        className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg text-xs font-bold leading-tight text-center inline-flex items-center justify-center transition-colors cursor-pointer ${
                           orderForm.visitType === "workshop"
-                            ? "bg-primary text-white dark:bg-white dark:text-slate-900"
+                            ? "bg-primary text-white dark:bg-white dark:text-slate-900 shadow-xs"
                             : "text-ink-muted hover:text-ink"
                         }`}
                       >
@@ -3235,19 +3238,20 @@ export default function AdminPage() {
                     <label className="block text-xs font-semibold text-ink mb-1">
                       Dringlichkeit
                     </label>
-                    <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15">
+                    <div className="grid grid-cols-3 items-stretch gap-1 p-1 rounded-xl bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15">
                       {(["normal", "express", "notfall"] as const).map((urg) => (
                         <button
                           key={urg}
                           type="button"
+                          data-compact-label="true"
                           onClick={() => setOrderForm({ ...orderForm, urgency: urg })}
-                          className={`min-h-[42px] py-1.5 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                          className={`min-h-[44px] px-2 sm:px-2.5 py-2 rounded-lg text-xs font-bold leading-tight text-center inline-flex items-center justify-center transition-colors cursor-pointer ${
                             orderForm.urgency === urg
                               ? urg === "notfall"
-                                ? "bg-red-600 text-white"
+                                ? "bg-red-600 text-white shadow-xs"
                                 : urg === "express"
-                                ? "bg-amber-600 text-white"
-                                : "bg-primary text-white dark:bg-white dark:text-slate-900"
+                                ? "bg-amber-600 text-white shadow-xs"
+                                : "bg-primary text-white dark:bg-white dark:text-slate-900 shadow-xs"
                               : "text-ink-muted hover:text-ink"
                           }`}
                         >
@@ -3533,7 +3537,7 @@ export default function AdminPage() {
                   <label className="block text-xs font-bold text-ink mb-2">
                     Was möchten Sie bestätigen?
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 items-stretch gap-2.5">
                     <button
                       type="button"
                       onClick={() =>
@@ -3555,7 +3559,7 @@ export default function AdminPage() {
                           };
                         })
                       }
-                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`h-full min-h-[88px] flex flex-col justify-between px-3.5 py-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                         completionModal.outcome === "sold"
                           ? "border-primary bg-primary text-white shadow-sm dark:border-accent"
                           : "border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 text-ink hover:border-accent"
@@ -3603,7 +3607,7 @@ export default function AdminPage() {
                           };
                         })
                       }
-                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`h-full min-h-[88px] flex flex-col justify-between px-3.5 py-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                         completionModal.outcome === "repaired"
                           ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
                           : "border-primary/15 dark:border-white/15 bg-background dark:bg-slate-950 text-ink hover:border-emerald-500"
@@ -3633,7 +3637,7 @@ export default function AdminPage() {
                       htmlFor="completion-marketplace-link"
                       className="block text-xs font-bold text-ink"
                     >
-                      Marktplatz-Artikel verknüpfen (optional – wird auf „Verkauft“ gesetzt):
+                      Marktplatz-Artikel verknüpfen (optional, wird auf „Verkauft“ gesetzt):
                     </label>
                     <select
                       id="completion-marketplace-link"
@@ -3657,7 +3661,7 @@ export default function AdminPage() {
                       className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-base sm:text-xs font-semibold text-ink focus:outline-none focus:border-accent"
                     >
                       <option value="">
-                        — Kein Marktplatz-Artikel (nur Handelsbeleg) —
+                        Kein Marktplatz-Artikel (nur Handelsbeleg)
                       </option>
                       {marketplaceItems
                         .filter(
@@ -4083,11 +4087,12 @@ export default function AdminPage() {
               </div>
 
               {/* Document Type Selector (Auftragsbeleg vs Kauf- & Garantiebeleg) */}
-              <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-white/10">
+              <div className="grid grid-cols-2 items-stretch gap-1 p-1 rounded-xl bg-white/10">
                 <button
                   type="button"
+                  data-compact-label="true"
                   onClick={() => setTicketDocType("service")}
-                  className={`min-h-[36px] px-2.5 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
+                  className={`min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg text-xs font-bold leading-tight text-center inline-flex items-center justify-center transition-colors cursor-pointer ${
                     ticketDocType === "service"
                       ? "bg-white text-primary shadow-xs"
                       : "text-white/80 hover:text-white"
@@ -4097,8 +4102,9 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
+                  data-compact-label="true"
                   onClick={() => setTicketDocType("warranty_sale")}
-                  className={`min-h-[36px] px-2.5 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
+                  className={`min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg text-xs font-bold leading-tight text-center inline-flex items-center justify-center transition-colors cursor-pointer ${
                     ticketDocType === "warranty_sale"
                       ? "bg-accent text-primary shadow-xs"
                       : "text-white/80 hover:text-white"
@@ -4109,11 +4115,11 @@ export default function AdminPage() {
               </div>
 
               {/* Multi-Format Export Action Buttons */}
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-stretch gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="min-h-[40px] px-3.5 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-4 h-4 shrink-0" />
                   <span>Drucken / PDF</span>
@@ -4138,7 +4144,7 @@ export default function AdminPage() {
                         );
                       }}
                       data-testid="export-ticket-png-btn"
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                     >
                       <ImageDown className="w-4 h-4 shrink-0" />
                       <span>Als Bild (PNG)</span>
@@ -4161,7 +4167,7 @@ export default function AdminPage() {
                         );
                       }}
                       data-testid="share-ticket-mobile-btn"
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                      className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                     >
                       <Share2 className="w-4 h-4 shrink-0" />
                       <span>Teilen (Handy)</span>
@@ -4174,7 +4180,7 @@ export default function AdminPage() {
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4 shrink-0" />
                       <span>Per WhatsApp senden</span>
@@ -4189,7 +4195,7 @@ export default function AdminPage() {
                         );
                         void handleCopyText(txt, "Ticket-Text");
                       }}
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg border border-white/25 hover:bg-white/10 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-white/25 hover:bg-white/10 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Copy className="w-3.5 h-3.5 shrink-0" />
                       <span>Text kopieren</span>
@@ -4203,7 +4209,7 @@ export default function AdminPage() {
                     downloadPrintableReceiptsHtml(printTickets, ticketDocType);
                     showToast("HTML-Druckbeleg heruntergeladen");
                   }}
-                  className="min-h-[44px] px-3.5 py-2 rounded-lg border border-white/25 hover:bg-white/10 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-white/25 hover:bg-white/10 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5 shrink-0" />
                   <span>HTML-Beleg</span>

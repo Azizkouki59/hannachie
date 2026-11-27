@@ -1,6 +1,6 @@
 {
   "name": "Hannachi Elektrohaushaltsgeräte Service",
   "description": "Erfahrener Spezialist für Elektrohaushaltsgeräte in Osnabrück seit 1990: Persönliche Fachberatung, Original-Ersatzteile nach Typenschild & ausgewählte Markengeräte auf Anfrage. Termine nach Vereinbarung.",
-  "requestFramePermissions": ["camera", "geolocation"],
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

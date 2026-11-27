@@ -1,11 +1,5 @@
-import { useEffect, useId, useRef } from "react";
-import {
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-} from "framer-motion";
+import { useEffect, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 
 interface HeroAnimatedBackdropProps {
   variant?: "hero-water-drum" | "about-heritage-emblem" | "subpage-header";
@@ -13,27 +7,17 @@ interface HeroAnimatedBackdropProps {
 }
 
 /**
- * Lightweight, 60fps CSS + inline SVG ambient light & architectural grid mesh
- * for Hero and dark Subpage Headers (zero WebGL / canvas overhead on mobile & desktop).
- * Palette: Hannachi Navy (#0F2A4A), Cerulean (#0284C7), Emerald (#10B981), opacity <= 0.15.
+ * Zero-lag architectural backdrop for Hero and dark Subpage Headers.
+ * Uses pure CSS gradients & CSS radial masks (zero full-viewport SVG masks,
+ * zero infinite orb loops, and compositor-only translate3d mouse spotlight on desktop).
  */
 export function HeroAnimatedBackdrop({
   variant = "hero-water-drum",
   seedKey = "",
 }: HeroAnimatedBackdropProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
-  const gridId = useId();
+  const spotlightRef = useRef<HTMLDivElement>(null);
   const prefersReduced = useReducedMotion();
-
-  const rawSpotX = useMotionValue(720);
-  const rawSpotY = useMotionValue(180);
-  const rawSpotOpacity = useMotionValue(0);
-
-  const spotX = useSpring(rawSpotX, { stiffness: 130, damping: 24, mass: 0.6 });
-  const spotY = useSpring(rawSpotY, { stiffness: 130, damping: 24, mass: 0.6 });
-  const spotOpacity = useSpring(rawSpotOpacity, { stiffness: 130, damping: 24 });
-
-  const spotlightBg = useMotionTemplate`radial-gradient(500px circle at ${spotX}px ${spotY}px, rgba(2, 132, 199, 0.14), rgba(16, 185, 129, 0.04) 44%, transparent 72%)`;
 
   useEffect(() => {
     if (prefersReduced || typeof window === "undefined") return undefined;
@@ -41,29 +25,60 @@ export function HeroAnimatedBackdrop({
     if (!isFinePointer) return undefined;
 
     const sectionEl = anchorRef.current?.parentElement;
-    if (!sectionEl) return undefined;
+    const spotEl = spotlightRef.current;
+    if (!sectionEl || !spotEl) return undefined;
+
+    let cachedRect: DOMRect | null = null;
+    let rafId = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    const commitTransform = () => {
+      rafId = 0;
+      spotEl.style.transform = `translate3d(${(targetX - 240).toFixed(1)}px, ${(targetY - 240).toFixed(1)}px, 0)`;
+    };
+
+    const onPointerEnter = () => {
+      cachedRect = sectionEl.getBoundingClientRect();
+    };
 
     const onPointerMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
-      const rect = sectionEl.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      rawSpotX.set(e.clientX - rect.left);
-      rawSpotY.set(e.clientY - rect.top);
-      rawSpotOpacity.set(1);
+      if (!cachedRect) {
+        cachedRect = sectionEl.getBoundingClientRect();
+      }
+      targetX = e.clientX - cachedRect.left;
+      targetY = e.clientY - cachedRect.top;
+      spotEl.style.opacity = "1";
+      if (!rafId) {
+        rafId = window.requestAnimationFrame(commitTransform);
+      }
     };
 
     const onPointerLeave = () => {
-      rawSpotOpacity.set(0);
+      cachedRect = null;
+      spotEl.style.opacity = "0";
     };
 
+    const invalidateRect = () => {
+      cachedRect = null;
+    };
+
+    sectionEl.addEventListener("pointerenter", onPointerEnter, { passive: true });
     sectionEl.addEventListener("pointermove", onPointerMove, { passive: true });
     sectionEl.addEventListener("pointerleave", onPointerLeave, { passive: true });
+    window.addEventListener("resize", invalidateRect, { passive: true });
+    window.addEventListener("scroll", invalidateRect, { passive: true });
 
     return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      sectionEl.removeEventListener("pointerenter", onPointerEnter);
       sectionEl.removeEventListener("pointermove", onPointerMove);
       sectionEl.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("resize", invalidateRect);
+      window.removeEventListener("scroll", invalidateRect);
     };
-  }, [prefersReduced, rawSpotX, rawSpotY, rawSpotOpacity]);
+  }, [prefersReduced]);
 
   const isHero = variant === "hero-water-drum";
 
@@ -73,84 +88,51 @@ export function HeroAnimatedBackdrop({
       aria-hidden="true"
       data-backdrop-variant={variant}
       data-backdrop-seed={seedKey || undefined}
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 overflow-hidden contain-strict"
     >
       {/* Base Hannachi architectural depth gradient (#020617 -> #0F2A4A) */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 85% 75% at 78% 12%, rgba(15, 42, 74, 0.92) 0%, rgba(15, 23, 42, 0.72) 48%, rgba(2, 6, 23, 0.98) 100%)",
+            "radial-gradient(ellipse 85% 75% at 78% 12%, rgba(15, 42, 74, 0.92) 0%, rgba(15, 23, 42, 0.74) 48%, rgba(2, 6, 23, 0.98) 100%)",
         }}
       />
 
-      {/* Ultra-subtle infinitely drifting radial mesh orbs (GPU-composited transform only) */}
+      {/* Static studio radial light pools (zero idle GPU animation) */}
       <div
-        className="ambient-mesh-a absolute -top-24 -right-20 h-[28rem] w-[28rem] sm:h-[36rem] sm:w-[36rem] rounded-full opacity-[0.14]"
+        className="absolute -top-24 -right-20 h-[28rem] w-[28rem] sm:h-[36rem] sm:w-[36rem] rounded-full opacity-[0.14]"
         style={{
           background:
             "radial-gradient(circle at center, #0284C7 0%, rgba(2, 132, 199, 0.32) 44%, transparent 72%)",
         }}
       />
       <div
-        className="ambient-mesh-b absolute -bottom-28 left-[12%] h-[24rem] w-[24rem] sm:h-[32rem] sm:w-[32rem] rounded-full opacity-[0.11]"
+        className="absolute -bottom-28 left-[12%] h-[24rem] w-[24rem] sm:h-[32rem] sm:w-[32rem] rounded-full opacity-[0.1]"
         style={{
           background:
-            "radial-gradient(circle at center, #10B981 0%, rgba(16, 185, 129, 0.24) 42%, transparent 70%)",
+            "radial-gradient(circle at center, #10B981 0%, rgba(16, 185, 129, 0.22) 42%, transparent 70%)",
         }}
       />
-      {isHero && (
-        <div
-          className="ambient-mesh-c absolute top-[22%] left-[44%] h-[20rem] w-[20rem] rounded-full opacity-[0.12]"
-          style={{
-            background:
-              "radial-gradient(circle at center, #0F2A4A 0%, rgba(56, 189, 248, 0.25) 45%, transparent 72%)",
-          }}
-        />
-      )}
 
-      {/* Precision hairline SVG engineering grid with subtle radial mask */}
-      <svg
-        className="absolute inset-0 h-full w-full opacity-[0.11]"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <pattern
-            id={`hero-grid-${gridId}`}
-            width="44"
-            height="44"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 44 0 L 0 0 0 44"
-              fill="none"
-              stroke="rgba(148, 163, 184, 0.42)"
-              strokeWidth="0.75"
-            />
-            <circle cx="0" cy="0" r="1.15" fill="rgba(56, 189, 248, 0.55)" />
-          </pattern>
-          <radialGradient id={`hero-grid-mask-${gridId}`} cx="62%" cy="35%" r="68%">
-            <stop offset="0%" stopColor="white" stopOpacity="1" />
-            <stop offset="68%" stopColor="white" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <mask id={`hero-mask-${gridId}`}>
-            <rect width="100%" height="100%" fill={`url(#hero-grid-mask-${gridId})`} />
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          fill={`url(#hero-grid-${gridId})`}
-          mask={`url(#hero-mask-${gridId})`}
-        />
-      </svg>
+      {/* Precision hairline engineering grid via pure CSS background (zero SVG mask cost) */}
+      <div
+        className="absolute inset-0 opacity-[0.13]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(148, 163, 184, 0.34) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.34) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 68% 68% at 62% 35%, #000 0%, rgba(0, 0, 0, 0.42) 66%, transparent 100%)",
+          maskImage:
+            "radial-gradient(ellipse 68% 68% at 62% 35%, #000 0%, rgba(0, 0, 0, 0.42) 66%, transparent 100%)",
+        }}
+      />
 
-      {/* Subtle architectural precision arcs on right quadrant (zero blur cost) */}
+      {/* Subtle static architectural precision rings on desktop */}
       {isHero && (
         <svg
-          className="hidden sm:block absolute -right-24 -top-24 h-[520px] w-[520px] opacity-[0.1]"
+          className="hidden sm:block absolute -right-24 -top-24 h-[500px] w-[500px] opacity-[0.09]"
           viewBox="0 0 520 520"
           fill="none"
         >
@@ -161,7 +143,6 @@ export function HeroAnimatedBackdrop({
             stroke="#38BDF8"
             strokeWidth="0.75"
             strokeDasharray="6 10"
-            className="hero-aperture-cw origin-center"
           />
           <circle
             cx="260"
@@ -170,18 +151,18 @@ export function HeroAnimatedBackdrop({
             stroke="#10B981"
             strokeWidth="0.75"
             strokeDasharray="3 12"
-            className="hero-aperture-ccw origin-center"
           />
         </svg>
       )}
 
-      {/* Subtle cursor-tracked studio sheen (desktop fine pointer only) */}
+      {/* GPU-composited cursor spotlight (desktop fine pointer only, translate3d only) */}
       {!prefersReduced && (
-        <motion.div
-          className="hidden lg:block absolute inset-0"
+        <div
+          ref={spotlightRef}
+          className="hidden lg:block absolute top-0 left-0 h-[480px] w-[480px] rounded-full opacity-0 transition-opacity duration-300"
           style={{
-            background: spotlightBg,
-            opacity: spotOpacity,
+            background:
+              "radial-gradient(circle at center, rgba(2, 132, 199, 0.14) 0%, rgba(16, 185, 129, 0.04) 44%, transparent 72%)",
           }}
         />
       )}
@@ -209,16 +190,14 @@ export function HeroAnimatedBackdrop({
 }
 
 /**
- * Ultra-lightweight CSS + inline SVG ambient mesh for light/dark content sections
- * (Services, 3-Step Process, Google Reviews, Inquiry) — replaces heavy WebGL canvases.
+ * Ultra-lightweight pure-CSS ambient studio mesh for content sections.
+ * Zero SVG masks, zero infinite CSS keyframes, zero repaint overhead during scroll.
  */
 export function SectionAmbientMesh({
   variant = "pillars",
 }: {
   variant?: "pillars" | "process" | "reviews" | "inquiry";
 }) {
-  const meshId = useId();
-
   const layout =
     variant === "process"
       ? {
@@ -254,46 +233,29 @@ export function SectionAmbientMesh({
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
       <div
-        className={`ambient-mesh-a absolute ${layout.orbA} h-80 w-80 sm:h-[26rem] sm:w-[26rem] rounded-full opacity-[0.06] dark:opacity-[0.11]`}
+        className={`absolute ${layout.orbA} h-80 w-80 sm:h-[26rem] sm:w-[26rem] rounded-full opacity-[0.055] dark:opacity-[0.1]`}
         style={{
           background: `radial-gradient(circle at center, ${layout.colorA} 0%, transparent 70%)`,
         }}
       />
       <div
-        className={`ambient-mesh-b absolute ${layout.orbB} h-72 w-72 sm:h-[24rem] sm:w-[24rem] rounded-full opacity-[0.05] dark:opacity-[0.09]`}
+        className={`absolute ${layout.orbB} h-72 w-72 sm:h-[24rem] sm:w-[24rem] rounded-full opacity-[0.045] dark:opacity-[0.08]`}
         style={{
           background: `radial-gradient(circle at center, ${layout.colorB} 0%, transparent 70%)`,
         }}
       />
-      <svg
-        className="absolute inset-0 h-full w-full opacity-[0.055] dark:opacity-[0.07]"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <pattern
-            id={`section-dots-${meshId}`}
-            width="36"
-            height="36"
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx="1.5" cy="1.5" r="1" fill="currentColor" />
-          </pattern>
-          <radialGradient id={`section-fade-${meshId}`} cx="50%" cy="45%" r="65%">
-            <stop offset="0%" stopColor="white" stopOpacity="1" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <mask id={`section-mask-${meshId}`}>
-            <rect width="100%" height="100%" fill={`url(#section-fade-${meshId})`} />
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          className="text-primary dark:text-sky-300"
-          fill={`url(#section-dots-${meshId})`}
-          mask={`url(#section-mask-${meshId})`}
-        />
-      </svg>
+      <div
+        className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, currentColor 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 65% 60% at 50% 45%, #000 0%, transparent 100%)",
+          maskImage:
+            "radial-gradient(ellipse 65% 60% at 50% 45%, #000 0%, transparent 100%)",
+        }}
+      />
     </div>
   );
 }

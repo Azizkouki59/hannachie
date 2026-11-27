@@ -137,30 +137,19 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const updatePinState = () => {
-      const sentinelTop = sentinelRef.current?.getBoundingClientRect().top ?? 0;
-      const scrolledPastBanner = sentinelTop <= 0.5;
-      const scrolledWhileOpen = open && window.scrollY > 0;
-      setIsPinned(scrolledPastBanner || scrolledWhileOpen);
-    };
-
-    updatePinState();
-    window.addEventListener("scroll", updatePinState, { passive: true });
-    window.addEventListener("resize", updatePinState, { passive: true });
-
-    const resizeObserver =
-      typeof ResizeObserver !== "undefined" && sentinelRef.current?.parentElement
-        ? new ResizeObserver(updatePinState)
-        : null;
-    if (resizeObserver && sentinelRef.current?.parentElement) {
-      resizeObserver.observe(sentinelRef.current.parentElement);
+    const sentinel = sentinelRef.current;
+    if (!sentinel || typeof IntersectionObserver === "undefined") {
+      return undefined;
     }
 
-    return () => {
-      window.removeEventListener("scroll", updatePinState);
-      window.removeEventListener("resize", updatePinState);
-      resizeObserver?.disconnect();
-    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPinned(!entry.isIntersecting || (open && window.scrollY > 0));
+      },
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, [open]);
 
   useEffect(() => {
@@ -187,7 +176,7 @@ export default function Navbar() {
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-0 w-full" />
       {isPinned && (
-        <div aria-hidden="true" className="h-[52px] lg:h-16 w-full shrink-0" />
+        <div aria-hidden="true" className="h-[56px] lg:h-16 w-full shrink-0" />
       )}
       <header className={isPinned ? "fixed top-0 inset-x-0 z-50" : "sticky top-0 z-50"}>
         {/* Backdrop anchored beneath top bar & drawer */}
@@ -208,7 +197,7 @@ export default function Navbar() {
 
       {/* Top Navigation Bar (Sits at z-30 so swiping the drawer upward glides smoothly underneath it) */}
       <div
-        className={`relative z-30 h-[52px] lg:h-16 border-b border-white/10 bg-primary-dark/95 dark:bg-slate-950/95 backdrop-blur-xl transition-shadow duration-200 ${
+        className={`relative z-30 h-[56px] lg:h-16 border-b border-white/10 bg-primary-dark/95 dark:bg-slate-950/95 backdrop-blur-xl transition-shadow duration-200 ${
           isPinned ? "shadow-[0_10px_30px_-10px_rgba(2,6,23,0.6)]" : ""
         }`}
       >
@@ -219,7 +208,7 @@ export default function Navbar() {
               href="/"
               onClick={() => triggerHapticFeedback(35)}
               className="group inline-flex h-11 min-h-[44px] items-center gap-2.5 text-[17px] sm:text-lg lg:text-xl font-extrabold tracking-tight text-white whitespace-nowrap shrink-0 hover:text-accent-light transition-colors"
-              aria-label="Hannachi – zur Startseite"
+              aria-label="Hannachi: zur Startseite"
             >
               <HannachiBrandLogo
                 size={28}
@@ -276,35 +265,19 @@ export default function Navbar() {
               aria-label={isDark ? "Hellmodus aktivieren" : "Dunkelmodus aktivieren"}
               aria-pressed={isDark}
               title={isDark ? "Zum Hellmodus wechseln" : "Zum Dunkelmodus wechseln"}
-              className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] lg:h-10 lg:w-auto lg:min-h-[40px] lg:min-w-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2.5 text-xs font-bold text-white transition-all hover:border-accent/60 hover:bg-white/20 active:scale-95 whitespace-nowrap cursor-pointer"
+              className="inline-flex h-10 w-10 min-h-[40px] min-w-[40px] lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2.5 text-xs font-bold text-white transition-colors duration-150 hover:border-accent/60 hover:bg-white/20 active:scale-95 whitespace-nowrap cursor-pointer"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {isDark ? (
-                  <motion.span
-                    key="theme-sun"
-                    initial={{ rotate: -65, scale: 0.7, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={{ rotate: 65, scale: 0.7, opacity: 0 }}
-                    transition={{ duration: 0.16, ease: "easeOut" }}
-                    className="inline-flex items-center gap-1.5 text-amber-300"
-                  >
-                    <Sun size={15} />
-                    <span className="hidden xl:inline text-white/90">Hell</span>
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="theme-moon"
-                    initial={{ rotate: 65, scale: 0.7, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={{ rotate: -65, scale: 0.7, opacity: 0 }}
-                    transition={{ duration: 0.16, ease: "easeOut" }}
-                    className="inline-flex items-center gap-1.5 text-sky-300"
-                  >
-                    <Moon size={15} />
-                    <span className="hidden xl:inline text-white/90">Dunkel</span>
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              {isDark ? (
+                <span className="inline-flex items-center gap-1.5 text-amber-300">
+                  <Sun size={15} aria-hidden="true" />
+                  <span className="hidden xl:inline text-white/90">Hell</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-sky-300">
+                  <Moon size={15} aria-hidden="true" />
+                  <span className="hidden xl:inline text-white/90">Dunkel</span>
+                </span>
+              )}
             </button>
 
             <button
@@ -317,11 +290,9 @@ export default function Navbar() {
               <ArrowRight size={14} />
             </button>
 
-            <motion.button
+            <button
               type="button"
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 520, damping: 24 }}
-              className={`inline-flex items-center justify-center gap-1.5 h-11 min-h-[44px] min-w-[44px] px-2.5 sm:px-3 rounded-xl border text-xs font-extrabold transition-colors lg:hidden whitespace-nowrap cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-1.5 h-10 min-h-[40px] min-w-[40px] px-2.5 sm:px-3 rounded-xl border text-xs font-extrabold transition-colors duration-150 active:scale-95 lg:hidden whitespace-nowrap cursor-pointer ${
                 open
                   ? "border-accent bg-accent text-white shadow-sm"
                   : "border-white/15 bg-white/10 text-white hover:bg-white/20"
@@ -337,33 +308,9 @@ export default function Navbar() {
                 setOpen((o) => !o);
               }}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {open ? (
-                  <motion.span
-                    key="nav-icon-close"
-                    initial={prefersReducedMotion ? false : { rotate: -90, scale: 0.7, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={prefersReducedMotion ? undefined : { rotate: 90, scale: 0.7, opacity: 0 }}
-                    transition={{ duration: 0.14 }}
-                    className="inline-flex items-center justify-center"
-                  >
-                    <X size={16} />
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="nav-icon-menu"
-                    initial={prefersReducedMotion ? false : { rotate: 90, scale: 0.7, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={prefersReducedMotion ? undefined : { rotate: -90, scale: 0.7, opacity: 0 }}
-                    transition={{ duration: 0.14 }}
-                    className="inline-flex items-center justify-center"
-                  >
-                    <Menu size={16} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              {open ? <X size={16} aria-hidden="true" /> : <Menu size={16} aria-hidden="true" />}
               <span className="hidden min-[360px]:inline">{open ? "Zu" : "Menü"}</span>
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
@@ -406,7 +353,7 @@ export default function Navbar() {
                 variants={prefersReducedMotion ? undefined : drawerListVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2"
               >
                 {mobileDrawerPages.map((p) => {
                   const active = isActive(p.href);
@@ -416,7 +363,7 @@ export default function Navbar() {
                       key={p.href}
                       variants={prefersReducedMotion ? undefined : drawerItemVariants}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-                      className={p.href === "/" ? "sm:col-span-2" : ""}
+                      className={p.href === "/" ? "min-[360px]:col-span-2" : ""}
                     >
                       <Link
                         href={p.href}

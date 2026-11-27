@@ -51,7 +51,7 @@ const MILESTONE_ERAS: MilestoneEra[] = [
     id: "2000er",
     tabLabel: "2000er",
     period: "Aufbau des Teile-Fachwissens",
-    title: "Präzise Zuordnung über E-Nr., PNC & Herstellerkataloge",
+    title: "Präzise Zuordnung über Typenschild & Herstellerkataloge",
     summary:
       "Mit dem Wandel von mechanischen zu elektronisch gesteuerten Waschmaschinen, Spülern und Kühlgeräten wächst das spezialisierte Wissen rund um Typenschilder, Pumpen, Heizelemente und Dichtungen führender Marken.",
     highlight: "Markenübergreifende Fachkenntnis für Miele, Bosch, Siemens, AEG & mehr",
@@ -69,9 +69,9 @@ const MILESTONE_ERAS: MilestoneEra[] = [
     id: "heute",
     tabLabel: "Heute",
     period: "Direkt per WhatsApp, Telefon & Termin",
-    title: `${yearsOfExperience}+ Jahre Erfahrung – modern & unkompliziert erreichbar`,
+    title: `${yearsOfExperience}+ Jahre Erfahrung, modern & unkompliziert erreichbar`,
     summary:
-      "Ob passgenaues Original-Ersatzteil nach Typenschild oder ausgewähltes Markengerät auf Anfrage inklusive schriftlicher Verkäufergarantie: Sie sprechen immer direkt mit dem Inhaber – ohne Warteschleife.",
+      "Ob passgenaues Original-Ersatzteil nach Typenschild oder ausgewähltes Markengerät auf Anfrage inklusive schriftlicher Verkäufergarantie: Sie sprechen immer direkt mit dem Inhaber, ohne Warteschleife.",
     highlight: "4,8 ★ Durchschnitt der Google-Bewertungen in Osnabrück",
   },
 ];
@@ -225,7 +225,7 @@ export default function UeberUns() {
             {/* Right 5 Columns: Museum-Framed Founder Portrait */}
             <div className="lg:col-span-5 flex flex-col">
               <Spatial3DCard maxTilt={4} className="flex-1 rounded-2xl">
-                <figure className="relative h-full min-h-[380px] sm:min-h-[450px] lg:min-h-full w-full overflow-hidden rounded-2xl border border-white/15 bg-slate-900 shadow-[0_30px_70px_-20px_rgba(2,6,23,0.85)]">
+                <figure className="relative h-full aspect-[4/5] sm:aspect-[4/3] lg:aspect-auto lg:min-h-[460px] w-full overflow-hidden rounded-2xl border border-white/15 bg-slate-900 shadow-[0_30px_70px_-20px_rgba(2,6,23,0.85)]">
                   <Image
                     src={herrHannachiImage}
                     alt="Kamal Hannachi – Inhaber und persönlicher Fachberater in Osnabrück"
@@ -235,7 +235,7 @@ export default function UeberUns() {
                     placeholder="blur"
                     blurDataURL={herrHannachiImage.blurDataURL}
                     sizes="(min-width: 1024px) 38vw, (min-width: 640px) 75vw, 94vw"
-                    className="object-cover object-top transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.03]"
+                    className="object-cover object-[50%_16%] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.03]"
                   />
                   {/* Measured bottom scrim guaranteeing >= 4.5:1 text contrast */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
@@ -456,12 +456,12 @@ export default function UeberUns() {
                 </div>
               </div>
 
-              {/* Real High-Resolution Osnabrück Location Photograph */}
+              {/* Real High-Resolution Osnabrück Fachhandel Photograph */}
               <figure className="space-y-2.5">
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-slate-900">
+                <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-slate-900">
                   <Image
                     src={showroomImage}
-                    alt="Ausgewählte Markengeräte: Kühlschrank, Waschmaschine und Trockner"
+                    alt="Hannachi Fachhandel in Osnabrück – Original-Ersatzteile und ausgewählte Markengeräte"
                     fill
                     quality={92}
                     placeholder="blur"
@@ -494,7 +494,7 @@ export default function UeberUns() {
                 3D-Kurzfilm · Osnabrück seit {business.founded}
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight text-balance">
-                Alle Hausgeräte in Bewegung – unser Spektrum in 4 Szenen.
+                Alle Hausgeräte in Bewegung: unser Spektrum in 4 Szenen.
               </h2>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-slate-400">
@@ -545,7 +545,7 @@ export default function UeberUns() {
                   01 · Persönliche Fachberatung
                 </p>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight text-balance">
-                  Direkter Kontakt mit Kamal Hannachi – ohne Umwege.
+                  Direkter Kontakt mit Kamal Hannachi ohne Umwege.
                 </h3>
                 <p className="text-sm sm:text-[15px] leading-relaxed text-slate-600 dark:text-slate-300 max-w-xl">
                   Ob am Telefon, per WhatsApp-Foto oder nach persönlicher
@@ -569,11 +569,11 @@ export default function UeberUns() {
                   02 · Original-Ersatzteile
                 </p>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight text-balance">
-                  Exakt nach Typenschild (E-Nr. / PNC).
+                  Exakt passend nach Typenschild.
                 </h3>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   Pumpen, Heizstäbe, Türmanschetten, Thermostate, Scharniere und
-                  Ersatzmodule – persönlich abgeglichen, damit jedes Teil exakt passt.
+                  Ersatzmodule, persönlich abgeglichen, damit jedes Teil exakt passt.
                 </p>
               </div>
               <p className="border-t border-primary/8 dark:border-white/10 pt-4 text-xs leading-relaxed text-ink-muted">
@@ -592,11 +592,11 @@ export default function UeberUns() {
                   03 · Ausgewählte Markengeräte
                 </p>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight text-balance">
-                  Auf Anfrage – inkl. schriftlicher Verkäufergarantie.
+                  Auf Anfrage inkl. schriftlicher Verkäufergarantie.
                 </h3>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   Wenn ein Ersatzgerät sinnvoller ist, vermittelt und verkauft Hannachi
-                  ausgewählte geprüfte Markengeräte nach aktueller Verfügbarkeit – mit{" "}
+                  ausgewählte geprüfte Markengeräte nach aktueller Verfügbarkeit, mit{" "}
                   <Link
                     href="/impressum#garantie"
                     className="font-semibold text-accent underline underline-offset-2"
@@ -640,7 +640,7 @@ export default function UeberUns() {
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 max-w-xl">
                   Keine versteckten Kosten, kein anonymer Ablauf: Sie erhalten vorab eine klare
                   Einschätzung zu passendem Ersatzteil oder Gerät und vereinbaren Ihren Termin
-                  unkompliziert direkt mit {business.owner} – per Telefon oder WhatsApp.
+                  unkompliziert direkt mit {business.owner} per Telefon oder WhatsApp.
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/8 dark:border-white/10 pt-4 text-xs">

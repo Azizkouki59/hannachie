@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AnimatePresence,
@@ -146,7 +146,7 @@ export default function CookieConsentBanner() {
               Einstellungen (z. B. Hell-/Dunkelmodus, Formular-Entwurf) werden gemäß{" "}
               <strong className="text-white">§ 25 Abs. 2 TDDDG</strong> lokal gespeichert.
               Optional können Sie <strong className="text-white">Google Maps</strong> (Google
-              Ireland / USA, Art. 6 Abs. 1 lit. a DSGVO) freischalten – jederzeit widerrufbar.
+              Ireland / USA, Art. 6 Abs. 1 lit. a DSGVO) freischalten, jederzeit widerrufbar.
             </p>
 
             {/* Granular Customization Section */}

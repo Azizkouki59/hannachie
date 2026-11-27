@@ -5,6 +5,11 @@
 // - Persönliche Kauf- & Ersatzteilberatung sowie Lieferung / Übergabe in Osnabrück & Umgebung nach Terminvereinbarung
 // - Gesetzliche Gewährleistung & schriftliche Verkäufergarantie ausschließlich für direkt bei Hannachi gekaufte Geräte
 
+import {
+  buildWhatsAppDirectUrl,
+  DEFAULT_WHATSAPP_GREETING,
+} from "@/utils/whatsapp";
+
 export type ServiceNoticeType = "maintenance" | "vacation";
 
 export type ServiceNotice = {
@@ -35,7 +40,7 @@ export const business = {
   mobileServiceNotice:
     "Osnabrück & Umgebung · Termine nach Vereinbarung.",
   warrantyNotice:
-    "Ausgewählte Markengeräte auf Anfrage – inkl. schriftlicher Verkäufergarantie bei direktem Erwerb.",
+    "Ausgewählte Markengeräte auf Anfrage inkl. schriftlicher Verkäufergarantie bei direktem Erwerb.",
   owner: "Kamal Hannachi",
   founded: BUSINESS_FOUNDED,
   street: BUSINESS_STREET,
@@ -43,8 +48,7 @@ export const business = {
   city: BUSINESS_CITY,
   phoneDisplay: BUSINESS_PHONE_DISPLAY,
   phoneHref: "tel:+491703493494",
-  whatsappHref:
-    "https://api.whatsapp.com/send?phone=491703493494&text=Hallo%20Herr%20Hannachi%2C%20ich%20habe%20eine%20kurze%20Anfrage%20zu%20einem%20Hausger%C3%A4t.",
+  whatsappHref: buildWhatsAppDirectUrl(DEFAULT_WHATSAPP_GREETING),
   hours: "Mo–Sa 08:00–18:00 Uhr · Termine nach Vereinbarung",
   email: BUSINESS_EMAIL,
   taxNote: "Persönliche, transparente Absprache direkt mit Inhaber Kamal Hannachi.",
@@ -61,14 +65,14 @@ export const business = {
   mapsEmbedUrl:
     "https://maps.google.com/maps?q=Hannachi+Elektrohaushaltsger%C3%A4te+Service,+Iburger+Stra%C3%9Fe+5,+49082+Osnabr%C3%BCck&t=&z=16&ie=UTF8&iwloc=&output=embed",
   coordinates: {
-    lat: 52.2902275,
-    lng: 8.0207428,
+    lat: 52.2647082,
+    lng: 8.0567763,
   },
   serviceNotice: {
     active: false,
     type: "vacation",
     label: "Info",
-    message: "Termine nach Vereinbarung – für eine schnelle Rückmeldung schreiben Sie gerne per WhatsApp.",
+    message: "Termine nach Vereinbarung. Für eine schnelle Rückmeldung schreiben Sie gerne per WhatsApp.",
   } as ServiceNotice,
   legal: {
     legalForm: "Einzelunternehmen",
@@ -143,7 +147,7 @@ export const services: Service[] = [
       "Markengerät auf Anfrage",
     ],
     approach:
-      "Kurz per WhatsApp (gerne mit Typenschild-Foto) oder Telefon melden – schnelle Rückmeldung direkt vom Inhaber.",
+      "Kurz per WhatsApp (gerne mit Typenschild-Foto) oder Telefon melden für eine schnelle Rückmeldung direkt vom Inhaber.",
     customerNote: {
       quote: "Spontaner Termin, gute Beratung und volle Fachkenntnis. Preis-Leistung absolut fair.",
       author: "Google-Rezension (Osnabrück)",
@@ -162,7 +166,7 @@ export const services: Service[] = [
       "Markengerät auf Anfrage",
     ],
     approach:
-      "E-Nr. vom Typenschild per WhatsApp senden – ich prüfe das passende Teil persönlich.",
+      "Typenschild per WhatsApp senden, ich prüfe das passende Teil persönlich.",
     customerNote: {
       quote: "Herr Hannachi konnte schon am Telefon schnell und kostenfrei einen hilfreichen Tipp geben.",
       author: "Roman Osinsky (Google Maps)",
@@ -181,7 +185,7 @@ export const services: Service[] = [
       "Markengerät auf Anfrage",
     ],
     approach:
-      "Bei Kühlgeräten kurz anrufen oder per WhatsApp schreiben – schnelle persönliche Rückmeldung.",
+      "Bei Kühlgeräten kurz anrufen oder per WhatsApp schreiben für eine schnelle persönliche Rückmeldung.",
     customerNote: {
       quote: "Sehr zuverlässig, kompetent und preislich absolut fair. Sehr zu empfehlen.",
       author: "Myra Bonnici (Google Maps)",
@@ -200,7 +204,7 @@ export const services: Service[] = [
       "Markengerät auf Anfrage",
     ],
     approach:
-      "Typenschild per WhatsApp senden – wir klären Teil oder Gerätewunsch direkt persönlich.",
+      "Typenschild per WhatsApp senden, wir klären Teil oder Gerätewunsch direkt persönlich.",
     customerNote: {
       quote: "Sehr freundlich, unkomplizierte Abstimmung per WhatsApp und schnelle Terminvereinbarung.",
       author: "Pia B (Google Maps)",
@@ -460,12 +464,12 @@ export const allSupportedAppliances: SupportedApplianceCategory[] = [
   {
     title: "Ersatzmodule & Verkäufergarantie",
     badge: "Module & Garantie",
-    description: "Original-Ersatzmodule nach Typenschild (E-Nr. / PNC) sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
+    description: "Original-Ersatzmodule nach Typenschild sowie Garantieabwicklung für direkt bei Hannachi erworbene Geräte.",
     items: [
       {
         name: "Steuerungs- & Leistungsmodule",
-        description: "Original-Ersatzmodule nach Typenschild-Abgleich (E-Nr. / PNC).",
-        symptoms: ["Passendes Ersatzmodul per E-Nr. anfragen", "Garantieanfrage für bei Hannachi erworbene Geräte"],
+        description: "Original-Ersatzmodule nach persönlichem Typenschild-Abgleich.",
+        symptoms: ["Passendes Ersatzmodul nach Typenschild anfragen", "Garantieanfrage für bei Hannachi erworbene Geräte"],
       },
       {
         name: "Inverter- & Motorsteuerungen",

@@ -40,9 +40,9 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Waschmaschine",
     symptomPreset: "Pumpt nicht ab / Fehler E18 / F20 (Flusensieb bereits geprüft)",
     question:
-      "Waschmaschine zeigt Fehler E18 / F20 oder pumpt nicht ab – was kann ich vorab selbst prüfen?",
+      "Waschmaschine zeigt Fehler E18 / F20 oder pumpt nicht ab: Was kann ich vorab selbst prüfen?",
     shortAnswer:
-      "In rund 60 % der Fälle blockiert ein Fremdkörper (Münze, Knopf, BH-Bügel oder Flusen) das Flusensieb oder den Siphonanschluss – kein Pumpendefekt.",
+      "In rund 60 % der Fälle blockiert ein Fremdkörper (Münze, Knopf, BH-Bügel oder Flusen) das Flusensieb oder den Siphonanschluss, nicht die Pumpe.",
     steps: [
       "Netzstecker ziehen und unten an der Front die Wartungsklappe öffnen.",
       "Restwasser über den kleinen Not-Ablassschlauch in eine flache Schale ablassen.",
@@ -59,7 +59,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Waschmaschine",
     symptomPreset: "Tür lässt sich nicht öffnen / Türverriegelung blockiert",
     question:
-      "Die Waschmaschinentür lässt sich nach dem Waschen nicht öffnen – wie entriegele ich sie sicher?",
+      "Die Waschmaschinentür lässt sich nach dem Waschen nicht öffnen: Wie entriegele ich sie sicher?",
     shortAnswer:
       "Das Bimetall-Türschloss benötigt nach Programmende oft 2 bis 3 Minuten zum Abkühlen. Zudem bleibt die Tür gesperrt, solange noch Restwasser in der Trommel steht.",
     steps: [
@@ -68,7 +68,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Öffnet die Tür weiterhin nicht: Wartungsklappe unten öffnen und vorsichtig an der farbigen Notentriegelungslasche neben dem Flusensieb nach unten ziehen.",
     ],
     proTip:
-      "Ziehen Sie niemals mit Gewalt am Türgriff – ein abgebrochener Griff oder ein defektes Türschloss lässt sich sonst nur schwer öffnen.",
+      "Ziehen Sie niemals mit Gewalt am Türgriff. Ein abgebrochener Griff oder ein defektes Türschloss lässt sich sonst nur schwer öffnen.",
     keywords: ["tür", "öffnet nicht", "schloss", "notentriegelung", "bullauge"],
   },
   {
@@ -77,13 +77,13 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Geschirrspüler",
     symptomPreset: "Fehlercode E15 / E24 oder Wasserhahn-Symbol blinkt",
     question:
-      "Geschirrspüler zeigt das Wasserhahn-Symbol oder Fehler E24 / E15 – was bedeuten diese Meldungen?",
+      "Geschirrspüler zeigt das Wasserhahn-Symbol oder Fehler E24 / E15: Was bedeuten diese Meldungen?",
     shortAnswer:
       "E24 weist meist auf einen blockierten Abfluss oder eine nicht eingerastete Pumpenabdeckung hin. E15 bedeutet hingegen, dass sich Wasser in der Bodenwanne gesammelt hat.",
     steps: [
       "Bei E24 / Abpump-Fehler: Bodensieb herausnehmen und prüfen, ob die kleine weiße Pumpenabdeckung im Pumpensumpf hörbar („Klick“) eingerastet ist.",
       "Bei blinkendem Wasserhahn-Symbol: Eckventil unter der Spüle voll aufdrehen und das feine Schmutzsieb im Aquastop-Schlauchanschluss unter fließendem Wasser abspülen.",
-      "Bei E15: Der Schwimmerschalter in der Bodenwanne hat ausgelöst – Wasserhahn schließen und Gerät nicht einfach schräg kippen, da sonst Elektronikteile nass werden können.",
+      "Bei E15: Der Schwimmerschalter in der Bodenwanne hat ausgelöst. Bitte Wasserhahn schließen und das Gerät nicht einfach schräg kippen, da sonst Elektronikteile nass werden können.",
     ],
     proTip:
       "Bei Fehler E15 ist häufig die Pumpentopf-Dichtung undicht. Anhand Ihres Typenschilds (E-Nr.) nennen wir Ihnen gerne den passenden Dichtungssatz aus unserem Ersatzteil-Sortiment.",
@@ -95,7 +95,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Geschirrspüler",
     symptomPreset: "Geschirr bleibt nass / Wasser wird nicht warm",
     question:
-      "Geschirrspüler reinigt unsauber oder trocknet nicht mehr richtig – wie unterscheide ich Pflege- von Heizfehlern?",
+      "Geschirrspüler reinigt unsauber oder trocknet nicht mehr richtig: Wie unterscheide ich Pflege- von Heizfehlern?",
     shortAnswer:
       "Bleibt das Geschirr am Ende kalt und nass, heizt das Gerät nicht. Ist das Innere heiß, aber schlierig, liegt es meist an verstopften Sprüharmen oder fehlendem Klarspüler.",
     steps: [
@@ -104,7 +104,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
       "Bleibt das Wasser kalt (oft begleitet von Fehler E09 bei Bosch/Siemens/Neff): Die Heizpumpe oder das Heizrelais ist defekt.",
     ],
     proTip:
-      "Verwenden Sie im Eco-Programm zusätzlich separaten Klarspüler und Salz statt nur Multi-Tabs – das verbessert die Trocknung spürbar.",
+      "Verwenden Sie im Eco-Programm zusätzlich separaten Klarspüler und Salz statt nur Multi-Tabs. Das verbessert die Trocknung spürbar.",
     keywords: ["trocknet nicht", "e09", "kalt", "heizpumpe", "sprüharme", "salz"],
   },
   {
@@ -113,7 +113,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Kühlschrank / Gefriergerät",
     symptomPreset: "Wasser im Innenraum oder starke Eisbildung trotz freiem Ablauf",
     question:
-      "Im Kühlschrank sammelt sich Wasser unter dem Gemüsefach oder die Rückwand vereist stark – warum?",
+      "Im Kühlschrank sammelt sich Wasser unter dem Gemüsefach oder die Rückwand vereist stark. Warum?",
     shortAnswer:
       "Steht Wasser im Kühlteil, ist fast immer die kleine Tauwasser-Ablaufrinne an der Rückwand verstopft. Starke Eisbildung entsteht oft durch eine undichte Türdichtung.",
     steps: [
@@ -131,11 +131,11 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Backofen / Herd",
     symptomPreset: "Backofen heizt nicht (Uhrzeit & Sicherungen bereits geprüft)",
     question:
-      "Der Backofen leuchtet, wird aber überhaupt nicht warm – welche zwei Ursachen lassen sich sofort testen?",
+      "Der Backofen leuchtet, wird aber überhaupt nicht warm: Welche zwei Ursachen lassen sich sofort testen?",
     shortAnswer:
       "Nach einem kurzen Stromausfall sperrt die Elektronik die Heizung, solange die Uhrzeit blinkt. Alternativ ist im Sicherungskasten nur eine der drei Herd-Phasen ausgelöst.",
     steps: [
-      "Blicken Sie auf das Display am Backofen: Blinkt dort „00:00“ oder ein Uhrsymbol? Stellen Sie die Uhrzeit ein – erst danach schaltet das Freigaberelais die Heizstäbe frei.",
+      "Blicken Sie auf das Display am Backofen: Blinkt dort „00:00“ oder ein Uhrsymbol? Stellen Sie die Uhrzeit ein, erst danach schaltet das Freigaberelais die Heizstäbe frei.",
       "Prüfen Sie im Sicherungskasten alle drei nebeneinanderliegenden Herd-Sicherungen (LS-Schalter): Oft versorgt eine Phase das Licht, während die anderen beiden die Heizung speisen.",
       "Testen Sie kurz Ober-/Unterhitze im Vergleich zu Umluft: Wird Ober-/Unterhitze warm, Umluft aber nicht, ist lediglich der Ringheizkörper durchgebrannt.",
     ],
@@ -149,7 +149,7 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     device: "Wäschetrockner",
     symptomPreset: "Trockner bricht ab / meldet Behälter voll obwohl Tank leer ist",
     question:
-      "Wäschetrockner bricht ab und meldet „Behälter voll“, obwohl der Wassertank leer ist – woran liegt das?",
+      "Wäschetrockner bricht ab und meldet „Behälter voll“, obwohl der Wassertank leer ist. Woran liegt das?",
     shortAnswer:
       "Flusen setzen mit der Zeit den Pumpensumpf der Kondensatpumpe zu, sodass der Schwimmerschalter unten im Gerät „Voll“ meldet, bevor das Wasser oben im Tank ankommt.",
     steps: [
@@ -171,11 +171,11 @@ const TROUBLESHOOTING_FAQS: TroubleshootingFaqItem[] = [
     shortAnswer:
       "Sobald die Sicherung / der FI-Schutzschalter auslöst, es verschmort riecht, laute Mahlgeräusche auftreten oder Wasser aus dem Geräteboden austritt.",
     proTip:
-      "Für ältere oder stärker beschädigte Geräte kann ein geprüftes Ersatzgerät aus unserem Bestand – inklusive schriftlicher Verkäufergarantie – wirtschaftlicher sein als eine Fremdreparatur.",
+      "Für ältere oder stärker beschädigte Geräte kann ein geprüftes Ersatzgerät aus unserem Bestand inklusive schriftlicher Verkäufergarantie wirtschaftlicher sein als eine Fremdreparatur.",
     steps: [
-      "FI-Schutzschalter fliegt heraus: Meist liegt ein Isolationsfehler am Heizstab oder Motor vor – Gerät ausgesteckt lassen.",
+      "FI-Schutzschalter fliegt heraus: Meist liegt ein Isolationsfehler am Heizstab oder Motor vor. Bitte das Gerät ausgesteckt lassen.",
       "Lautes Rumpeln beim Schleudern oder metallisches Schleifen: Hinweis auf Trommellager, Stoßdämpfer oder einen eingezogenen Fremdkörper.",
-      "Elektronik-Totalausfall: Lassen Sie defekte Starkstrom- oder Elektronikkomponenten ausschließlich durch den Hersteller-Kundendienst oder einen eingetragenen Handwerksbetrieb begutachten – alternativ bieten wir Ihnen ein geprüftes Ersatzgerät mit Garantie.",
+      "Elektronik-Totalausfall: Lassen Sie defekte Starkstrom- oder Elektronikkomponenten ausschließlich durch den Hersteller-Kundendienst oder einen eingetragenen Handwerksbetrieb begutachten. Alternativ bieten wir Ihnen ein geprüftes Ersatzgerät mit Garantie.",
     ],
     keywords: ["fi", "kurzschluss", "platine", "lager", "laut", "techniker", "kosten"],
   },
@@ -444,7 +444,7 @@ export default function SimulatorFaqSection() {
                                 <CheckCircle2 size={14} className="shrink-0" />
                                 <span>
                                   {isResolved
-                                    ? "Problem gelöst ✓"
+                                    ? "Problem gelöst"
                                     : "Ja, funktioniert wieder"}
                                 </span>
                               </button>
@@ -495,7 +495,7 @@ export default function SimulatorFaqSection() {
             onClick={() =>
               openQuickRequest(
                 "Waschmaschine",
-                "Selbsthilfe geprüft – Anfrage nach Ersatzteil (E-Nr.) oder Ersatzgerät mit Garantie",
+                "Selbsthilfe geprüft: Anfrage nach Ersatzteil oder Ersatzgerät mit Garantie",
                 "",
                 "repair"
               )

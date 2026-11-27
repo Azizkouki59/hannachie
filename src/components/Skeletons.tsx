@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 
 /**
  * Base Skeleton primitive with smooth pulse + sweeping light sheen

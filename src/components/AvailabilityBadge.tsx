@@ -50,10 +50,10 @@ export default function AvailabilityBadge({ className = "", tone = "dark" }: { c
   const text = tone === "dark" ? (status.open ? "text-emerald-300" : "text-white/75") : status.open ? "text-emerald-700 dark:text-emerald-400" : "text-ink-muted";
   return (
     <span className={`inline-flex items-center gap-1.5 font-semibold ${text} ${className}`} role="status">
-      <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-        {status.open && <span className="absolute inset-0 rounded-full bg-emerald-400 animate-live-ping" />}
-        <span className={`relative h-2 w-2 rounded-full ${status.open ? "bg-emerald-400" : "bg-slate-400"}`} />
-      </span>
+      <span
+        aria-hidden="true"
+        className={`h-2 w-2 shrink-0 rounded-full ${status.open ? "bg-emerald-400" : "bg-slate-400"}`}
+      />
       {status.label}
     </span>
   );

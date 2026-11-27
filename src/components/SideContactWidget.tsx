@@ -27,7 +27,10 @@ import {
   REPAIR_DRAFT_EVENT,
   type RepairDraft,
 } from "@/lib/repairRequest";
-import { buildWhatsAppDirectUrl } from "@/utils/whatsapp";
+import {
+  buildWhatsAppDirectUrl,
+  formatQuickWhatsAppMessage,
+} from "@/utils/whatsapp";
 
 export interface SideContactWidgetProps {
   phone?: string;
@@ -260,7 +263,7 @@ export default function SideContactWidget({
                       placeholder="blur"
                       blurDataURL={herrHannachiImage.blurDataURL}
                       sizes="44px"
-                      className="object-cover object-top"
+                      className="object-cover object-[50%_20%]"
                     />
                   </div>
                   <div className="min-w-0">
@@ -400,15 +403,25 @@ export default function SideContactWidget({
                     {[
                       {
                         label: "Ersatzteil",
-                        msg: "Hallo Herr Hannachi, ich suche ein Original-Ersatzteil und sende gleich die E-Nr. / ein Foto vom Typenschild.",
+                        msg: formatQuickWhatsAppMessage({
+                          title: "Ersatzteil-Anfrage",
+                          detail: "Ich suche ein Original-Ersatzteil für mein Hausgerät.",
+                          photoHint: true,
+                        }),
                       },
                       {
                         label: "Gerät",
-                        msg: "Hallo Herr Hannachi, welche ausgewählten Markengeräte haben Sie aktuell in Osnabrück auf Anfrage?",
+                        msg: formatQuickWhatsAppMessage({
+                          title: "Geräte-Anfrage",
+                          detail: "Welche ausgewählten Markengeräte haben Sie aktuell auf Anfrage?",
+                        }),
                       },
                       {
                         label: "Termin",
-                        msg: "Hallo Herr Hannachi, ich möchte gerne einen kurzen Termin nach Vereinbarung in Osnabrück abstimmen.",
+                        msg: formatQuickWhatsAppMessage({
+                          title: "Termin-Anfrage",
+                          detail: "Ich möchte gerne einen kurzen Termin nach Vereinbarung abstimmen.",
+                        }),
                       },
                     ].map((quick) => (
                       <a
@@ -437,25 +450,6 @@ export default function SideContactWidget({
                     </Link>
                   </p>
                 </motion.div>
-
-                {/* 2b. Schedule Appointment in Calendar */}
-                <Link
-                  href="/kontakt#kalender-termin"
-                  onClick={() => {
-                    triggerHapticFeedback(50);
-                    setOpen(false);
-                  }}
-                  data-testid="contact-widget-gcal-link"
-                  className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 px-3.5 py-2.5 text-xs font-bold text-sky-100 hover:bg-sky-500/25 hover:text-white active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <Clock size={15} className="shrink-0 text-sky-300" aria-hidden="true" />
-                    <span className="truncate leading-tight text-left">
-                      Termin im Kalender merken
-                    </span>
-                  </span>
-                  <ArrowRight size={14} className="shrink-0 text-sky-300" aria-hidden="true" />
-                </Link>
 
                 {/* 3. Direct Phone Call + Copy */}
                 <div className="flex items-center gap-2 pt-0.5">

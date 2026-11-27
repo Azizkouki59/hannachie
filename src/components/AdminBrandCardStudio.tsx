@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Check,
   Download,
@@ -41,7 +41,7 @@ const NAVY_SKY_LOGO_VARIATIONS: Array<{
     shortLabel: "Logo 1 · H-Monogramm",
     badge: "Variante 1 · Monogramm",
     title: "Modernes „H“-Monogramm mit Trommel & Schraubenschlüssel",
-    subtitle: "Marineblau (#0F172A), Himmelblau (#0284C7) & Weiß – ideal als Hauptlogo & Stempel",
+    subtitle: "Marineblau (#0F172A), Himmelblau (#0284C7) & Weiß, ideal als Hauptlogo & Stempel",
     src: logoV1Monogram,
     filename: "Hannachi-Logo-V1-Monogramm-Blau.jpg",
   },
@@ -68,7 +68,7 @@ const NAVY_SKY_LOGO_VARIATIONS: Array<{
     shortLabel: "Logo 4 · Dunkles Siegel",
     badge: "Variante 4 · Dunkles Siegel",
     title: "Rundes Qualitäts-Siegel auf tiefem Marineblau",
-    subtitle: "Weiß & Himmelblau auf Marineblau – perfekt für WhatsApp-Profilbild & Arbeitskleidung",
+    subtitle: "Weiß & Himmelblau auf Marineblau, perfekt für WhatsApp-Profilbild & Arbeitskleidung",
     src: logoV4DarkBadge,
     filename: "Hannachi-Logo-V4-Siegel-Marineblau.jpg",
   },
@@ -181,7 +181,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
   const [contactLocation, setContactLocation] = useState(
     `${business.street} · ${business.zip} ${business.city}`
   );
-  const [customTagline, setCustomTagline] = useState(
+  const [customTagline] = useState(
     "An- & Verkauf · Gebrauchtgeräte · Original-Ersatzteile"
   );
   const [qrUrl, setQrUrl] = useState("https://hannachi.de");
@@ -266,7 +266,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
           ctx.fillStyle = "#0284c7";
           ctx.font = "800 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-          ctx.fillText("ELEKTROHAUSHALTSGERÄTE SERVICE", padX + 150, 128);
+          ctx.fillText("ELEKTROHAUSHALTSGERÄTE & ERSATZTEILE", padX + 150, 128);
 
           // Divider
           ctx.fillStyle = "#e2e8f0";
@@ -385,7 +385,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
           ctx.fillStyle = skyLightHex;
           ctx.font = "700 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-          ctx.fillText("ELEKTROHAUSHALTSGERÄTE SERVICE", padX + 142, 128);
+          ctx.fillText("ELEKTROHAUSHALTSGERÄTE & ERSATZTEILE", padX + 142, 128);
 
           ctx.fillStyle = "rgba(255,255,255,0.15)";
           ctx.fillRect(padX, 174, 570, 2);
@@ -507,7 +507,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
         ctx.fillStyle = "#ffffff";
         ctx.font = "700 22px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
         ctx.fillText(
-          "ELEKTROHAUSHALTSGERÄTE SERVICE",
+          "ELEKTROHAUSHALTSGERÄTE & ERSATZTEILE",
           width / 2,
           144
         );
@@ -666,7 +666,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             <span className="block text-xs font-bold text-ink">
               Logo auf der Visitenkarte auswählen (aus den 4 neuen Entwürfen):
             </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 items-stretch gap-2">
               {NAVY_SKY_LOGO_VARIATIONS.map((logo) => {
                 const isSelected = selectedLogoId === logo.id;
                 return (
@@ -674,7 +674,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     key={logo.id}
                     type="button"
                     onClick={() => setSelectedLogoId(logo.id)}
-                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex flex-col items-center gap-1.5 ${
+                    className={`h-full min-h-[82px] px-2.5 py-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 ${
                       isSelected
                         ? "border-sky-500 bg-sky-500/10 ring-2 ring-sky-500/30"
                         : "border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 hover:border-sky-400"
@@ -700,11 +700,11 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             <span className="block text-xs font-bold text-ink">
               Schnell-Auswahl Kontaktperson:
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 items-stretch gap-2">
               <button
                 type="button"
                 onClick={() => applyPresetPerson("mrs")}
-                className={`min-h-[44px] px-3 py-2 rounded-lg border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors text-center ${
                   personName.toLowerCase().includes("frau")
                     ? "bg-sky-600 text-white border-sky-600"
                     : "bg-surface dark:bg-slate-900 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
@@ -716,14 +716,14 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
               <button
                 type="button"
                 onClick={() => applyPresetPerson("mr")}
-                className={`min-h-[44px] px-3 py-2 rounded-lg border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
-                  personName.toLowerCase().includes("mohamed")
+                className={`min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors text-center ${
+                  personName.toLowerCase().includes("kamal")
                     ? "bg-sky-600 text-white border-sky-600"
                     : "bg-surface dark:bg-slate-900 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
                 }`}
               >
                 <UserCheck className="w-4 h-4 shrink-0" />
-                <span>Herr M. Hannachi</span>
+                <span>Herr Kamal Hannachi</span>
               </button>
             </div>
           </div>
@@ -857,7 +857,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                             HANNACHI
                           </div>
                           <div className="text-[9px] sm:text-[11px] font-extrabold tracking-wide text-sky-600 mt-0.5 truncate">
-                            ELEKTROHAUSHALTSGERÄTE SERVICE
+                            ELEKTROHAUSHALTSGERÄTE &amp; ERSATZTEILE
                           </div>
                         </div>
                       </div>
@@ -952,7 +952,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                                 : "text-sky-400"
                             }`}
                           >
-                            ELEKTROHAUSHALTSGERÄTE SERVICE
+                            ELEKTROHAUSHALTSGERÄTE &amp; ERSATZTEILE
                           </div>
                         </div>
                       </div>
@@ -1062,7 +1062,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   HANNACHI
                 </div>
                 <div className="text-[10px] sm:text-xs font-bold tracking-wider text-white">
-                  ELEKTROHAUSHALTSGERÄTE SERVICE
+                  ELEKTROHAUSHALTSGERÄTE &amp; ERSATZTEILE
                 </div>
               </div>
 

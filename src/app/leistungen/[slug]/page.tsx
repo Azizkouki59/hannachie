@@ -1,6 +1,7 @@
 "use client";
 
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -20,9 +21,14 @@ import ApplianceLogo from "@/components/ApplianceLogo";
 import { serviceIcons } from "@/components/Illustrations";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { PageHeader, ReviewCard } from "@/components/ui";
+import { serviceImagesBySlug } from "@/data/images";
 import { business, services, sparePartsCategories } from "@/data/site";
 import { triggerHapticFeedback } from "@/lib/haptics";
 import { buildRouteMetadata } from "@/lib/seo";
+import {
+  buildWhatsAppDirectUrl,
+  formatQuickWhatsAppMessage,
+} from "@/utils/whatsapp";
 
 type Props = { params: { slug: string } };
 
@@ -40,6 +46,7 @@ export default function ServicePage({ params }: Props) {
   const service = services.find((s) => s.slug === params.slug);
   if (!service) notFound();
   const Icon = serviceIcons[service.slug];
+  const servicePhoto = serviceImagesBySlug[service.slug];
   const others = services.filter((s) => s.slug !== service.slug);
   const matchingPartsGroup = sparePartsCategories.find(
     (cat) => cat.appliance === service.slug
@@ -49,7 +56,7 @@ export default function ServicePage({ params }: Props) {
   return (
     <>
       <PageHeader
-        title={`${service.title} – Beratung & Original-Ersatzteile`}
+        title={`${service.title}: Beratung & Original-Ersatzteile`}
         intro={service.intro}
       />
 
@@ -118,7 +125,7 @@ export default function ServicePage({ params }: Props) {
                     Original-Ersatzteile für {service.title}
                   </h2>
                   <p className="mt-1 text-xs sm:text-sm text-ink-muted">
-                    Passgenau nach Typenschild (E-Nr. / PNC) — Bauteil antippen zum Anfragen:
+                    Passgenau nach Typenschild: Bauteil einfach antippen zum Anfragen.
                   </p>
                   <div className="mt-3.5 grid gap-2 sm:grid-cols-2">
                     {matchingPartsGroup.parts.map((part) => (
@@ -168,7 +175,7 @@ export default function ServicePage({ params }: Props) {
                         Original-Ersatzteile per Typenschild
                       </span>
                       <span className="text-ink-muted">
-                        Passgenau nach E-Nr. / PNC für alle bekannten Marken im Verkauf.
+                        Passgenau nach Typenschild für alle bekannten Marken im Verkauf.
                       </span>
                     </div>
                   </div>
@@ -231,7 +238,22 @@ export default function ServicePage({ params }: Props) {
                   : "min-w-0 lg:col-span-5 lg:sticky lg:top-20 space-y-5"
               }
             >
-              <div className="card h-full flex flex-col justify-between rounded-2xl border border-primary/10 dark:border-white/10 bg-surface/70 dark:bg-slate-900 p-5 sm:p-6">
+              <div className="card h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-surface/70 dark:bg-slate-900">
+                {servicePhoto && (
+                  <div className="relative aspect-[3/2] w-full overflow-hidden border-b border-primary/8 dark:border-white/10 bg-slate-900">
+                    <Image
+                      src={servicePhoto}
+                      alt={`${service.title} – Beratung, Original-Ersatzteile & Markengeräte bei Hannachi Osnabrück`}
+                      fill
+                      quality={92}
+                      placeholder="blur"
+                      blurDataURL={servicePhoto.blurDataURL}
+                      sizes="(min-width: 1024px) 38vw, 96vw"
+                      className="object-cover object-center"
+                    />
+                  </div>
+                )}
+                <div className="p-5 sm:p-6 flex flex-1 flex-col justify-between">
                 <div className="flex items-center justify-between gap-3 pb-4 border-b border-primary/8 dark:border-white/10">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-accent block">
@@ -313,7 +335,14 @@ export default function ServicePage({ params }: Props) {
                       <span className="tabular-nums truncate">{business.phoneDisplay}</span>
                     </a>
                     <a
-                      href={business.whatsappHref}
+                      href={buildWhatsAppDirectUrl(
+                        formatQuickWhatsAppMessage({
+                          title: `${service.title}-Anfrage`,
+                          device: service.title,
+                          detail: "Fachberatung, Original-Ersatzteil oder Gerät auf Anfrage",
+                          photoHint: true,
+                        }),
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors"
@@ -322,6 +351,16 @@ export default function ServicePage({ params }: Props) {
                       <span>WhatsApp</span>
                     </a>
                   </div>
+                  <p className="text-[11px] leading-snug text-ink-faint text-center">
+                    Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+                    <Link
+                      href="/datenschutz#whatsapp"
+                      className="underline underline-offset-2 hover:text-accent"
+                    >
+                      Datenschutz
+                    </Link>
+                  </p>
+                </div>
                 </div>
               </div>
 

@@ -1,24 +1,21 @@
 "use client";
 import type { Metadata } from "next";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  Calendar,
-  Camera,
   Check,
   Clock,
   Link2,
+  Mail,
   MapPin,
   MessageCircle,
-  MessageSquareText,
   Phone,
   Radar,
 } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
-import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import GoogleMapsEmbed, { type ContactMapViewMode } from "@/components/GoogleMapsEmbed";
-import PhotoAnleitungGuide from "@/components/PhotoAnleitungGuide";
 import { Spatial3DCard } from "@/components/animations";
 import { PageHeader } from "@/components/ui";
 import { business } from "@/data/site";
@@ -28,8 +25,6 @@ import { buildRouteMetadata } from "@/lib/seo";
 import { updateUrlSearchParams } from "@/shims/next-navigation";
 
 export const metadata: Metadata = buildRouteMetadata("/kontakt");
-
-type ContactHubTab = "anfrage" | "typenschild" | "kalender";
 
 const deviceBySlug: Record<string, string> = {
   waschmaschinen: "Waschmaschine",
@@ -67,59 +62,14 @@ function parseMapModeParam(mode?: string): ContactMapViewMode | null {
   return null;
 }
 
-function parseTabParam(tab?: string): ContactHubTab | null {
-  const normalized = tab?.trim().toLowerCase();
-  if (normalized === "anfrage") return "anfrage";
-  if (normalized === "typenschild" || normalized === "photo-anleitung") return "typenschild";
-  if (normalized === "kalender" || normalized === "kalender-termin") return "kalender";
-  return null;
-}
-
-const HUB_TABS: Array<{
-  id: ContactHubTab;
-  label: string;
-  shortLabel: string;
-  icon: typeof MessageSquareText;
-}> = [
-  {
-    id: "anfrage",
-    label: "Schnellanfrage",
-    shortLabel: "Anfrage",
-    icon: MessageSquareText,
-  },
-  {
-    id: "typenschild",
-    label: "Typenschild-Guide",
-    shortLabel: "Typenschild",
-    icon: Camera,
-  },
-  {
-    id: "kalender",
-    label: "Kalender-Termin",
-    shortLabel: "Kalender",
-    icon: Calendar,
-  },
-];
-
 export default function Kontakt({
   searchParams,
 }: {
-  searchParams: { geraet?: string; symptom?: string; mode?: string; tab?: string };
+  searchParams: { geraet?: string; symptom?: string; mode?: string };
 }) {
   const { place } = useGoogleLivePlace();
   const prefersReducedMotion = useReducedMotion();
   const urlMapMode = parseMapModeParam(searchParams?.mode);
-  const urlTab = parseTabParam(searchParams?.tab);
-
-  const [activeTab, setActiveTab] = useState<ContactHubTab>(() => {
-    if (urlTab) return urlTab;
-    if (typeof window !== "undefined") {
-      const h = window.location.hash.replace("#", "").toLowerCase();
-      if (h === "photo-anleitung") return "typenschild";
-      if (h === "kalender-termin") return "kalender";
-    }
-    return "anfrage";
-  });
 
   const [mapViewMode, setMapViewMode] = useState<ContactMapViewMode>(
     urlMapMode ?? "service-area"
@@ -133,26 +83,6 @@ export default function Kontakt({
       setMapViewMode("service-area");
     }
   }, [urlMapMode, searchParams?.mode]);
-
-  useEffect(() => {
-    if (urlTab) setActiveTab(urlTab);
-  }, [urlTab]);
-
-  useEffect(() => {
-    const syncHashToTab = () => {
-      const h = window.location.hash.replace("#", "").toLowerCase();
-      if (h === "photo-anleitung") setActiveTab("typenschild");
-      else if (h === "kalender-termin") setActiveTab("kalender");
-      else if (h === "anfrage") setActiveTab("anfrage");
-    };
-    window.addEventListener("hashchange", syncHashToTab);
-    return () => window.removeEventListener("hashchange", syncHashToTab);
-  }, []);
-
-  const handleSelectTab = (next: ContactHubTab) => {
-    triggerHapticFeedback(25);
-    setActiveTab(next);
-  };
 
   const handleMapViewModeChange = (nextMode: ContactMapViewMode) => {
     triggerHapticFeedback(25);
@@ -190,7 +120,7 @@ export default function Kontakt({
     <>
       <PageHeader
         title="Kontakt & Anfrage."
-        intro="Direkt per WhatsApp, Telefon, Kurzformular oder Kalender-Termin · Osnabrück · Termine nach Vereinbarung."
+        intro="Direkt per WhatsApp, Telefon oder Kurzformular · Osnabrück · Termine nach Vereinbarung."
       />
       <section className="py-7 sm:py-11 bg-surface dark:bg-slate-950">
         <div className="container-page grid gap-6 lg:gap-7 lg:grid-cols-12 lg:items-start">
@@ -211,6 +141,15 @@ export default function Kontakt({
                     <MessageCircle size={14} aria-hidden="true" />
                     <span>WhatsApp öffnen</span>
                   </a>
+                  <p className="mt-1.5 text-[10.5px] leading-snug text-ink-faint">
+                    Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+                    <Link
+                      href="/datenschutz#whatsapp"
+                      className="underline underline-offset-2 hover:text-accent"
+                    >
+                      Datenschutz
+                    </Link>
+                  </p>
                 </ContactItem>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5 pt-3 border-t border-primary/8 dark:border-white/10">
@@ -220,6 +159,15 @@ export default function Kontakt({
                       className="inline-flex min-h-[36px] items-center font-bold text-primary dark:text-slate-100 hover:text-accent transition-colors tabular-nums"
                     >
                       {place.phoneDisplay}
+                    </a>
+                  </ContactItem>
+
+                  <ContactItem icon={Mail} title="E-Mail">
+                    <a
+                      href={`mailto:${business.email}`}
+                      className="inline-flex min-h-[36px] items-center font-semibold text-primary dark:text-slate-100 hover:text-accent transition-colors break-all"
+                    >
+                      {business.email}
                     </a>
                   </ContactItem>
 
@@ -358,100 +306,13 @@ export default function Kontakt({
             </div>
           </aside>
 
-          {/* Compact 3-Tab Interactive Contact Hub */}
-          <div id="anfrage" className="min-w-0 scroll-mt-24 lg:col-span-8 space-y-4">
-            <div
-              role="tablist"
-              aria-label="Kontakt-Funktionen wählen"
-              className="grid grid-cols-3 gap-1.5 rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-1.5 shadow-xs"
-            >
-              {HUB_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => handleSelectTab(tab.id)}
-                    className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs sm:text-[13px] font-extrabold transition-colors cursor-pointer ${
-                      active
-                        ? "text-white"
-                        : "text-ink-muted hover:text-primary dark:hover:text-white"
-                    }`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="contact-hub-active-tab"
-                        transition={
-                          prefersReducedMotion
-                            ? { duration: 0.1 }
-                            : { type: "spring", stiffness: 400, damping: 32 }
-                        }
-                        aria-hidden="true"
-                        className="absolute inset-0 rounded-xl bg-primary dark:bg-accent shadow-xs"
-                      />
-                    )}
-                    <Icon size={15} className="relative z-10 shrink-0" aria-hidden="true" />
-                    <span className="relative z-10 hidden sm:inline truncate">{tab.label}</span>
-                    <span className="relative z-10 sm:hidden truncate">{tab.shortLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <AnimatePresence mode="wait" initial={false}>
-              {activeTab === "anfrage" && (
-                <motion.div
-                  key="tab-anfrage"
-                  role="tabpanel"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <RepairForm
-                    defaultDevice={defaultDevice}
-                    defaultSymptom={searchParams?.symptom || ""}
-                    defaultMode={defaultMode}
-                    showPhotoGuideLink
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === "typenschild" && (
-                <motion.div
-                  key="tab-typenschild"
-                  id="photo-anleitung"
-                  role="tabpanel"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <PhotoAnleitungGuide id="photo-anleitung-panel" />
-                </motion.div>
-              )}
-
-              {activeTab === "kalender" && (
-                <motion.div
-                  key="tab-kalender"
-                  id="kalender-termin"
-                  role="tabpanel"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <GoogleCalendarScheduler
-                    mode="customer"
-                    defaultDevice={defaultDevice || "Waschmaschine"}
-                    defaultProblem={searchParams?.symptom || ""}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Direct Inquiry Form */}
+          <div id="anfrage" className="min-w-0 scroll-mt-24 lg:col-span-8">
+            <RepairForm
+              defaultDevice={defaultDevice}
+              defaultSymptom={searchParams?.symptom || ""}
+              defaultMode={defaultMode}
+            />
           </div>
         </div>
       </section>
