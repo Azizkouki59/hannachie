@@ -87,6 +87,7 @@ import {
 import AdminMarketplaceManager from "@/components/AdminMarketplaceManager";
 import AdminBrandCardStudio from "@/components/AdminBrandCardStudio";
 import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
+import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 
 interface TicketDraftFields {
   grossPriceInput: string;
@@ -881,7 +882,7 @@ export default function AdminPage() {
       workOrSaleSummary.trim() ||
       (outcome === "sold"
         ? `Verkauft & übergeben (${ticket.brand} ${deviceLabel})`
-        : `Vor-Ort- / Garantieservice abgeschlossen (${ticket.brand} ${deviceLabel})`);
+        : `Übergabe- / Garantievorgang abgeschlossen (${ticket.brand} ${deviceLabel})`);
 
     const completionDetails: TicketCompletionDetails = {
       outcome,
@@ -1251,13 +1252,23 @@ export default function AdminPage() {
         </div>
 
         <div className="max-w-md w-full mx-auto my-10 bg-white dark:bg-slate-900 border border-primary/12 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-lg">
-          <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mb-5">
-            <Lock className="w-5 h-5 text-accent-light" />
+          <div className="mb-5 space-y-2.5">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+              <Lock className="w-3 h-3" />
+              Geschützter Bereich
+            </span>
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <HannachiBrandLogo
+                variant="lockup-auto"
+                height={46}
+                showSubline={false}
+                decorative
+              />
+              <h1 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight">
+                Auftragsbuch
+              </h1>
+            </div>
           </div>
-
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-white tracking-tight">
-            Hannachi Auftragsbuch
-          </h1>
           <p className="mt-2 text-sm text-ink-muted leading-relaxed">
             Geschützter Verwaltungsbereich für Kundenanfragen, Termine und Belege. Bitte melden Sie sich mit dem Admin-Passwort an.
           </p>
@@ -1338,10 +1349,18 @@ export default function AdminPage() {
               </Link>
               <Link
                 href="/admin"
-                className="font-serif text-base sm:text-xl font-bold text-ink tracking-tight whitespace-nowrap truncate"
+                aria-label="Hannachi Auftragsbuch"
+                className="inline-flex items-center gap-1.5 sm:gap-2 tracking-tight whitespace-nowrap truncate"
               >
-                <span className="sm:hidden">Auftragsbuch</span>
-                <span className="hidden sm:inline">Hannachi Auftragsbuch</span>
+                <HannachiBrandLogo
+                  variant="lockup-auto"
+                  height={34}
+                  showSubline={false}
+                  decorative
+                />
+                <span className="hidden sm:inline text-sm font-bold text-ink-muted">
+                  · Auftragsbuch
+                </span>
               </Link>
             </div>
 
@@ -1842,7 +1861,7 @@ export default function AdminPage() {
                 </span>
               </div>
               <p className="hidden sm:block mt-1 text-xs text-ink-muted">
-                Abgeschlossene Vor-Ort-Aufträge &amp; Verkäufe
+                Abgeschlossene Verkäufe &amp; Übergaben
               </p>
             </button>
           </section>
@@ -2212,7 +2231,7 @@ export default function AdminPage() {
                             </span>
                             <span aria-hidden="true">·</span>
                             <span>
-                              {ticket.visitType === "home_visit" ? "Vor-Ort" : "Übergabe"}
+                              {ticket.visitType === "home_visit" ? "Lieferung" : "Übergabe"}
                             </span>
                             {ticket.urgency !== "normal" && (
                               <>
@@ -3615,7 +3634,7 @@ export default function AdminPage() {
                     >
                       <div className="flex items-center gap-2 font-extrabold text-sm">
                         <Wrench className="w-4 h-4 shrink-0" />
-                        <span>Vor-Ort- / Garantieservice</span>
+                        <span>Übergabe / Garantieabwicklung</span>
                       </div>
                       <p
                         className={`mt-1 text-xs ${

@@ -13,7 +13,7 @@ import {
   toolsWorkbenchImage,
   showroomImage,
   type StaticImageData,
-} from "./images";
+} from "./images.ts";
 
 export type MarketplaceCategoryId =
   | "all"

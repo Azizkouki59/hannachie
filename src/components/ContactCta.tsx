@@ -14,12 +14,12 @@ export default function ContactCta() {
         {/* Dot pattern */}
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
         {/* Glow blobs */}
-        <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-accent/15 blur-[120px]" />
-        <div className="absolute -bottom-20 -left-20 h-[400px] w-[400px] rounded-full bg-blue-600/10 blur-[100px]" />
+        <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-[#1974B8]/16 blur-[120px]" />
+        <div className="absolute -bottom-20 -left-20 h-[400px] w-[400px] rounded-full bg-[#C92A42]/11 blur-[100px]" />
       </div>
 
       {/* Top border accent */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#64B5EC]/55 via-45% to-[#E86A7D]/48" />
 
       <div className="container-page relative grid gap-6 sm:gap-8 lg:gap-10 py-10 sm:py-14 lg:py-16 lg:grid-cols-12 lg:items-center">
         {/* Text */}

@@ -38,8 +38,8 @@ const HOW_WE_WORK_STEPS: HowWeWorkStep[] = [
     requestType: "check_parts",
     icon: MessageSquareText,
     iconShellClass:
-      "border-sky-500/25 bg-gradient-to-br from-sky-500/15 to-accent/5 text-accent dark:text-sky-300",
-    accentBarClass: "from-sky-500 to-accent",
+      "border-[#1974B8]/25 bg-gradient-to-br from-[#1974B8]/14 to-accent/5 text-accent dark:text-[#7AC4F4]",
+    accentBarClass: "from-[#1974B8] to-[#64B5EC]",
   },
   {
     num: "02",
@@ -52,8 +52,8 @@ const HOW_WE_WORK_STEPS: HowWeWorkStep[] = [
     requestType: "check_parts",
     icon: PackageSearch,
     iconShellClass:
-      "border-amber-500/25 bg-gradient-to-br from-amber-500/15 to-orange-500/5 text-amber-600 dark:text-amber-300",
-    accentBarClass: "from-amber-500 to-orange-500",
+      "border-[#C92A42]/28 bg-gradient-to-br from-[#C92A42]/12 to-[#E86A7D]/5 text-[#C92A42] dark:text-[#E86A7D]",
+    accentBarClass: "from-[#C92A42] to-[#E86A7D]",
   },
   {
     num: "03",
@@ -120,13 +120,13 @@ export default function HowWeWorkSection({
             whileInView={{ scaleX: 1, opacity: 1 }}
             viewport={{ once: true, amount: "some" }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-none hidden md:block origin-left absolute top-[3rem] left-[16%] right-[16%] h-[2px] rounded-full bg-gradient-to-r from-sky-500/30 via-sky-400/50 to-emerald-500/35"
+            className="pointer-events-none hidden md:block origin-left absolute top-[3rem] left-[16%] right-[16%] h-[2px] rounded-full bg-gradient-to-r from-[#1974B8]/35 via-[#C92A42]/42 to-emerald-500/35"
           />
 
           {/* Mobile Vertical Hairline Connector Spine */}
           <div
             aria-hidden="true"
-            className="pointer-events-none md:hidden absolute top-11 bottom-11 left-[2.7rem] sm:left-[2.95rem] w-[2px] rounded-full bg-gradient-to-b from-sky-500/35 via-amber-500/35 to-emerald-500/35"
+            className="pointer-events-none md:hidden absolute top-11 bottom-11 left-[2.7rem] sm:left-[2.95rem] w-[2px] rounded-full bg-gradient-to-b from-[#1974B8]/35 via-[#C92A42]/40 to-emerald-500/35"
           />
 
           <StaggerContainer className="relative z-10 grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">

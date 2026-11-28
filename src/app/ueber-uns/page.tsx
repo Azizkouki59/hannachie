@@ -19,6 +19,7 @@ import { AboutPrecisionStudio3D } from "@/components/AboutPrecisionStudio3D";
 import { FadeUp, Spatial3DCard, RevealText } from "@/components/animations";
 import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { herrHannachiImage, showroomImage } from "@/data/images";
+import { generatedPhotos } from "@/data/generatedPhotos";
 import { brands, business, sparePartsBrands, yearsOfExperience } from "@/data/site";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { triggerHapticFeedback } from "@/lib/haptics";
@@ -508,6 +509,41 @@ export default function UeberUns() {
               openQuickRequest(appliance, partNote, "", "question");
             }}
           />
+
+          {/* Studio Equipment & Spare-Parts Bench Gallery */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+            <figure className="overflow-hidden rounded-2xl border border-white/12 bg-[#020617] flex flex-col justify-between">
+              <div className="aspect-[16/9] w-full overflow-hidden bg-[#020617]">
+                <img
+                  src={generatedPhotos.pillarSpareParts.src}
+                  alt={generatedPhotos.pillarSpareParts.alt}
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <figcaption className="border-t border-white/10 px-4 py-3 text-xs text-slate-300 flex items-center justify-between gap-2">
+                <span className="font-semibold text-white">Original-Ersatzteile nach E-Nr.</span>
+                <span className="font-mono text-sky-300">Osnabrück · Seit {business.founded}</span>
+              </figcaption>
+            </figure>
+
+            <figure className="overflow-hidden rounded-2xl border border-white/12 bg-[#020617] flex flex-col justify-between">
+              <div className="aspect-[16/9] w-full overflow-hidden bg-[#020617]">
+                <img
+                  src={generatedPhotos.heroAtelierStage.src}
+                  alt={generatedPhotos.heroAtelierStage.alt}
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <figcaption className="border-t border-white/10 px-4 py-3 text-xs text-slate-300 flex items-center justify-between gap-2">
+                <span className="font-semibold text-white">Geräteprüfung &amp; Qualitätskontrolle</span>
+                <span className="text-sky-300">Präzision für jedes Typenschild</span>
+              </figcaption>
+            </figure>
+          </div>
         </div>
       </section>
 

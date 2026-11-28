@@ -137,7 +137,7 @@ export const WHATSAPP_TEMPLATE_OPTIONS: {
     id: "on_the_way",
     label: "Auf dem Weg / Anfahrt",
     shortLabel: "Auf dem Weg",
-    shortDesc: "Kurze Info an den Kunden: Wir sind gleich bei Ihnen vor Ort",
+    shortDesc: "Kurze Info an den Kunden: Lieferung / Übergabe ist unterwegs",
   },
   {
     id: "price_estimate",
@@ -418,7 +418,7 @@ export function formatTicketTextSummary(
       `Bestätigt am: ${new Date(c.confirmedAt).toLocaleString("de-DE")} (${c.confirmedBy})`
     );
   } else if (t.technicianNotes?.trim()) {
-    lines.push(`Notiz / Arbeit: ${t.technicianNotes.trim()}`);
+    lines.push(`Notiz / Vorgang: ${t.technicianNotes.trim()}`);
   }
 
   lines.push("");

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface HeroAnimatedBackdropProps {
   variant?: "hero-water-drum" | "about-heritage-emblem" | "subpage-header";
@@ -8,8 +8,7 @@ interface HeroAnimatedBackdropProps {
 
 /**
  * Zero-lag architectural backdrop for Hero and dark Subpage Headers.
- * Uses pure CSS gradients & CSS radial masks (zero full-viewport SVG masks,
- * zero infinite orb loops, and compositor-only translate3d mouse spotlight on desktop).
+ * Uses pure CSS gradients, CSS radial masks, and GPU-composited motion (transform/opacity only).
  */
 export function HeroAnimatedBackdrop({
   variant = "hero-water-drum",
@@ -90,34 +89,57 @@ export function HeroAnimatedBackdrop({
       data-backdrop-seed={seedKey || undefined}
       className="pointer-events-none absolute inset-0 overflow-hidden contain-strict"
     >
-      {/* Base Hannachi architectural depth gradient (#020617 -> #0F2A4A) */}
+      {/* Base Hannachi calm sapphire depth gradient (#071126 -> #102447) */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 85% 75% at 78% 12%, rgba(15, 42, 74, 0.92) 0%, rgba(15, 23, 42, 0.74) 48%, rgba(2, 6, 23, 0.98) 100%)",
+            "radial-gradient(ellipse 85% 75% at 78% 12%, rgba(18, 43, 84, 0.92) 0%, rgba(12, 27, 56, 0.78) 48%, rgba(7, 17, 38, 0.98) 100%)",
         }}
       />
 
-      {/* Static studio radial light pools (zero idle GPU animation) */}
-      <div
-        className="absolute -top-24 -right-20 h-[28rem] w-[28rem] sm:h-[36rem] sm:w-[36rem] rounded-full opacity-[0.14]"
+      {/* Soft studio radial light pools balancing calm cobalt blue & velvety crimson */}
+      <motion.div
+        animate={
+          isHero && !prefersReduced
+            ? { scale: [1, 1.06, 1], opacity: [0.15, 0.21, 0.15] }
+            : undefined
+        }
+        transition={
+          isHero && !prefersReduced
+            ? { duration: 11, repeat: Infinity, ease: "easeInOut" }
+            : undefined
+        }
+        className="absolute -top-24 -right-20 h-[28rem] w-[28rem] sm:h-[36rem] sm:w-[36rem] rounded-full opacity-[0.15]"
         style={{
           background:
-            "radial-gradient(circle at center, #0284C7 0%, rgba(2, 132, 199, 0.32) 44%, transparent 72%)",
+            "radial-gradient(circle at center, #1974B8 0%, rgba(25, 116, 184, 0.28) 44%, transparent 72%)",
         }}
       />
-      <div
-        className="absolute -bottom-28 left-[12%] h-[24rem] w-[24rem] sm:h-[32rem] sm:w-[32rem] rounded-full opacity-[0.1]"
+      <motion.div
+        animate={
+          isHero && !prefersReduced
+            ? { scale: [1, 1.07, 1], opacity: [0.075, 0.115, 0.075] }
+            : undefined
+        }
+        transition={
+          isHero && !prefersReduced
+            ? { duration: 13, delay: 1.5, repeat: Infinity, ease: "easeInOut" }
+            : undefined
+        }
+        className="absolute -bottom-28 left-[10%] h-[24rem] w-[24rem] sm:h-[32rem] sm:w-[32rem] rounded-full opacity-[0.075]"
         style={{
           background:
-            "radial-gradient(circle at center, #10B981 0%, rgba(16, 185, 129, 0.22) 42%, transparent 70%)",
+            "radial-gradient(circle at center, #C92A42 0%, rgba(201, 42, 66, 0.16) 42%, transparent 72%)",
         }}
       />
 
       {/* Precision hairline engineering grid via pure CSS background (zero SVG mask cost) */}
-      <div
-        className="absolute inset-0 opacity-[0.13]"
+      <motion.div
+        initial={isHero && !prefersReduced ? { opacity: 0 } : false}
+        animate={{ opacity: 0.11 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 opacity-[0.11]"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(148, 163, 184, 0.34) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.34) 1px, transparent 1px)",
@@ -129,30 +151,47 @@ export function HeroAnimatedBackdrop({
         }}
       />
 
-      {/* Subtle static architectural precision rings on desktop */}
+      {/* Subtle architectural precision rings on desktop with ultra-calm mechanical rotation */}
       {isHero && (
-        <svg
-          className="hidden sm:block absolute -right-24 -top-24 h-[500px] w-[500px] opacity-[0.09]"
+        <motion.svg
+          initial={prefersReduced ? false : { opacity: 0, scale: 0.93 }}
+          animate={{ opacity: 0.11, scale: 1 }}
+          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          className="hidden sm:block absolute -right-24 -top-24 h-[520px] w-[520px] opacity-[0.11]"
           viewBox="0 0 520 520"
           fill="none"
         >
-          <circle
+          <motion.circle
             cx="260"
             cy="260"
             r="228"
-            stroke="#38BDF8"
-            strokeWidth="0.75"
+            stroke="#64B5EC"
+            strokeWidth="0.85"
             strokeDasharray="6 10"
+            style={{ transformOrigin: "260px 260px" }}
+            animate={prefersReduced ? undefined : { rotate: 360 }}
+            transition={
+              prefersReduced
+                ? undefined
+                : { duration: 96, repeat: Infinity, ease: "linear" }
+            }
           />
-          <circle
+          <motion.circle
             cx="260"
             cy="260"
             r="168"
-            stroke="#10B981"
-            strokeWidth="0.75"
+            stroke="#E86A7D"
+            strokeWidth="0.85"
             strokeDasharray="3 12"
+            style={{ transformOrigin: "260px 260px" }}
+            animate={prefersReduced ? undefined : { rotate: -360 }}
+            transition={
+              prefersReduced
+                ? undefined
+                : { duration: 120, repeat: Infinity, ease: "linear" }
+            }
           />
-        </svg>
+        </motion.svg>
       )}
 
       {/* GPU-composited cursor spotlight (desktop fine pointer only, translate3d only) */}
@@ -162,27 +201,41 @@ export function HeroAnimatedBackdrop({
           className="hidden lg:block absolute top-0 left-0 h-[480px] w-[480px] rounded-full opacity-0 transition-opacity duration-300"
           style={{
             background:
-              "radial-gradient(circle at center, rgba(2, 132, 199, 0.14) 0%, rgba(16, 185, 129, 0.04) 44%, transparent 72%)",
+              "radial-gradient(circle at center, rgba(25, 116, 184, 0.14) 0%, rgba(201, 42, 66, 0.04) 44%, transparent 72%)",
           }}
         />
       )}
 
       {/* Protective contrast scrim so white typography stays razor-sharp */}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.68)_0%,rgba(2,6,23,0.34)_52%,rgba(2,6,23,0.12)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,17,38,0.66)_0%,rgba(7,17,38,0.32)_52%,rgba(7,17,38,0.12)_100%)]" />
 
-      {/* Crisp top & bottom architectural hairlines */}
-      <div
-        className="absolute top-0 inset-x-0 h-px"
+      {/* Crisp top & bottom architectural hairlines with pro center-out reveal */}
+      <motion.div
+        initial={isHero && !prefersReduced ? { scaleX: 0.25, opacity: 0 } : false}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute top-0 inset-x-0 h-px origin-center"
         style={{
           background:
-            "linear-gradient(90deg, transparent 8%, rgba(2, 132, 199, 0.42) 38%, rgba(224, 242, 254, 0.54) 50%, rgba(16, 185, 129, 0.34) 64%, transparent 92%)",
+            "linear-gradient(90deg, transparent 8%, rgba(100, 181, 236, 0.44) 38%, rgba(224, 242, 254, 0.48) 50%, rgba(232, 106, 125, 0.36) 64%, transparent 92%)",
         }}
       />
+      {isHero && !prefersReduced && (
+        <motion.div
+          animate={{ x: ["-20vw", "110vw"], opacity: [0, 0.85, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, repeatDelay: 4.5, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute top-0 left-0 h-[1.5px] w-56 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(100,181,236,0.9) 50%, rgba(232,106,125,0.78) 85%, transparent 100%)",
+          }}
+        />
+      )}
       <div
         className="absolute bottom-0 inset-x-0 h-px"
         style={{
           background:
-            "linear-gradient(90deg, transparent 5%, rgba(148, 163, 184, 0.16) 35%, rgba(56, 189, 248, 0.28) 55%, rgba(148, 163, 184, 0.14) 85%, transparent 98%)",
+            "linear-gradient(90deg, transparent 5%, rgba(148, 163, 184, 0.16) 35%, rgba(100, 181, 236, 0.3) 55%, rgba(232, 106, 125, 0.2) 78%, transparent 98%)",
         }}
       />
     </div>
@@ -201,31 +254,31 @@ export function SectionAmbientMesh({
   const layout =
     variant === "process"
       ? {
-          orbA: "-top-24 left-[8%]",
-          orbB: "-bottom-28 right-[10%]",
-          colorA: "#0284C7",
-          colorB: "#10B981",
-        }
-      : variant === "reviews"
-        ? {
-            orbA: "-top-20 right-[12%]",
-            orbB: "-bottom-24 left-[14%]",
-            colorA: "#0284C7",
-            colorB: "#0F2A4A",
-          }
-        : variant === "inquiry"
-          ? {
-              orbA: "-top-24 right-[6%]",
-              orbB: "-bottom-24 left-[6%]",
-              colorA: "#10B981",
-              colorB: "#0284C7",
+              orbA: "-top-24 left-[8%]",
+              orbB: "-bottom-28 right-[10%]",
+              colorA: "#1974B8",
+              colorB: "#C92A42",
             }
-          : {
-              orbA: "-top-24 right-[14%]",
-              orbB: "-bottom-28 left-[10%]",
-              colorA: "#0284C7",
-              colorB: "#0F2A4A",
-            };
+          : variant === "reviews"
+            ? {
+                orbA: "-top-20 right-[12%]",
+                orbB: "-bottom-24 left-[14%]",
+                colorA: "#1974B8",
+                colorB: "#0F2447",
+              }
+            : variant === "inquiry"
+              ? {
+                  orbA: "-top-24 right-[6%]",
+                  orbB: "-bottom-24 left-[6%]",
+                  colorA: "#C92A42",
+                  colorB: "#1974B8",
+                }
+              : {
+                  orbA: "-top-24 right-[14%]",
+                  orbB: "-bottom-28 left-[10%]",
+                  colorA: "#1974B8",
+                  colorB: "#C92A42",
+                };
 
   return (
     <div

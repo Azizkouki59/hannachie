@@ -7,6 +7,9 @@ import {
   AnimatePresence,
   useDragControls,
   useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
   type PanInfo,
   type Variants,
 } from "framer-motion";
@@ -29,7 +32,6 @@ import { useQuickRequest } from "@/components/QuickRequestSheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
 import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
-import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 
 const drawerListVariants: Variants = {
   hidden: { opacity: 0 },
@@ -48,6 +50,8 @@ const drawerItemVariants: Variants = {
     transition: { type: "spring", stiffness: 420, damping: 30 },
   },
 };
+
+const HANNACHI_LETTERS = ["H", "a", "n", "n", "a", "c", "h", "i"] as const;
 
 const desktopNav = [
   { href: "/", label: "Startseite" },
@@ -68,6 +72,13 @@ export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const prefersReducedMotion = useReducedMotion();
   const drawerDragControls = useDragControls();
+  const { scrollYProgress } = useScroll();
+  const smoothScrollProgress = useSpring(scrollYProgress, {
+    stiffness: 280,
+    damping: 32,
+    restDelta: 0.001,
+  });
+  const logoLineScaleX = useTransform(smoothScrollProgress, [0, 1], [0.16, 1]);
 
   const mobileDrawerPages = [
     {
@@ -169,14 +180,11 @@ export default function Navbar() {
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  const currentPageLabel =
-    mobileDrawerPages.find((p) => isActive(p.href))?.label || "Startseite";
-
   return (
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-0 w-full" />
       {isPinned && (
-        <div aria-hidden="true" className="h-[56px] lg:h-16 w-full shrink-0" />
+        <div aria-hidden="true" className="h-[68px] lg:h-[74px] w-full shrink-0" />
       )}
       <header className={isPinned ? "fixed top-0 inset-x-0 z-50" : "sticky top-0 z-50"}>
         {/* Backdrop anchored beneath top bar & drawer */}
@@ -195,36 +203,152 @@ export default function Navbar() {
           )}
         </AnimatePresence>
 
-      {/* Top Navigation Bar (Sits at z-30 so swiping the drawer upward glides smoothly underneath it) */}
+      {/* Top Navigation Bar (Clean 68px/74px midnight-sapphire architectural header) */}
       <div
-        className={`relative z-30 h-[56px] lg:h-16 border-b border-white/10 bg-primary-dark/95 dark:bg-slate-950/95 backdrop-blur-xl transition-shadow duration-200 ${
-          isPinned ? "shadow-[0_10px_30px_-10px_rgba(2,6,23,0.6)]" : ""
+        className={`relative z-30 h-[68px] lg:h-[74px] border-b border-white/[0.08] bg-[#071126]/95 backdrop-blur-2xl transition-[box-shadow,background-color] duration-200 ${
+          isPinned
+            ? "bg-[#060f22]/98 shadow-[0_14px_34px_-14px_rgba(2,6,23,0.78)]"
+            : ""
         }`}
       >
-        <div className="container-page flex h-full items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-4 xl:gap-6">
-          {/* Zone 1: Clean Brand Wordmark + Subtle Mobile Page Context */}
-          <div className="flex items-center gap-2.5 min-w-0 lg:justify-self-start">
+        <div className="container-page relative flex h-full items-center justify-between gap-3 sm:gap-5 lg:gap-8 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:items-center xl:gap-8">
+          {/* Zone 1: Integrated Animated Hannachi Crest + Letter-by-Letter Wordmark + Scroll-Driven Ruby Line */}
+          <div className="flex flex-1 min-w-0 max-w-full h-full items-center lg:flex-initial xl:justify-self-start">
             <Link
               href="/"
               onClick={() => triggerHapticFeedback(35)}
-              className="group inline-flex h-11 min-h-[44px] items-center gap-2.5 text-[17px] sm:text-lg lg:text-xl font-extrabold tracking-tight text-white whitespace-nowrap shrink-0 hover:text-accent-light transition-colors"
+              className="group relative inline-flex items-center gap-2.5 sm:gap-3 whitespace-nowrap py-1 focus-visible:outline-offset-4 rounded-xl"
               aria-label="Hannachi: zur Startseite"
             >
-              <HannachiBrandLogo
-                size={28}
-                className="sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-[1.04]"
-              />
-              <span>Hannachi</span>
-            </Link>
+              {/* Animated Signature Cobalt-Sapphire H-Crest */}
+              <motion.span
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.04 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="relative flex h-[38px] w-[38px] sm:h-[42px] sm:w-[42px] shrink-0 items-center justify-center select-none"
+                aria-hidden="true"
+              >
+                <svg
+                  viewBox="0 0 64 64"
+                  className="h-full w-full overflow-visible drop-shadow-[0_4px_12px_rgba(14,165,233,0.28)]"
+                >
+                  <defs>
+                    <radialGradient id="navCrestCore" cx="38%" cy="30%" r="80%">
+                      <stop offset="0%" stopColor="#1749B2" />
+                      <stop offset="48%" stopColor="#0C2E7A" />
+                      <stop offset="100%" stopColor="#071844" />
+                    </radialGradient>
+                    <linearGradient id="navCrestArc" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#1974B8" stopOpacity="0.45" />
+                      <stop offset="55%" stopColor="#64B5EC" />
+                      <stop offset="100%" stopColor="#BAE6FD" />
+                    </linearGradient>
+                    <linearGradient id="navCrestRuby" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#F27D8E" />
+                      <stop offset="50%" stopColor="#C92A42" />
+                      <stop offset="100%" stopColor="#A11E33" />
+                    </linearGradient>
+                  </defs>
 
-            {/* Mobile Active Page Indicator */}
-            <span className="hidden min-[400px]:inline lg:hidden min-w-0 text-[11px] font-medium text-white/55 truncate border-l border-white/15 pl-2.5">
-              {currentPageLabel}
-            </span>
+                  {/* Deep cobalt medallion */}
+                  <ellipse cx="32" cy="33" rx="25" ry="22" fill="url(#navCrestCore)" />
+                  {/* Subtle top glass sheen */}
+                  <ellipse
+                    cx="32"
+                    cy="24"
+                    rx="18"
+                    ry="9.5"
+                    fill="#FFFFFF"
+                    fillOpacity="0.12"
+                  />
+                  {/* Fine sapphire rim */}
+                  <ellipse
+                    cx="32"
+                    cy="33"
+                    rx="24.6"
+                    ry="21.6"
+                    fill="none"
+                    stroke="#64B5EC"
+                    strokeWidth="1.25"
+                    strokeOpacity="0.58"
+                  />
+                  {/* Luminous sky-sapphire sweeping arc */}
+                  <motion.path
+                    d="M 11.5 46.5 A 26.5 23.5 0 0 1 56.5 24.5"
+                    fill="none"
+                    stroke="url(#navCrestArc)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0.2 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0.01 }
+                        : { duration: 0.72, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
+                    }
+                  />
+                  {/* Crisp geometric ruby H */}
+                  <path
+                    d="M 21.5 22.5 H 27.5 V 30.2 H 36.5 V 22.5 H 42.5 V 43.5 H 36.5 V 35.4 H 27.5 V 43.5 H 21.5 Z"
+                    fill="#040B1F"
+                    fillOpacity="0.45"
+                    transform="translate(0, 1.2)"
+                  />
+                  <path
+                    d="M 21.5 22.5 H 27.5 V 30.2 H 36.5 V 22.5 H 42.5 V 43.5 H 36.5 V 35.4 H 27.5 V 43.5 H 21.5 Z"
+                    fill="url(#navCrestRuby)"
+                  />
+                </svg>
+              </motion.span>
+
+              {/* Hannachi wordmark (staggered fade-in + slide-up) + Scroll-driven ruby line */}
+              <span aria-hidden="true" className="inline-flex flex-col items-stretch">
+                <span className="inline-flex items-baseline overflow-hidden">
+                  {HANNACHI_LETTERS.map((char, idx) => (
+                    <motion.span
+                      key={`${char}-${idx}`}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0.01 }
+                          : {
+                              duration: 0.42,
+                              delay: 0.05 + idx * 0.044,
+                              ease: [0.22, 1, 0.36, 1],
+                            }
+                      }
+                      className="inline-block font-sans text-[22px] min-[375px]:text-[24px] sm:text-[26px] lg:text-[28px] font-black tracking-[-0.025em] leading-none bg-gradient-to-b from-[#F27D8E] via-[#E13B55] to-[#C92A42] bg-clip-text text-transparent pb-[2px] will-change-transform"
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+                </span>
+
+                {/* Scroll-driven ruby accent line directly underneath Hannachi */}
+                <motion.span
+                  initial={prefersReducedMotion ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={
+                    prefersReducedMotion
+                      ? { duration: 0.01 }
+                      : { duration: 0.4, delay: 0.22, ease: [0.22, 1, 0.36, 1] }
+                  }
+                  className="relative mt-[3px] h-[2.5px] w-full rounded-full bg-white/[0.1]"
+                >
+                  <motion.span
+                    style={prefersReducedMotion ? undefined : { scaleX: logoLineScaleX }}
+                    className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-[#A11E33] via-[#C92A42] to-[#E86A7D] shadow-[0_0_8px_rgba(201,42,66,0.55)] will-change-transform"
+                  />
+                </motion.span>
+              </span>
+            </Link>
           </div>
 
-          {/* Zone 2: 5 Concise Single-Line Desktop Navigation Links (True Center) */}
-          <nav aria-label="Hauptnavigation" className="hidden lg:flex lg:justify-self-center items-center gap-5 xl:gap-8">
+          {/* Zone 2: 5 Clean Single-Line Navigation Links (True Center) */}
+          <nav aria-label="Hauptnavigation" className="hidden lg:flex xl:justify-self-center items-center gap-6 xl:gap-8">
             {desktopNav.map((n) => {
               const active = isActive(n.href);
               return (
@@ -232,8 +356,10 @@ export default function Navbar() {
                   key={n.href}
                   href={n.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative py-1.5 text-[13.5px] xl:text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
-                    active ? "text-white font-semibold" : "text-white/75 hover:text-white"
+                  className={`relative py-2.5 text-[14px] xl:text-[14.5px] tracking-[0.005em] whitespace-nowrap shrink-0 transition-colors duration-150 ${
+                    active
+                      ? "text-white font-bold"
+                      : "text-slate-300/85 font-medium hover:text-white"
                   }`}
                 >
                   <span>{n.label}</span>
@@ -243,10 +369,10 @@ export default function Navbar() {
                       transition={
                         prefersReducedMotion
                           ? { duration: 0.1 }
-                          : { type: "spring", stiffness: 300, damping: 30 }
+                          : { type: "spring", stiffness: 360, damping: 32 }
                       }
                       aria-hidden="true"
-                      className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.7)]"
+                      className="absolute inset-x-0.5 -bottom-0.5 h-[2px] rounded-full bg-gradient-to-r from-[#C92A42] to-[#E86A7D]"
                     />
                   )}
                 </Link>
@@ -254,8 +380,8 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Zone 3: Theme Toggle + CTA + Mobile Menu Drawer Button */}
-          <div className="flex items-center gap-1.5 lg:gap-2 shrink-0 lg:justify-self-end">
+          {/* Zone 3: Minimal Theme Icon Toggle + Symmetrical Ruby CTA + Mobile Menu */}
+          <div className="relative z-10 flex items-center gap-2 sm:gap-2.5 shrink-0 xl:justify-self-end">
             <button
               type="button"
               onClick={() => {
@@ -265,18 +391,12 @@ export default function Navbar() {
               aria-label={isDark ? "Hellmodus aktivieren" : "Dunkelmodus aktivieren"}
               aria-pressed={isDark}
               title={isDark ? "Zum Hellmodus wechseln" : "Zum Dunkelmodus wechseln"}
-              className="inline-flex h-10 w-10 min-h-[40px] min-w-[40px] lg:w-auto items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2.5 text-xs font-bold text-white transition-colors duration-150 hover:border-accent/60 hover:bg-white/20 active:scale-95 whitespace-nowrap cursor-pointer"
+              className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] lg:h-10 lg:w-10 lg:min-h-[40px] lg:min-w-[40px] items-center justify-center rounded-xl border border-white/12 bg-white/[0.045] text-slate-200 transition-colors duration-150 hover:border-white/25 hover:bg-white/[0.1] hover:text-white active:scale-95 shrink-0 cursor-pointer"
             >
               {isDark ? (
-                <span className="inline-flex items-center gap-1.5 text-amber-300">
-                  <Sun size={15} aria-hidden="true" />
-                  <span className="hidden xl:inline text-white/90">Hell</span>
-                </span>
+                <Sun size={16} className="text-amber-200" aria-hidden="true" />
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-sky-300">
-                  <Moon size={15} aria-hidden="true" />
-                  <span className="hidden xl:inline text-white/90">Dunkel</span>
-                </span>
+                <Moon size={16} className="text-sky-200" aria-hidden="true" />
               )}
             </button>
 
@@ -284,18 +404,18 @@ export default function Navbar() {
               type="button"
               onClick={() => openQuickRequest()}
               aria-expanded={isQuickRequestOpen}
-              className="hidden lg:inline-flex min-h-[40px] items-center gap-1.5 xl:gap-2 rounded-xl bg-accent px-3.5 xl:px-4 py-1.5 text-xs xl:text-sm font-bold text-white shadow-xs transition-all duration-150 hover:bg-accent-dark hover:-translate-y-px whitespace-nowrap shrink-0 cursor-pointer"
+              className="hero-cta-specular group hidden lg:inline-flex h-10 min-h-[40px] items-center gap-2 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] px-5 text-[13.5px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_20px_-6px_rgba(201,42,66,0.48)] transition-all duration-150 hover:from-[#D4334C] hover:to-[#AE2238] hover:-translate-y-px whitespace-nowrap shrink-0 cursor-pointer"
             >
               <span>Anfragen</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className="transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
             </button>
 
             <button
               type="button"
-              className={`inline-flex items-center justify-center gap-1.5 h-10 min-h-[40px] min-w-[40px] px-2.5 sm:px-3 rounded-xl border text-xs font-extrabold transition-colors duration-150 active:scale-95 lg:hidden whitespace-nowrap cursor-pointer ${
+              className={`inline-flex items-center justify-center gap-2 h-11 min-h-[44px] w-11 min-w-[44px] sm:w-auto sm:px-4 rounded-xl border text-[13px] font-bold transition-colors duration-150 active:scale-95 lg:hidden whitespace-nowrap cursor-pointer ${
                 open
-                  ? "border-accent bg-accent text-white shadow-sm"
-                  : "border-white/15 bg-white/10 text-white hover:bg-white/20"
+                  ? "border-[#E86A7D]/55 bg-[#C92A42] text-white shadow-[0_6px_18px_-4px_rgba(201,42,66,0.48)]"
+                  : "border-white/12 bg-white/[0.045] text-white hover:border-white/25 hover:bg-white/[0.1]"
               }`}
               aria-expanded={open}
               aria-controls="mobile-nav-drawer"
@@ -308,8 +428,8 @@ export default function Navbar() {
                 setOpen((o) => !o);
               }}
             >
-              {open ? <X size={16} aria-hidden="true" /> : <Menu size={16} aria-hidden="true" />}
-              <span className="hidden min-[360px]:inline">{open ? "Zu" : "Menü"}</span>
+              {open ? <X size={17} aria-hidden="true" /> : <Menu size={17} aria-hidden="true" />}
+              <span className="hidden sm:inline">{open ? "Zu" : "Menü"}</span>
             </button>
           </div>
         </div>
@@ -335,7 +455,7 @@ export default function Navbar() {
                 ? { duration: 0.12 }
                 : { type: "spring", stiffness: 390, damping: 32, mass: 0.85 }
             }
-            className="absolute inset-x-0 top-full z-20 rounded-b-3xl border-b border-white/12 bg-primary-dark/98 dark:bg-slate-950/98 backdrop-blur-2xl text-white shadow-2xl lg:hidden max-h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain will-change-transform"
+            className="absolute inset-x-0 top-full z-20 rounded-b-3xl border-b border-white/12 bg-primary-dark/98 dark:bg-slate-950/98 backdrop-blur-2xl text-white shadow-2xl lg:hidden max-h-[calc(100dvh-4.25rem-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain will-change-transform"
           >
             <nav
               id="mobile-nav-drawer"

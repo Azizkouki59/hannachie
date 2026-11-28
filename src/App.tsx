@@ -55,7 +55,7 @@ function LiveBusinessJsonLd({ cleanPath }: { cleanPath: string }) {
       alternateName: "Hannachi Osnabrück",
       description: `Unabhängiger Fachhandel für Elektrohaushaltsgeräte in ${business.city} seit ${business.founded}: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage nach Terminvereinbarung.`,
       url: baseUrl,
-      logo: `${baseUrl}/favicon.svg`,
+      logo: `${baseUrl}/assets/aistudio/hannachi-emblem-2048_263261a0.png`,
       image: `${baseUrl}/images/herr-hannachi.jpg`,
       telephone: place.internationalPhoneNumber || "+491703493494",
       email: business.email,
@@ -301,24 +301,6 @@ const pageSlideVariants = {
   },
 };
 
-function RouteTransferRibbon({ routeKey }: { routeKey: string }) {
-  const prefersReduced = useReducedMotion();
-  if (prefersReduced) return null;
-  return (
-    <motion.div
-      key={`transfer-ribbon-${routeKey}`}
-      aria-hidden="true"
-      initial={{ scaleX: 0, opacity: 0.95, transformOrigin: "0% 50%" }}
-      animate={{ scaleX: 1, opacity: [0.95, 0.85, 0] }}
-      transition={{
-        scaleX: { duration: 0.42, ease: antigravityEase },
-        opacity: { duration: 0.58, times: [0, 0.62, 1], ease: "easeOut" },
-      }}
-      className="pointer-events-none fixed top-0 inset-x-0 z-[70] h-[2.5px] bg-gradient-to-r from-sky-400 via-cyan-200 to-sky-500 shadow-[0_0_14px_rgba(56,189,248,0.85)]"
-    />
-  );
-}
-
 export default function App() {
   const { pathname, search, hash } = useLocationState();
   const prefersReducedMotion = useReducedMotion();
@@ -425,7 +407,6 @@ export default function App() {
         <ThemeProvider>
           <QuickRequestProvider>
             <div className="min-h-screen flex flex-col font-sans bg-surface text-primary dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
-              {!isAdminRoute && <RouteTransferRibbon routeKey={cleanPath} />}
               <div className="relative flex min-h-screen flex-col">
               <a
                 href="#main"

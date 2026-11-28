@@ -18,9 +18,8 @@ import {
   useTransform,
   type PanInfo,
 } from "framer-motion";
-import { X, Phone } from "lucide-react";
+import { MessageCircle, X, Phone } from "lucide-react";
 import RepairForm from "@/components/RepairForm";
-import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 import type { InquiryMode } from "@/lib/repairRequest";
 import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
 import { business } from "@/data/site";
@@ -307,7 +306,12 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
               />
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <HannachiBrandLogo size={36} />
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#64B5EC]/35 bg-[#1974B8]/25 text-[#64B5EC]"
+                  >
+                    <MessageCircle size={18} />
+                  </span>
                   <div className="min-w-0">
                     <p className="text-xs sm:text-sm font-extrabold leading-tight truncate">
                       {mode === "question" ? "Direkte Frage" : "Kurze Anfrage"}

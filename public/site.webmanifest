@@ -1,0 +1,24 @@
+{
+  "name": "Hannachi Elektrohaushaltsgeräte & Ersatzteile",
+  "short_name": "Hannachi",
+  "description": "Unabhängiger Fachhandel in Osnabrück seit 1990: persönliche Beratung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "lang": "de-DE",
+  "icons": [
+    {
+      "src": "/assets/aistudio/app-icon-192_c3e7c35d.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/aistudio/app-icon-512_bdba8a7c.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

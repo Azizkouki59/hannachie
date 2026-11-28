@@ -37,8 +37,8 @@ export const viewport: Viewport = { themeColor: "#0F172A" };
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  name: "Hannachi Elektrohaushaltsgeräte Service",
+  "@type": ["LocalBusiness", "HomeGoodsStore"],
+  name: `${business.name} ${business.tagline}`,
   url: business.url,
   telephone: "+491703493494",
   foundingDate: String(business.founded),

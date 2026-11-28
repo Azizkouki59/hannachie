@@ -27,7 +27,6 @@ import {
   StaggerContainer,
   StaggerItem,
   CountUp,
-  ScrollProgressBar,
   Spatial3DCard,
   Spatial3DPhoto,
   RevealText,
@@ -360,28 +359,26 @@ export default function HomepageClient() {
 
   return (
     <>
-      <ScrollProgressBar />
-
       {/* ══════════════════════════════════════════════════════════════════
           SECTION 1: MOBILE ON-SITE HERO (CLEAR & COMPLIANT)
       ══════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroSectionRef}
-        className="relative overflow-hidden bg-primary-dark pt-3 pb-6 sm:pt-9 sm:pb-12 lg:pt-12 lg:pb-14 border-b border-white/10"
+        className="relative overflow-hidden bg-primary-dark pt-7 pb-8 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-16 border-b border-white/10"
       >
         <HeroAnimatedBackdrop variant="hero-water-drum" />
 
         <div className="container-page relative z-10">
-          <div className="grid gap-4 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
+          <div className="grid gap-5 sm:gap-8 lg:grid-cols-12 lg:items-stretch lg:gap-10">
             {/* Left Column (7 cols): Editorial Masked Typography + Specular Glass Console */}
             <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
               {/* Compact Trust Eyebrow */}
               <div className="overflow-hidden">
                 <motion.div
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-[13px] font-semibold text-white/75"
+                  transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+                  className="mb-2.5 sm:mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-[13px] font-semibold text-white/75"
                 >
                   <a
                     href="#kundenstimmen"
@@ -391,9 +388,11 @@ export default function HomepageClient() {
                     <span className="tabular-nums">{ratingFormatted} ★ Google ({place.userRatingCount})</span>
                   </a>
                   <span aria-hidden="true" className="text-white/30">·</span>
-                  <span className="font-bold text-white/90">Seit {business.founded} in Osnabrück</span>
-                  <span aria-hidden="true" className="text-white/30">·</span>
-                  <AvailabilityBadge />
+                  <span className="font-bold text-white/95">
+                    Seit <span className="text-[#E86A7D]">{business.founded}</span> in Osnabrück
+                  </span>
+                  <span aria-hidden="true" className="hidden sm:inline text-white/30">·</span>
+                  <AvailabilityBadge className="basis-full sm:basis-auto" />
                 </motion.div>
               </div>
 
@@ -401,12 +400,12 @@ export default function HomepageClient() {
                 <h1 className="text-[24px] min-[375px]:text-[27px] sm:text-[36px] lg:text-[42px] font-extrabold leading-[1.14] tracking-[-0.025em] text-white text-balance">
                   <RevealText
                     trigger="mount"
-                    delay={0.05}
+                    delay={0.06}
                     segments={[
                       { text: "Ihr Fachhandel für Hausgeräte " },
                       {
                         text: "& Original-Ersatzteile in Osnabrück",
-                        className: "text-sky-300",
+                        className: "text-[#7AC4F4]",
                       },
                     ]}
                   />
@@ -416,8 +415,8 @@ export default function HomepageClient() {
               <motion.p
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-2.5 sm:mt-3.5 max-w-[58ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.6] text-white/85"
+                transition={{ duration: 0.54, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-3 sm:mt-4 max-w-[58ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.6] text-white/85"
               >
                 Unabhängiger Fachhandel von Inhaber{" "}
                 <strong className="text-white font-semibold">{business.owner}</strong> seit{" "}
@@ -434,15 +433,19 @@ export default function HomepageClient() {
                 onPointerEnter={handleConsolePointerEnter}
                 onPointerMove={handleConsolePointerMove}
                 onPointerLeave={handleConsolePointerLeave}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{
-                  duration: 0.42,
-                  delay: 0.12,
+                  duration: 0.56,
+                  delay: 0.2,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className="hero-glass-console mt-3.5 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.035] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-[0_24px_56px_-18px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
+                className="hero-glass-console mt-4 sm:mt-6 rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.09] to-white/[0.035] backdrop-blur-md p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 shadow-[0_24px_56px_-18px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
               >
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-[#64B5EC]/50 via-white/30 to-[#E86A7D]/45"
+                />
                 <div className="relative z-10 flex items-center justify-between gap-2 text-xs">
                   <span className="font-extrabold text-white min-w-0">
                     Gerät wählen
@@ -492,7 +495,7 @@ export default function HomepageClient() {
                                 : { type: "spring", stiffness: 420, damping: 34, mass: 0.75 }
                             }
                             aria-hidden="true"
-                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-sky-500 to-sky-600 ring-1 ring-inset ring-sky-200/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]"
+                            className="absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-b from-[#1e7ec4] to-[#135a91] ring-1 ring-inset ring-sky-200/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
                           />
                         )}
                         <AnimatePresence>
@@ -664,7 +667,7 @@ export default function HomepageClient() {
                     href={place.phoneHref}
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-call-btn"
-                    className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
+                    className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2 sm:px-2.5 py-2 text-[11px] min-[375px]:text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
                   >
                     <Phone size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
                     <span className="truncate">{place.phoneDisplay}</span>
@@ -676,7 +679,7 @@ export default function HomepageClient() {
                     type="button"
                     onClick={handleScrollToRequest}
                     data-testid="hero-direct-form-btn"
-                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-b from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_20px_-6px_rgba(2,132,199,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors cursor-pointer overflow-hidden"
+                    className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] hover:from-[#D4334C] hover:to-[#AE2238] px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_22px_-6px_rgba(201,42,66,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] transition-colors cursor-pointer overflow-hidden"
                   >
                     <span className="truncate">
                       {selectedSymptom ? "Formular" : "Termin"}
@@ -701,16 +704,20 @@ export default function HomepageClient() {
 
               {/* Mobile Calm Studio Photo Frame with Mr. Hannachi's Real Photo */}
               <motion.div
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.56, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-3.5 mx-auto w-full max-w-[440px] lg:hidden"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.58, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className="mt-4 mx-auto w-full max-w-[440px] lg:hidden"
               >
                 <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 inset-x-6 z-20 h-px bg-gradient-to-r from-[#64B5EC]/60 via-sky-200/45 to-[#E86A7D]/45"
+                  />
                   <motion.div
-                    initial={prefersReducedMotion ? false : { scale: 1.04 }}
+                    initial={prefersReducedMotion ? false : { scale: 1.055 }}
                     animate={{ scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 1.05, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute inset-0"
                   >
                     <Image
@@ -734,7 +741,12 @@ export default function HomepageClient() {
                     <span>Fachberatung · Seit {business.founded}</span>
                   </div>
 
-                  <div className="hero-badge absolute inset-x-2.5 bottom-2.5 z-10 flex items-center justify-between gap-2.5 rounded-xl border border-white/22 bg-slate-950/88 px-3 py-2.5 backdrop-blur-md text-white">
+                  <motion.div
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.48, delay: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                    className="hero-badge absolute inset-x-2.5 bottom-2.5 z-10 flex items-center justify-between gap-2.5 rounded-xl border border-white/22 bg-slate-950/88 px-3 py-2.5 backdrop-blur-md text-white"
+                  >
                     <div className="min-w-0">
                       <p className="text-[12px] font-extrabold leading-tight text-white truncate">
                         {business.owner}
@@ -748,41 +760,57 @@ export default function HomepageClient() {
                       <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
                       <span>{ratingFormatted}</span>
                     </span>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             </div>
 
             {/* Right Column (5 cols): Desktop Studio Portrait Stage with Mr. Hannachi's Real Photo */}
             <motion.div
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{
-                duration: 0.48,
-                delay: 0.1,
+                duration: 0.62,
+                delay: 0.14,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="relative hidden lg:flex lg:col-span-5 flex-col"
             >
               <div className="group/portrait relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-white/18 bg-slate-900/90 shadow-[0_26px_64px_-18px_rgba(2,6,23,0.84),0_0_0_1px_rgba(255,255,255,0.08)]">
-                <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/portrait:scale-[1.02]">
-                  <Image
-                    src={herrHannachiImage}
-                    alt="Kamal Hannachi: Persönliche Hausgeräte-Beratung & Ersatzteile in Osnabrück"
-                    fill
-                    priority={!isMobileViewport}
-                    preload={!isMobileViewport}
-                    quality={95}
-                    placeholder="blur"
-                    blurDataURL={herrHannachiImage.blurDataURL}
-                    sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
-                    className="object-cover object-[50%_15%]"
-                  />
-                </div>
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-0 inset-x-8 z-20 h-px bg-gradient-to-r from-[#64B5EC]/60 via-sky-200/45 to-[#E86A7D]/45"
+                />
+                <motion.div
+                  initial={prefersReducedMotion ? false : { scale: 1.055 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 1.1, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-0"
+                >
+                  <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/portrait:scale-[1.02]">
+                    <Image
+                      src={herrHannachiImage}
+                      alt="Kamal Hannachi: Persönliche Hausgeräte-Beratung & Ersatzteile in Osnabrück"
+                      fill
+                      priority={!isMobileViewport}
+                      preload={!isMobileViewport}
+                      quality={95}
+                      placeholder="blur"
+                      blurDataURL={herrHannachiImage.blurDataURL}
+                      sizes="(min-width: 1280px) 500px, (min-width: 1024px) 420px, 95vw"
+                      className="object-cover object-[50%_15%]"
+                    />
+                  </div>
+                </motion.div>
 
                 <div className="pointer-events-none absolute inset-0 z-[6] bg-gradient-to-t from-slate-950/92 via-slate-950/24 to-slate-950/12" />
 
-                <div className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/22 bg-slate-950/86 px-4 py-3.5 backdrop-blur-md">
+                <motion.div
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.52, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="hero-badge absolute inset-x-4 bottom-4 z-10 rounded-xl border border-white/22 bg-slate-950/86 px-4 py-3.5 backdrop-blur-md"
+                >
                   <div className="flex items-center justify-between gap-2 text-xs text-accent-light font-bold">
                     <span>Hausgeräte-Spezialist seit {business.founded}</span>
                     <span className="inline-flex items-center gap-1">
@@ -800,21 +828,21 @@ export default function HomepageClient() {
                       <span>{ratingFormatted} Google ({place.userRatingCount})</span>
                     </span>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>
 
           {/* Interactive Spotlight KPI Tiles with Viewport Count-Up */}
-          <div className="mt-3.5 sm:mt-7 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+          <div className="mt-5 sm:mt-8 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
             {stats.map(({ prefix, value, decimals, suffix, label, icon: Icon }, idx) => (
               <motion.div
                 key={label}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.975 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{
-                  duration: 0.46,
-                  delay: 0.22 + idx * 0.06,
+                  duration: 0.5,
+                  delay: 0.28 + idx * 0.065,
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 className="h-full"
@@ -823,7 +851,7 @@ export default function HomepageClient() {
                   <div className="group/kpi relative h-full min-h-[86px] overflow-hidden rounded-2xl border border-white/14 bg-gradient-to-b from-white/[0.08] via-white/[0.045] to-slate-950/30 p-3.5 sm:p-4 flex flex-col justify-between min-w-0 shadow-[0_14px_30px_-14px_rgba(2,6,23,0.75),inset_0_1px_0_rgba(255,255,255,0.16)] transition-colors duration-200 hover:border-sky-400/45 hover:bg-white/[0.09]">
                     <div
                       aria-hidden="true"
-                      className="pointer-events-none absolute top-0 inset-x-4 h-px bg-gradient-to-r from-transparent via-sky-300/50 to-transparent"
+                      className="pointer-events-none absolute top-0 inset-x-4 h-px bg-gradient-to-r from-[#64B5EC]/55 via-sky-200/45 to-[#E86A7D]/45"
                     />
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-base min-[375px]:text-lg sm:text-xl lg:text-2xl font-extrabold text-white tabular-nums">
@@ -926,7 +954,11 @@ export default function HomepageClient() {
                     scrollYaw={idx === 0 ? 1.8 : idx === 2 ? -1.8 : 0}
                     className="rounded-2xl"
                   >
-                    <article className="group h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 shadow-card transition-shadow duration-300 hover:shadow-card-hover">
+                    <article className="group relative h-full flex flex-col justify-between overflow-hidden rounded-2xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 shadow-card transition-shadow duration-300 hover:shadow-card-hover">
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-0 inset-x-0 z-20 h-[2px] bg-gradient-to-r from-[#1974B8]/65 via-[#64B5EC]/55 to-[#C92A42]/50 opacity-85"
+                      />
                       <div>
                         {/* Recessed 3D Parallax Studio Photography Header */}
                         <Spatial3DPhoto
@@ -1007,6 +1039,77 @@ export default function HomepageClient() {
               );
             })}
           </StaggerContainer>
+
+          {/* Bespoke Hannachi Brand Identity & Workshop Heritage Strip */}
+          <FadeUp delay={0.1}>
+            <div className="relative mt-6 sm:mt-10 overflow-hidden rounded-2xl border border-primary/12 dark:border-white/12 bg-gradient-to-br from-[#071126] via-[#0d1f45] to-[#132b59] text-white shadow-[0_24px_56px_-18px_rgba(7,17,38,0.58)]">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-[#C92A42]/70 via-[#64B5EC]/75 to-transparent"
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+                <div className="lg:col-span-6 p-5 sm:p-7 flex flex-col justify-between gap-4 border-b lg:border-b-0 lg:border-r border-white/12 bg-gradient-to-br from-[#071126] to-[#0b1b3a]">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7AC4F4]">
+                      Fachhandel · Osnabrück seit {business.founded}
+                    </p>
+                    <h3 className="mt-1.5 text-lg sm:text-xl font-extrabold text-white leading-snug text-balance">
+                      Persönliche Auskunft statt anonymer Warteschleife
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-[13.5px] leading-relaxed text-white/75">
+                      Ob Original-Ersatzteil nach Typenschild oder ausgewähltes Markengerät mit schriftlicher Verkäufergarantie — Inhaber{" "}
+                      <strong className="font-semibold text-white">{business.owner}</strong> berät Sie direkt und ehrlich.
+                    </p>
+                  </div>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-white/10 text-xs text-white/88">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
+                      <span>{yearsOfExperience}+ Jahre Erfahrung</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
+                      <span>Prüfung nach Typenschild (E-Nr.)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
+                      <span>Ausgewählte Markengeräte</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
+                      <span>Termine nach Vereinbarung</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="lg:col-span-6 relative min-h-[220px] sm:min-h-[250px] overflow-hidden flex flex-col justify-end">
+                  <img
+                    src={generatedPhotos.heroAtelierStage.src}
+                    alt={generatedPhotos.heroAtelierStage.alt}
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover object-center"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#030816]/98 via-[#060f24]/88 via-60% to-[#071126]/35" />
+                  <div className="relative z-10 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#93D5FF] [text-shadow:0_1px_8px_rgba(2,6,23,0.95)]">
+                        Geprüfter Fachhandel · Osnabrück seit {business.founded}
+                      </p>
+                      <h3 className="mt-1 text-base sm:text-lg font-extrabold text-white leading-snug [text-shadow:0_2px_10px_rgba(2,6,23,0.95)]">
+                        Technik-Kompetenz &amp; Original-Ersatzteile aus einer Hand
+                      </h3>
+                    </div>
+                    <Link
+                      href="/ueber-uns"
+                      className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] hover:from-[#D4334C] hover:to-[#AE2238] px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_6px_18px_-4px_rgba(201,42,66,0.46)] transition-colors whitespace-nowrap"
+                    >
+                      <span>Mehr über uns</span>
+                      <ArrowRight size={13} aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
@@ -1119,7 +1222,7 @@ export default function HomepageClient() {
       ══════════════════════════════════════════════════════════════════ */}
       <section
         id="anfrage"
-        className="cv-auto section relative scroll-mt-16 lg:scroll-mt-20 overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
+        className="cv-auto section relative scroll-mt-[72px] lg:scroll-mt-[84px] overflow-hidden bg-white dark:bg-slate-900 border-t border-primary/8 dark:border-white/10"
       >
         <SectionAmbientMesh variant="inquiry" />
         <div className="container-page relative z-10">
@@ -1156,14 +1259,20 @@ export default function HomepageClient() {
               </Suspense>
             </div>
 
-            <aside className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-stretch lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-20">
+            <aside className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-5 items-stretch lg:col-span-4 min-w-0 w-full max-w-full lg:sticky lg:top-[88px]">
               <Spatial3DCard maxTilt={5} scrollYaw={-1.8} className="rounded-2xl">
-                <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-b from-slate-900 to-primary-dark p-4 sm:p-6 text-white shadow-[0_24px_54px_-14px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.16)] border border-sky-300/18">
+                <div className="relative h-full flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-b from-[#0e1e3d] to-[#071126] p-4 sm:p-6 text-white shadow-[0_24px_54px_-14px_rgba(7,17,38,0.68),inset_0_1px_0_rgba(255,255,255,0.16)] border border-sky-300/18">
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-sky-300/60 to-transparent"
+                    className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-[#C92A42]/65 via-[#64B5EC]/65 to-transparent"
                   />
                   <div>
+                    <div className="mb-3.5 flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7AC4F4]">
+                        Fachhandel seit {business.founded}
+                      </span>
+                      <span className="h-1.5 w-10 rounded-full bg-gradient-to-r from-[#C92A42] to-[#64B5EC]" aria-hidden="true" />
+                    </div>
                     <div className="flex items-center gap-3.5 sm:gap-4 pb-4 border-b border-white/10">
                       <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0">
                         <div className="relative h-full w-full overflow-hidden rounded-xl border-2 border-sky-400/50 shadow-[0_10px_22px_-8px_rgba(14,165,233,0.55)]">

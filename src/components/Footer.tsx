@@ -1,5 +1,4 @@
 "use client";
-import { WordmarkReveal } from "@/components/animations";
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -12,22 +11,30 @@ import {
 } from "lucide-react";
 import { business, services, nav } from "@/data/site";
 import { useConsent } from "@/lib/consent";
-import HannachiBrandLogo from "@/components/HannachiBrandLogo";
 
 export default function Footer() {
   const { openConsentManager } = useConsent();
 
   return (
     <>
-      <footer className="cv-auto bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <footer className="relative cv-auto bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#64B5EC]/55 via-45% to-[#E86A7D]/48"
+        />
         <div className="container-page grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-7 sm:gap-8 lg:gap-10 py-10 sm:py-14">
           {/* Brand & Legal Positioning */}
           <div className="sm:col-span-2 lg:col-span-4">
-            <div className="flex items-center gap-3">
-              <HannachiBrandLogo size={38} />
-              <div>
-                <p className="text-[18px] font-extrabold tracking-wide text-white">HANNACHI</p>
-                <p className="text-[10px] font-medium text-white/60 leading-none">
+            <div className="flex flex-col items-start gap-1.5">
+              <p className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+                {business.name}
+              </p>
+              <div className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="h-[2px] w-7 rounded-full bg-gradient-to-r from-[#64B5EC] to-[#E86A7D]"
+                />
+                <p className="text-[11px] font-semibold tracking-wide text-sky-300/90">
                   {business.tagline}
                 </p>
               </div>
@@ -38,6 +45,15 @@ export default function Footer() {
                 Persönliche Fachberatung, Original-Ersatzteile nach E-Nr.
               </strong>{" "}
               &amp; ausgewählte Markengeräte auf Anfrage. Inhaber {business.owner}.
+            </p>
+            <p className="mt-2 max-w-sm text-[11px] leading-relaxed text-white/55">
+              Handelsgewerbe gemäß § 14 GewO (kein Handwerks- oder Meisterbetrieb i. S. d. HwO).{" "}
+              <Link
+                href="/impressum#gewerbe"
+                className="text-sky-300/90 hover:text-white underline underline-offset-2"
+              >
+                Rechtliche Hinweise
+              </Link>
             </p>
 
             {/* Social Media Section */}
@@ -167,15 +183,6 @@ export default function Footer() {
               </p>
             </address>
           </div>
-        </div>
-
-        {/* Oversized signature wordmark — mathematically centered & never clips on any phone */}
-        <div className="container-page overflow-hidden py-1 sm:py-2">
-          <WordmarkReveal
-            text="HANNACHI"
-            className="pt-1 pb-1 text-center font-extrabold tracking-[-0.03em] text-[clamp(2.4rem,13.4vw,12rem)]"
-            letterClassName="bg-gradient-to-b from-white/[0.18] to-white/[0.02] bg-clip-text text-transparent"
-          />
         </div>
 
         {/* Bottom bar with clean standard legal links */}

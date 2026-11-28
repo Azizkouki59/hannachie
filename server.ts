@@ -179,12 +179,21 @@ function parseCookieHeader(cookieHeader: string | undefined): Record<string, str
 }
 
 function isHttpsRequest(req: Request): boolean {
-  if (isProd || req.secure) return true;
+  if (req.secure) return true;
   const proto = req.headers["x-forwarded-proto"];
   if (typeof proto === "string") {
     return proto.split(",")[0].trim().toLowerCase() === "https";
   }
-  return false;
+  if (!isProd) return false;
+  const host = (req.headers.host || "").toLowerCase();
+  const isLocalHost =
+    host.startsWith("localhost:") ||
+    host === "localhost" ||
+    host.startsWith("127.0.0.1:") ||
+    host === "127.0.0.1" ||
+    host.startsWith("[::1]:") ||
+    host === "[::1]";
+  return !isLocalHost;
 }
 
 function setAdminSessionCookie(

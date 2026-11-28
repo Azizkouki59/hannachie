@@ -226,7 +226,7 @@ export function PageHeader({
           initial={prefersReduced ? false : { scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
           transition={{ duration: 0.54, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          className="origin-left mt-6 sm:mt-7 h-[2px] w-14 bg-gradient-to-r from-accent to-accent-light rounded-full"
+          className="origin-left mt-6 sm:mt-7 h-[2.5px] w-16 bg-gradient-to-r from-[#C92A42] via-[#64B5EC] to-accent-light rounded-full"
         />
       </div>
     </section>

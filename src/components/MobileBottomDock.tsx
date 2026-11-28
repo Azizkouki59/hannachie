@@ -329,7 +329,7 @@ export default function MobileBottomDock({
         aria-hidden={shouldHideDock}
         className={`fixed inset-x-0 bottom-0 ${
           activeWidget ? "z-50" : "z-40"
-        } lg:hidden pointer-events-none px-2.5 sm:px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]`}
+        } lg:hidden pointer-events-none px-2 min-[375px]:px-2.5 sm:px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]`}
       >
         {/* Calm, Always-Labeled Glassmorphic Touch Dock */}
         <div
@@ -358,7 +358,7 @@ export default function MobileBottomDock({
                 className="absolute inset-0 rounded-xl bg-sky-500/18 ring-1 ring-sky-400/35"
                 aria-hidden="true"
               >
-                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-sky-400 sm:hidden" />
+                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-6 rounded-full bg-gradient-to-r from-[#64B5EC] to-[#E86A7D] sm:hidden" />
               </motion.span>
             )}
             <motion.span
@@ -404,7 +404,7 @@ export default function MobileBottomDock({
                 className="absolute inset-0 rounded-xl bg-sky-500/18 ring-1 ring-sky-400/35"
                 aria-hidden="true"
               >
-                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-sky-400 sm:hidden" />
+                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-6 rounded-full bg-gradient-to-r from-[#64B5EC] to-[#E86A7D] sm:hidden" />
               </motion.span>
             )}
             <motion.span
@@ -520,7 +520,7 @@ export default function MobileBottomDock({
                 className="absolute inset-0 rounded-xl bg-sky-500/18 ring-1 ring-sky-400/35"
                 aria-hidden="true"
               >
-                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-5 rounded-full bg-sky-400 sm:hidden" />
+                <span className="absolute top-0.5 left-1/2 -translate-x-1/2 h-[2px] w-6 rounded-full bg-gradient-to-r from-[#64B5EC] to-[#E86A7D] sm:hidden" />
               </motion.span>
             )}
             <motion.span

@@ -388,21 +388,6 @@ export function MagneticHover({ children, className = "" }: { children: ReactNod
   );
 }
 
-/* ── Scroll progress bar (Direct 1:1 GPU scaleX, zero spring loop lag) ── */
-export function ScrollProgressBar() {
-  const prefersReduced = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-
-  if (prefersReduced) return null;
-
-  return (
-    <motion.div
-      style={{ scaleX: scrollYProgress }}
-      className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-accent via-sky-400 to-cyan-300 origin-left z-50 pointer-events-none"
-    />
-  );
-}
-
 /* ── Mobile Floating Quick Actions (Sticky Phone Dock) ── */
 export function MobileQuickActions({
   phone,
