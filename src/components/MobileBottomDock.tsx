@@ -3,7 +3,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+  type PanInfo,
+} from "framer-motion";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -120,6 +128,9 @@ export default function MobileBottomDock({
   const [redirectingLabel, setRedirectingLabel] = useState<string | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const customSendLinkRef = useRef<HTMLAnchorElement | null>(null);
+  const sheetDragControls = useDragControls();
+  const sheetDragY = useMotionValue(0);
+  const sheetBackdropOpacity = useTransform(sheetDragY, [0, 180], [1, 0]);
 
   useEffect(() => {
     return () => {
@@ -201,7 +212,8 @@ export default function MobileBottomDock({
   useEffect(() => {
     setActiveWidget(null);
     setRedirectingLabel(null);
-  }, [pathname, isQuickRequestOpen]);
+    sheetDragY.set(0);
+  }, [pathname, isQuickRequestOpen, sheetDragY]);
 
   useEffect(() => {
     if (!activeWidget) return undefined;
@@ -312,6 +324,17 @@ export default function MobileBottomDock({
   const isCallWidgetOpen = activeWidget === "call";
   const isWhatsAppWidgetOpen = activeWidget === "whatsapp";
 
+  const handleSheetDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (info.offset.y > 55 || info.velocity.y > 320) {
+      hapticDismiss();
+      setActiveWidget(null);
+      sheetDragY.set(0);
+    }
+  };
+
   return (
     <>
       <motion.nav
@@ -329,16 +352,16 @@ export default function MobileBottomDock({
         aria-hidden={shouldHideDock}
         className={`fixed inset-x-0 bottom-0 ${
           activeWidget ? "z-50" : "z-40"
-        } lg:hidden pointer-events-none px-2 min-[375px]:px-2.5 sm:px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))]`}
+        } lg:hidden pointer-events-none px-2 min-[375px]:px-2.5 sm:px-4 pb-[max(0.375rem,env(safe-area-inset-bottom))]`}
       >
-        {/* Calm, Always-Labeled Glassmorphic Touch Dock */}
+        {/* Calm, Always-Labeled Native App Touch Dock */}
         <div
           className={`${
             shouldHideDock ? "pointer-events-none" : "pointer-events-auto"
-          } relative mx-auto grid w-full max-w-xl md:max-w-2xl grid-cols-5 items-stretch gap-1 sm:gap-1.5 rounded-2xl border ring-1 ring-inset ring-white/10 p-1 sm:p-1.5 text-white backdrop-blur-xl transition-shadow duration-200 ${
+          } relative mx-auto grid w-full max-w-xl md:max-w-2xl grid-cols-5 items-stretch gap-1 sm:gap-1.5 rounded-2xl border ring-1 ring-inset ring-white/10 p-1 text-white transition-shadow duration-200 ${
             isScrolled || activeWidget
-              ? "border-white/18 bg-primary-dark/96 dark:bg-slate-900/96 shadow-[0_18px_44px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
-              : "border-white/12 bg-primary-dark/94 dark:bg-slate-900/94 shadow-[0_14px_34px_rgba(2,6,23,0.58),inset_0_1px_0_rgba(255,255,255,0.10)]"
+              ? "border-white/18 bg-[#071126]/98 dark:bg-slate-900/98 shadow-[0_18px_44px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.12)]"
+              : "border-white/12 bg-[#071126]/96 dark:bg-slate-900/96 shadow-[0_14px_34px_rgba(2,6,23,0.58),inset_0_1px_0_rgba(255,255,255,0.10)]"
           }`}
         >
           {/* 1. Start */}
@@ -347,7 +370,7 @@ export default function MobileBottomDock({
             onClick={handleNavTap}
             aria-current={isHomeActive ? "page" : undefined}
             data-testid="mobile-dock-home"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 transition-colors active:scale-[0.96] ${
+            className={`relative flex min-w-0 min-h-[46px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1 transition-colors active:scale-[0.96] ${
               isHomeActive ? "text-white" : "text-white/65 hover:text-white"
             }`}
           >
@@ -365,7 +388,7 @@ export default function MobileBottomDock({
               animate={
                 prefersReducedMotion
                   ? undefined
-                  : { scale: isHomeActive ? 1.1 : 1, y: isHomeActive ? -1 : 0 }
+                  : { scale: isHomeActive ? 1.08 : 1, y: isHomeActive ? -0.5 : 0 }
               }
               transition={tabSpring}
               className="relative z-10 inline-flex shrink-0"
@@ -393,7 +416,7 @@ export default function MobileBottomDock({
             onClick={handleNavTap}
             aria-current={isServiceActive ? "page" : undefined}
             data-testid="mobile-dock-service"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 transition-colors active:scale-[0.94] ${
+            className={`relative flex min-w-0 min-h-[46px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1 transition-colors active:scale-[0.94] ${
               isServiceActive ? "text-white" : "text-white/65 hover:text-white"
             }`}
           >
@@ -411,7 +434,7 @@ export default function MobileBottomDock({
               animate={
                 prefersReducedMotion
                   ? undefined
-                  : { scale: isServiceActive ? 1.1 : 1, y: isServiceActive ? -1 : 0 }
+                  : { scale: isServiceActive ? 1.08 : 1, y: isServiceActive ? -0.5 : 0 }
               }
               transition={tabSpring}
               className="relative z-10 inline-flex shrink-0"
@@ -442,7 +465,7 @@ export default function MobileBottomDock({
             aria-haspopup="dialog"
             aria-label={`Anruf-Widget öffnen: ${effectivePhoneDisplay}`}
             data-testid="mobile-dock-call"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
+            className={`relative flex min-w-0 min-h-[46px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1 text-white active:scale-[0.96] transition-all ${
               isCallWidgetOpen
                 ? "bg-emerald-500/32 ring-1 ring-emerald-300/70 shadow-[0_0_18px_rgba(16,185,129,0.28)]"
                 : "bg-emerald-500/14 ring-1 ring-emerald-400/25 hover:bg-emerald-500/24"
@@ -473,11 +496,11 @@ export default function MobileBottomDock({
             aria-haspopup="dialog"
             aria-label="WhatsApp-Schnellauswahl öffnen"
             data-testid="mobile-dock-whatsapp"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 text-white active:scale-[0.96] transition-all ${
+            className={`relative flex min-w-0 min-h-[46px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1 text-white active:scale-[0.96] transition-all ${
               isWhatsAppWidgetOpen
                 ? "bg-[#25D366]/34 ring-1 ring-[#4ADE80]/80 shadow-[0_0_18px_rgba(37,211,102,0.3)]"
                 : draftWhatsAppResult
-                ? "bg-[#25D366]/24 ring-1 ring-[#4ADE80]/55 hover:bg-[#25D366]/32"
+                ? "bg-[#25D366]/24 ring-1 ring-[#4ADE80]/60 hover:bg-[#25D366]/32"
                 : "bg-[#25D366]/14 ring-1 ring-[#4ADE80]/25 hover:bg-[#25D366]/24"
             }`}
           >
@@ -488,18 +511,18 @@ export default function MobileBottomDock({
                 className="text-[#4ADE80] shrink-0"
                 aria-hidden="true"
               />
-              {draftWhatsAppResult && (
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full bg-[#4ADE80]"
-                />
-              )}
             </span>
             <span
               data-compact-label="true"
               className="text-[10.5px] sm:text-xs font-bold tracking-tight leading-none text-emerald-50 truncate"
             >
-              {draftWhatsAppResult ? "Senden" : "WhatsApp"}
+              {draftWhatsAppResult ? (
+                <span key="dock-send">Senden</span>
+              ) : (
+                <span key="dock-wa" translate="no" className="notranslate">
+                  WhatsApp
+                </span>
+              )}
             </span>
           </a>
 
@@ -509,7 +532,7 @@ export default function MobileBottomDock({
             onClick={handleNavTap}
             aria-current={isContactActive ? "page" : undefined}
             data-testid="mobile-dock-kontakt"
-            className={`relative flex min-w-0 min-h-[48px] flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1.5 transition-colors active:scale-[0.96] ${
+            className={`relative flex min-w-0 min-h-[46px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 sm:px-2.5 py-1 transition-colors active:scale-[0.96] ${
               isContactActive ? "text-white" : "text-white/65 hover:text-white"
             }`}
           >
@@ -527,7 +550,7 @@ export default function MobileBottomDock({
               animate={
                 prefersReducedMotion
                   ? undefined
-                  : { scale: isContactActive ? 1.1 : 1, y: isContactActive ? -1 : 0 }
+                  : { scale: isContactActive ? 1.08 : 1, y: isContactActive ? -0.5 : 0 }
               }
               transition={tabSpring}
               className="relative z-10 flex items-center justify-center"
@@ -535,16 +558,15 @@ export default function MobileBottomDock({
               <MapPin
                 size={18}
                 strokeWidth={isContactActive ? 2.25 : 1.85}
-                className={isContactActive ? "text-sky-300" : ""}
+                className={
+                  isContactActive
+                    ? "text-sky-300"
+                    : savedDraft
+                    ? "text-sky-200"
+                    : ""
+                }
                 aria-hidden="true"
               />
-              {savedDraft && !isContactActive && (
-                <span
-                  aria-hidden="true"
-                  title="Gespeicherte Anfrage fortsetzen"
-                  className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full bg-sky-400"
-                />
-              )}
             </motion.span>
             <span
               data-compact-label="true"
@@ -558,12 +580,13 @@ export default function MobileBottomDock({
         </div>
       </motion.nav>
 
-      {/* Compact Pre-Redirect Widget (Instant 1-Tap Actions, Zero Big Form) */}
+      {/* Compact Pre-Redirect Bottom Sheet (Swipe-down to dismiss, Instant 1-Tap Actions) */}
       <AnimatePresence>
         {activeWidget && !shouldHideDock && (
           <>
             <motion.div
               key="mobile-dock-preredirect-backdrop"
+              style={prefersReducedMotion ? undefined : { opacity: sheetBackdropOpacity }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -571,9 +594,10 @@ export default function MobileBottomDock({
               onClick={() => {
                 hapticDismiss();
                 setActiveWidget(null);
+                sheetDragY.set(0);
               }}
               aria-hidden="true"
-              className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[2px] lg:hidden"
+              className="fixed inset-0 z-40 bg-slate-950/55 lg:hidden"
             />
 
             <motion.div
@@ -581,16 +605,23 @@ export default function MobileBottomDock({
               id="mobile-dock-preredirect-widget"
               data-testid="mobile-dock-preredirect-widget"
               role="dialog"
-              aria-modal="false"
+              aria-modal="true"
               aria-label={
                 activeWidget === "call"
                   ? "Anruf vor Weiterleitung bestätigen"
                   : "WhatsApp-Direktnachricht auswählen"
               }
+              drag={prefersReducedMotion ? false : "y"}
+              dragControls={sheetDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.04, bottom: 0.85 }}
+              onDragEnd={handleSheetDragEnd}
+              style={prefersReducedMotion ? undefined : { y: sheetDragY }}
               initial={
                 prefersReducedMotion
                   ? { opacity: 0 }
-                  : { opacity: 0, y: 16, scale: 0.96 }
+                  : { opacity: 0, y: 24, scale: 0.97 }
               }
               animate={
                 prefersReducedMotion
@@ -600,22 +631,37 @@ export default function MobileBottomDock({
               exit={
                 prefersReducedMotion
                   ? { opacity: 0 }
-                  : { opacity: 0, y: 12, scale: 0.97 }
+                  : { opacity: 0, y: 28, scale: 0.97 }
               }
               transition={widgetSpring}
-              className="fixed inset-x-0 bottom-[calc(4.65rem+env(safe-area-inset-bottom))] z-50 px-2.5 sm:px-4 lg:hidden pointer-events-none"
+              className="fixed inset-x-0 bottom-[calc(4.15rem+env(safe-area-inset-bottom))] z-50 px-2.5 sm:px-4 lg:hidden pointer-events-none"
             >
-              <div className="pointer-events-auto mx-auto w-full max-w-md sm:max-w-lg overflow-hidden rounded-3xl border border-primary/12 dark:border-white/15 bg-white/98 dark:bg-slate-900/98 text-primary dark:text-slate-100 shadow-[0_22px_55px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-                {/* Native Sheet Grab Handle */}
-                <div aria-hidden="true" className="flex justify-center pt-2.5 pb-0.5">
-                  <span className="h-1 w-9 rounded-full bg-primary/15 dark:bg-white/20" />
+              <div className="pointer-events-auto mx-auto w-full max-w-md sm:max-w-lg max-h-[78dvh] overflow-y-auto overscroll-contain rounded-3xl border border-primary/14 dark:border-white/15 bg-white dark:bg-slate-900 text-primary dark:text-slate-100 shadow-[0_22px_55px_rgba(2,6,23,0.48)]">
+                {/* Interactive Drag Handle Bar (Swipe Down to Dismiss) */}
+                <div
+                  onPointerDown={(e) => {
+                    if (!prefersReducedMotion) {
+                      sheetDragControls.start(e);
+                    }
+                  }}
+                  aria-hidden="true"
+                  className="flex justify-center pt-3 pb-1 touch-none select-none cursor-grab active:cursor-grabbing"
+                >
+                  <span className="h-1.5 w-11 rounded-full bg-primary/20 dark:bg-white/25" />
                 </div>
                 {activeWidget === "call" ? (
-                  <div className="p-4 space-y-3">
-                    {/* Call Widget Header */}
-                    <div className="flex items-center justify-between gap-2.5">
+                  <div className="px-4 pb-4 pt-1 space-y-3">
+                    {/* Call Widget Header (also draggable) */}
+                    <div
+                      onPointerDown={(e) => {
+                        if (!prefersReducedMotion) {
+                          sheetDragControls.start(e);
+                        }
+                      }}
+                      className="flex items-center justify-between gap-2.5 touch-none"
+                    >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
                           <Phone size={17} aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
@@ -623,7 +669,13 @@ export default function MobileBottomDock({
                             Direkt anrufen
                           </p>
                           <h3 className="text-sm font-extrabold text-primary dark:text-white truncate">
-                            {business.owner} · {business.city}
+                            <span translate="no" className="notranslate">
+                              {business.owner}
+                            </span>{" "}
+                            ·{" "}
+                            <span translate="no" className="notranslate">
+                              {business.city}
+                            </span>
                           </h3>
                         </div>
                       </div>
@@ -632,34 +684,39 @@ export default function MobileBottomDock({
                         onClick={() => {
                           hapticDismiss();
                           setActiveWidget(null);
+                          sheetDragY.set(0);
                         }}
                         aria-label="Anruf-Widget schließen"
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
+                        className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white active:scale-95 transition-all cursor-pointer"
                       >
-                        <X size={16} />
+                        <X size={18} />
                       </button>
                     </div>
 
                     {/* Number + Copy */}
-                    <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-950/35 px-3 py-2">
-                      <p className="text-base font-extrabold tracking-tight text-primary dark:text-white tabular-nums">
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-950/35 px-3 py-1.5">
+                      <p
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate text-base font-extrabold tracking-tight text-primary dark:text-white tabular-nums"
+                      >
                         {effectivePhoneDisplay}
                       </p>
                       <button
                         type="button"
                         onClick={() => void handleCopyPhoneNumber()}
-                        className="inline-flex min-h-[34px] shrink-0 items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-bold text-primary dark:text-slate-100 hover:border-emerald-500 transition-colors cursor-pointer"
+                        className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-primary dark:text-slate-100 hover:border-emerald-500 active:scale-95 transition-all cursor-pointer"
                       >
                         {copiedPhone ? (
-                          <>
-                            <Check size={13} className="text-emerald-600 dark:text-emerald-400" />
+                          <span key="dock-copied" className="inline-flex items-center gap-1.5">
+                            <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
                             <span>Kopiert</span>
-                          </>
+                          </span>
                         ) : (
-                          <>
-                            <Copy size={13} />
+                          <span key="dock-copy" className="inline-flex items-center gap-1.5">
+                            <Copy size={14} />
                             <span>Kopieren</span>
-                          </>
+                          </span>
                         )}
                       </button>
                     </div>
@@ -671,7 +728,12 @@ export default function MobileBottomDock({
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <ShieldCheck size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                        <span>Direkt mit {business.owner}</span>
+                        <span>
+                          Direkt mit{" "}
+                          <span translate="no" className="notranslate">
+                            {business.owner}
+                          </span>
+                        </span>
                       </span>
                     </div>
 
@@ -680,37 +742,53 @@ export default function MobileBottomDock({
                         href={effectivePhoneHref}
                         onClick={() => scheduleWidgetCloseAfterRedirect("Telefon wird geöffnet…")}
                         data-testid="mobile-dock-call-confirm"
-                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs sm:text-sm font-extrabold text-white shadow-sm transition-colors"
+                        className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all"
                       >
-                        <Phone size={15} aria-hidden="true" />
-                        <span>{redirectingLabel || "Jetzt anrufen"}</span>
-                        <ArrowUpRight size={14} aria-hidden="true" />
+                        <Phone size={16} aria-hidden="true" />
+                        <span key={redirectingLabel ? "calling" : "call"}>
+                          {redirectingLabel || "Jetzt anrufen"}
+                        </span>
+                        <ArrowUpRight size={15} aria-hidden="true" />
                       </a>
                       <button
                         type="button"
                         onClick={() => {
                           hapticTap();
                           setActiveWidget(null);
+                          sheetDragY.set(0);
                           openQuickRequest("Waschmaschine", "Rückrufbitte", "", "question");
                         }}
-                        className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-surface dark:bg-slate-800 px-3 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors cursor-pointer"
+                        className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-surface dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.97] transition-all cursor-pointer"
                       >
-                        <FileText size={14} aria-hidden="true" />
+                        <FileText size={15} aria-hidden="true" />
                         <span>Formular</span>
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3.5 space-y-2.5">
-                    {/* Compact WhatsApp Header */}
-                    <div className="flex items-center justify-between gap-2">
+                  <div className="px-3.5 pb-3.5 pt-1 space-y-2.5">
+                    {/* Compact WhatsApp Header (draggable) */}
+                    <div
+                      onPointerDown={(e) => {
+                        if (!prefersReducedMotion) {
+                          sheetDragControls.start(e);
+                        }
+                      }}
+                      className="flex items-center justify-between gap-2 touch-none"
+                    >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/18 text-[#16a34a] dark:text-[#4ADE80] border border-[#25D366]/30">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/18 text-[#16a34a] dark:text-[#4ADE80] border border-[#25D366]/30">
                           <MessageCircle size={18} aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
                           <h3 className="text-sm font-extrabold text-primary dark:text-white leading-tight truncate">
-                            WhatsApp · {business.owner}
+                            <span translate="no" className="notranslate">
+                              WhatsApp
+                            </span>{" "}
+                            ·{" "}
+                            <span translate="no" className="notranslate">
+                              {business.owner}
+                            </span>
                           </h3>
                           <p className="mt-0.5 text-[11px] text-ink-muted truncate">
                             1× tippen, Chat öffnet sofort
@@ -722,11 +800,12 @@ export default function MobileBottomDock({
                         onClick={() => {
                           hapticDismiss();
                           setActiveWidget(null);
+                          sheetDragY.set(0);
                         }}
                         aria-label="WhatsApp-Widget schließen"
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
+                        className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 text-ink-muted hover:text-primary dark:hover:text-white active:scale-95 transition-all cursor-pointer"
                       >
-                        <X size={16} />
+                        <X size={18} />
                       </button>
                     </div>
 
@@ -777,11 +856,11 @@ export default function MobileBottomDock({
                               scheduleWidgetCloseAfterRedirect("WhatsApp wird geöffnet…")
                             }
                             data-testid={`mobile-dock-wa-${item.id}`}
-                            className="group flex items-center justify-between gap-2.5 rounded-xl border border-primary/10 dark:border-white/10 bg-surface/85 dark:bg-slate-800/75 hover:border-[#16a34a]/50 hover:bg-[#25D366]/10 px-3 py-2.5 transition-colors"
+                            className="group flex min-h-[50px] items-center justify-between gap-2.5 rounded-xl border border-primary/10 dark:border-white/10 bg-surface/85 dark:bg-slate-800/75 hover:border-[#16a34a]/50 hover:bg-[#25D366]/10 px-3 py-2 transition-colors"
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#25D366]/14 text-[#16a34a] dark:text-[#4ADE80] group-hover:bg-[#16a34a] group-hover:text-white transition-colors">
-                                <Icon size={15} aria-hidden="true" />
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#25D366]/14 text-[#16a34a] dark:text-[#4ADE80] group-hover:bg-[#16a34a] group-hover:text-white transition-colors">
+                                <Icon size={16} aria-hidden="true" />
                               </span>
                               <div className="min-w-0">
                                 <p className="text-xs font-extrabold text-primary dark:text-white leading-tight truncate">
@@ -802,8 +881,8 @@ export default function MobileBottomDock({
                       })}
                     </div>
 
-                    {/* Ultra-Simple 1-Line Instant Chat Input */}
-                    <div className="flex items-center gap-1.5 pt-0.5">
+                    {/* Ultra-Simple 1-Line Instant Chat Input (16px font to prevent iOS focus zoom) */}
+                    <div className="flex items-center gap-2 pt-0.5">
                       <label htmlFor="mobile-dock-wa-quick" className="sr-only">
                         Kurze Nachricht für WhatsApp schreiben
                       </label>
@@ -819,7 +898,7 @@ export default function MobileBottomDock({
                           }
                         }}
                         placeholder="Oder kurz schreiben (z. B. Miele Pumpe)…"
-                        className="flex-1 min-w-0 min-h-[42px] rounded-xl border border-primary/14 dark:border-white/14 bg-surface dark:bg-slate-800 px-3 py-2 text-xs text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-[#16a34a] focus:outline-none"
+                        className="flex-1 min-w-0 min-h-[44px] rounded-xl border border-primary/14 dark:border-white/14 bg-surface dark:bg-slate-800 px-3 py-2 text-base sm:text-xs text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-[#16a34a] focus:outline-none"
                       />
                       <a
                         ref={customSendLinkRef}
@@ -831,15 +910,21 @@ export default function MobileBottomDock({
                         }
                         data-testid="mobile-dock-whatsapp-confirm"
                         aria-label="Nachricht direkt in WhatsApp öffnen"
-                        className="btn-shimmer-beam inline-flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] active:scale-[0.97] px-3.5 text-xs font-extrabold text-white shadow-sm transition-all"
+                        className="btn-shimmer-beam inline-flex h-[44px] min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] active:scale-[0.97] px-3.5 text-xs font-extrabold text-white shadow-sm transition-all"
                       >
                         <Send size={14} aria-hidden="true" />
-                        <span>{redirectingLabel ? "Öffnet…" : "Chat"}</span>
+                        <span key={redirectingLabel ? "wa-opening" : "wa-chat"}>
+                          {redirectingLabel ? "Öffnet…" : "Chat"}
+                        </span>
                       </a>
                     </div>
 
                     <p className="text-[10.5px] leading-snug text-ink-faint text-center">
-                      Freiwillige Weiterleitung zu WhatsApp (Meta).{" "}
+                      Freiwillige Weiterleitung zu{" "}
+                      <span translate="no" className="notranslate">
+                        WhatsApp
+                      </span>{" "}
+                      (<span translate="no" className="notranslate">Meta</span>).{" "}
                       <Link
                         href="/datenschutz#whatsapp"
                         onClick={() => setActiveWidget(null)}

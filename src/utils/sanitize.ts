@@ -47,6 +47,92 @@ export function isSafeHttpsUrl(raw: unknown): boolean {
   }
 }
 
+const ALLOWED_GOOGLE_MAPS_HOSTS = new Set([
+  "www.google.com",
+  "google.com",
+  "maps.google.com",
+  "maps.app.goo.gl",
+  "goo.gl",
+]);
+
+/**
+ * Validates that a dynamic map link uses strict https:// and points strictly to an official Google Maps domain.
+ */
+export function isSafeGoogleMapsUrl(raw: unknown): boolean {
+  if (!isSafeHttpsUrl(raw)) return false;
+  try {
+    const parsed = new URL(String(raw).trim());
+    return ALLOWED_GOOGLE_MAPS_HOSTS.has(parsed.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Verifies actual binary magic bytes for PNG, JPEG, and WebP images.
+ */
+export function hasValidImageMagicBytes(
+  bytes: Uint8Array,
+  declaredFormat: string
+): boolean {
+  if (bytes.length < 12) return false;
+  const fmt = declaredFormat.toLowerCase();
+  if (fmt === "png") {
+    return (
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    );
+  }
+  if (fmt === "jpg" || fmt === "jpeg") {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (fmt === "webp") {
+    return (
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    );
+  }
+  return false;
+}
+
+/**
+ * Validates a base64 image data URL (webp/jpeg/jpg/png) and verifies its decoded header magic bytes.
+ */
+export function isValidBase64ImageDataUrl(raw: unknown): boolean {
+  if (typeof raw !== "string") return false;
+  const trimmed = raw.trim();
+  const match = /^data:image\/(webp|jpeg|jpg|png);base64,([A-Za-z0-9+/=]+)$/i.exec(
+    trimmed
+  );
+  if (!match) return false;
+  const ext = match[1].toLowerCase();
+  const b64Prefix = match[2].slice(0, 32);
+  if (b64Prefix.length < 16) return false;
+  try {
+    const padded = b64Prefix.slice(0, Math.floor(b64Prefix.length / 4) * 4);
+    const bin = atob(padded);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) {
+      bytes[i] = bin.charCodeAt(i);
+    }
+    return hasValidImageMagicBytes(bytes, ext);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Validates that an internal navigation href is strictly relative to this app and not protocol-relative (//evil.com).
  */

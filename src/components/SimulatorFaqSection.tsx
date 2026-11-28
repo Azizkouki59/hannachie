@@ -232,7 +232,11 @@ export default function SimulatorFaqSection() {
             Häufig gestellte Fragen zur Selbsthilfe &amp; Ersatzteilwahl
           </h2>
           <p className="mt-3 text-sm sm:text-base text-ink-muted leading-relaxed">
-            Viele typische Fehlermeldungen (wie <strong className="text-primary dark:text-slate-200">E18, E24, blinkende Uhrzeit</strong> oder blockierte Türen) lassen sich ohne Werkzeug selbst lösen. Prüfen Sie hier die häufigsten Fälle zur Selbsthilfe:
+            Viele typische Fehlermeldungen (wie{" "}
+            <strong className="text-primary dark:text-slate-200">
+              <span dir="ltr" translate="no" className="notranslate">E18, E24</span>, blinkende Uhrzeit
+            </strong>{" "}
+            oder blockierte Türen) lassen sich ohne Werkzeug selbst lösen. Prüfen Sie hier die häufigsten Fälle zur Selbsthilfe:
           </p>
         </div>
 
@@ -248,7 +252,7 @@ export default function SimulatorFaqSection() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Fehlercode oder Frage suchen (z. B. E18, E24, Tür öffnet nicht, heizt nicht)..."
+              placeholder="Fehlercode oder Frage suchen (z. B. E18, E24, Tür öffnet nicht, heizt nicht)…"
               aria-label="Häufige Fragen durchsuchen"
               className="w-full rounded-2xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 pl-11 pr-10 py-3.5 text-xs sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none shadow-xs"
             />
@@ -278,7 +282,7 @@ export default function SimulatorFaqSection() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`rounded-xl border px-3.5 py-2 text-center text-xs font-bold leading-tight transition-all cursor-pointer sm:whitespace-nowrap ${
                     active
                       ? "border-accent bg-accent text-white shadow-xs"
                       : "border-primary/10 dark:border-white/12 bg-white dark:bg-slate-900 text-primary dark:text-slate-200 hover:border-accent/50"
@@ -299,7 +303,8 @@ export default function SimulatorFaqSection() {
                 Keine passende Frage für „{searchQuery}“ gefunden.
               </p>
               <p className="mt-1 text-xs text-ink-muted">
-                Stellen Sie Ihre Frage direkt unverbindlich an Herrn Hannachi oder setzen Sie den Filter zurück.
+                Stellen Sie Ihre Frage direkt unverbindlich an{" "}
+                <span translate="no" className="notranslate">Herrn Hannachi</span> oder setzen Sie den Filter zurück.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <button
@@ -416,7 +421,9 @@ export default function SimulatorFaqSection() {
                               aria-hidden="true"
                             />
                             <p className="leading-relaxed">
-                              <strong className="font-bold">Hinweis von Herrn Hannachi:</strong>{" "}
+                              <strong className="font-bold">
+                                Hinweis von <span translate="no" className="notranslate">Herrn Hannachi</span>:
+                              </strong>{" "}
                               {faq.proTip}
                             </p>
                           </div>
@@ -442,7 +449,7 @@ export default function SimulatorFaqSection() {
                                 }`}
                               >
                                 <CheckCircle2 size={14} className="shrink-0" />
-                                <span>
+                                <span key={isResolved ? "faq-res" : "faq-unres"}>
                                   {isResolved
                                     ? "Problem gelöst"
                                     : "Ja, funktioniert wieder"}
@@ -500,7 +507,7 @@ export default function SimulatorFaqSection() {
                 "repair"
               )
             }
-            className="inline-flex min-h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-primary dark:bg-accent px-4 py-2.5 text-xs font-extrabold text-white hover:opacity-95 transition-opacity cursor-pointer whitespace-nowrap"
+            className="inline-flex min-h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-primary dark:bg-accent px-4 py-2.5 text-center text-xs font-extrabold text-white hover:opacity-95 transition-opacity cursor-pointer sm:whitespace-nowrap"
           >
             <span>Geprüfte Anfrage senden</span>
           </button>

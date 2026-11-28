@@ -154,10 +154,30 @@ export function AnimatedWasher({
           <g>
             <rect x="142" y="35" width="62" height="34" rx="7" fill="#020617" stroke="#0284C7" strokeWidth="1.5" />
             {/* LED text / timer */}
-            <text x="173" y="52" fill="#38BDF8" fontSize="13" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+            <text
+              key={isSpinningFast ? "spin-num" : "wash-num"}
+              x="173"
+              y="52"
+              fill="#38BDF8"
+              fontSize="13"
+              fontWeight="bold"
+              fontFamily="monospace"
+              textAnchor="middle"
+              className="notranslate"
+            >
               {isSpinningFast ? "1400" : "42:00"}
             </text>
-            <text x="173" y="63" fill="#0EA5E9" fontSize="7" fontWeight="bold" textAnchor="middle" letterSpacing="1">
+            <text
+              key={isSpinningFast ? "spin-lbl" : "wash-lbl"}
+              x="173"
+              y="63"
+              fill="#0EA5E9"
+              fontSize="7"
+              fontWeight="bold"
+              textAnchor="middle"
+              letterSpacing="1"
+              className="notranslate"
+            >
               {isSpinningFast ? "SCHL" : "WASCH"}
             </text>
             {/* Blinking green status LED */}
@@ -281,7 +301,9 @@ export function AnimatedWasher({
           className="mt-3 inline-flex max-w-full items-center justify-center gap-1.5 rounded-full border border-accent/20 bg-white/90 dark:bg-slate-900/90 dark:border-accent/35 px-3 py-1.5 text-center text-[11px] font-bold leading-tight text-accent dark:text-accent-light shadow-sm backdrop-blur transition-all hover:bg-accent hover:text-white"
         >
           <RotateCw size={12} className={isSpinningFast ? "animate-spin" : ""} />
-          {isSpinningFast ? "Turbo-Schleudern aktiv! (Klick zum Stoppen)" : "Klicken: Schleudergang testen"}
+          <span key={isSpinningFast ? "spin-stop" : "spin-start"}>
+            {isSpinningFast ? "Turbo-Schleudern aktiv! (Klick zum Stoppen)" : "Klicken: Schleudergang testen"}
+          </span>
         </button>
       )}
     </div>
@@ -336,7 +358,7 @@ export function AnimatedDishwasher({
           </circle>
           {/* Digital Timer */}
           <rect x="80" y="34" width="55" height="24" rx="5" fill="#020617" stroke="#0284C7" strokeWidth="1" />
-          <text x="107" y="50" fill="#38BDF8" fontSize="11" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+          <text x="107" y="50" fill="#38BDF8" fontSize="11" fontWeight="bold" fontFamily="monospace" textAnchor="middle" className="notranslate">
             0:45
           </text>
           {/* Program buttons */}
@@ -513,10 +535,10 @@ export function AnimatedFridge({
 
               {/* Digital Temperature Display on Door */}
               <rect x="130" y="32" width="56" height="28" rx="6" fill="#0F172A" />
-              <text x="158" y="46" fill="#38BDF8" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+              <text x="158" y="46" fill="#38BDF8" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" className="notranslate">
                 +4°C
               </text>
-              <text x="158" y="55" fill="#22C55E" fontSize="6.5" fontWeight="bold" textAnchor="middle">
+              <text x="158" y="55" fill="#22C55E" fontSize="6.5" fontWeight="bold" textAnchor="middle" className="notranslate">
                 ECO AKTIV
               </text>
             </g>
@@ -592,7 +614,7 @@ export function AnimatedOven({
           <circle cx="190" cy="50" r="14" fill="#334155" stroke="#64748B" strokeWidth="1.5" />
           {/* Digital Clock */}
           <rect x="85" y="36" width="70" height="28" rx="6" fill="#020617" stroke="#EA580C" strokeWidth="1" />
-          <text x="120" y="54" fill="#FB923C" fontSize="13" fontWeight="bold" fontFamily="monospace" textAnchor="middle">
+          <text x="120" y="54" fill="#FB923C" fontSize="13" fontWeight="bold" fontFamily="monospace" textAnchor="middle" className="notranslate">
             200°C
           </text>
 
@@ -694,7 +716,7 @@ export function InteractiveApplianceShowcase({
     { id: "dishwasher", label: "Geschirrspüler", deviceName: "Geschirrspüler", desc: "Geschirr wird nicht sauber, Wasser läuft aus oder Fehlercode blinkt?", icon: Sparkles },
     { id: "fridge", label: "Kühlschrank", deviceName: "Kühlschrank / Gefriergerät", desc: "Kühlt nicht mehr richtig, vereist ständig oder Kompressor brummt?", icon: Snowflake },
     { id: "oven", label: "Backofen", deviceName: "Backofen / Herd", desc: "Wird nicht heiß, Ober-/Unterhitze defekt oder Scheibe beschädigt?", icon: Flame },
-    { id: "other", label: "Anderes Gerät", deviceName: "Anderes Gerät (Sonstiges)", desc: "Wäschetrockner, Induktion, Dunsthaube, Kaffeeautomat, Platine oder sonstiges Gerät?", icon: PackageSearch },
+    { id: "other", label: "Anderes Gerät", deviceName: "Anderes Gerät (Sonstiges)", desc: "Wäschetrockner, Induktion, Dunstabzugshaube, Kaffeevollautomat, Platine oder sonstiges Gerät?", icon: PackageSearch },
   ] as const;
 
   const issuesByTab: Record<string, string[]> = {
@@ -789,7 +811,7 @@ export function InteractiveApplianceShowcase({
                     Nahezu alle Fabrikate &amp; Gerätetypen
                   </h4>
                   <p className="relative z-10 text-xs text-white/70 text-center mt-1.5 leading-relaxed">
-                    Wäschetrockner · Induktion · Dunsthauben · Kaffeeautomaten · Elektronikplatinen
+                    Wäschetrockner · Induktion · Dunstabzugshauben · Kaffeevollautomaten · Elektronikplatinen
                   </p>
                   <div className="relative z-10 mt-4 sm:mt-5 flex flex-wrap gap-1.5 justify-center">
                     {["Wäschetrockner", "Ceranfeld / Induktion", "Kaffeevollautomat", "Dunstabzugshaube", "Mikrowelle", "Elektronik / Platine"].map((tag) => (
@@ -842,7 +864,7 @@ export function InteractiveApplianceShowcase({
                     type="text"
                     value={customDeviceText}
                     onChange={(e) => setCustomDeviceText(e.target.value)}
-                    placeholder="z. B. Wäschetrockner, Jura Kaffeeautomat, Induktionsfeld..."
+                    placeholder="z. B. Wäschetrockner, Jura Kaffeevollautomat, Induktionsfeld…"
                     className="flex-1 min-w-0 rounded-xl border border-primary/15 dark:border-white/15 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint dark:placeholder:text-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                   />
                   {onSelectRepair ? (
@@ -919,9 +941,9 @@ export function InteractiveApplianceShowcase({
                   }
                   className="btn-primary w-full sm:w-auto text-center sm:whitespace-nowrap cursor-pointer"
                 >
-                  <span>
+                  <span key={selectedIssue ? "app-btn-sel" : "app-btn-unsel"}>
                     {selectedIssue
-                      ? `Mit Auswahl anfragen`
+                      ? "Mit Auswahl anfragen"
                       : `${currentTabObj.label} jetzt anfragen`}
                   </span>
                   <ArrowRight size={16} className="shrink-0" />
@@ -952,7 +974,9 @@ export function InteractiveApplianceShowcase({
                 }
                 className="btn-ghost w-full sm:w-auto text-center sm:whitespace-nowrap cursor-pointer"
               >
-                Direkte Frage (WhatsApp)
+                <span>
+                  Direkte Frage (<span translate="no" className="notranslate">WhatsApp</span>)
+                </span>
               </button>
             ) : (
               <Link

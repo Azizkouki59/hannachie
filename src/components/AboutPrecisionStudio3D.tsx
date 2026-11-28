@@ -87,7 +87,7 @@ const FILM_CHAPTERS: FilmChapter[] = [
     index: "03",
     startSec: 16,
     endSec: 24,
-    shortLabel: "03 Kaffee & Mikro",
+    shortLabel: "03 Kaffee & Mikrowelle",
     cinemaKicker: "Szene 03 · Kaffeevollautomaten & Mikrowellen",
     cinemaHeadline: "Kaffeevollautomaten, Siebträger & Mikrowellen",
     appliance: "Kaffee & kompakte Küchengeräte",
@@ -132,9 +132,9 @@ const QUICK_APPLIANCES = [
   { label: "Spüler", sec: 8.05, chapter: 1, device: "Geschirrspüler", Icon: Dishwasher },
   { label: "Backofen", sec: 10.5, chapter: 1, device: "Backofen / Herd", Icon: Oven },
   { label: "Kochfeld", sec: 12.2, chapter: 1, device: "Ceranfeld / Induktion", Icon: Cooktop },
-  { label: "Abzug", sec: 13.8, chapter: 1, device: "Dunstabzugshaube", Icon: RangeHood },
+  { label: "Dunstabzug", sec: 13.8, chapter: 1, device: "Dunstabzugshaube", Icon: RangeHood },
   { label: "Kaffee", sec: 16.05, chapter: 2, device: "Kaffeevollautomat", Icon: CoffeeMachine },
-  { label: "Mikro", sec: 19.5, chapter: 2, device: "Mikrowelle", Icon: MicrowaveIcon },
+  { label: "Mikrowelle", sec: 19.5, chapter: 2, device: "Mikrowelle", Icon: MicrowaveIcon },
   { label: "Kühlen", sec: 24.05, chapter: 3, device: "Kühlschrank / Gefriergerät", Icon: Fridge },
   { label: "Gefrieren", sec: 27.5, chapter: 3, device: "Kühlschrank / Gefriergerät", Icon: Freezer },
 ] as const;
@@ -1527,7 +1527,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
         {/* Top Cinema Bar */}
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 sm:px-5 py-3 bg-slate-950">
           <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
-            <span className="font-mono font-bold text-sky-400 tabular-nums shrink-0">
+            <span dir="ltr" translate="no" className="notranslate font-mono font-bold text-sky-400 tabular-nums shrink-0">
               {activeChapter.index}
             </span>
             <span aria-hidden="true" className="text-slate-600">
@@ -1537,7 +1537,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
               {activeChapter.cinemaHeadline}
             </span>
           </div>
-          <span className="font-mono text-[11px] font-semibold text-slate-400 tabular-nums whitespace-nowrap shrink-0">
+          <span dir="ltr" translate="no" className="notranslate font-mono text-[11px] font-semibold text-slate-400 tabular-nums whitespace-nowrap shrink-0">
             {formatTimecode(currentTime)} / {formatTimecode(FILM_DURATION)}
           </span>
         </div>
@@ -1609,15 +1609,15 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
                 className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg bg-sky-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-sky-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 {isPlaying ? (
-                  <>
+                  <span key="ap-pause" className="inline-flex items-center gap-1.5">
                     <Pause size={14} aria-hidden="true" />
                     <span>Pause</span>
-                  </>
+                  </span>
                 ) : (
-                  <>
+                  <span key="ap-play" className="inline-flex items-center gap-1.5">
                     <Play size={14} aria-hidden="true" />
                     <span>Abspielen</span>
-                  </>
+                  </span>
                 )}
               </button>
 
@@ -1692,7 +1692,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
                   }`}
                 >
                   <Icon className="h-7 w-7 sm:h-8 sm:w-8 text-slate-200 transition-transform duration-300 group-hover:-translate-y-0.5 shrink-0" />
-                  <span className="text-[10px] font-semibold whitespace-nowrap truncate max-w-full">
+                  <span className="text-[10px] font-semibold text-center leading-tight break-words max-w-full px-0.5">
                     {label}
                   </span>
                 </button>
@@ -1733,7 +1733,8 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
 
         <div className="pt-5 mt-5 border-t border-white/10 space-y-3">
           <p className="text-xs leading-relaxed text-slate-400">
-            Typenschild abfotografieren und direkt an Kamal Hannachi senden für eine schnelle,
+            Typenschild abfotografieren und direkt an{" "}
+            <span translate="no" className="notranslate">Kamal Hannachi</span> senden für eine schnelle,
             persönliche Rückmeldung zu jedem Hausgerät.
           </p>
           <button
@@ -1745,7 +1746,7 @@ export function AboutPrecisionStudio3D({ onRequestPart }: AboutPrecisionStudio3D
                 activeChapter.quickRequestPart,
               );
             }}
-            className="w-full inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-sky-400 active:scale-[0.99] transition-all cursor-pointer whitespace-nowrap"
+            className="w-full inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-center text-sm font-bold text-slate-950 hover:bg-sky-400 active:scale-[0.99] transition-all cursor-pointer sm:whitespace-nowrap"
           >
             <span>Direkt persönlich anfragen</span>
             <ArrowRight size={15} aria-hidden="true" />

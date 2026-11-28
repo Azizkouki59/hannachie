@@ -6,6 +6,7 @@ import {
   type WhatsAppMessageInput,
 } from "@/utils/whatsapp";
 import {
+  isSafeGoogleMapsUrl,
   isSafeHttpsUrl,
   safeJsonParse,
   sanitizeSingleLine,
@@ -1007,8 +1008,8 @@ export function buildClientGoogleMapsLink(v: {
   if (v.visitType === "workshop") {
     return "";
   }
-  if (v.mapsLocationUrl && v.mapsLocationUrl.trim().startsWith("http")) {
-    return v.mapsLocationUrl.trim();
+  if (isSafeGoogleMapsUrl(v.mapsLocationUrl)) {
+    return v.mapsLocationUrl!.trim();
   }
   if (v.coordinates && typeof v.coordinates.lat === "number" && typeof v.coordinates.lng === "number") {
     return `https://www.google.com/maps?q=${v.coordinates.lat.toFixed(6)},${v.coordinates.lng.toFixed(6)}`;
@@ -1142,7 +1143,7 @@ export function saveRepairDraft(draft: {
       callbackTime: sanitizeSingleLine(v.callbackTime, 120) || "Jederzeit erreichbar",
       zip: sanitizeSingleLine(v.zip, 80),
       streetAddress: sanitizeSingleLine(v.streetAddress, 200),
-      mapsLocationUrl: isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+      mapsLocationUrl: isSafeGoogleMapsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
       locationVerified: Boolean(v.locationVerified),
       coordinates:
         v.coordinates &&
@@ -1266,7 +1267,7 @@ export function loadRepairDraft(): RepairDraft | null {
         sanitizeSingleLine(rawValues.callbackTime, 120) || "Jederzeit erreichbar",
       zip: sanitizeSingleLine(rawValues.zip, 80) || emptyValues.zip,
       streetAddress: sanitizeSingleLine(rawValues.streetAddress, 200),
-      mapsLocationUrl: isSafeHttpsUrl(rawValues.mapsLocationUrl)
+      mapsLocationUrl: isSafeGoogleMapsUrl(rawValues.mapsLocationUrl)
         ? (rawValues.mapsLocationUrl as string).trim()
         : "",
       locationVerified: Boolean(rawValues.locationVerified),
@@ -1403,7 +1404,7 @@ export function prepareImmediateWhatsAppHandoff(
     zip: isHomeVisit ? sanitizeSingleLine(v.zip, 80) : "",
     streetAddress: isHomeVisit ? sanitizeSingleLine(v.streetAddress, 200) : "",
     mapsLocationUrl:
-      isHomeVisit && isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+      isHomeVisit && isSafeGoogleMapsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
     locationVerified: isHomeVisit ? Boolean(v.locationVerified) : false,
     coordinates: isHomeVisit ? v.coordinates : null,
     name: sanitizeSingleLine(v.name, 120),
@@ -1452,7 +1453,7 @@ export async function submitRepairRequest(
     zip: isHomeVisit ? sanitizeSingleLine(v.zip, 80) : "",
     streetAddress: isHomeVisit ? sanitizeSingleLine(v.streetAddress, 200) : "",
     mapsLocationUrl:
-      isHomeVisit && isSafeHttpsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
+      isHomeVisit && isSafeGoogleMapsUrl(v.mapsLocationUrl) ? v.mapsLocationUrl!.trim() : "",
     locationVerified: isHomeVisit ? Boolean(v.locationVerified) : false,
     coordinates: isHomeVisit ? v.coordinates : null,
     name: sanitizeSingleLine(v.name, 120),

@@ -52,7 +52,10 @@ export default function ServiceNoticeBanner({
         >
           <div className="container-page flex items-center justify-between gap-2.5 sm:gap-4 py-2 sm:py-2.5">
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+              <span
+                key={isMaintenance ? "sn-maint" : "sn-cal"}
+                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-300"
+              >
                 {isMaintenance ? (
                   <PackageSearch size={11} aria-hidden="true" />
                 ) : (
@@ -61,13 +64,16 @@ export default function ServiceNoticeBanner({
                 <span>{normalized.label}</span>
               </span>
 
-              <p className="min-w-0 flex-1 text-xs sm:text-[13px] font-semibold leading-snug text-primary dark:text-amber-50">
+              <p
+                dir="auto"
+                className="min-w-0 flex-1 text-xs sm:text-[13px] font-semibold leading-snug text-primary dark:text-amber-50"
+              >
                 <Info
                   size={13}
                   className="mr-1.5 inline-block -translate-y-px text-amber-700 dark:text-amber-300 sm:hidden"
                   aria-hidden="true"
                 />
-                {normalized.message}
+                <span>{normalized.message}</span>
               </p>
             </div>
 

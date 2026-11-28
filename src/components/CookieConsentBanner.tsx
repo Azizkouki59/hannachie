@@ -121,7 +121,13 @@ export default function CookieConsentBanner() {
                     Privatsphäre- &amp; Cookie-Einstellungen
                   </h2>
                   <p className="text-xs text-white/65">
-                    Hannachi Elektrohaushaltsgeräte &amp; Ersatzteile · Osnabrück
+                    <span translate="no" className="notranslate">
+                      Hannachi
+                    </span>{" "}
+                    Elektrohaushaltsgeräte &amp; Ersatzteile ·{" "}
+                    <span translate="no" className="notranslate">
+                      Osnabrück
+                    </span>
                   </p>
                 </div>
               </div>
@@ -144,9 +150,15 @@ export default function CookieConsentBanner() {
             >
               Wir setzen keine Werbe- oder Tracking-Cookies ein. Lediglich technisch notwendige
               Einstellungen (z. B. Hell-/Dunkelmodus, Formular-Entwurf) werden gemäß{" "}
-              <strong className="text-white">§ 25 Abs. 2 TDDDG</strong> lokal gespeichert.
-              Optional können Sie <strong className="text-white">Google Maps</strong> (Google
-              Ireland / USA, Art. 6 Abs. 1 lit. a DSGVO) freischalten, jederzeit widerrufbar.
+              <strong translate="no" className="notranslate text-white">
+                § 25 Abs. 2 TDDDG
+              </strong>{" "}
+              lokal gespeichert. Optional können Sie{" "}
+              <strong translate="no" className="notranslate text-white">
+                Google Maps
+              </strong>{" "}
+              (<span translate="no" className="notranslate">Google Ireland / USA</span>,{" "}
+              <span translate="no" className="notranslate">Art. 6 Abs. 1 lit. a DSGVO</span>) freischalten, jederzeit widerrufbar.
             </p>
 
             {/* Granular Customization Section */}
@@ -196,13 +208,33 @@ export default function CookieConsentBanner() {
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-white text-xs sm:text-sm flex items-center gap-1.5">
                         <MapPin size={14} className="text-sky-400 shrink-0" aria-hidden="true" />
-                        <span>Externe Medien (Google Maps)</span>
+                        <span>
+                          Externe Medien (
+                          <span translate="no" className="notranslate">
+                            Google Maps
+                          </span>
+                          )
+                        </span>
                       </span>
                     </div>
                     <p className="mt-1 text-white/70 leading-relaxed">
-                      Ermöglicht das direkte Laden der interaktiven Google-Maps-Karte zur
-                      Orientierung in Osnabrück. Hierbei wird Ihre IP-Adresse an Google LLC
-                      (USA) übermittelt (zertifiziert nach EU-US Data Privacy Framework).
+                      Ermöglicht das direkte Laden der interaktiven{" "}
+                      <span translate="no" className="notranslate">
+                        Google-Maps
+                      </span>
+                      -Karte zur Orientierung in{" "}
+                      <span translate="no" className="notranslate">
+                        Osnabrück
+                      </span>
+                      . Hierbei wird Ihre IP-Adresse an{" "}
+                      <span translate="no" className="notranslate">
+                        Google LLC
+                      </span>{" "}
+                      (USA) übermittelt (zertifiziert nach{" "}
+                      <span translate="no" className="notranslate">
+                        EU-US Data Privacy Framework
+                      </span>
+                      ).
                     </p>
                   </div>
                   <label className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-end cursor-pointer">

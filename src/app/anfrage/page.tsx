@@ -36,17 +36,35 @@ export default function AnfragePage({
             <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-4 sm:p-5 text-left">
               <MessageSquareText size={18} className="text-accent mb-2" aria-hidden="true" />
               <p className="font-extrabold text-sm text-primary dark:text-slate-100">1. Beratung</p>
-              <p className="mt-1 text-xs text-ink-muted">Direkt mit Inhaber Kamal Hannachi.</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Direkt mit Inhaber{" "}
+                <span translate="no" className="notranslate">
+                  Kamal Hannachi
+                </span>
+                .
+              </p>
             </div>
             <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-4 sm:p-5 text-left">
               <PackageSearch size={18} className="text-amber-500 mb-2" aria-hidden="true" />
               <p className="font-extrabold text-sm text-primary dark:text-slate-100">2. Ersatzteilsuche</p>
-              <p className="mt-1 text-xs text-ink-muted">Passgenau nach Typenschild (E-Nr.).</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Passgenau nach Typenschild (
+                <span translate="no" className="notranslate">
+                  E-Nr.
+                </span>
+                ).
+              </p>
             </div>
             <div className="card rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-4 sm:p-5 text-left">
               <CalendarCheck size={18} className="text-emerald-500 mb-2" aria-hidden="true" />
               <p className="font-extrabold text-sm text-primary dark:text-slate-100">3. Termin</p>
-              <p className="mt-1 text-xs text-ink-muted">Nach Vereinbarung in Osnabrück.</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Nach Vereinbarung in{" "}
+                <span translate="no" className="notranslate">
+                  Osnabrück
+                </span>
+                .
+              </p>
             </div>
           </div>
 

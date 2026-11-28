@@ -101,7 +101,7 @@ export default function HowWeWorkSection({
         <FadeUp>
           <div className="max-w-2xl mx-auto text-center mb-7 sm:mb-10">
             <p className="eyebrow">
-              So arbeiten wir · {business.city}
+              So arbeiten wir · <span translate="no" className="notranslate">{business.city}</span>
             </p>
             <h2
               id="how-we-work-heading"

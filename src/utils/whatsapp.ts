@@ -1,4 +1,4 @@
-import { isSafeHttpsUrl, sanitizeSingleLine, sanitizeText } from "@/utils/sanitize";
+import { isSafeGoogleMapsUrl, sanitizeSingleLine, sanitizeText } from "@/utils/sanitize";
 
 export type WhatsAppInquiryMode = "repair" | "question";
 export type WhatsAppVisitType = "home_visit" | "workshop";
@@ -277,7 +277,7 @@ function resolveDeviceDisplay(device: string, customDevice?: string): string {
 
 function resolveMapsLink(input: WhatsAppMessageInput): string {
   const explicitUrl = sanitizeLine(input.mapsLocationUrl);
-  if (isSafeHttpsUrl(explicitUrl)) {
+  if (isSafeGoogleMapsUrl(explicitUrl)) {
     return explicitUrl;
   }
 

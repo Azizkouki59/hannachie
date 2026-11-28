@@ -18,6 +18,7 @@ import {
   Play,
 } from "lucide-react";
 import { business } from "@/data/site";
+import { isSafeHttpsUrl } from "@/utils/sanitize";
 import { SectionAmbientMesh } from "@/components/HeroAnimatedBackdrop";
 import {
   googleReviews82,
@@ -149,7 +150,9 @@ function VerifiedReviewCard({
   const body = showOriginal && hasOriginalAlt ? review.originalText! : review.text;
   const isLong = body.length > 210;
   const displayBody = isLong && !expanded ? `${body.slice(0, 205).trim()}…` : body;
-  const mapsLink = review.googleMapsUri || review.authorUri || fallbackMapsUri;
+  const rawMapsCandidate = review.googleMapsUri || review.authorUri || fallbackMapsUri;
+  const mapsLink = isSafeHttpsUrl(rawMapsCandidate) ? rawMapsCandidate : fallbackMapsUri;
+  const safeAuthorUri = isSafeHttpsUrl(review.authorUri) ? review.authorUri : "";
   const avatarBg = AVATAR_COLORS[colorIdx % AVATAR_COLORS.length];
   const dupTabIndex = isDuplicate ? -1 : undefined;
 
@@ -165,7 +168,7 @@ function VerifiedReviewCard({
               className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white ${avatarBg}`}
               aria-hidden="true"
             >
-              {review.authorPhotoUri && !avatarError ? (
+              {review.authorPhotoUri && isSafeHttpsUrl(review.authorPhotoUri) && !avatarError ? (
                 <img
                   src={review.authorPhotoUri}
                   alt={isDuplicate ? "" : review.author}
@@ -178,23 +181,27 @@ function VerifiedReviewCard({
               )}
             </div>
             <div className="min-w-0">
-              {review.authorUri ? (
+              {safeAuthorUri ? (
                 <a
-                  href={review.authorUri}
+                  href={safeAuthorUri}
                   target="_blank"
                   rel="noopener noreferrer"
                   tabIndex={dupTabIndex}
                   className="block truncate text-sm font-extrabold text-primary dark:text-slate-100 hover:text-accent transition-colors"
                 >
-                  {review.author}
+                  <span translate="no" className="notranslate">{review.author}</span>
                 </a>
               ) : (
-                <p className="truncate text-sm font-extrabold text-primary dark:text-slate-100">
+                <p translate="no" className="notranslate truncate text-sm font-extrabold text-primary dark:text-slate-100">
                   {review.author}
                 </p>
               )}
               <p className="truncate text-[11px] text-ink-faint">
-                {review.relativeTime || "Verifiziert auf Google Maps"}
+                {review.relativeTime || (
+                  <>
+                    Verifiziert auf <span translate="no" className="notranslate">Google Maps</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -230,8 +237,12 @@ function VerifiedReviewCard({
           ))}
         </div>
 
-        <p className="text-xs sm:text-[13.5px] leading-relaxed text-primary/90 dark:text-slate-200">
-          {displayBody || "Bewertung ohne Textkommentar."}
+        <p dir="auto" className="text-xs sm:text-[13.5px] leading-relaxed text-primary/90 dark:text-slate-200">
+          {displayBody ? (
+            <span key={expanded ? "exp" : "col"}>{displayBody}</span>
+          ) : (
+            <span key="empty">Bewertung ohne Textkommentar.</span>
+          )}
         </p>
 
         {isLong && (
@@ -241,7 +252,9 @@ function VerifiedReviewCard({
             onClick={() => setExpanded((prev) => !prev)}
             className="mt-1.5 text-xs font-bold text-accent hover:underline cursor-pointer"
           >
-            {expanded ? "Weniger anzeigen" : "Weiterlesen"}
+            <span key={expanded ? "less" : "more"}>
+              {expanded ? "Weniger anzeigen" : "Weiterlesen"}
+            </span>
           </button>
         )}
 
@@ -254,7 +267,9 @@ function VerifiedReviewCard({
               onClick={() => setShowOriginal((prev) => !prev)}
               className="font-semibold text-accent hover:underline cursor-pointer"
             >
-              {showOriginal ? "Übersetzung (DE)" : "Original ansehen"}
+              <span key={showOriginal ? "orig-de" : "orig-view"}>
+                {showOriginal ? "Übersetzung (DE)" : "Original ansehen"}
+              </span>
             </button>
           </div>
         )}
@@ -263,7 +278,9 @@ function VerifiedReviewCard({
       <div className="mt-3.5 pt-2.5 border-t border-primary/8 dark:border-white/10 flex items-center justify-between gap-2 text-[11px] text-ink-faint">
         <span className="inline-flex items-center gap-1 font-medium">
           <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-          <span>{review.isLiveFromApi ? "Google Live" : "Google Maps"}</span>
+          <span key={review.isLiveFromApi ? "src-live" : "src-maps"} translate="no" className="notranslate">
+            {review.isLiveFromApi ? "Google Live" : "Google Maps"}
+          </span>
         </span>
         <a
           href={mapsLink}
@@ -272,7 +289,7 @@ function VerifiedReviewCard({
           tabIndex={dupTabIndex}
           className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
         >
-          <span>Auf Google ansehen</span>
+          <span>Auf <span translate="no" className="notranslate">Google</span> ansehen</span>
           <ExternalLink size={10} aria-hidden="true" />
         </a>
       </div>
@@ -420,6 +437,7 @@ function DesktopReviewTicker({
 
   return (
     <div
+      dir="ltr"
       className="mask-fade-edges relative overflow-hidden py-2 -my-2"
       onPointerEnter={() => {
         isHoveredRef.current = true;
@@ -609,16 +627,17 @@ export function GoogleReviewsSection({
                           id="google-reviews-heading"
                           className="text-lg sm:text-xl font-extrabold text-primary dark:text-white tracking-tight"
                         >
-                          Google-Bewertungen
+                          <span translate="no" className="notranslate">Google</span>-Bewertungen
                         </h2>
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 tabular-nums">
+                        <span translate="no" className="notranslate inline-flex items-center gap-1 rounded-lg bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 text-xs font-extrabold text-amber-700 dark:text-amber-300 tabular-nums">
                           <Star size={12} className="fill-[#fbbc04] text-[#fbbc04]" aria-hidden="true" />
                           <span>{ratingFormatted}</span>
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs sm:text-sm text-ink-muted">
-                        {place.userRatingCount} Bewertungen auf Google Maps für{" "}
-                        <span className="font-semibold text-primary dark:text-slate-200">
+                        {place.userRatingCount} Bewertungen auf{" "}
+                        <span translate="no" className="notranslate">Google Maps</span> für{" "}
+                        <span translate="no" className="notranslate font-semibold text-primary dark:text-slate-200">
                           {business.name} · {business.city}
                         </span>
                       </p>
@@ -633,10 +652,12 @@ export function GoogleReviewsSection({
                       rel="noopener noreferrer"
                       onClick={() => triggerHapticFeedback(30)}
                       data-compact-label="true"
-                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors whitespace-nowrap min-w-0"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white transition-colors sm:whitespace-nowrap min-w-0"
                     >
                       <MessageSquarePlus size={14} className="shrink-0" aria-hidden="true" />
-                      <span className="truncate">Auf Google bewerten</span>
+                      <span className="truncate">
+                        Auf <span translate="no" className="notranslate">Google</span> bewerten
+                      </span>
                       <ExternalLink size={12} className="hidden min-[380px]:inline shrink-0" aria-hidden="true" />
                     </a>
                     <a
@@ -644,9 +665,12 @@ export function GoogleReviewsSection({
                       target="_blank"
                       rel="noopener noreferrer"
                       data-compact-label="true"
-                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors whitespace-nowrap min-w-0"
+                      className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-2.5 sm:px-3.5 py-2 text-[11.5px] sm:text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors sm:whitespace-nowrap min-w-0"
                     >
-                      <span className="truncate">Alle {place.userRatingCount} auf Google</span>
+                      <span className="truncate">
+                        Alle {place.userRatingCount} auf{" "}
+                        <span translate="no" className="notranslate">Google</span>
+                      </span>
                       <ExternalLink size={12} className="hidden min-[380px]:inline shrink-0" aria-hidden="true" />
                     </a>
                     {mode === "full" && (
@@ -683,7 +707,7 @@ export function GoogleReviewsSection({
                         setPage(0);
                         setVisibleFullCount(9);
                       }}
-                      className={`shrink-0 snap-start whitespace-nowrap min-h-[36px] sm:min-h-[34px] rounded-lg px-3 sm:px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                      className={`shrink-0 snap-start whitespace-nowrap min-h-[44px] sm:min-h-[34px] rounded-xl sm:rounded-lg px-3.5 sm:px-2.5 py-1.5 sm:py-1 text-xs font-bold transition-colors active:scale-95 cursor-pointer ${
                         selectedTopic === "all"
                           ? "bg-primary text-white dark:bg-accent"
                           : "bg-primary/5 dark:bg-white/5 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -705,7 +729,7 @@ export function GoogleReviewsSection({
                             setPage(0);
                             setVisibleFullCount(9);
                           }}
-                          className={`shrink-0 snap-start whitespace-nowrap min-h-[36px] sm:min-h-[34px] rounded-lg px-3 sm:px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                          className={`shrink-0 snap-start whitespace-nowrap min-h-[44px] sm:min-h-[34px] rounded-xl sm:rounded-lg px-3.5 sm:px-2.5 py-1.5 sm:py-1 text-xs font-bold transition-colors active:scale-95 cursor-pointer ${
                             active
                               ? "bg-primary text-white dark:bg-accent"
                               : "bg-primary/5 dark:bg-white/5 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -733,14 +757,14 @@ export function GoogleReviewsSection({
                             setVisibleFullCount(9);
                           }}
                           placeholder="Stichwort suchen…"
-                          className="w-full min-h-[36px] rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 pl-8 pr-3 py-1.5 text-xs text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
+                          className="w-full min-h-[44px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 pl-8 pr-3 py-1.5 text-base sm:text-xs text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
                         />
                       </div>
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortOption)}
                         aria-label="Sortierung"
-                        className="min-h-[36px] rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-primary dark:text-slate-100 focus:border-accent focus:outline-none cursor-pointer"
+                        className="min-h-[44px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 px-3 sm:px-2.5 py-1.5 text-base sm:text-xs font-semibold text-primary dark:text-slate-100 focus:border-accent focus:outline-none cursor-pointer"
                       >
                         <option value="relevant">Relevanteste</option>
                         <option value="highest">Beste zuerst</option>
@@ -767,15 +791,15 @@ export function GoogleReviewsSection({
                             className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 px-2.5 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
                           >
                             {effectiveTickerPaused ? (
-                              <>
+                              <span key="ticker-play" className="inline-flex items-center gap-1.5">
                                 <Play size={12} aria-hidden="true" />
                                 <span>Weiter</span>
-                              </>
+                              </span>
                             ) : (
-                              <>
+                              <span key="ticker-pause" className="inline-flex items-center gap-1.5">
                                 <Pause size={12} aria-hidden="true" />
                                 <span>Pause</span>
-                              </>
+                              </span>
                             )}
                           </button>
                           <button
@@ -812,7 +836,7 @@ export function GoogleReviewsSection({
                         <span className="text-xs font-medium text-ink-faint tabular-nums">
                           Seite {safePage + 1} / {totalCompactPages}
                         </span>
-                        <div className="inline-flex items-center gap-1">
+                        <div className="inline-flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => {
@@ -820,9 +844,9 @@ export function GoogleReviewsSection({
                               setPage((p) => (p > 0 ? p - 1 : totalCompactPages - 1));
                             }}
                             aria-label="Vorherige Bewertungen"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
+                            className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-[36px] sm:min-w-[36px] items-center justify-center rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-primary dark:text-slate-200 hover:border-accent active:scale-95 transition-all cursor-pointer"
                           >
-                            <ChevronLeft size={15} />
+                            <ChevronLeft size={16} />
                           </button>
                           <button
                             type="button"
@@ -831,9 +855,9 @@ export function GoogleReviewsSection({
                               setPage((p) => (p + 1) % totalCompactPages);
                             }}
                             aria-label="Nächste Bewertungen"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
+                            className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-[36px] sm:min-w-[36px] items-center justify-center rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 text-primary dark:text-slate-200 hover:border-accent active:scale-95 transition-all cursor-pointer"
                           >
-                            <ChevronRight size={15} />
+                            <ChevronRight size={16} />
                           </button>
                         </div>
                       </div>
@@ -915,19 +939,21 @@ export function GoogleReviewsSection({
                     </span>
                   </button>
                   <p className="text-[11px] text-ink-faint">
-                    Auszüge aus öffentlichen Google-Bewertungen. Die Bewertungen werden von Google veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
+                    Auszüge aus öffentlichen <span translate="no" className="notranslate">Google</span>-Bewertungen. Die Bewertungen werden von{" "}
+                    <span translate="no" className="notranslate">Google</span> veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
                   </p>
                 </div>
               ) : (
                 <p className="text-[11px] text-ink-faint">
-                  Auszüge aus öffentlichen Google-Bewertungen. Die Bewertungen werden von Google veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
+                  Auszüge aus öffentlichen <span translate="no" className="notranslate">Google</span>-Bewertungen. Die Bewertungen werden von{" "}
+                  <span translate="no" className="notranslate">Google</span> veröffentlicht; wir prüfen nicht, ob die Verfasser unser Angebot genutzt haben.
                 </p>
               )}
 
               {showViewAllLink && (
                 <Link
                   href="/kundenbewertungen"
-                  className="inline-flex min-h-[40px] items-center gap-1.5 text-xs sm:text-sm font-extrabold text-accent hover:underline"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 text-xs sm:text-sm font-extrabold text-accent hover:underline"
                 >
                   <span>Alle Kundenbewertungen ansehen</span>
                   <ArrowRight size={14} aria-hidden="true" />

@@ -313,7 +313,7 @@ function MapLazyPlaceholder({
         ) : (
           <MapPin size={14} className="text-red-500 shrink-0" aria-hidden="true" />
         )}
-        <span>
+        <span key={mode}>
           {mode === "service-area"
             ? "Regionskarte (25 km) laden"
             : "Standort-Karte laden"}
@@ -336,7 +336,7 @@ function MapLoadingBackdrop({ mode }: { mode: ContactMapViewMode }) {
       />
       <div className="relative z-10 inline-flex items-center gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-200 shadow-sm backdrop-blur-xs">
         <span className="h-2 w-2 rounded-full bg-sky-500 animate-pulse" aria-hidden="true" />
-        <span>
+        <span key={mode}>
           {mode === "service-area"
             ? "Regionskarte wird geladen …"
             : "Standortkarte wird geladen …"}
@@ -387,12 +387,28 @@ function MapTimeoutFallbackCard({
         <p className="text-xs font-extrabold text-primary dark:text-slate-100">
           Karte konnte nicht geladen werden
         </p>
-        <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">
+        <p
+          key={mode === "service-area" ? (selectedArea ? selectedArea.value : "sa-all") : "pin"}
+          className="mt-0.5 text-[11px] leading-snug text-ink-muted"
+        >
           {mode === "service-area"
             ? selectedArea
-              ? `Lieferung & Übergabe in ${selectedArea.zip} ${selectedArea.city} (Region Osnabrück)`
-              : "Lieferung & Übergabe im 25 km Radius um Osnabrück & Landkreis"
-            : placeAddress}
+              ? (
+                <>
+                  Lieferung &amp; Übergabe in{" "}
+                  <span translate="no" className="notranslate">
+                    {selectedArea.zip} {selectedArea.city}
+                  </span>{" "}
+                  (Region <span translate="no" className="notranslate">Osnabrück</span>)
+                </>
+              )
+              : (
+                <>
+                  Lieferung &amp; Übergabe im 25 km Radius um{" "}
+                  <span translate="no" className="notranslate">Osnabrück</span> &amp; Landkreis
+                </>
+              )
+            : <span translate="no" className="notranslate">{placeAddress}</span>}
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
@@ -411,7 +427,9 @@ function MapTimeoutFallbackCard({
             rel="noopener noreferrer"
             className="inline-flex min-h-[38px] items-center justify-center gap-1 rounded-xl border border-primary/15 dark:border-white/15 bg-surface px-2.5 py-1.5 text-[11px] font-bold text-primary dark:text-slate-100 hover:text-accent transition-colors"
           >
-            <span>Maps öffnen</span>
+            <span>
+              <span translate="no" className="notranslate">Maps</span> öffnen
+            </span>
             <ExternalLink size={11} aria-hidden="true" />
           </a>
         </div>
@@ -1225,7 +1243,7 @@ export default function GoogleMapsEmbed({
               onClick={() => setMode("service-area")}
               aria-pressed={activeMode === "service-area"}
               data-testid="map-toggle-service-area-btn"
-              className={`relative inline-flex min-h-[42px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
+              className={`relative inline-flex min-h-[42px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-center text-xs font-extrabold leading-tight transition-colors cursor-pointer sm:whitespace-nowrap ${
                 activeMode === "service-area"
                   ? "text-white"
                   : "text-ink-muted hover:text-ink"
@@ -1251,7 +1269,7 @@ export default function GoogleMapsEmbed({
               onClick={() => setMode("pin")}
               aria-pressed={activeMode === "pin"}
               data-testid="map-toggle-pin-btn"
-              className={`relative inline-flex min-h-[42px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-extrabold transition-colors cursor-pointer whitespace-nowrap ${
+              className={`relative inline-flex min-h-[42px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-center text-xs font-extrabold leading-tight transition-colors cursor-pointer sm:whitespace-nowrap ${
                 activeMode === "pin"
                   ? "text-white"
                   : "text-ink-muted hover:text-ink"
@@ -1376,7 +1394,7 @@ export default function GoogleMapsEmbed({
                   aria-hidden="true"
                 />
                 <span className="truncate">
-                  {userLocation.placeLabel} · ca. {Math.max(1, userLocation.distanceFromHqKm)} km
+                  <span translate="no" className="notranslate">{userLocation.placeLabel}</span> · ca. {Math.max(1, userLocation.distanceFromHqKm)} km
                 </span>
               </motion.span>
             ) : activeMode === "service-area" ? (
@@ -1403,9 +1421,15 @@ export default function GoogleMapsEmbed({
                   aria-hidden="true"
                 />
                 <span className="truncate">
-                  {selectedArea
-                    ? `${selectedArea.label} · ca. ${activeAreaDistance} km`
-                    : "Region Osnabrück · ca. 25 km"}
+                  {selectedArea ? (
+                    <>
+                      <span translate="no" className="notranslate">{selectedArea.label}</span> · ca. {activeAreaDistance} km
+                    </>
+                  ) : (
+                    <>
+                      Region <span translate="no" className="notranslate">Osnabrück</span> · ca. 25 km
+                    </>
+                  )}
                 </span>
               </motion.span>
             ) : (
@@ -1431,7 +1455,9 @@ export default function GoogleMapsEmbed({
                   className="text-red-500 shrink-0"
                   aria-hidden="true"
                 />
-                <span className="truncate">Standort-Pin · {business.city}</span>
+                <span className="truncate">
+                  Standort-Pin · <span translate="no" className="notranslate">{business.city}</span>
+                </span>
               </motion.span>
             )}
           </AnimatePresence>
@@ -1459,15 +1485,15 @@ export default function GoogleMapsEmbed({
             }`}
           >
             {touchNavUnlocked ? (
-              <>
+              <span key="map-nav-unlock" className="inline-flex items-center gap-1.5">
                 <Lock size={12} className="shrink-0" aria-hidden="true" />
                 <span>Scrollen</span>
-              </>
+              </span>
             ) : (
-              <>
+              <span key="map-nav-lock" className="inline-flex items-center gap-1.5">
                 <Hand size={12} className="text-sky-600 dark:text-sky-400 shrink-0" aria-hidden="true" />
                 <span>1-Finger-Nav</span>
-              </>
+              </span>
             )}
           </button>
         )}
@@ -1548,7 +1574,7 @@ export default function GoogleMapsEmbed({
                       aria-hidden="true"
                     />
                     <span className="truncate">
-                      Lieferung &amp; Übergabe verfügbar · {userLocation.placeLabel}
+                      Lieferung &amp; Übergabe verfügbar · <span translate="no" className="notranslate">{userLocation.placeLabel}</span>
                     </span>
                   </>
                 ) : (
@@ -1559,7 +1585,7 @@ export default function GoogleMapsEmbed({
                       aria-hidden="true"
                     />
                     <span className="truncate">
-                      {userLocation.placeLabel} (ca. {userLocation.distanceFromHqKm} km ab Osnabrück)
+                      <span translate="no" className="notranslate">{userLocation.placeLabel}</span> (ca. {userLocation.distanceFromHqKm} km ab <span translate="no" className="notranslate">Osnabrück</span>)
                     </span>
                   </>
                 )
@@ -1571,9 +1597,18 @@ export default function GoogleMapsEmbed({
                     aria-hidden="true"
                   />
                   <span className="truncate">
-                    {selectedArea
-                      ? `Lieferung & Übergabe in ${selectedArea.zip} ${selectedArea.city}`
-                      : "Osnabrück & Landkreis (12 Städte/Gemeinden)"}
+                    {selectedArea ? (
+                      <>
+                        Lieferung &amp; Übergabe in{" "}
+                        <span translate="no" className="notranslate">
+                          {selectedArea.zip} {selectedArea.city}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span translate="no" className="notranslate">Osnabrück</span> &amp; Landkreis (12 Städte/Gemeinden)
+                      </>
+                    )}
                   </span>
                 </>
               ) : (
@@ -1583,7 +1618,7 @@ export default function GoogleMapsEmbed({
                     className="text-red-500 shrink-0"
                     aria-hidden="true"
                   />
-                  <span className="truncate">{placeAddress}</span>
+                  <span translate="no" className="notranslate truncate">{placeAddress}</span>
                 </>
               )}
             </motion.div>
@@ -1598,29 +1633,34 @@ export default function GoogleMapsEmbed({
               aria-label="Meinen aktuellen Standort auf der Karte anzeigen"
               title="Karte auf meinen aktuellen Standort im Raum Osnabrück zentrieren"
               data-testid="map-show-my-location-btn"
-              className={`inline-flex min-h-[40px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1.5 text-xs font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-75 disabled:cursor-wait whitespace-nowrap ${
+              className={`inline-flex min-h-[40px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1.5 text-center text-xs font-bold leading-tight active:scale-95 transition-all cursor-pointer disabled:opacity-75 disabled:cursor-wait sm:whitespace-nowrap ${
                 activeUserCoordinates
                   ? "border-sky-600 bg-sky-600 text-white hover:bg-sky-700"
                   : "border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 text-primary dark:text-slate-100 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400"
               }`}
             >
-              {userLocation.status === "locating" ? (
-                <Loader2 size={13} className="animate-spin shrink-0" aria-hidden="true" />
-              ) : activeUserCoordinates ? (
-                <CheckCircle2 size={13} className="text-white shrink-0" aria-hidden="true" />
-              ) : (
-                <LocateFixed
-                  size={13}
-                  className="text-sky-600 dark:text-sky-400 shrink-0"
-                  aria-hidden="true"
-                />
-              )}
-              <span className="truncate">
-                {userLocation.status === "locating"
-                  ? "Suche …"
-                  : activeUserCoordinates
-                  ? "Standort aktiv"
-                  : "Mein Standort"}
+              <span
+                key={userLocation.status === "locating" ? "loc-ing" : activeUserCoordinates ? "loc-on" : "loc-off"}
+                className="inline-flex items-center gap-1.5 min-w-0"
+              >
+                {userLocation.status === "locating" ? (
+                  <Loader2 size={13} className="animate-spin shrink-0" aria-hidden="true" />
+                ) : activeUserCoordinates ? (
+                  <CheckCircle2 size={13} className="text-white shrink-0" aria-hidden="true" />
+                ) : (
+                  <LocateFixed
+                    size={13}
+                    className="text-sky-600 dark:text-sky-400 shrink-0"
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="truncate">
+                  {userLocation.status === "locating"
+                    ? "Suche …"
+                    : activeUserCoordinates
+                    ? "Standort aktiv"
+                    : "Mein Standort"}
+                </span>
               </span>
             </button>
 
@@ -1628,13 +1668,20 @@ export default function GoogleMapsEmbed({
               href={mapsExternalHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[40px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent/50 hover:text-accent active:scale-95 transition-all whitespace-nowrap"
+              className="inline-flex min-h-[40px] sm:min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 sm:px-3 py-1.5 text-center text-xs font-bold leading-tight text-primary dark:text-slate-100 hover:border-accent/50 hover:text-accent active:scale-95 transition-all sm:whitespace-nowrap"
             >
               <Navigation size={12} className="text-sky-600 dark:text-sky-400 shrink-0" aria-hidden="true" />
-              <span className="truncate">
-                {activeMode === "service-area" && selectedArea && !activeUserCoordinates
-                  ? `${selectedArea.city} zeigen`
-                  : "Route öffnen"}
+              <span
+                key={activeMode === "service-area" && selectedArea && !activeUserCoordinates ? selectedArea.value : "route"}
+                className="truncate"
+              >
+                {activeMode === "service-area" && selectedArea && !activeUserCoordinates ? (
+                  <>
+                    <span translate="no" className="notranslate">{selectedArea.city}</span> zeigen
+                  </>
+                ) : (
+                  "Route öffnen"
+                )}
               </span>
               <ExternalLink size={11} className="shrink-0 opacity-75" aria-hidden="true" />
             </a>

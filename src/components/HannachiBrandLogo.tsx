@@ -123,8 +123,10 @@ export default function HannachiBrandLogo({
         role={decorative ? undefined : "img"}
         aria-label={decorative ? undefined : cfg.alt}
         aria-hidden={decorative ? true : undefined}
+        dir="ltr"
+        translate="no"
         style={useInlineHeight ? { height: h } : undefined}
-        className={`relative inline-flex shrink-0 items-center select-none ${
+        className={`notranslate relative inline-flex shrink-0 items-center select-none ${
           !className && !height ? "h-[46px]" : ""
         } ${className}`.trim()}
       >

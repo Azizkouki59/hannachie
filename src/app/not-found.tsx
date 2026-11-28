@@ -27,11 +27,11 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Link href="/" className="btn-primary w-full sm:w-auto">
             <Home size={16} aria-hidden />
-            Zur Startseite
+            <span>Zur Startseite</span>
           </Link>
           <Link href="/leistungen" className="btn-ghost w-full sm:w-auto">
             <PackageSearch size={16} aria-hidden />
-            Geräte &amp; Ersatzteile
+            <span>Geräte &amp; Ersatzteile</span>
           </Link>
           <button
             type="button"
@@ -39,7 +39,7 @@ export default function NotFound() {
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-accent/25 bg-accent/8 dark:bg-accent/15 px-5 py-3 text-sm font-bold text-accent dark:text-accent-light transition-colors hover:bg-accent hover:text-white cursor-pointer"
           >
             <MessageSquareText size={16} aria-hidden />
-            Schnellanfrage öffnen
+            <span>Schnellanfrage öffnen</span>
             <ArrowRight size={15} aria-hidden />
           </button>
         </div>

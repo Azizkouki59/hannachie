@@ -72,7 +72,10 @@ export default function ServicePage({ params }: Props) {
               <span>Alle Geräte &amp; Ersatzteile</span>
             </Link>
             <span className="text-xs font-medium text-ink-faint">
-              {business.city} &amp; Umgebung · Termine nach Vereinbarung
+              <span translate="no" className="notranslate">
+                {business.city}
+              </span>{" "}
+              &amp; Umgebung · Termine nach Vereinbarung
             </span>
           </div>
 
@@ -190,7 +193,11 @@ export default function ServicePage({ params }: Props) {
                         Schriftliche Verkäufergarantie
                       </span>
                       <span className="text-ink-muted">
-                        Für ausgewählte Markengeräte bei direktem Erwerb über Hannachi (
+                        Für ausgewählte Markengeräte bei direktem Erwerb über{" "}
+                        <span translate="no" className="notranslate">
+                          Hannachi
+                        </span>{" "}
+                        (
                         <Link
                           href="/impressum#garantie"
                           className="font-semibold text-accent underline underline-offset-2"
@@ -257,7 +264,14 @@ export default function ServicePage({ params }: Props) {
                 <div className="flex items-center justify-between gap-3 pb-4 border-b border-primary/8 dark:border-white/10">
                   <div className="min-w-0">
                     <span className="text-xs font-bold text-accent block">
-                      Spezialist in Osnabrück seit {business.founded}
+                      Spezialist in{" "}
+                      <span translate="no" className="notranslate">
+                        Osnabrück
+                      </span>{" "}
+                      seit{" "}
+                      <span dir="ltr" translate="no" className="notranslate">
+                        {business.founded}
+                      </span>
                     </span>
                     <h3 className="mt-0.5 text-lg font-extrabold text-primary dark:text-slate-100 truncate">
                       {service.title}
@@ -280,7 +294,10 @@ export default function ServicePage({ params }: Props) {
                         Region &amp; Termine
                       </dt>
                       <dd className="text-ink-muted mt-0.5">
-                        {business.city} &amp; Umgebung · Termine nach Vereinbarung
+                        <span translate="no" className="notranslate">
+                          {business.city}
+                        </span>{" "}
+                        &amp; Umgebung · Termine nach Vereinbarung
                       </dd>
                     </div>
                   </div>
@@ -295,7 +312,11 @@ export default function ServicePage({ params }: Props) {
                         Beratung &amp; Angebot
                       </dt>
                       <dd className="text-ink-muted mt-0.5">
-                        Persönliche Fachberatung · Original-Ersatzteile nach E-Nr. · Ausgewählte Markengeräte auf Anfrage
+                        Persönliche Fachberatung · Original-Ersatzteile nach{" "}
+                        <span translate="no" className="notranslate">
+                          E-Nr.
+                        </span>{" "}
+                        · Ausgewählte Markengeräte auf Anfrage
                       </dd>
                     </div>
                   </div>
@@ -332,7 +353,9 @@ export default function ServicePage({ params }: Props) {
                       className="min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent/50 transition-colors"
                     >
                       <Phone size={14} className="text-accent shrink-0" aria-hidden="true" />
-                      <span className="tabular-nums truncate">{business.phoneDisplay}</span>
+                      <span dir="ltr" translate="no" className="notranslate tabular-nums truncate">
+                        {business.phoneDisplay}
+                      </span>
                     </a>
                     <a
                       href={buildWhatsAppDirectUrl(
@@ -348,11 +371,17 @@ export default function ServicePage({ params }: Props) {
                       className="min-h-[42px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-colors"
                     >
                       <MessageCircle size={14} className="shrink-0" aria-hidden="true" />
-                      <span>WhatsApp</span>
+                      <span translate="no" className="notranslate">
+                        WhatsApp
+                      </span>
                     </a>
                   </div>
                   <p className="text-[11px] leading-snug text-ink-faint text-center">
-                    Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+                    Freiwillige Weiterleitung zu{" "}
+                    <span translate="no" className="notranslate">
+                      WhatsApp (Meta)
+                    </span>{" "}
+                    ·{" "}
                     <Link
                       href="/datenschutz#whatsapp"
                       className="underline underline-offset-2 hover:text-accent"

@@ -88,9 +88,10 @@ export default function ValidationToast({
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                       <MessageCircle size={13} aria-hidden />
-                      <span>
+                      <span key={missingFields.length === 1 ? "vt-1" : "vt-n"}>
                         Noch {missingFields.length}{" "}
-                        {missingFields.length === 1 ? "Feld fehlt" : "Felder fehlen"} für WhatsApp
+                        {missingFields.length === 1 ? "Feld fehlt" : "Felder fehlen"} für{" "}
+                        <span translate="no" className="notranslate">WhatsApp</span>
                       </span>
                     </p>
                     <button
@@ -104,7 +105,10 @@ export default function ValidationToast({
                   </div>
 
                   {primaryError && (
-                    <p className="mt-1 text-[13px] font-semibold leading-snug text-primary dark:text-slate-100">
+                    <p
+                      dir="auto"
+                      className="mt-1 text-[13px] font-semibold leading-snug text-primary dark:text-slate-100"
+                    >
                       {primaryError}
                     </p>
                   )}

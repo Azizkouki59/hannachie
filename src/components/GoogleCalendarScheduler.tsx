@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { business } from "@/data/site";
+import { isSafeHttpsUrl } from "@/utils/sanitize";
 import {
   ADMIN_TIME_SLOTS,
   getTodayIsoDate,
@@ -112,7 +113,13 @@ export function OfficialGoogleSignInButton({
             <path fill="none" d="M0 0h48v48H0z" />
           </svg>
         </div>
-        <span className="gsi-material-button-contents">{label}</span>
+        <span
+          key={label === "Sign in with Google" ? "gcal-signin" : "gcal-busy"}
+          translate={label === "Sign in with Google" ? "no" : undefined}
+          className={`gsi-material-button-contents${label === "Sign in with Google" ? " notranslate" : ""}`}
+        >
+          {label}
+        </span>
       </div>
     </button>
   );
@@ -456,7 +463,10 @@ export default function GoogleCalendarScheduler({
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-              <span>Google Calendar Integration</span>
+              <span>
+                <span translate="no" className="notranslate">Google Calendar</span>{" "}
+                Integration
+              </span>
               {mode === "customer" && (
                 <span
                   data-testid="calendar-optional-badge"
@@ -466,15 +476,33 @@ export default function GoogleCalendarScheduler({
                 </span>
               )}
             </div>
-            <h3 className="text-base sm:text-lg font-extrabold text-ink">
-              {mode === "admin"
-                ? "Google Kalender Synchronisierung & Übergabetermine"
-                : "Optional: Übergabe- oder Beratungstermin im Google Kalender eintragen"}
+            <h3 key={`h-${mode}`} className="text-base sm:text-lg font-extrabold text-ink">
+              {mode === "admin" ? (
+                <>
+                  <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                  Synchronisierung &amp; Übergabetermine
+                </>
+              ) : (
+                <>
+                  Optional: Übergabe- oder Beratungstermin im{" "}
+                  <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                  eintragen
+                </>
+              )}
             </h3>
-            <p className="text-xs text-ink-muted mt-0.5">
-              {mode === "admin"
-                ? "Synchronisieren Sie Ihre geplanten Übergabe- und Beratungstermine mit 1 Klick in Ihren Google Kalender."
-                : "Nicht erforderlich: Für Ihre Anfrage genügt das Formular oben. Optional können Sie den Termin hier zusätzlich in Ihrem Google Kalender speichern."}
+            <p key={`p-${mode}`} className="text-xs text-ink-muted mt-0.5">
+              {mode === "admin" ? (
+                <>
+                  Synchronisieren Sie Ihre geplanten Übergabe- und Beratungstermine mit 1 Klick in Ihren{" "}
+                  <span translate="no" className="notranslate">Google Kalender</span>.
+                </>
+              ) : (
+                <>
+                  Nicht erforderlich: Für Ihre Anfrage genügt das Formular oben. Optional können Sie den Termin hier zusätzlich in Ihrem{" "}
+                  <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                  speichern.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -489,14 +517,19 @@ export default function GoogleCalendarScheduler({
               data-testid="calendar-optional-toggle-btn"
               className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-sky-500/50 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
             >
-              <span>
-                {isOptionalExpanded ? "Ausblenden" : "Optional nutzen"}
+              <span
+                key={isOptionalExpanded ? "gcal-exp" : "gcal-col"}
+                className="inline-flex items-center gap-1.5"
+              >
+                <span>
+                  {isOptionalExpanded ? "Ausblenden" : "Optional nutzen"}
+                </span>
+                {isOptionalExpanded ? (
+                  <ChevronUp className="w-4 h-4 shrink-0" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 shrink-0" aria-hidden="true" />
+                )}
               </span>
-              {isOptionalExpanded ? (
-                <ChevronUp className="w-4 h-4 shrink-0" aria-hidden="true" />
-              ) : (
-                <ChevronDown className="w-4 h-4 shrink-0" aria-hidden="true" />
-              )}
             </button>
           ) : needsAuth ? (
             <OfficialGoogleSignInButton
@@ -509,7 +542,13 @@ export default function GoogleCalendarScheduler({
               {user?.email && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate max-w-[180px]">{user.email}</span>
+                  <span
+                    dir="ltr"
+                    translate="no"
+                    className="notranslate truncate max-w-[180px]"
+                  >
+                    {user.email}
+                  </span>
                 </span>
               )}
               <button
@@ -544,7 +583,7 @@ export default function GoogleCalendarScheduler({
           role="alert"
           className="rounded-xl border border-red-500/35 bg-red-500/10 p-3.5 text-xs sm:text-sm text-red-800 dark:text-red-200 flex items-start justify-between gap-3"
         >
-          <span>{errorMsg}</span>
+          <span dir="auto">{errorMsg}</span>
           <button
             type="button"
             onClick={() => setErrorMsg(null)}
@@ -563,16 +602,19 @@ export default function GoogleCalendarScheduler({
         >
           <div className="flex items-center gap-2 font-bold">
             <CalendarCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>{successBanner.title}</span>
+            <span dir="auto">{successBanner.title}</span>
           </div>
-          {successBanner.htmlLink && (
+          {successBanner.htmlLink && isSafeHttpsUrl(successBanner.htmlLink) && (
             <a
               href={successBanner.htmlLink}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-[38px] items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shrink-0"
             >
-              <span>Im Google Kalender öffnen</span>
+              <span>
+                Im <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                öffnen
+              </span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
@@ -584,10 +626,14 @@ export default function GoogleCalendarScheduler({
         <div className="rounded-xl border border-dashed border-sky-500/35 bg-sky-500/[0.04] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1 max-w-xl">
             <h4 className="text-sm sm:text-base font-extrabold text-ink">
-              Optional: Mit Google anmelden, um persönliche Termine vorzumerken
+              Optional: Mit <span translate="no" className="notranslate">Google</span>{" "}
+              anmelden, um persönliche Termine vorzumerken
             </h4>
             <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-              Dieser Schritt ist freiwillig. Nach der Anmeldung können Sie freie Zeitfenster prüfen, einen persönlichen Beratungs- oder Übergabetermin für Beratung, Original-Ersatzteile oder ausgewählte Markengeräte direkt im Google Kalender anlegen und verwalten. Hinweise zur Datenverarbeitung durch Google finden Sie in unserer{" "}
+              Dieser Schritt ist freiwillig. Nach der Anmeldung können Sie freie Zeitfenster prüfen, einen persönlichen Beratungs- oder Übergabetermin für Beratung, Original-Ersatzteile oder ausgewählte Markengeräte direkt im{" "}
+              <span translate="no" className="notranslate">Google Kalender</span>{" "}
+              anlegen und verwalten. Hinweise zur Datenverarbeitung durch{" "}
+              <span translate="no" className="notranslate">Google</span> finden Sie in unserer{" "}
               <Link href="/datenschutz#google" className="font-semibold text-accent underline underline-offset-2">
                 Datenschutzerklärung
               </Link>
@@ -612,7 +658,9 @@ export default function GoogleCalendarScheduler({
                   <h4 className="text-xs sm:text-sm font-extrabold text-ink flex items-center gap-1.5">
                     <CalendarPlus className="w-4 h-4 text-sky-600" />
                     <span>
-                      Terminierte Aufträge mit 1 Klick in Google Kalender übertragen ({scheduledTickets.length})
+                      Terminierte Aufträge mit 1 Klick in{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      übertragen ({scheduledTickets.length})
                     </span>
                   </h4>
                 </div>
@@ -626,10 +674,17 @@ export default function GoogleCalendarScheduler({
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-extrabold text-ink truncate">
-                            {t.scheduledDate} ({t.scheduledSlot}) · {t.name}
+                            <span dir="ltr" translate="no" className="notranslate">
+                              {t.scheduledDate} ({t.scheduledSlot})
+                            </span>{" "}
+                            · <span dir="auto">{t.name}</span>
                           </div>
                           <div className="text-[11px] text-ink-muted truncate">
-                            {t.brand} {t.device} · {t.streetAddress || t.zip}
+                            <span dir="ltr" translate="no" className="notranslate">
+                              {t.brand}
+                            </span>{" "}
+                            <span>{t.device}</span> ·{" "}
+                            <span dir="auto">{t.streetAddress || t.zip}</span>
                           </div>
                         </div>
                         <button
@@ -640,8 +695,17 @@ export default function GoogleCalendarScheduler({
                           className="min-h-[38px] px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-60"
                         >
                           <CalendarPlus className="w-3.5 h-3.5" />
-                          <span>
-                            {isSyncing ? "Übertrage…" : "In Google Kalender"}
+                          <span key={isSyncing ? "sync-busy" : "sync-idle"}>
+                            {isSyncing ? (
+                              "Übertrage…"
+                            ) : (
+                              <>
+                                In{" "}
+                                <span translate="no" className="notranslate">
+                                  Google Kalender
+                                </span>
+                              </>
+                            )}
                           </span>
                         </button>
                       </div>
@@ -747,7 +811,7 @@ export default function GoogleCalendarScheduler({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-ink mb-1">
-                    Telefon / WhatsApp *
+                    Telefon / <span translate="no" className="notranslate">WhatsApp</span> *
                   </label>
                   <input
                     type="tel"
@@ -763,7 +827,8 @@ export default function GoogleCalendarScheduler({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-ink mb-1">
-                    PLZ &amp; Ort (Region Osnabrück)
+                    PLZ &amp; Ort (Region{" "}
+                    <span translate="no" className="notranslate">Osnabrück</span>)
                   </label>
                   <select
                     value={zip}
@@ -783,7 +848,7 @@ export default function GoogleCalendarScheduler({
                   </label>
                   <input
                     type="text"
-                    placeholder="z. B. Iburger Str. 5"
+                    placeholder="z. B. Iburger Straße 5"
                     value={streetAddress}
                     onChange={(e) => setStreetAddress(e.target.value)}
                     className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
@@ -815,7 +880,9 @@ export default function GoogleCalendarScheduler({
                   />
                   <span>
                     Ich stimme der Verarbeitung meiner Angaben zur Terminabstimmung sowie der
-                    Eintragung über Google Kalender gemäß{" "}
+                    Eintragung über{" "}
+                    <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                    gemäß{" "}
                     <Link
                       href="/datenschutz#google"
                       className="font-semibold text-accent underline underline-offset-2"
@@ -834,10 +901,20 @@ export default function GoogleCalendarScheduler({
                 className="w-full min-h-[46px] px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-sm inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
               >
                 <CalendarPlus className="w-4 h-4 shrink-0" />
-                <span>
-                  {submitting
-                    ? "Trage Termin in Google Kalender ein…"
-                    : "Persönlichen Termin im Google Kalender eintragen"}
+                <span key={submitting ? "gcal-sub" : "gcal-idle"}>
+                  {submitting ? (
+                    <>
+                      Trage Termin in{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      ein…
+                    </>
+                  ) : (
+                    <>
+                      Persönlichen Termin im{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      eintragen
+                    </>
+                  )}
                 </span>
               </button>
             </form>
@@ -848,13 +925,19 @@ export default function GoogleCalendarScheduler({
             <div className="flex items-center justify-between gap-2 pb-2 border-b border-primary/10 dark:border-white/10">
               <h4 className="text-sm font-extrabold text-ink flex items-center gap-2">
                 <Clock className="w-4 h-4 text-sky-500" />
-                <span>Kommende Termine im Google Kalender ({events.length})</span>
+                <span>
+                  Kommende Termine im{" "}
+                  <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                  ({events.length})
+                </span>
               </h4>
             </div>
 
             {loadingEvents ? (
               <div className="py-8 text-center text-xs text-ink-muted">
-                Lade Google Kalender-Termine…
+                Lade{" "}
+                <span translate="no" className="notranslate">Google Kalender</span>
+                -Termine…
               </div>
             ) : events.length === 0 ? (
               <div className="py-8 text-center text-xs text-ink-muted">
@@ -883,20 +966,29 @@ export default function GoogleCalendarScheduler({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <span className="inline-block px-2 py-0.5 rounded bg-sky-500/15 text-sky-700 dark:text-sky-300 font-mono text-[11px] font-bold">
+                          <span
+                            dir="ltr"
+                            translate="no"
+                            className="notranslate inline-block px-2 py-0.5 rounded bg-sky-500/15 text-sky-700 dark:text-sky-300 font-mono text-[11px] font-bold"
+                          >
                             {formattedStart}
                           </span>
-                          <h5 className="text-xs sm:text-sm font-extrabold text-ink mt-1 break-words">
+                          <h5
+                            dir="auto"
+                            className="text-xs sm:text-sm font-extrabold text-ink mt-1 break-words"
+                          >
                             {ev.summary || "(Ohne Titel)"}
                           </h5>
                           {ev.location && (
                             <p className="text-[11px] text-ink-muted flex items-center gap-1 mt-0.5">
                               <MapPin className="w-3 h-3 text-accent shrink-0" />
-                              <span className="truncate">{ev.location}</span>
+                              <span dir="auto" className="truncate">
+                                {ev.location}
+                              </span>
                             </p>
                           )}
                         </div>
-                        {ev.htmlLink && (
+                        {ev.htmlLink && isSafeHttpsUrl(ev.htmlLink) && (
                           <a
                             href={ev.htmlLink}
                             target="_blank"
@@ -1018,30 +1110,48 @@ export default function GoogleCalendarScheduler({
               </div>
               <div>
                 <h4
+                  key={pendingMutation.type}
                   id="gcal-confirm-modal-title"
                   className="text-base font-extrabold text-ink"
                 >
-                  {pendingMutation.type === "delete"
-                    ? "Termin aus Google Kalender löschen?"
-                    : "Termin im Google Kalender aktualisieren?"}
+                  {pendingMutation.type === "delete" ? (
+                    <>
+                      Termin aus{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      löschen?
+                    </>
+                  ) : (
+                    <>
+                      Termin im{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      aktualisieren?
+                    </>
+                  )}
                 </h4>
-                <p className="text-xs sm:text-sm text-ink-muted mt-1 leading-relaxed">
+                <p
+                  key={`p-${pendingMutation.type}`}
+                  className="text-xs sm:text-sm text-ink-muted mt-1 leading-relaxed"
+                >
                   {pendingMutation.type === "delete" ? (
                     <>
                       Möchten Sie den Termin{" "}
-                      <strong className="text-ink">
+                      <strong dir="auto" className="text-ink">
                         „{pendingMutation.event.summary || "Termin"}“
                       </strong>{" "}
-                      wirklich dauerhaft aus Ihrem Google Kalender entfernen?
+                      wirklich dauerhaft aus Ihrem{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      entfernen?
                     </>
                   ) : (
                     <>
                       Möchten Sie den Termin{" "}
-                      <strong className="text-ink">
+                      <strong dir="auto" className="text-ink">
                         „{pendingMutation.event.summary || "Termin"}“
                       </strong>{" "}
-                      im Google Kalender auf den{" "}
-                      <strong className="text-ink">
+                      im{" "}
+                      <span translate="no" className="notranslate">Google Kalender</span>{" "}
+                      auf den{" "}
+                      <strong dir="ltr" translate="no" className="notranslate text-ink">
                         {pendingMutation.newDateIso} ({pendingMutation.newSlot})
                       </strong>{" "}
                       verschieben?
@@ -1071,11 +1181,13 @@ export default function GoogleCalendarScheduler({
                     : "bg-sky-600 hover:bg-sky-500"
                 }`}
               >
-                {mutating
-                  ? "Wird ausgeführt…"
-                  : pendingMutation.type === "delete"
-                  ? "Ja, Termin löschen"
-                  : "Ja, Termin aktualisieren"}
+                <span key={mutating ? "mut-busy" : pendingMutation.type}>
+                  {mutating
+                    ? "Wird ausgeführt…"
+                    : pendingMutation.type === "delete"
+                    ? "Ja, Termin löschen"
+                    : "Ja, Termin aktualisieren"}
+                </span>
               </button>
             </div>
           </div>

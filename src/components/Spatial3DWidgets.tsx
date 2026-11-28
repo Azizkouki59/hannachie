@@ -116,7 +116,7 @@ export function Appliance3DShowcaseCarousel({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6 sm:mb-8">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent-light">
-              3D Einblick · Osnabrück
+              3D Einblick · <span translate="no" className="notranslate">Osnabrück</span>
             </p>
             <h2 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
               Geräte, Originalteile &amp; Beratung im Überblick
@@ -133,7 +133,7 @@ export function Appliance3DShowcaseCarousel({
             >
               <ChevronLeft size={18} aria-hidden="true" />
             </motion.button>
-            <span className="px-2 font-mono text-xs font-bold text-white/75 tabular-nums">
+            <span dir="ltr" translate="no" className="notranslate px-2 font-mono text-xs font-bold text-white/75 tabular-nums">
               0{activeIdx + 1} / 0{total}
             </span>
             <motion.button
@@ -306,9 +306,11 @@ export function Heritage3DOrbitalBadge({
           <div className="relative z-10 flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-accent-light">
               <Award size={15} className="shrink-0" aria-hidden="true" />
-              <span>Seit {business.founded} · {business.city}</span>
+              <span>
+                Seit {business.founded} · <span translate="no" className="notranslate">{business.city}</span>
+              </span>
             </div>
-            <span className="inline-flex items-center gap-1 text-xs font-extrabold text-amber-300 tabular-nums">
+            <span dir="ltr" translate="no" className="notranslate inline-flex items-center gap-1 text-xs font-extrabold text-amber-300 tabular-nums">
               <Star size={12} className="fill-amber-300 text-amber-300" aria-hidden="true" />
               <span>{ratingFormatted} ({reviewCount})</span>
             </span>
@@ -319,12 +321,12 @@ export function Heritage3DOrbitalBadge({
               {yearsOfExperience}+ Jahre
             </span>
             <span className="text-xs sm:text-sm font-semibold text-white/75">
-              Erfahrung in Osnabrück
+              Erfahrung in <span translate="no" className="notranslate">Osnabrück</span>
             </span>
           </div>
 
           <p className="relative z-10 mt-2.5 text-xs sm:text-[13px] leading-relaxed text-white/80">
-            Inhaber <strong className="text-white">{business.owner}</strong> · Persönliche Beratung, Originalteile &amp; ausgewählte Markengeräte.
+            Inhaber <strong translate="no" className="notranslate text-white">{business.owner}</strong> · Persönliche Beratung, Originalteile &amp; ausgewählte Markengeräte.
           </p>
         </div>
       </div>
@@ -371,10 +373,10 @@ export function Rating3DPrismBanner({
                   ))}
                 </div>
                 <p className="text-base sm:text-lg font-extrabold text-white leading-snug">
-                  {reviewCount} Bewertungen auf Google
+                  {reviewCount} Bewertungen auf <span translate="no" className="notranslate">Google</span>
                 </p>
                 <p className="mt-0.5 text-xs sm:text-sm text-white/75">
-                  Ehrliche Rückmeldungen aus Osnabrück &amp; Umgebung · Seit {business.founded}
+                  Ehrliche Rückmeldungen aus <span translate="no" className="notranslate">Osnabrück</span> &amp; Umgebung · Seit {business.founded}
                 </p>
               </div>
             </div>
@@ -387,7 +389,9 @@ export function Rating3DPrismBanner({
                 className="inline-flex w-full md:w-auto justify-center min-h-[44px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/18 px-4 py-2.5 text-xs font-extrabold text-white transition-colors"
               >
                 <ShieldCheck size={15} className="text-emerald-400 shrink-0" aria-hidden="true" />
-                <span>Google-Profil öffnen</span>
+                <span>
+                  <span translate="no" className="notranslate">Google</span>-Profil öffnen
+                </span>
                 <ArrowRight size={14} aria-hidden="true" />
               </a>
             </div>
@@ -405,7 +409,7 @@ const SERVICE_TOWNS = [
   { name: "Osnabrück", x: "50%", y: "50%", primary: true, km: "Zentrum" },
   { name: "Wallenhorst", x: "42%", y: "26%", primary: false, km: "9 km" },
   { name: "Belm", x: "72%", y: "34%", primary: false, km: "10 km" },
-  { name: "GMHütte", x: "56%", y: "74%", primary: false, km: "12 km" },
+  { name: "Georgsmarienhütte", x: "58%", y: "74%", primary: false, km: "12 km" },
   { name: "Hasbergen", x: "26%", y: "64%", primary: false, km: "11 km" },
 ] as const;
 
@@ -421,10 +425,10 @@ export function Contact3DCompassCard() {
       <div className="flex items-center justify-between gap-2 mb-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-accent-light">
-            Region · Osnabrück
+            Region · <span translate="no" className="notranslate">Osnabrück</span>
           </p>
           <h3 className="text-sm font-extrabold text-white">
-            Osnabrück &amp; 25 km Umgebung
+            <span translate="no" className="notranslate">Osnabrück</span> &amp; 25 km Umgebung
           </h3>
         </div>
         <AnimatePresence mode="wait" initial={false}>
@@ -434,7 +438,9 @@ export function Contact3DCompassCard() {
             animate={{ opacity: 1, y: 0 }}
             exit={prefersReduced ? undefined : { opacity: 0, y: -4 }}
             transition={{ duration: 0.16 }}
-            className="text-[11px] font-bold text-sky-300 tabular-nums shrink-0"
+            dir="ltr"
+            translate="no"
+            className="notranslate text-[11px] font-bold text-sky-300 tabular-nums shrink-0"
           >
             {activeTownObj.name} · {activeTownObj.km}
           </motion.span>
@@ -480,7 +486,10 @@ export function Contact3DCompassCard() {
                 >
                   {town.primary && <MapPin size={12} aria-hidden="true" />}
                 </span>
-                <span className="mt-1 whitespace-nowrap rounded bg-slate-950/85 px-1.5 py-0.5 text-[9.5px] font-bold text-white/90 border border-white/15">
+                <span
+                  translate="no"
+                  className="notranslate mt-1 max-w-[104px] text-center leading-tight break-words rounded bg-slate-950/85 px-1.5 py-0.5 text-[9.5px] font-bold text-white/90 border border-white/15"
+                >
                   {town.name}
                 </span>
               </button>

@@ -88,6 +88,7 @@ import AdminMarketplaceManager from "@/components/AdminMarketplaceManager";
 import AdminBrandCardStudio from "@/components/AdminBrandCardStudio";
 import GoogleCalendarScheduler from "@/components/GoogleCalendarScheduler";
 import HannachiBrandLogo from "@/components/HannachiBrandLogo";
+import { isSafeGoogleMapsUrl } from "@/utils/sanitize";
 
 interface TicketDraftFields {
   grossPriceInput: string;
@@ -1246,7 +1247,7 @@ export default function AdminPage() {
             <ArrowLeft className="w-4 h-4" />
             Zurück zur Website
           </Link>
-          <span className="text-xs font-mono text-ink-muted tabular-nums">
+          <span translate="no" className="notranslate text-xs font-mono text-ink-muted tabular-nums">
             Hannachi Fachhandel · Osnabrück
           </span>
         </div>
@@ -1255,7 +1256,7 @@ export default function AdminPage() {
           <div className="mb-5 space-y-2.5">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
               <Lock className="w-3 h-3" />
-              Geschützter Bereich
+              <span>Geschützter Bereich</span>
             </span>
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <HannachiBrandLogo
@@ -1302,11 +1303,13 @@ export default function AdminPage() {
                   aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <span key={showPassword ? "pw-off" : "pw-on"} className="inline-flex">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </span>
                 </button>
               </div>
               {authError && (
-                <p role="alert" className="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
+                <p role="alert" dir="auto" className="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
                   {authError}
                 </p>
               )}
@@ -1317,12 +1320,14 @@ export default function AdminPage() {
               disabled={authLoading}
               className="w-full min-h-[48px] py-3 px-5 rounded-xl bg-accent hover:bg-accent-dark disabled:opacity-60 text-white font-extrabold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              {authLoading ? "Wird geprüft…" : "Auftragsbuch öffnen"}
+              <span key={authLoading ? "auth-busy" : "auth-idle"}>
+                {authLoading ? "Wird geprüft…" : "Auftragsbuch öffnen"}
+              </span>
             </button>
           </form>
         </div>
 
-        <div className="max-w-6xl w-full mx-auto text-center text-xs text-ink-muted">
+        <div translate="no" className="notranslate max-w-6xl w-full mx-auto text-center text-xs text-ink-muted">
           {business.name} · {business.street}, {business.zip} {business.city}
         </div>
       </div>
@@ -1387,7 +1392,7 @@ export default function AdminPage() {
                 className="hover:text-ink transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingTickets ? "animate-spin" : ""}`} />
-                Aktualisieren
+                <span>Aktualisieren</span>
               </button>
               {tickets.length > 0 && (
                 <button
@@ -1401,7 +1406,7 @@ export default function AdminPage() {
                   className="hover:text-ink transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Excel / CSV
+                  <span translate="no" className="notranslate">Excel / CSV</span>
                 </button>
               )}
             </nav>
@@ -1447,7 +1452,7 @@ export default function AdminPage() {
         {saveToast && (
           <div className="fixed top-16 inset-x-3 sm:inset-x-auto sm:top-20 sm:right-5 mx-auto sm:mx-0 max-w-sm z-50 bg-primary text-white px-4 py-2.5 rounded-xl shadow-lg border border-white/15 flex items-center gap-2 text-xs font-semibold">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="truncate">{saveToast}</span>
+            <span dir="auto" className="truncate">{saveToast}</span>
           </div>
         )}
 
@@ -1634,6 +1639,7 @@ export default function AdminPage() {
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex flex-wrap items-center gap-2 text-xs font-mono tabular-nums">
                                   <span
+                                    key={isToday ? "today" : isTomorrow ? "tomorrow" : "date"}
                                     className={`px-2 py-0.5 rounded font-bold ${
                                       isToday
                                         ? "bg-emerald-600 text-white"
@@ -1644,9 +1650,13 @@ export default function AdminPage() {
                                   >
                                     {isToday ? "HEUTE" : isTomorrow ? "MORGEN" : formattedDate}
                                   </span>
-                                  <span className="font-bold text-ink">{t.scheduledSlot}</span>
+                                  <span dir="ltr" translate="no" className="notranslate font-bold text-ink">
+                                    {t.scheduledSlot}
+                                  </span>
                                   <span aria-hidden="true">·</span>
-                                  <span className="text-ink-muted">{t.id}</span>
+                                  <span dir="ltr" translate="no" className="notranslate text-ink-muted">
+                                    {t.id}
+                                  </span>
                                 </div>
                                 <button
                                   type="button"
@@ -1660,20 +1670,31 @@ export default function AdminPage() {
 
                               <div>
                                 <h3 className="text-base sm:text-lg font-extrabold text-ink">
-                                  {t.name} ·{" "}
+                                  <span dir="auto">{t.name}</span> ·{" "}
                                   <span className="text-accent">
-                                    {t.brand} {deviceLabel}
+                                    <span translate="no" className="notranslate">{t.brand}</span>{" "}
+                                    <span>{deviceLabel}</span>
                                   </span>
                                 </h3>
-                                <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
+                                <p dir="auto" className="text-xs sm:text-sm text-ink-muted mt-0.5">
                                   {t.problem}
                                 </p>
-                                <p className="text-xs font-mono text-ink mt-1">
-                                  {t.visitType === "home_visit"
-                                    ? [t.streetAddress, t.zip.replace(" (Werkstatt)", "")]
+                                <p dir="auto" className="text-xs font-mono text-ink mt-1">
+                                  <span key={t.visitType}>
+                                    {t.visitType === "home_visit" ? (
+                                      [t.streetAddress, t.zip.replace(" (Werkstatt)", "")]
                                         .filter(Boolean)
                                         .join(", ") || "Osnabrück"
-                                    : "Lieferung & Übergabe (Osnabrück & Umgebung)"}
+                                    ) : (
+                                      <>
+                                        Lieferung &amp; Übergabe (
+                                        <span translate="no" className="notranslate">
+                                          Osnabrück
+                                        </span>{" "}
+                                        &amp; Umgebung)
+                                      </>
+                                    )}
+                                  </span>
                                 </p>
                               </div>
 
@@ -1706,12 +1727,13 @@ export default function AdminPage() {
                                 {t.visitType === "home_visit" && (
                                   <a
                                     href={
-                                      t.mapsLocationUrl ||
-                                      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                        [t.streetAddress, t.zip.replace(" (Werkstatt)", "")]
-                                          .filter(Boolean)
-                                          .join(", ")
-                                      )}`
+                                      isSafeGoogleMapsUrl(t.mapsLocationUrl)
+                                        ? t.mapsLocationUrl
+                                        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                            [t.streetAddress, t.zip.replace(" (Werkstatt)", "")]
+                                              .filter(Boolean)
+                                              .join(", ")
+                                          )}`
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -1727,7 +1749,8 @@ export default function AdminPage() {
                                   className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-accent/40 bg-accent/10 text-xs font-bold text-ink inline-flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                   <FileText className="w-3.5 h-3.5 text-accent shrink-0" />
-                                  <span>Beleg / PDF</span>
+                                  <span className="sm:hidden">Beleg / <span translate="no" className="notranslate">PDF</span></span>
+                                  <span className="hidden sm:inline">Beleg / <span translate="no" className="notranslate">PDF</span></span>
                                 </button>
                               </div>
                             </article>
@@ -1750,8 +1773,18 @@ export default function AdminPage() {
                         className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                       >
                         <div className="text-xs">
-                          <span className="font-mono font-bold text-ink">{t.id}</span> ·{" "}
-                          <span className="font-bold text-ink">{t.name}</span> ({t.brand} {t.device})
+                          <span dir="ltr" translate="no" className="notranslate font-mono font-bold text-ink">
+                            {t.id}
+                          </span>{" "}
+                          ·{" "}
+                          <span dir="auto" className="font-bold text-ink">
+                            {t.name}
+                          </span>{" "}
+                          (
+                          <span translate="no" className="notranslate">
+                            {t.brand}
+                          </span>{" "}
+                          <span>{t.device}</span>)
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -1763,7 +1796,7 @@ export default function AdminPage() {
                                 `Auftrag ${t.id} für Heute eingeplant`
                               )
                             }
-                            className="min-h-[36px] px-3 py-1 rounded-lg bg-primary text-white text-xs font-bold cursor-pointer"
+                            className="min-h-[44px] sm:min-h-[36px] px-3.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-primary text-white text-xs font-bold cursor-pointer active:scale-[0.97] transition-transform"
                           >
                             Auf Heute
                           </button>
@@ -1776,7 +1809,7 @@ export default function AdminPage() {
                                 `Auftrag ${t.id} für Morgen eingeplant`
                               )
                             }
-                            className="min-h-[36px] px-3 py-1 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-bold text-ink cursor-pointer"
+                            className="min-h-[44px] sm:min-h-[36px] px-3.5 sm:px-3 py-1.5 sm:py-1 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-bold text-ink cursor-pointer active:scale-[0.97] transition-transform"
                           >
                             Auf Morgen
                           </button>
@@ -1877,21 +1910,26 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={toggleSelectAllFiltered}
-                      className={`min-h-[42px] sm:min-h-[40px] px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
+                      className={`min-h-[44px] sm:min-h-[40px] px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors inline-flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
                         allFilteredSelected
                           ? "bg-accent/15 border-accent text-ink"
                           : "bg-background dark:bg-slate-950 border-primary/15 dark:border-white/15 text-ink-muted hover:text-ink"
                       }`}
                     >
-                      {allFilteredSelected ? (
-                        <CheckSquare className="w-4 h-4 text-accent shrink-0" />
-                      ) : (
-                        <Square className="w-4 h-4 shrink-0" />
-                      )}
-                      <span>
-                        {allFilteredSelected
-                          ? "Auswahl aufheben"
-                          : `Alle (${filteredTickets.length})`}
+                      <span
+                        key={allFilteredSelected ? "all-yes" : "all-no"}
+                        className="inline-flex items-center gap-2"
+                      >
+                        {allFilteredSelected ? (
+                          <CheckSquare className="w-4 h-4 text-accent shrink-0" />
+                        ) : (
+                          <Square className="w-4 h-4 shrink-0" />
+                        )}
+                        <span>
+                          {allFilteredSelected
+                            ? "Auswahl aufheben"
+                            : `Alle (${filteredTickets.length})`}
+                        </span>
                       </span>
                     </button>
                   )}
@@ -1901,7 +1939,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setStatusFilter("all")}
-                      className="sm:hidden min-h-[42px] px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer tabular-nums"
+                      className="sm:hidden min-h-[44px] px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer tabular-nums"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Alle ({counts.all})</span>
@@ -1919,10 +1957,10 @@ export default function AdminPage() {
                       );
                       showToast("CSV Datei heruntergeladen");
                     }}
-                    className="md:hidden min-h-[42px] px-3 py-1.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink inline-flex items-center gap-1.5 cursor-pointer"
+                    className="md:hidden min-h-[44px] px-3.5 py-1.5 rounded-lg border border-primary/15 dark:border-white/15 text-xs font-semibold text-ink inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>CSV</span>
+                    <span translate="no" className="notranslate">CSV</span>
                   </button>
                 )}
 
@@ -2003,7 +2041,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[38px] min-w-[38px] inline-flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer"
+                      className="absolute right-0.5 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] sm:min-h-[38px] sm:min-w-[38px] inline-flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer"
                       aria-label="Suche löschen"
                     >
                       <X className="w-4 h-4" />
@@ -2015,8 +2053,8 @@ export default function AdminPage() {
 
             {/* Scope Filter Row: Ersatzteile vs Marktplatz / Verkauf vs Lieferung vs Übergabe */}
             {tickets.length > 0 && (
-              <div className="pt-2 border-t border-primary/8 dark:border-white/10 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <span className="text-[11px] font-bold text-ink-muted mr-1 shrink-0">
+              <div className="pt-2 border-t border-primary/8 dark:border-white/10 snap-rail sm:flex sm:flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold text-ink-muted mr-1 shrink-0 snap-start">
                   Bereich:
                 </span>
                 {(
@@ -2034,7 +2072,7 @@ export default function AdminPage() {
                       key={sc.id}
                       type="button"
                       onClick={() => setScopeFilter(sc.id)}
-                      className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
+                      className={`min-h-[44px] sm:min-h-[38px] px-3.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 snap-start cursor-pointer tabular-nums active:scale-[0.97] ${
                         active
                           ? "bg-accent text-primary shadow-xs"
                           : "bg-background dark:bg-slate-950 border border-primary/10 dark:border-white/10 text-ink-muted hover:text-ink"
@@ -2152,7 +2190,7 @@ export default function AdminPage() {
                         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
                           <span className="inline-flex items-center gap-1.5 font-extrabold text-emerald-800 dark:text-emerald-300">
                             <BadgeCheck className="w-4 h-4 shrink-0" />
-                            <span>
+                            <span key={comp?.outcome || simpleStatus}>
                               ABGESCHLOSSEN ·{" "}
                               {comp?.outcome === "sold"
                                 ? "VERKAUFT"
@@ -2185,15 +2223,20 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => toggleDetailsForTicket(ticket.id)}
                           data-testid={`ticket-completed-details-btn-${ticket.id}`}
-                          className="min-h-[38px] px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="min-h-[44px] sm:min-h-[38px] px-3.5 sm:px-3 py-1.5 sm:py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-[0.97] transition-transform"
                         >
-                          <Eye className="w-3.5 h-3.5 shrink-0" />
-                          <span>{isDetailsOpen ? "Details schließen" : "Details"}</span>
-                          {isDetailsOpen ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
+                          <span
+                            key={isDetailsOpen ? "det-open" : "det-closed"}
+                            className="inline-flex items-center gap-1.5"
+                          >
+                            <Eye className="w-3.5 h-3.5 shrink-0" />
+                            <span>{isDetailsOpen ? "Details schließen" : "Details"}</span>
+                            {isDetailsOpen ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </span>
                         </button>
                       </div>
                     )}
@@ -2219,9 +2262,11 @@ export default function AdminPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-ink-muted font-mono tabular-nums">
-                            <span className="font-bold text-ink">{ticket.id}</span>
+                            <span dir="ltr" translate="no" className="notranslate font-bold text-ink">
+                              {ticket.id}
+                            </span>
                             <span aria-hidden="true">·</span>
-                            <span>
+                            <span dir="ltr" translate="no" className="notranslate">
                               {new Date(ticket.createdAt).toLocaleString("de-DE", {
                                 day: "2-digit",
                                 month: "2-digit",
@@ -2230,21 +2275,21 @@ export default function AdminPage() {
                               })}
                             </span>
                             <span aria-hidden="true">·</span>
-                            <span>
+                            <span key={ticket.visitType}>
                               {ticket.visitType === "home_visit" ? "Lieferung" : "Übergabe"}
                             </span>
                             {ticket.urgency !== "normal" && (
-                              <>
+                              <span key="urg-badge" className="inline-flex items-center gap-2">
                                 <span aria-hidden="true">·</span>
                                 <span className="font-sans font-bold text-red-600 dark:text-red-400">
                                   {ADMIN_URGENCY_META[ticket.urgency]?.label || "Dringend"}
                                 </span>
-                              </>
+                              </span>
                             )}
                           </div>
 
                           <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                            <h2 className="text-lg sm:text-2xl font-bold text-ink tracking-tight truncate">
+                            <h2 dir="auto" className="text-lg sm:text-2xl font-bold text-ink tracking-tight truncate">
                               {ticket.name}
                             </h2>
                             {phoneKey && (
@@ -2252,11 +2297,11 @@ export default function AdminPage() {
                                 type="button"
                                 onClick={() => setCustomerHistoryPhone(phoneKey)}
                                 data-testid={`customer-history-btn-${ticket.id}`}
-                                className="min-h-[32px] inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer shrink-0"
+                                className="min-h-[44px] sm:min-h-[32px] px-2.5 sm:px-0 -my-1.5 sm:my-0 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer shrink-0 rounded-lg active:bg-accent/10"
                                 title="Alle bisherigen Aufträge dieses Kunden anzeigen"
                               >
                                 <History className="w-3.5 h-3.5 shrink-0" />
-                                <span>
+                                <span key={customerOrderCount > 1 ? "multi" : "single"}>
                                   {customerOrderCount > 1
                                     ? `Historie (${customerOrderCount})`
                                     : "Kundenakte"}
@@ -2269,7 +2314,9 @@ export default function AdminPage() {
                             <span className="inline-flex items-center gap-1 font-mono font-semibold text-ink tabular-nums">
                               <a
                                 href={`tel:${cleanTel}`}
-                                className="hover:text-accent underline decoration-accent/40 underline-offset-2"
+                                dir="ltr"
+                                translate="no"
+                                className="notranslate min-h-[44px] sm:min-h-0 inline-flex items-center hover:text-accent underline decoration-accent/40 underline-offset-2"
                               >
                                 {ticket.phone}
                               </a>
@@ -2280,13 +2327,13 @@ export default function AdminPage() {
                                 }
                                 title="Telefonnummer kopieren"
                                 aria-label="Telefonnummer kopieren"
-                                className="min-h-[34px] min-w-[34px] inline-flex items-center justify-center rounded hover:bg-primary/10 dark:hover:bg-white/10 text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                                className="min-h-[44px] min-w-[44px] sm:min-h-[34px] sm:min-w-[34px] inline-flex items-center justify-center rounded-lg hover:bg-primary/10 dark:hover:bg-white/10 text-ink-muted hover:text-ink transition-colors cursor-pointer active:scale-95"
                               >
-                                <Copy className="w-3.5 h-3.5" />
+                                <Copy className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                               </button>
                             </span>
                             {ticket.visitType === "home_visit" && (
-                              <span className="truncate max-w-full">
+                              <span dir="auto" className="truncate max-w-full">
                                 {[ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
                                   .filter(Boolean)
                                   .join(", ") || "Osnabrück"}
@@ -2294,7 +2341,7 @@ export default function AdminPage() {
                             )}
                             {ticket.callbackTime && (
                               <span className="hidden sm:inline">
-                                · Rückruf: {ticket.callbackTime}
+                                · Rückruf: <span dir="auto">{ticket.callbackTime}</span>
                               </span>
                             )}
                           </div>
@@ -2303,7 +2350,7 @@ export default function AdminPage() {
                             <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-primary dark:text-accent-light">
                               <ShoppingBag className="w-3.5 h-3.5 text-accent shrink-0" />
                               <span className="truncate">
-                                Artikel: {linkedTitle}
+                                Artikel: <span dir="auto">{linkedTitle}</span>
                               </span>
                             </div>
                           )}
@@ -2348,11 +2395,11 @@ export default function AdminPage() {
                                     : "text-ink-muted hover:text-ink"
                                 }`}
                               >
-                                {active && <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
-                                <span className="sm:hidden">
+                                {active && <Check key="chk" className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
+                                <span key={`m-${opt.value}`} className="sm:hidden">
                                   {opt.value === "in_progress" ? "Arbeit" : opt.label}
                                 </span>
-                                <span className="hidden sm:inline">{opt.label}</span>
+                                <span key={`d-${opt.value}`} className="hidden sm:inline">{opt.label}</span>
                               </button>
                             );
                           })}
@@ -2367,11 +2414,15 @@ export default function AdminPage() {
                           Gerät &amp; Hersteller
                         </div>
                         <div className="mt-0.5 text-sm sm:text-base font-bold text-ink">
-                          {ticket.brand} · {deviceLabel}
+                          <span translate="no" className="notranslate">{ticket.brand}</span> ·{" "}
+                          <span>{deviceLabel}</span>
                         </div>
                         {ticket.model && (
                           <div className="text-xs font-mono text-ink-muted mt-0.5">
-                            Modell: {ticket.model}
+                            Modell:{" "}
+                            <span dir="ltr" translate="no" className="notranslate">
+                              {ticket.model}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -2380,7 +2431,7 @@ export default function AdminPage() {
                         <div className="text-[11px] sm:text-xs font-semibold text-ink-muted">
                           Kundenanliegen
                         </div>
-                        <p className="mt-0.5 text-sm sm:text-base text-ink leading-relaxed">
+                        <p dir="auto" className="mt-0.5 text-sm sm:text-base text-ink leading-relaxed">
                           {ticket.problem}
                         </p>
                       </div>
@@ -2397,7 +2448,7 @@ export default function AdminPage() {
                           }`}
                         >
                           <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
-                          <span>
+                          <span key={formattedShortDate ? "has-dt" : "no-dt"}>
                             {formattedShortDate
                               ? `${formattedShortDate}${
                                   ticket.scheduledSlot &&
@@ -2409,7 +2460,11 @@ export default function AdminPage() {
                           </span>
                         </span>
                         {totals.grossTotal > 0 && (
-                          <span className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-mono font-extrabold tabular-nums">
+                          <span
+                            dir="ltr"
+                            translate="no"
+                            className="notranslate px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-mono font-extrabold tabular-nums"
+                          >
                             {formatEuro(totals.grossTotal)}
                           </span>
                         )}
@@ -2428,7 +2483,7 @@ export default function AdminPage() {
                               "Termin auf Heute gesetzt"
                             )
                           }
-                          className="min-h-[36px] px-2.5 py-1 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer"
+                          className="min-h-[44px] px-3 py-1.5 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer active:scale-[0.97] transition-transform"
                         >
                           Heute
                         </button>
@@ -2444,7 +2499,7 @@ export default function AdminPage() {
                               "Termin auf Morgen gesetzt"
                             )
                           }
-                          className="min-h-[36px] px-2.5 py-1 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer"
+                          className="min-h-[44px] px-3 py-1.5 rounded-lg bg-primary/8 dark:bg-white/10 text-xs font-bold text-ink cursor-pointer active:scale-[0.97] transition-transform"
                         >
                           Morgen
                         </button>
@@ -2452,18 +2507,23 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => toggleScheduleForTicket(ticket.id)}
                           aria-expanded={isScheduleOpen}
-                          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-xs font-bold inline-flex items-center gap-1 cursor-pointer ${
+                          className={`min-h-[44px] px-3 py-1.5 rounded-lg border text-xs font-bold inline-flex items-center gap-1 cursor-pointer active:scale-[0.97] transition-transform ${
                             isScheduleOpen || isDirty
                               ? "border-accent bg-accent/15 text-ink"
                               : "border-primary/15 dark:border-white/15 text-ink-muted"
                           }`}
                         >
-                          <span>Termin &amp; €</span>
-                          {isScheduleOpen ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
+                          <span
+                            key={isScheduleOpen ? "sch-open" : "sch-closed"}
+                            className="inline-flex items-center gap-1"
+                          >
+                            <span>Termin &amp; €</span>
+                            {isScheduleOpen ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -2499,7 +2559,7 @@ export default function AdminPage() {
                                   "Termin auf Heute gesetzt"
                                 )
                               }
-                              className="min-h-[30px] px-2.5 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
+                              className="min-h-[40px] sm:min-h-[30px] px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-md sm:rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
                             >
                               Heute
                             </button>
@@ -2518,7 +2578,7 @@ export default function AdminPage() {
                                   "Termin auf Morgen gesetzt"
                                 )
                               }
-                              className="min-h-[30px] px-2.5 py-0.5 rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
+                              className="min-h-[40px] sm:min-h-[30px] px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-md sm:rounded bg-primary/5 dark:bg-white/10 hover:bg-accent/20 text-ink font-semibold cursor-pointer"
                             >
                               Morgen
                             </button>
@@ -2619,7 +2679,7 @@ export default function AdminPage() {
                           htmlFor={`note-${ticket.id}`}
                           className="block text-xs font-semibold text-ink mb-1.5"
                         >
-                          Notiz / Durchgeführte Arbeit
+                          Notiz / Vorgangsdetails
                         </label>
                         <div className="flex items-center gap-2">
                           <input
@@ -2642,7 +2702,7 @@ export default function AdminPage() {
                                 handleSavePriceAndNote(ticket, true);
                               }
                             }}
-                            placeholder="z. B. Pumpe gereinigt…"
+                            placeholder="z. B. E-Nr. geprüft, Übergabe vereinbart…"
                             className="w-full min-h-[44px] sm:min-h-[42px] px-3 py-2 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink focus:outline-none focus:border-accent"
                           />
                           <button
@@ -2656,7 +2716,9 @@ export default function AdminPage() {
                             title="Preis und Notiz speichern"
                           >
                             <Save className="w-3.5 h-3.5" />
-                            <span>{isDirty ? "Speichern" : "OK"}</span>
+                            <span key={isDirty ? "dirty" : "clean"}>
+                              {isDirty ? "Speichern" : "OK"}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -2694,7 +2756,10 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between gap-2 px-1">
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
                             <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                            <span>1-Klick WhatsApp-Antwort an {ticket.name}</span>
+                            <span>
+                              1-Klick <span translate="no" className="notranslate">WhatsApp</span>-Antwort an{" "}
+                              <span dir="auto">{ticket.name}</span>
+                            </span>
                           </span>
                           <span className="text-[11px] font-mono text-ink-muted">
                             Direktversand mit Auftragsdaten
@@ -2737,7 +2802,7 @@ export default function AdminPage() {
                               className="min-h-[44px] flex-1 px-3 sm:px-3.5 py-2 rounded-l-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-colors inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                             >
                               <MessageCircle className="w-4 h-4 shrink-0" />
-                              <span>WhatsApp</span>
+                              <span translate="no" className="notranslate">WhatsApp</span>
                             </a>
                             <button
                               type="button"
@@ -2768,11 +2833,14 @@ export default function AdminPage() {
                                   className="fixed inset-x-3 bottom-[76px] z-50 sm:inset-x-auto sm:absolute sm:left-0 sm:bottom-full sm:mb-1.5 sm:z-30 sm:w-72 rounded-2xl sm:rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 shadow-2xl sm:shadow-xl p-2 sm:p-1.5 space-y-1"
                                 >
                                   <div className="px-2.5 py-1.5 sm:py-1 flex items-center justify-between text-xs sm:text-[11px] font-bold text-ink-muted border-b border-primary/8 dark:border-white/10">
-                                    <span>WhatsApp-Vorlage an {ticket.name}</span>
+                                    <span>
+                                      <span translate="no" className="notranslate">WhatsApp</span>-Vorlage an{" "}
+                                      <span dir="auto">{ticket.name}</span>
+                                    </span>
                                     <button
                                       type="button"
                                       onClick={() => setOpenWaMenuId(null)}
-                                      className="min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center hover:text-ink cursor-pointer"
+                                      className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 inline-flex items-center justify-center hover:text-ink cursor-pointer"
                                       aria-label="Menü schließen"
                                     >
                                       <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -2788,7 +2856,7 @@ export default function AdminPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={() => setOpenWaMenuId(null)}
-                                      className="block rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+                                      className="min-h-[48px] sm:min-h-0 flex flex-col justify-center rounded-xl sm:rounded-lg px-3 py-2.5 sm:px-2.5 sm:py-2 hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
                                     >
                                       <div className="text-sm sm:text-xs font-extrabold text-ink">
                                         {tpl.label}
@@ -2807,12 +2875,13 @@ export default function AdminPage() {
                           {ticket.visitType === "home_visit" && (
                             <a
                               href={
-                                ticket.mapsLocationUrl ||
-                                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                  [ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
-                                    .filter(Boolean)
-                                    .join(", ")
-                                )}`
+                                isSafeGoogleMapsUrl(ticket.mapsLocationUrl)
+                                  ? ticket.mapsLocationUrl
+                                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                      [ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
+                                        .filter(Boolean)
+                                        .join(", ")
+                                    )}`
                               }
                               target="_blank"
                               rel="noopener noreferrer"
@@ -2837,13 +2906,18 @@ export default function AdminPage() {
                                 : "border-primary/20 dark:border-white/20 bg-background dark:bg-slate-950 text-ink hover:border-accent"
                             }`}
                           >
-                            <Eye className="w-4 h-4 shrink-0" />
-                            <span>Details</span>
-                            {isDetailsOpen ? (
-                              <ChevronUp className="w-3.5 h-3.5 shrink-0" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5 shrink-0" />
-                            )}
+                            <span
+                              key={isDetailsOpen ? "d-open" : "d-closed"}
+                              className="inline-flex items-center gap-1.5"
+                            >
+                              <Eye className="w-4 h-4 shrink-0" />
+                              <span>Details</span>
+                              {isDetailsOpen ? (
+                                <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                            </span>
                           </button>
 
                           {/* 1-Click Pro Ticket Export & Print Preview */}
@@ -2854,10 +2928,16 @@ export default function AdminPage() {
                             className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl border border-accent/45 bg-accent/12 hover:bg-accent hover:text-primary text-xs sm:text-sm font-extrabold text-ink transition-colors inline-flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap shrink-0 cursor-pointer"
                           >
                             <FileText className="w-4 h-4 text-accent shrink-0" />
-                            <span className="sm:hidden">Beleg / PDF</span>
+                            <span className="sm:hidden">
+                              Beleg / <span translate="no" className="notranslate">PDF</span>
+                            </span>
                             <span className="hidden sm:inline">Ticket exportieren</span>
                             {totals.grossTotal > 0 && (
-                              <span className="hidden sm:inline font-mono text-xs opacity-80 tabular-nums">
+                              <span
+                                dir="ltr"
+                                translate="no"
+                                className="notranslate hidden sm:inline font-mono text-xs opacity-80 tabular-nums"
+                              >
                                 ({formatEuro(totals.grossTotal)})
                               </span>
                             )}
@@ -2883,14 +2963,14 @@ export default function AdminPage() {
                               <button
                                 type="button"
                                 onClick={() => void handleDeleteTicket(ticket.id)}
-                                className="min-h-[34px] px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
+                                className="min-h-[40px] sm:min-h-[34px] px-3 sm:px-2.5 py-1 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
                               >
                                 Ja
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="min-h-[34px] px-2 py-1 rounded-lg text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
+                                className="min-h-[40px] sm:min-h-[34px] px-3 sm:px-2 py-1 rounded-lg text-xs font-semibold text-ink-muted hover:text-ink cursor-pointer"
                               >
                                 Nein
                               </button>
@@ -2919,11 +2999,18 @@ export default function AdminPage() {
                             <div className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-ink">
                               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span>
-                                Vollständige Auftrags- &amp; Abschlussdetails ({ticket.id})
+                                Vollständige Auftrags- &amp; Abschlussdetails (
+                                <span dir="ltr" translate="no" className="notranslate">
+                                  {ticket.id}
+                                </span>
+                                )
                               </span>
                             </div>
                             <span className="text-[11px] font-mono text-ink-muted">
-                              Beleg-Nr.: {ticket.invoiceNumber}
+                              Beleg-Nr.:{" "}
+                              <span dir="ltr" translate="no" className="notranslate">
+                                {ticket.invoiceNumber}
+                              </span>
                             </span>
                           </div>
 
@@ -2932,7 +3019,10 @@ export default function AdminPage() {
                               <div className="font-bold text-ink-muted uppercase tracking-wide text-[11px]">
                                 Abschluss-Status
                               </div>
-                              <div className="font-extrabold text-ink text-sm">
+                              <div
+                                key={`${isCompleted}-${comp?.outcome}-${simpleStatus}`}
+                                className="font-extrabold text-ink text-sm"
+                              >
                                 {isCompleted
                                   ? comp?.outcome === "sold"
                                     ? "Abgeschlossen · Verkauft"
@@ -2953,27 +3043,36 @@ export default function AdminPage() {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}{" "}
-                                  ({comp.confirmedBy})
+                                  (
+                                  <span translate="no" className="notranslate">
+                                    {comp.confirmedBy}
+                                  </span>
+                                  )
                                 </div>
                               )}
                             </div>
 
                             <div className="space-y-1">
                               <div className="font-bold text-ink-muted uppercase tracking-wide text-[11px]">
-                                Gerät, Teile &amp; E-Nr.
+                                Gerät, Teile &amp; <span translate="no" className="notranslate">E-Nr.</span>
                               </div>
                               <div className="font-bold text-ink text-sm">
-                                {ticket.brand} · {deviceLabel}
+                                <span translate="no" className="notranslate">{ticket.brand}</span> ·{" "}
+                                <span>{deviceLabel}</span>
                               </div>
                               <div className="font-mono text-ink-muted">
-                                Modell / E-Nr.:{" "}
-                                {comp?.partsOrSerial || ticket.model || "Nicht angegeben"}
+                                Modell / <span translate="no" className="notranslate">E-Nr.</span>:{" "}
+                                <span dir="ltr" translate="no" className="notranslate">
+                                  {comp?.partsOrSerial || ticket.model || "Nicht angegeben"}
+                                </span>
                               </div>
                               <div>
                                 Übergabe-Art:{" "}
-                                {ticket.visitType === "home_visit"
-                                  ? "Lieferung / Übergabe vor Ort"
-                                  : "Übergabe nach Termin"}
+                                <span key={ticket.visitType}>
+                                  {ticket.visitType === "home_visit"
+                                    ? "Lieferung / Übergabe vor Ort"
+                                    : "Übergabe nach Termin"}
+                                </span>
                               </div>
                             </div>
 
@@ -2982,23 +3081,47 @@ export default function AdminPage() {
                                 Abrechnung &amp; Garantie
                               </div>
                               <div className="font-mono font-extrabold text-ink text-sm tabular-nums">
-                                {totals.grossTotal > 0
-                                  ? `${formatEuro(totals.grossTotal)} (inkl. 19 % MwSt.)`
-                                  : "Preis auf Anfrage / nach Vereinbarung"}
+                                <span key={totals.grossTotal > 0 ? "gt-num" : "gt-ask"}>
+                                  {totals.grossTotal > 0 ? (
+                                    <>
+                                      <span dir="ltr" translate="no" className="notranslate">
+                                        {formatEuro(totals.grossTotal)}
+                                      </span>{" "}
+                                      (inkl. 19 %{" "}
+                                      <span translate="no" className="notranslate">MwSt.</span>)
+                                    </>
+                                  ) : (
+                                    "Preis auf Anfrage / nach Vereinbarung"
+                                  )}
+                                </span>
                               </div>
                               {totals.grossTotal > 0 && (
                                 <div className="font-mono text-ink-muted tabular-nums">
-                                  Netto: {formatEuro(totals.netTotal)} · MwSt.:{" "}
-                                  {formatEuro(totals.vatAmount)}
+                                  Netto:{" "}
+                                  <span dir="ltr" translate="no" className="notranslate">
+                                    {formatEuro(totals.netTotal)}
+                                  </span>{" "}
+                                  · <span translate="no" className="notranslate">MwSt.</span>:{" "}
+                                  <span dir="ltr" translate="no" className="notranslate">
+                                    {formatEuro(totals.vatAmount)}
+                                  </span>
                                 </div>
                               )}
                               <div>
                                 Garantie:{" "}
-                                {comp?.warrantyMonths
-                                  ? `${comp.warrantyMonths} Monate schriftliche Garantie`
-                                  : comp?.outcome === "sold"
-                                  ? "Inkl. schriftlicher Verkäufergarantie"
-                                  : "Gemäß Prüfprotokoll"}
+                                <span
+                                  key={
+                                    comp?.warrantyMonths
+                                      ? "w-m"
+                                      : comp?.outcome || "w-def"
+                                  }
+                                >
+                                  {comp?.warrantyMonths
+                                    ? `${comp.warrantyMonths} Monate schriftliche Garantie`
+                                    : comp?.outcome === "sold"
+                                    ? "Inkl. schriftlicher Verkäufergarantie"
+                                    : "Gemäß Prüfprotokoll"}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -3006,16 +3129,19 @@ export default function AdminPage() {
                           <div className="rounded-lg border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-900 p-3 space-y-1.5 text-xs">
                             <div>
                               <span className="font-bold text-ink">Kundenanliegen: </span>
-                              <span className="text-ink-muted">{ticket.problem}</span>
+                              <span dir="auto" className="text-ink-muted">{ticket.problem}</span>
                             </div>
                             {(comp?.workOrSaleSummary || ticket.technicianNotes) && (
                               <div>
-                                <span className="font-bold text-ink">
+                                <span
+                                  key={comp?.outcome === "sold" ? "lbl-s" : "lbl-r"}
+                                  className="font-bold text-ink"
+                                >
                                   {comp?.outcome === "sold"
                                     ? "Verkaufs- & Übergabebestätigung: "
-                                    : "Durchgeführte Arbeit / Servicenotiz: "}
+                                    : "Übergabe- / Garantienotiz: "}
                                 </span>
-                                <span className="text-ink">
+                                <span dir="auto" className="text-ink">
                                   {comp?.workOrSaleSummary || ticket.technicianNotes}
                                 </span>
                               </div>
@@ -3023,12 +3149,18 @@ export default function AdminPage() {
                             <div>
                               <span className="font-bold text-ink">Kunde &amp; Ort: </span>
                               <span className="text-ink-muted">
-                                {ticket.name} · Tel.: {ticket.phone} ·{" "}
-                                {ticket.visitType === "home_visit"
-                                  ? [ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
-                                      .filter(Boolean)
-                                      .join(", ") || "Osnabrück"
-                                  : "Lieferung & Übergabe (Osnabrück & Umgebung)"}
+                                <span dir="auto">{ticket.name}</span> · Tel.:{" "}
+                                <span dir="ltr" translate="no" className="notranslate">
+                                  {ticket.phone}
+                                </span>{" "}
+                                ·{" "}
+                                <span dir="auto">
+                                  {ticket.visitType === "home_visit"
+                                    ? [ticket.streetAddress, ticket.zip.replace(" (Werkstatt)", "")]
+                                        .filter(Boolean)
+                                        .join(", ") || "Osnabrück"
+                                    : "Lieferung & Übergabe (Osnabrück & Umgebung)"}
+                                </span>
                               </span>
                             </div>
                           </div>
@@ -3040,7 +3172,7 @@ export default function AdminPage() {
                               className="min-h-[38px] px-3.5 py-1.5 rounded-lg border border-primary/20 dark:border-white/20 hover:border-accent text-xs font-bold text-ink inline-flex items-center gap-1.5 cursor-pointer"
                             >
                               <Pencil className="w-3.5 h-3.5" />
-                              <span>
+                              <span key={isCompleted ? "ed-c" : "ed-o"}>
                                 {isCompleted
                                   ? "Abschluss (Verkauft / Service) bearbeiten"
                                   : "Jetzt als Verkauft oder Service abschließen"}
@@ -3053,7 +3185,7 @@ export default function AdminPage() {
                               className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>
+                              <span key={comp?.outcome === "sold" ? "ex-s" : "ex-r"}>
                                 {comp?.outcome === "sold"
                                   ? "Kauf- & Garantiebeleg exportieren"
                                   : "Service-Beleg exportieren"}
@@ -3085,7 +3217,10 @@ export default function AdminPage() {
                 <span className="inline-flex items-center justify-center min-w-[26px] h-6 sm:min-w-[28px] sm:h-7 px-2 rounded-md bg-accent text-primary font-mono font-bold text-xs tabular-nums">
                   {selectedTicketIds.length}
                 </span>
-                <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
+                <span
+                  key={selectedTicketIds.length === 1 ? "sel-1" : "sel-n"}
+                  className="text-xs sm:text-sm font-semibold whitespace-nowrap"
+                >
                   {selectedTicketIds.length === 1
                     ? "Auftrag ausgewählt"
                     : "Aufträge ausgewählt"}
@@ -3138,9 +3273,11 @@ export default function AdminPage() {
                 className="min-h-[38px] px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span className="sm:hidden">PDF ({selectedTicketIds.length})</span>
+                <span className="sm:hidden">
+                  <span translate="no" className="notranslate">PDF</span> ({selectedTicketIds.length})
+                </span>
                 <span className="hidden sm:inline">
-                  Sammel-PDF / Drucken ({selectedTicketIds.length})
+                  Sammel-<span translate="no" className="notranslate">PDF</span> / Drucken ({selectedTicketIds.length})
                 </span>
               </button>
 
@@ -3150,7 +3287,7 @@ export default function AdminPage() {
                 className="min-h-[38px] px-2.5 sm:px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>CSV</span>
+                <span translate="no" className="notranslate">CSV</span>
               </button>
 
               {confirmBulkDelete ? (
@@ -3194,10 +3331,21 @@ export default function AdminPage() {
             <div className="bg-surface dark:bg-slate-900 border border-primary/15 dark:border-white/15 rounded-t-2xl sm:rounded-xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-xl overflow-hidden">
               <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-primary/10 dark:border-white/10 shrink-0 bg-surface dark:bg-slate-900">
                 <div className="min-w-0">
-                  <h2 className="font-serif text-lg sm:text-xl font-bold text-ink truncate">
-                    {orderForm.editingTicketId
-                      ? `Auftrag ${orderForm.editingTicketId} bearbeiten`
-                      : "Neuen Auftrag eintragen"}
+                  <h2
+                    key={orderForm.editingTicketId ? "edit" : "new"}
+                    className="font-serif text-lg sm:text-xl font-bold text-ink truncate"
+                  >
+                    {orderForm.editingTicketId ? (
+                      <>
+                        Auftrag{" "}
+                        <span dir="ltr" translate="no" className="notranslate">
+                          {orderForm.editingTicketId}
+                        </span>{" "}
+                        bearbeiten
+                      </>
+                    ) : (
+                      "Neuen Auftrag eintragen"
+                    )}
                   </h2>
                   <p className="text-xs text-ink-muted mt-0.5 truncate">
                     Telefonanfrage, Übergabetermin oder Geräte-/Teilebestellung
@@ -3369,7 +3517,7 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-ink mb-1">
-                    Was ist defekt? (Fehlerbeschreibung)
+                    Anliegen / Gesuchtes Gerät oder Ersatzteil
                   </label>
                   <input
                     type="text"
@@ -3377,7 +3525,7 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setOrderForm({ ...orderForm, problem: e.target.value })
                     }
-                    placeholder="z. B. Pumpt nicht ab, Fehler F11"
+                    placeholder="z. B. Original-Laugenpumpe nach E-Nr. oder Markengerät"
                     className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                   />
                 </div>
@@ -3415,7 +3563,7 @@ export default function AdminPage() {
                             streetAddress: e.target.value,
                           })
                         }
-                        placeholder="z. B. Iburger Str. 20"
+                        placeholder="z. B. Iburger Straße 5"
                         className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                       />
                     </div>
@@ -3479,7 +3627,7 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-ink mb-1">
-                    Notiz / Durchgeführte Arbeit (optional)
+                    Notiz / Vorgangsdetails (optional)
                   </label>
                   <input
                     type="text"
@@ -3490,7 +3638,7 @@ export default function AdminPage() {
                         technicianNotes: e.target.value,
                       })
                     }
-                    placeholder="z. B. Laugenpumpe gereinigt, Ersatzteil eingebaut…"
+                    placeholder="z. B. E-Nr. abgeglichen, Übergabetermin vereinbart…"
                     className="w-full min-h-[44px] px-3 py-2.5 rounded-lg bg-background dark:bg-slate-950 border border-primary/15 dark:border-white/15 text-base sm:text-sm text-ink"
                   />
                 </div>
@@ -3508,9 +3656,11 @@ export default function AdminPage() {
                     type="submit"
                     className="min-h-[44px] flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-bold text-sm cursor-pointer"
                   >
-                    {orderForm.editingTicketId
-                      ? "Änderungen speichern"
-                      : "Auftrag speichern"}
+                    <span key={orderForm.editingTicketId ? "save-edit" : "save-new"}>
+                      {orderForm.editingTicketId
+                        ? "Änderungen speichern"
+                        : "Auftrag speichern"}
+                    </span>
                   </button>
                 </div>
               </form>
@@ -3699,7 +3849,10 @@ export default function AdminPage() {
 
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <label className="block text-xs font-semibold text-ink">
+                    <label
+                      key={completionModal.outcome}
+                      className="block text-xs font-semibold text-ink"
+                    >
                       {completionModal.outcome === "sold"
                         ? "Verkaufter Artikel & Übergabe-Details *"
                         : "Teileübergabe / Hannachi-Garantie-Details *"}
@@ -3892,7 +4045,7 @@ export default function AdminPage() {
                     className="min-h-[44px] flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
                     <BadgeCheck className="w-4 h-4 shrink-0" />
-                    <span>
+                    <span key={savingCompletion ? "c-busy" : "c-idle"}>
                       {savingCompletion
                         ? "Wird gespeichert…"
                         : "Speichern & Abschließen"}
@@ -3929,8 +4082,12 @@ export default function AdminPage() {
                       Kundenakte &amp; Auftragsverlauf
                     </div>
                     <h2 className="font-serif text-lg sm:text-xl font-bold text-ink mt-0.5 truncate">
-                      {primaryTicket?.name || "Kunde"} ·{" "}
-                      <span className="font-mono text-sm text-ink-muted">
+                      <span dir="auto">{primaryTicket?.name || "Kunde"}</span> ·{" "}
+                      <span
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate font-mono text-sm text-ink-muted"
+                      >
                         {primaryTicket?.phone || customerHistoryPhone}
                       </span>
                     </h2>
@@ -3972,7 +4129,11 @@ export default function AdminPage() {
                       <div className="text-[11px] font-semibold text-ink-muted">
                         Gesamtumsatz
                       </div>
-                      <div className="text-lg font-mono font-extrabold text-ink tabular-nums">
+                      <div
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate text-lg font-mono font-extrabold text-ink tabular-nums"
+                      >
                         {totalRevenue > 0 ? formatEuro(totalRevenue) : "—"}
                       </div>
                     </div>
@@ -3996,11 +4157,14 @@ export default function AdminPage() {
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                             <div className="flex flex-wrap items-center gap-2 font-mono">
-                              <span className="font-bold text-ink">{ht.id}</span>
-                              <span className="text-ink-muted">
+                              <span dir="ltr" translate="no" className="notranslate font-bold text-ink">
+                                {ht.id}
+                              </span>
+                              <span dir="ltr" translate="no" className="notranslate text-ink-muted">
                                 {new Date(ht.createdAt).toLocaleDateString("de-DE")}
                               </span>
                               <span
+                                key={`${st}-${ht.completionDetails?.outcome}`}
                                 className={`px-2 py-0.5 rounded font-sans font-bold text-[11px] ${
                                   st === "completed"
                                     ? "bg-emerald-600 text-white"
@@ -4018,16 +4182,37 @@ export default function AdminPage() {
                                   : "Neu"}
                               </span>
                             </div>
-                            <span className="font-mono font-extrabold text-ink tabular-nums">
-                              {totals.grossTotal > 0 ? formatEuro(totals.grossTotal) : "Ohne Betrag"}
+                            <span
+                              key={totals.grossTotal > 0 ? "ht-g" : "ht-o"}
+                              className="font-mono font-extrabold text-ink tabular-nums"
+                            >
+                              {totals.grossTotal > 0 ? (
+                                <span dir="ltr" translate="no" className="notranslate">
+                                  {formatEuro(totals.grossTotal)}
+                                </span>
+                              ) : (
+                                "Ohne Betrag"
+                              )}
                             </span>
                           </div>
 
                           <div className="text-xs sm:text-sm font-bold text-ink">
-                            {ht.brand} · {dev}
-                            {ht.model ? ` (${ht.model})` : ""}
+                            <span translate="no" className="notranslate">{ht.brand}</span> ·{" "}
+                            <span>{dev}</span>
+                            {ht.model ? (
+                              <>
+                                {" "}
+                                (
+                                <span dir="ltr" translate="no" className="notranslate">
+                                  {ht.model}
+                                </span>
+                                )
+                              </>
+                            ) : (
+                              ""
+                            )}
                           </div>
-                          <p className="text-xs text-ink-muted">
+                          <p dir="auto" className="text-xs text-ink-muted">
                             {ht.completionDetails?.workOrSaleSummary || ht.problem}
                           </p>
 
@@ -4088,11 +4273,18 @@ export default function AdminPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm sm:text-base font-extrabold">
-                    Ticket Export &amp; Beleg-Vorschau ({printTickets.length}{" "}
-                    {printTickets.length === 1 ? "Auftrag" : "Aufträge"})
+                    Ticket Export &amp; Beleg-Vorschau (
+                    <span key={printTickets.length === 1 ? "pt-1" : "pt-n"}>
+                      {printTickets.length}{" "}
+                      {printTickets.length === 1 ? "Auftrag" : "Aufträge"}
+                    </span>
+                    )
                   </div>
                   <div className="text-xs text-white/75 mt-0.5">
-                    Als Bild (PNG), PDF/Druck, HTML-Beleg, Excel-CSV oder direkt per Handy-Teilen exportieren.
+                    Als Bild (<span translate="no" className="notranslate">PNG</span>),{" "}
+                    <span translate="no" className="notranslate">PDF</span>/Druck,{" "}
+                    <span translate="no" className="notranslate">HTML</span>-Beleg,{" "}
+                    <span translate="no" className="notranslate">Excel-CSV</span> oder direkt per Handy-Teilen exportieren.
                   </div>
                 </div>
                 <button
@@ -4271,27 +4463,42 @@ export default function AdminPage() {
               >
                 <div className="flex flex-col sm:flex-row print:flex-row items-start justify-between gap-4 sm:gap-6 pb-5 sm:pb-6 border-b-2 border-slate-900">
                   <div>
-                    <h1 className="text-lg sm:text-xl font-bold tracking-tight">
+                    <h1 translate="no" className="notranslate text-lg sm:text-xl font-bold tracking-tight">
                       {business.name}
                     </h1>
-                    <p className="text-xs text-slate-600 mt-1">
+                    <p translate="no" className="notranslate text-xs text-slate-600 mt-1">
                       Inhaber: {business.owner} · {business.street},{" "}
                       {business.zip} {business.city}
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p dir="ltr" translate="no" className="notranslate text-xs text-slate-600">
                       Tel.: {business.phoneDisplay} · {business.email}
                     </p>
                   </div>
                   <div className="flex items-start justify-between sm:justify-end w-full sm:w-auto gap-4 shrink-0">
                     <div className="text-left sm:text-right print:text-right font-mono text-xs tabular-nums">
-                      <div className="font-bold text-sm">
+                      <div key={isWarrantyDoc ? "w" : "s"} className="font-bold text-sm">
                         {isWarrantyDoc
                           ? "KAUF- & GARANTIEBELEG"
                           : "HANDELS- & ÜBERGABEBELEG"}
                       </div>
-                      <div className="mt-1">Auftrags-Nr.: {printTicket.id}</div>
-                      <div>Beleg-Nr.: {printTicket.invoiceNumber}</div>
-                      <div>Datum: {new Date().toLocaleDateString("de-DE")}</div>
+                      <div className="mt-1">
+                        Auftrags-Nr.:{" "}
+                        <span dir="ltr" translate="no" className="notranslate">
+                          {printTicket.id}
+                        </span>
+                      </div>
+                      <div>
+                        Beleg-Nr.:{" "}
+                        <span dir="ltr" translate="no" className="notranslate">
+                          {printTicket.invoiceNumber}
+                        </span>
+                      </div>
+                      <div>
+                        Datum:{" "}
+                        <span dir="ltr" translate="no" className="notranslate">
+                          {new Date().toLocaleDateString("de-DE")}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex flex-col items-center border border-slate-300 rounded p-1.5 bg-white shrink-0">
                       <QRCodeSVG
@@ -4301,7 +4508,11 @@ export default function AdminPage() {
                         bgColor="#FFFFFF"
                         fgColor="#0F172A"
                       />
-                      <span className="mt-1 font-mono text-[9px] text-slate-600 tabular-nums leading-none">
+                      <span
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate mt-1 font-mono text-[9px] text-slate-600 tabular-nums leading-none"
+                      >
                         {printTicket.id}
                       </span>
                     </div>
@@ -4311,57 +4522,88 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-5 sm:gap-6 py-5 sm:py-6 border-b border-slate-300">
                   <div>
                     <div className="text-xs font-bold text-slate-500">KUNDENDATEN</div>
-                    <div className="mt-1 font-bold text-base">{printTicket.name}</div>
-                    {printTicket.streetAddress && <div>{printTicket.streetAddress}</div>}
-                    <div>{printTicket.zip.replace(" (Werkstatt)", "")}</div>
-                    <div className="mt-1 font-mono">Tel.: {printTicket.phone}</div>
+                    <div dir="auto" className="mt-1 font-bold text-base">
+                      {printTicket.name}
+                    </div>
+                    {printTicket.streetAddress && <div dir="auto">{printTicket.streetAddress}</div>}
+                    <div dir="auto">{printTicket.zip.replace(" (Werkstatt)", "")}</div>
+                    <div className="mt-1 font-mono">
+                      Tel.:{" "}
+                      <span dir="ltr" translate="no" className="notranslate">
+                        {printTicket.phone}
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs font-bold text-slate-500">GERÄT &amp; TERMIN</div>
                     <div className="mt-1 font-bold">
-                      {printTicket.brand} ·{" "}
-                      {printTicket.device.includes("Anderes")
-                        ? printTicket.customDevice || "Hausgerät"
-                        : printTicket.device}
+                      <span translate="no" className="notranslate">
+                        {printTicket.brand}
+                      </span>{" "}
+                      ·{" "}
+                      <span>
+                        {printTicket.device.includes("Anderes")
+                          ? printTicket.customDevice || "Hausgerät"
+                          : printTicket.device}
+                      </span>
                     </div>
-                    {printTicket.model && <div>Modell / E-Nr.: {printTicket.model}</div>}
+                    {printTicket.model && (
+                      <div>
+                        Modell / <span translate="no" className="notranslate">E-Nr.</span>:{" "}
+                        <span dir="ltr" translate="no" className="notranslate">
+                          {printTicket.model}
+                        </span>
+                      </div>
+                    )}
                     <div className="mt-0.5 text-slate-600">
                       Übergabe-Art:{" "}
-                      {printTicket.visitType === "home_visit"
-                        ? "Lieferung / Übergabe vor Ort"
-                        : "Übergabe nach Termin"}
+                      <span key={printTicket.visitType}>
+                        {printTicket.visitType === "home_visit"
+                          ? "Lieferung / Übergabe vor Ort"
+                          : "Übergabe nach Termin"}
+                      </span>
                     </div>
                     <div className="mt-0.5">
                       Termin:{" "}
-                      {printTicket.scheduledDate
-                        ? new Date(
-                            `${printTicket.scheduledDate}T12:00:00`
-                          ).toLocaleDateString("de-DE")
-                        : "Nach Vereinbarung"}{" "}
-                      ({printTicket.scheduledSlot})
+                      <span dir="ltr" translate="no" className="notranslate">
+                        {printTicket.scheduledDate
+                          ? new Date(
+                              `${printTicket.scheduledDate}T12:00:00`
+                            ).toLocaleDateString("de-DE")
+                          : "Nach Vereinbarung"}{" "}
+                        ({printTicket.scheduledSlot})
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="py-5 border-b border-slate-300">
-                  <div className="text-xs font-bold text-slate-500">
+                  <div
+                    key={isWarrantyDoc ? "hdr-w" : "hdr-s"}
+                    className="text-xs font-bold text-slate-500"
+                  >
                     {isWarrantyDoc
                       ? "GERÄTEDATEN / ÜBERGABE & GARANTIEHINWEIS"
                       : "ANLIEGEN / ÜBERGABE & NOTIZEN"}
                   </div>
                   <p className="mt-1.5 text-sm leading-relaxed">
-                    <strong>Kundenangabe:</strong> {printTicket.problem}
+                    <strong>Kundenangabe:</strong>{" "}
+                    <span dir="auto">{printTicket.problem}</span>
                   </p>
                   {printTicket.completionDetails && (
                     <p className="mt-2 text-sm leading-relaxed text-emerald-800">
                       <strong>
                         Bestätigter Abschluss (
-                        {printTicket.completionDetails.outcome === "sold"
-                          ? "Verkauft"
-                          : "Garantie- / Übergabevorgang"}
+                        <span key={printTicket.completionDetails.outcome}>
+                          {printTicket.completionDetails.outcome === "sold"
+                            ? "Verkauft"
+                            : "Garantie- / Übergabevorgang"}
+                        </span>
                         ):
                       </strong>{" "}
-                      {printTicket.completionDetails.workOrSaleSummary}
+                      <span dir="auto">
+                        {printTicket.completionDetails.workOrSaleSummary}
+                      </span>
                       {printTicket.completionDetails.warrantyMonths > 0
                         ? ` · ${printTicket.completionDetails.warrantyMonths} Monate Garantie`
                         : ""}
@@ -4369,14 +4611,16 @@ export default function AdminPage() {
                   )}
                   {printTicket.completionDetails?.partsOrSerial && (
                     <p className="mt-1 text-sm font-mono">
-                      <strong>Teile / E-Nr.:</strong>{" "}
-                      {printTicket.completionDetails.partsOrSerial}
+                      <strong>Teile / <span translate="no" className="notranslate">E-Nr.</span>:</strong>{" "}
+                      <span dir="ltr" translate="no" className="notranslate">
+                        {printTicket.completionDetails.partsOrSerial}
+                      </span>
                     </p>
                   )}
                   {!printTicket.completionDetails && printTicket.technicianNotes && (
                     <p className="mt-2 text-sm leading-relaxed">
-                      <strong>Durchgeführte Arbeit / Notiz:</strong>{" "}
-                      {printTicket.technicianNotes}
+                      <strong>Übergabe- / Garantienotiz:</strong>{" "}
+                      <span dir="auto">{printTicket.technicianNotes}</span>
                     </p>
                   )}
                 </div>
@@ -4384,21 +4628,26 @@ export default function AdminPage() {
                 <div className="py-5 sm:py-6 border-b border-slate-300">
                   <div className="flex justify-between items-center py-1 text-sm">
                     <span>Nettobetrag:</span>
-                    <span className="font-mono tabular-nums">
+                    <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
                       {totals.grossTotal > 0 ? formatEuro(totals.netTotal) : "__________ €"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 text-sm">
-                    <span>zzgl. 19 % MwSt.:</span>
-                    <span className="font-mono tabular-nums">
+                    <span>
+                      zzgl. 19 % <span translate="no" className="notranslate">MwSt.</span>:
+                    </span>
+                    <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
                       {totals.grossTotal > 0
                         ? formatEuro(totals.vatAmount)
                         : "__________ €"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 mt-2 border-t border-slate-900 text-base font-bold">
-                    <span>Gesamtbetrag (inkl. MwSt.):</span>
-                    <span className="font-mono tabular-nums">
+                    <span>
+                      Gesamtbetrag (inkl.{" "}
+                      <span translate="no" className="notranslate">MwSt.</span>):
+                    </span>
+                    <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
                       {totals.grossTotal > 0
                         ? formatEuro(totals.grossTotal)
                         : "__________ €"}
@@ -4407,18 +4656,51 @@ export default function AdminPage() {
                 </div>
 
                 <div className="pt-6 sm:pt-8 text-xs text-slate-600 space-y-6">
-                  <p>
-                    {isWarrantyDoc
-                      ? "Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei Hannachi Elektrohaushaltsgeräte & Ersatzteile erworbene Geräte. Handelsgewerbe nach § 14 GewO (kein Handwerks- oder Meisterbetrieb)."
-                      : "Dokumentiert durch Hannachi Elektrohaushaltsgeräte & Ersatzteile · Iburger Straße 5, 49082 Osnabrück (Handelsgewerbe nach § 14 GewO, kein Handwerksbetrieb). Vielen Dank für Ihr Vertrauen!"}
+                  <p key={isWarrantyDoc ? "f-w" : "f-s"}>
+                    {isWarrantyDoc ? (
+                      <>
+                        Schriftliche Verkäufergarantie gemäß Kaufbeleg für direkt bei{" "}
+                        <span translate="no" className="notranslate">
+                          Hannachi Elektrohaushaltsgeräte &amp; Ersatzteile
+                        </span>{" "}
+                        erworbene Geräte. Handelsgewerbe nach{" "}
+                        <span translate="no" className="notranslate">§ 14 GewO</span>{" "}
+                        (kein Handwerks- oder Meisterbetrieb).
+                      </>
+                    ) : (
+                      <>
+                        Dokumentiert durch{" "}
+                        <span translate="no" className="notranslate">
+                          Hannachi Elektrohaushaltsgeräte &amp; Ersatzteile · Iburger Straße 5, 49082 Osnabrück
+                        </span>{" "}
+                        (Handelsgewerbe nach{" "}
+                        <span translate="no" className="notranslate">§ 14 GewO</span>, kein Handwerksbetrieb). Vielen Dank für Ihr Vertrauen!
+                      </>
+                    )}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-8 sm:gap-12 pt-6 sm:pt-8">
-                    <div className="border-t border-slate-400 pt-1">
-                      {isWarrantyDoc
-                        ? "Datum / Unterschrift Verkäufer (Hannachi)"
-                        : "Datum / Unterschrift Hannachi Fachhandel"}
+                    <div
+                      key={isWarrantyDoc ? "s1-w" : "s1-s"}
+                      className="border-t border-slate-400 pt-1"
+                    >
+                      {isWarrantyDoc ? (
+                        <>
+                          Datum / Unterschrift Verkäufer (
+                          <span translate="no" className="notranslate">Hannachi</span>)
+                        </>
+                      ) : (
+                        <>
+                          Datum / Unterschrift{" "}
+                          <span translate="no" className="notranslate">
+                            Hannachi Fachhandel
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <div className="border-t border-slate-400 pt-1">
+                    <div
+                      key={isWarrantyDoc ? "s2-w" : "s2-s"}
+                      className="border-t border-slate-400 pt-1"
+                    >
                       {isWarrantyDoc
                         ? "Datum / Unterschrift Käufer"
                         : "Datum / Unterschrift Kunde"}

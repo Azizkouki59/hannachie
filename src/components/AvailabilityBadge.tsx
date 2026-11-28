@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 // Phone/WhatsApp availability: Mon–Sat 08:00–18:00 (Europe/Berlin).
 const OPEN_MIN = 8 * 60;
 const CLOSE_MIN = 18 * 60;
-const DAY_NAMES = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const DAY_NAMES = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
-type Status = { open: boolean; label: string };
+type Status = { open: boolean; label: string; hasWhatsAppHint?: boolean };
 
 function berlinNow(): { day: number; minutes: number } {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -33,7 +33,7 @@ export function getAvailability(): Status {
   let next = (day + 1) % 7;
   if (next === 0) next = 1;
   const when = next === (day + 1) % 7 ? "Morgen" : DAY_NAMES[next];
-  return { open: false, label: `${when} ab 08:00 Uhr erreichbar · WhatsApp jederzeit` };
+  return { open: false, label: `${when} ab 08:00 Uhr erreichbar`, hasWhatsAppHint: true };
 }
 
 export default function AvailabilityBadge({ className = "", tone = "dark" }: { className?: string; tone?: "dark" | "light" }) {
@@ -54,7 +54,18 @@ export default function AvailabilityBadge({ className = "", tone = "dark" }: { c
         aria-hidden="true"
         className={`h-2 w-2 shrink-0 rounded-full ${status.open ? "bg-emerald-400" : "bg-slate-400"}`}
       />
-      {status.label}
+      <span key={status.label}>
+        {status.label}
+        {status.hasWhatsAppHint && (
+          <>
+            {" · "}
+            <span translate="no" className="notranslate">
+              WhatsApp
+            </span>{" "}
+            jederzeit
+          </>
+        )}
+      </span>
     </span>
   );
 }

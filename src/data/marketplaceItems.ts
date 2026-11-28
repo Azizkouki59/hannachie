@@ -343,8 +343,8 @@ export const MARKETPLACE_QUICK_PRESETS: MarketplaceQuickPreset[] = [
     category: "ovens_stoves",
     conditionType: "refurbished",
     brand: "Siemens",
-    titleTemplate: "Siemens iQ500 Backofen (Autark · 230V)",
-    shortSpecs: "71 L Garraum · 3D Heißluft plus · Steckerfertig (230V)",
+    titleTemplate: "Siemens iQ500 Backofen (Autark · 230 V)",
+    shortSpecs: "71 L Garraum · 3D Heißluft plus · Steckerfertig (230 V)",
     bullets: [
       "Autarker 60-cm-Backofen · Steckerfertig (230 V, reiner Geräteverkauf)",
       "Heizkörper, Thermostat und Türdichtung im internen Funktionstest kontrolliert",

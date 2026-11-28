@@ -64,7 +64,7 @@
 @layer base {
   :root {
     --font-jakarta: "Plus Jakarta Sans", system-ui, sans-serif;
-    --mobile-dock-height: 4rem;
+    --mobile-dock-height: 3.5rem;
   }
 
   .dark {
@@ -82,18 +82,23 @@
 
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 5.25rem;
+    scroll-padding-top: 5.75rem;
     overflow-x: clip;
     -webkit-text-size-adjust: 100%;
   }
+  @media (min-width: 640px) {
+    html {
+      scroll-padding-top: 6.5rem;
+    }
+  }
   @media (min-width: 1024px) {
     html {
-      scroll-padding-top: 5.75rem;
+      scroll-padding-top: 7.25rem;
     }
   }
   @media (max-width: 1023px) {
     html {
-      scroll-padding-bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom) + 1rem);
+      scroll-padding-bottom: calc(var(--mobile-dock-height) + env(safe-area-inset-bottom) + 0.75rem);
     }
   }
   body {
@@ -161,7 +166,7 @@
       border-color 160ms ease;
   }
   .btn-ghost-light:active { transform: translate3d(0, 1px, 0) scale(0.975); }
-  .section { @apply py-10 sm:py-16 lg:py-20; }
+  .section { @apply py-8 sm:py-16 lg:py-20; }
 
   /* Studio-grade spotlight card: cursor radial glow, hairline rim highlight & crisp -2px lift */
   .card {
@@ -334,6 +339,20 @@
 
   .pb-safe {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* Tactile native mobile snap rail */
+  .snap-rail {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .snap-rail::-webkit-scrollbar {
+    display: none;
   }
 
   /* Skip layout & paint work for off-screen below-the-fold sections */
@@ -1162,6 +1181,11 @@
    preserving exact sizing on compact app-control labels ([data-compact-label])
    so 3/4/5-column dock tabs, segmented pills, and tiles stay symmetric. */
 @media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([data-allow-compact-font]),
+  select:not([data-allow-compact-font]),
+  textarea:not([data-allow-compact-font]) {
+    font-size: 16px;
+  }
   .text-\[8px\]:not([data-compact-label]),
   .text-\[9px\]:not([data-compact-label]),
   .text-\[9\.5px\]:not([data-compact-label]) { font-size: 10.5px !important; }

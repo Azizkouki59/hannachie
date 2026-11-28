@@ -180,7 +180,7 @@ function ApplianceCard({
               aria-expanded={showAllMobile}
               className="flex min-h-[44px] w-full items-center justify-between border-t border-primary/8 dark:border-white/10 py-2 text-xs font-bold text-accent cursor-pointer"
             >
-              <span>
+              <span key={showAllMobile ? "sd-less" : "sd-more"}>
                 {showAllMobile
                   ? "Weniger Themen anzeigen"
                   : `+ ${hiddenMobileCount} weitere Themen anzeigen`}
@@ -209,7 +209,7 @@ function ApplianceCard({
             triggerHapticFeedback(35);
             onSelectInquiry(device.name, "");
           }}
-          className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary dark:bg-accent px-3.5 py-2.5 text-xs font-extrabold text-white hover:bg-accent dark:hover:bg-accent-dark active:scale-[0.98] transition-all whitespace-nowrap cursor-pointer"
+          className="flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary dark:bg-accent px-3.5 py-2.5 text-center text-xs font-extrabold leading-tight text-white hover:bg-accent dark:hover:bg-accent-dark active:scale-[0.98] transition-all sm:whitespace-nowrap cursor-pointer"
         >
           <span>Teil / Gerät anfragen</span>
           <ArrowRight size={14} aria-hidden="true" />
@@ -272,7 +272,7 @@ export default function ServicesDirectory() {
   return (
     <div className="w-full">
       {/* Sticky Filter & Search Toolbar */}
-      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/95 dark:bg-slate-950/95 py-2.5 sm:py-3 sticky top-[68px] lg:top-[74px] z-30 backdrop-blur-md">
+      <div className="border-b border-primary/8 dark:border-white/10 bg-surface/98 dark:bg-slate-950/98 py-2.5 sm:py-3 sticky top-[84px] sm:top-[96px] lg:top-[108px] z-30 lg:backdrop-blur-md">
         <div className="container-page flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
           <nav
             aria-label="Kategorienavigation"
@@ -333,8 +333,11 @@ export default function ServicesDirectory() {
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
-            <span className="hidden xl:inline text-xs font-medium text-ink-faint tabular-nums whitespace-nowrap">
-              {totalMatchingDevices} Gerätegruppen
+            <span
+              key={totalMatchingDevices === 1 ? "tot-1" : "tot-n"}
+              className="hidden xl:inline text-xs font-medium text-ink-faint tabular-nums whitespace-nowrap"
+            >
+              {totalMatchingDevices} {totalMatchingDevices === 1 ? "Gerätegruppe" : "Gerätegruppen"}
             </span>
             <div className="relative w-full lg:w-64">
               <Search
@@ -354,10 +357,10 @@ export default function ServicesDirectory() {
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-0.5 top-1/2 -translate-y-1/2 flex h-10 w-10 min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-ink-faint hover:text-primary dark:hover:text-slate-100 cursor-pointer"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-ink-faint hover:text-primary dark:hover:text-slate-100 active:scale-95 transition-transform cursor-pointer"
                   aria-label="Suche zurücksetzen"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -427,7 +430,13 @@ export default function ServicesDirectory() {
                         <div className="flex items-center gap-2 text-xs font-semibold text-accent tabular-nums">
                           <span>{formattedNumber}. Bereich</span>
                           <span aria-hidden="true" className="text-ink-faint">·</span>
-                          <span className="text-ink-muted">{category.devices.length} Gerätegruppen</span>
+                          <span
+                            key={category.devices.length === 1 ? "cat-1" : "cat-n"}
+                            className="text-ink-muted"
+                          >
+                            {category.devices.length}{" "}
+                            {category.devices.length === 1 ? "Gerätegruppe" : "Gerätegruppen"}
+                          </span>
                         </div>
                         <h2 className="mt-1 text-xl sm:text-2xl font-extrabold text-primary dark:text-slate-100 tracking-tight text-balance">
                           {category.title}
@@ -439,7 +448,7 @@ export default function ServicesDirectory() {
                               {" "}
                               <Link
                                 href="/impressum#garantie"
-                                className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark whitespace-nowrap"
+                                className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark sm:whitespace-nowrap"
                               >
                                 Garantiebedingungen
                               </Link>

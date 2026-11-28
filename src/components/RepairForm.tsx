@@ -961,13 +961,13 @@ export default function RepairForm({
             </div>
             <div className="min-w-0">
               <span className="font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Bereit · #{referenceId}
+                Bereit · <span dir="ltr" translate="no" className="notranslate">#{referenceId}</span>
               </span>
               <h3 className="mt-0.5 text-base sm:text-xl font-extrabold text-primary dark:text-white">
-                In WhatsApp auf „Senden“ tippen
+                In <span translate="no" className="notranslate">WhatsApp</span> auf „Senden“ tippen
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-ink-muted">
-                Ihre strukturierte Nachricht für Herrn Hannachi ist startklar. App nicht geöffnet? Direkt starten oder Text kopieren.
+                Ihre strukturierte Nachricht für Herrn <span translate="no" className="notranslate">Hannachi</span> ist startklar. App nicht geöffnet? Direkt starten oder Text kopieren.
               </p>
             </div>
           </div>
@@ -986,7 +986,7 @@ export default function RepairForm({
                 className="col-span-2 sm:col-span-1 sm:flex-1 sm:min-w-[200px] inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] px-4 sm:px-5 py-3 text-xs sm:text-sm font-extrabold text-white text-center shadow-md transition-all"
               >
                 <MessageCircle size={18} className="shrink-0" />
-                <span>WhatsApp öffnen</span>
+                <span><span translate="no" className="notranslate">WhatsApp</span> öffnen</span>
                 <ArrowRight size={15} className="shrink-0" />
               </a>
             )}
@@ -999,7 +999,7 @@ export default function RepairForm({
                 className="col-span-1 inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 sm:px-4 py-3 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.98] transition-all shrink-0"
               >
                 <MessageCircle size={15} className="shrink-0" />
-                <span className="truncate">WhatsApp Web</span>
+                <span translate="no" className="notranslate truncate">WhatsApp Web</span>
               </a>
             )}
             <button
@@ -1010,15 +1010,15 @@ export default function RepairForm({
               } inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 sm:px-4 py-3 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.98] transition-all cursor-pointer shrink-0`}
             >
               {copied ? (
-                <>
+                <span key="rf-copied" className="inline-flex items-center gap-1.5">
                   <Check size={15} className="text-emerald-500 shrink-0" />
                   <span>Kopiert</span>
-                </>
+                </span>
               ) : (
-                <>
+                <span key="rf-copy" className="inline-flex items-center gap-1.5">
                   <Copy size={15} className="shrink-0" />
                   <span>Kopieren</span>
-                </>
+                </span>
               )}
             </button>
           </div>
@@ -1038,7 +1038,7 @@ export default function RepairForm({
               {renderWhatsAppFormattedMessage(messageText)}
             </div>
             <div className="mt-2 pt-1.5 border-t border-emerald-600/15 flex items-center justify-between text-[10.5px] font-semibold text-emerald-800/80 dark:text-emerald-300/80">
-              <span>Fertige Nachricht an {business.owner}</span>
+              <span>Fertige Nachricht an <span translate="no" className="notranslate">{business.owner}</span></span>
               <span className="inline-flex items-center gap-1 shrink-0">
                 <span>Bereit</span>
                 <CheckCheck size={13} className="text-sky-600 dark:text-sky-400" />
@@ -1056,7 +1056,8 @@ export default function RepairForm({
                 href={sharedMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[40px] items-center font-bold text-accent hover:underline shrink-0"
+                translate="no"
+                className="notranslate inline-flex min-h-[40px] items-center font-bold text-accent hover:underline shrink-0"
               >
                 Google Maps →
               </a>
@@ -1070,7 +1071,13 @@ export default function RepairForm({
                 className="inline-flex min-h-[44px] items-center gap-1.5 font-bold text-primary dark:text-slate-200 hover:text-accent transition-colors"
               >
                 <Phone size={14} className="text-accent" />
-                <span>Lieber anrufen ({business.phoneDisplay})</span>
+                <span>
+                  Lieber anrufen (
+                  <span dir="ltr" translate="no" className="notranslate tabular-nums">
+                    {business.phoneDisplay}
+                  </span>
+                  )
+                </span>
               </a>
               <a
                 href={business.mapsWriteReviewUrl}
@@ -1080,7 +1087,7 @@ export default function RepairForm({
                 className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400 hover:underline"
               >
                 <Star size={14} />
-                <span>
+                <span key={serviceDoneRated ? "rf-rated" : "rf-rate"}>
                   {serviceDoneRated ? "Danke!" : "Auf Google bewerten"}
                 </span>
               </a>
@@ -1146,7 +1153,7 @@ export default function RepairForm({
                         setRequestType(option.id);
                       }}
                       aria-pressed={active}
-                      className={`relative inline-flex min-h-[42px] sm:min-h-[38px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-lg px-1.5 sm:px-2.5 py-2 sm:py-1.5 text-[10.5px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap min-w-0 ${
+                      className={`relative inline-flex min-h-[44px] sm:min-h-[38px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-lg px-1.5 sm:px-2.5 py-2 sm:py-1.5 text-[10.5px] sm:text-xs font-bold transition-colors cursor-pointer whitespace-nowrap min-w-0 ${
                         active
                           ? "text-white"
                           : "text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1300,7 +1307,7 @@ export default function RepairForm({
                     aria-pressed={isSelected}
                     className={`${
                       isOddLast ? "col-span-2 sm:col-span-1" : ""
-                    } inline-flex min-h-[40px] sm:min-h-[38px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl border px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-center sm:text-left leading-snug transition-colors cursor-pointer ${
+                    } inline-flex min-h-[44px] sm:min-h-[38px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl border px-2.5 sm:px-3 py-2 sm:py-1.5 text-xs font-semibold text-center sm:text-left leading-snug transition-colors cursor-pointer ${
                       isSelected
                         ? "border-emerald-500/60 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300"
                         : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted hover:border-accent/50 hover:text-primary dark:hover:text-white"
@@ -1355,14 +1362,16 @@ export default function RepairForm({
                   onClick={shareGpsLocation}
                   disabled={gpsStatus === "locating"}
                   aria-busy={gpsStatus === "locating"}
-                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors disabled:opacity-65 disabled:cursor-wait cursor-pointer"
+                  className="inline-flex min-h-[44px] sm:min-h-[36px] items-center gap-1.5 rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent active:scale-95 transition-all disabled:opacity-65 disabled:cursor-wait cursor-pointer"
                 >
                   {gpsStatus === "locating" ? (
-                    <Loader2 size={12} className="animate-spin text-accent shrink-0" />
+                    <Loader2 size={13} className="animate-spin text-accent shrink-0" />
                   ) : (
-                    <Navigation size={12} className="text-accent shrink-0" />
+                    <Navigation size={13} className="text-accent shrink-0" />
                   )}
-                  <span>{gpsStatus === "locating" ? "Suche…" : "Mein Ort"}</span>
+                  <span key={gpsStatus === "locating" ? "rf-loc" : "rf-ort"}>
+                    {gpsStatus === "locating" ? "Suche…" : "Mein Ort"}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -1370,9 +1379,9 @@ export default function RepairForm({
                     triggerHapticFeedback(35);
                     setIsMapModalOpen(true);
                   }}
-                  className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent transition-colors cursor-pointer"
+                  className="inline-flex min-h-[44px] sm:min-h-[36px] items-center gap-1.5 rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-900 px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent active:scale-95 transition-all cursor-pointer"
                 >
-                  <MapPin size={12} className="text-accent shrink-0" />
+                  <MapPin size={13} className="text-accent shrink-0" />
                   <span>Karte</span>
                 </button>
               </div>
@@ -1512,7 +1521,7 @@ export default function RepairForm({
                       hapticTap();
                       set("zip", area.value);
                     }}
-                    className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer ${
+                    className={`shrink-0 snap-start whitespace-nowrap min-h-[42px] sm:min-h-[34px] rounded-xl sm:rounded-lg border px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-semibold transition-colors cursor-pointer ${
                       active
                         ? "border-accent bg-accent/12 text-accent"
                         : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1603,9 +1612,18 @@ export default function RepairForm({
                 setShowOptionalFields((prev) => !prev);
               }}
               aria-expanded={showOptionalFields}
-              className="flex min-h-[42px] w-full items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
+              className="flex min-h-[46px] w-full items-center justify-between gap-2 rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer"
             >
-              <span className="min-w-0 text-left truncate">
+              <span
+                key={
+                  showOptionalFields
+                    ? "opt-hide"
+                    : optionalSummaryParts.length > 0
+                    ? "opt-summary"
+                    : "opt-default"
+                }
+                className="min-w-0 text-left truncate"
+              >
                 {showOptionalFields
                   ? "Optionale Angaben ausblenden"
                   : optionalSummaryParts.length > 0
@@ -1645,7 +1663,7 @@ export default function RepairForm({
                         enterKeyHint="next"
                         value={values.brand}
                         onChange={(e) => set("brand", e.target.value)}
-                        placeholder="z. B. Miele, Bosch Serie 6, Siemens..."
+                        placeholder="z. B. Miele, Bosch Serie 6, Siemens…"
                         className="w-full min-h-[42px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-950 px-3.5 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
                       />
                       <div className="flex sm:flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar snap-x -mx-1 px-1 pb-0.5">
@@ -1657,6 +1675,7 @@ export default function RepairForm({
                             <button
                               key={b}
                               type="button"
+                              translate="no"
                               onClick={() => {
                                 hapticTap();
                                 set(
@@ -1668,7 +1687,7 @@ export default function RepairForm({
                                     : b
                                 );
                               }}
-                              className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] sm:min-h-[32px] rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
+                              className={`notranslate shrink-0 snap-start whitespace-nowrap min-h-[42px] sm:min-h-[32px] rounded-xl sm:rounded-lg border px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-bold transition-colors cursor-pointer ${
                                 active
                                   ? "border-accent bg-accent/15 text-accent"
                                   : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1697,7 +1716,7 @@ export default function RepairForm({
                         value={values.model}
                         onChange={(e) => set("model", e.target.value)}
                         placeholder="z. B. WM14T420/01 oder W1 WCD 120"
-                        className="w-full min-h-[42px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-950 px-3.5 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
+                        className="w-full min-h-[44px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-950 px-3.5 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
                       />
                       <button
                         type="button"
@@ -1706,7 +1725,7 @@ export default function RepairForm({
                           set("hasTypeplatePhoto", !values.hasTypeplatePhoto);
                         }}
                         aria-pressed={Boolean(values.hasTypeplatePhoto)}
-                        className={`w-full flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                        className={`w-full min-h-[46px] flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors cursor-pointer ${
                           values.hasTypeplatePhoto
                             ? "border-emerald-500/45 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
                             : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:border-accent/40 hover:text-primary dark:hover:text-white"
@@ -1754,7 +1773,7 @@ export default function RepairForm({
                                 set("callbackTime", slot.value);
                               }}
                               aria-pressed={active}
-                              className={`shrink-0 snap-start whitespace-nowrap min-h-[34px] sm:min-h-[32px] rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
+                              className={`shrink-0 snap-start whitespace-nowrap min-h-[42px] sm:min-h-[32px] rounded-xl sm:rounded-lg border px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-bold transition-colors cursor-pointer ${
                                 active
                                   ? "border-accent bg-accent/15 text-accent"
                                   : "border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -1860,7 +1879,7 @@ export default function RepairForm({
           <div className="pt-1 space-y-1.5">
             <label
               htmlFor={id("privacy")}
-              className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-[11px] sm:text-xs leading-relaxed cursor-pointer transition-colors ${
+              className={`flex min-h-[48px] items-start gap-3 rounded-xl border px-3.5 py-3 text-[11px] sm:text-xs leading-relaxed cursor-pointer transition-colors ${
                 privacyError
                   ? "border-red-500/60 bg-red-500/[0.06] text-primary dark:text-slate-200"
                   : "border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 text-ink-muted dark:text-slate-300"
@@ -1876,7 +1895,7 @@ export default function RepairForm({
                   if (e.target.checked) setPrivacyError(null);
                 }}
                 aria-invalid={Boolean(privacyError)}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded accent-accent cursor-pointer"
+                className="mt-0.5 h-5 w-5 sm:h-4 sm:w-4 shrink-0 rounded accent-accent cursor-pointer"
               />
               <span>
                 Ich habe die{" "}
@@ -1892,7 +1911,7 @@ export default function RepairForm({
                   href="/datenschutz#whatsapp"
                   className="font-semibold text-accent underline underline-offset-2"
                 >
-                  WhatsApp (Meta)
+                  <span translate="no" className="notranslate">WhatsApp</span> (Meta)
                 </Link>{" "}
                 (Alternative: Telefon / E-Mail).
               </span>
@@ -1910,7 +1929,10 @@ export default function RepairForm({
 
           {/* Primary Submit CTA */}
           <div className="pt-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-            <p className="text-[11px] text-ink-muted leading-snug">
+            <p
+              key={isReadyForWhatsApp && privacyAccepted ? "rf-ready" : "rf-hint"}
+              className="text-[11px] text-ink-muted leading-snug"
+            >
               {isReadyForWhatsApp && privacyAccepted
                 ? "Fertig · öffnet direkt im WhatsApp-Chat."
                 : "Kurz Anliegen antippen & Datenschutz bestätigen."}
@@ -1927,16 +1949,16 @@ export default function RepairForm({
               }`}
             >
               {isSubmitting ? (
-                <>
+                <span key="rf-submitting" className="inline-flex items-center gap-2">
                   <Loader2 size={17} className="animate-spin" />
                   <span>Wird geöffnet…</span>
-                </>
+                </span>
               ) : (
-                <>
+                <span key="rf-idle" className="inline-flex items-center gap-2">
                   <MessageCircle size={18} className="shrink-0" />
-                  <span>Per WhatsApp senden</span>
+                  <span>Per <span translate="no" className="notranslate">WhatsApp</span> senden</span>
                   <ArrowRight size={15} className="shrink-0" />
-                </>
+                </span>
               )}
             </motion.button>
           </div>

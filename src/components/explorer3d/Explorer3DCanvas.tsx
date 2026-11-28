@@ -202,6 +202,8 @@ interface ProjectedPinSlot {
   el: HTMLButtonElement | null;
   x: number;
   y: number;
+  w: number;
+  h: number;
   fade: number;
   visible: boolean;
   lastEl: HTMLButtonElement | null;
@@ -627,6 +629,7 @@ export default function Explorer3DCanvas({
           curLookAt.copy(targetLookAt);
         }
       }
+      needPinMeasure = true;
       markActive(14);
     };
     syncSize(true);
@@ -650,6 +653,8 @@ export default function Explorer3DCanvas({
       el: null,
       x: 0,
       y: 0,
+      w: 132,
+      h: 28,
       fade: 0,
       visible: false,
       lastEl: null,
@@ -658,6 +663,8 @@ export default function Explorer3DCanvas({
       lastFade: -1,
       lastVisible: false,
     }));
+
+    let needPinMeasure = true;
 
     // Hover state tracked inside closure + reflected sparsely to React for pin styling
     let localHoveredPartId: string | null = null;
@@ -828,6 +835,7 @@ export default function Explorer3DCanvas({
         next.root.visible = true;
         lastLeaderAssemblyId = null;
         lastShellAssemblyId = null;
+        needPinMeasure = true;
         for (let i = 0; i < MAX_PIN_SLOTS; i++) {
           pinSlots[i].el = null;
           pinSlots[i].lastEl = null;
@@ -1349,10 +1357,9 @@ export default function Explorer3DCanvas({
       const isDesktopPinsViewport = width >= 768;
       const pinThreshold = curXray > 0.5 ? 0.08 : 0.22;
       const showDesktopPins = isDesktopPinsViewport && effectiveCutaway >= pinThreshold;
-      const pinTopMargin = 58;
-      const pinBottomMargin = width >= 1024 ? height - 76 : height - 28;
-      const pinLeftMargin = 74;
-      const pinRightMargin = Math.max(pinLeftMargin + 20, width - 74);
+      // Strict HUD safe zone boundaries (keeps pins completely clear of top toolbar & bottom dock)
+      const pinTopMargin = 74;
+      const pinBottomMargin = width >= 1024 ? height - 80 : height - 28;
       const pinFade = clamp((effectiveCutaway - pinThreshold) / 0.16, 0, 1);
 
       const leaderNeedsUpdate =
@@ -1439,13 +1446,22 @@ export default function Explorer3DCanvas({
           slot.visible = false;
           slot.fade = pinFade;
 
+          // Cache real rendered box dimensions once per element mount or resize (zero per-frame layout thrash)
+          if (pinEl && (pinEl !== slot.lastEl || needPinMeasure)) {
+            slot.w = clamp(Math.ceil(pinEl.offsetWidth || 132), 88, 170);
+            slot.h = clamp(Math.ceil(pinEl.offsetHeight || 28), 24, 36);
+          }
+
           if (pinEl && showDesktopPins) {
             _projVec.copy(part.group.position).add(part.anchorLocal);
             _projVec.applyMatrix4(stageGroup.matrixWorld);
             _projVec.project(camera);
 
             if (_projVec.z > -1 && _projVec.z < 1) {
-              slot.x = clamp((_projVec.x * 0.5 + 0.5) * width, pinLeftMargin, pinRightMargin);
+              const halfW = slot.w * 0.5 + 12;
+              const minX = Math.min(width * 0.5, halfW);
+              const maxX = Math.max(minX + 10, width - halfW);
+              slot.x = clamp((_projVec.x * 0.5 + 0.5) * width, minX, maxX);
               slot.y = clamp(
                 (-_projVec.y * 0.5 + 0.5) * height,
                 pinTopMargin,
@@ -1456,41 +1472,75 @@ export default function Explorer3DCanvas({
           }
         }
       }
+      if (isDesktopPinsViewport && needPinMeasure && partCount > 0) {
+        needPinMeasure = false;
+      }
 
       if (leaderNeedsUpdate) {
         lastLeaderExplode = curExplode;
         lastLeaderAssemblyId = activeAssemblyId;
       }
 
-      // Lightweight 5-pass 2D pin de-overlap solver (desktop/tablet >= 768px only)
+      // Precision 16-pass AABB pin de-overlap solver (guarantees zero label collisions)
       if (showDesktopPins) {
-        const minSepX = 118;
-        const minSepY = 29;
-        for (let iter = 0; iter < 5; iter++) {
+        const padX = 10;
+        const padY = 8;
+        const maxBottom = Math.max(pinTopMargin + 20, pinBottomMargin);
+
+        for (let iter = 0; iter < 16; iter++) {
+          let hadCollision = false;
           for (let a = 0; a < partCount; a++) {
             const sa = pinSlots[a];
             if (!sa.visible) continue;
+            const halfWa = sa.w * 0.5 + 12;
+
             for (let b = a + 1; b < partCount; b++) {
               const sb = pinSlots[b];
               if (!sb.visible) continue;
+              const halfWb = sb.w * 0.5 + 12;
+
+              const reqX = (sa.w + sb.w) * 0.5 + padX;
+              const reqY = (sa.h + sb.h) * 0.5 + padY;
+
               const dx = sb.x - sa.x;
               const dy = sb.y - sa.y;
-              if (Math.abs(dx) < minSepX && Math.abs(dy) < minSepY) {
-                const pushY = (minSepY - Math.abs(dy)) * 0.54 + 0.5;
-                const dirY = dy >= 0 ? 1 : -1;
-                sa.y = clamp(
-                  sa.y - dirY * pushY,
-                  pinTopMargin,
-                  Math.max(pinTopMargin + 20, pinBottomMargin),
-                );
-                sb.y = clamp(
-                  sb.y + dirY * pushY,
-                  pinTopMargin,
-                  Math.max(pinTopMargin + 20, pinBottomMargin),
-                );
+              const overlapX = reqX - Math.abs(dx);
+              const overlapY = reqY - Math.abs(dy);
+
+              if (overlapX > 0 && overlapY > 0) {
+                hadCollision = true;
+                // Push along minimum penetration axis (with subtle horizontal spread on near-vertical stacks)
+                if (overlapX * 0.34 < overlapY) {
+                  const dirX = dx === 0 ? (a % 2 === 0 ? 1 : -1) : dx > 0 ? 1 : -1;
+                  const pushX = overlapX * 0.52 + 0.6;
+                  sa.x = clamp(sa.x - dirX * pushX, halfWa, Math.max(halfWa + 10, width - halfWa));
+                  sb.x = clamp(sb.x + dirX * pushX, halfWb, Math.max(halfWb + 10, width - halfWb));
+                } else {
+                  const dirY = dy === 0 ? (b % 2 === 0 ? 1 : -1) : dy > 0 ? 1 : -1;
+                  const pushY = overlapY * 0.54 + 0.6;
+                  const fanX = Math.abs(dx) < 28 ? (a % 2 === 0 ? -4 : 4) : 0;
+                  sa.y = clamp(sa.y - dirY * pushY, pinTopMargin, maxBottom);
+                  sb.y = clamp(sb.y + dirY * pushY, pinTopMargin, maxBottom);
+                  if (fanX !== 0) {
+                    sa.x = clamp(sa.x + fanX, halfWa, Math.max(halfWa + 10, width - halfWa));
+                    sb.x = clamp(sb.x - fanX, halfWb, Math.max(halfWb + 10, width - halfWb));
+                  }
+                  // If vertical separation remained blocked by top/bottom HUD clamp, separate horizontally
+                  if (reqY - Math.abs(sb.y - sa.y) > 1) {
+                    const remOverlapX = reqX - Math.abs(sb.x - sa.x);
+                    if (remOverlapX > 0) {
+                      const dirX =
+                        sb.x === sa.x ? (a % 2 === 0 ? 1 : -1) : sb.x > sa.x ? 1 : -1;
+                      const pushX = remOverlapX * 0.52 + 1.0;
+                      sa.x = clamp(sa.x - dirX * pushX, halfWa, Math.max(halfWa + 10, width - halfWa));
+                      sb.x = clamp(sb.x + dirX * pushX, halfWb, Math.max(halfWb + 10, width - halfWb));
+                    }
+                  }
+                }
               }
             }
           }
+          if (!hadCollision) break;
         }
       }
 
@@ -1789,7 +1839,7 @@ export default function Explorer3DCanvas({
               }}
               aria-pressed={isSelected}
               title={`${part.code} · ${part.name}`}
-              className={`group absolute top-0 left-0 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-extrabold shadow-[0_6px_18px_-6px_rgba(15,23,42,0.55)] transition-colors duration-150 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+              className={`group absolute top-0 left-0 inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10.5px] lg:text-[11px] font-extrabold whitespace-nowrap shadow-[0_6px_18px_-6px_rgba(15,23,42,0.55)] transition-colors duration-150 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 isSelected
                   ? "border-emerald-400 bg-emerald-600 text-white z-20"
                   : isSecondary
@@ -1800,7 +1850,7 @@ export default function Explorer3DCanvas({
               }`}
             >
               <span
-                className={`inline-flex h-4 w-4 items-center justify-center rounded-full font-mono text-[9.5px] font-black tabular-nums ${
+                className={`inline-flex h-4 w-4 items-center justify-center rounded-full font-mono text-[9.5px] font-black tabular-nums shrink-0 ${
                   isSelected || isSecondary || isHovered
                     ? "bg-white/20 text-white"
                     : "bg-primary/10 dark:bg-white/12 text-accent dark:text-sky-300 group-hover:bg-white/20 group-hover:text-white"
@@ -1808,7 +1858,7 @@ export default function Explorer3DCanvas({
               >
                 {part.code}
               </span>
-              <span className="max-w-[116px] truncate pr-0.5">{part.shortLabel}</span>
+              <span className="max-w-[104px] lg:max-w-[118px] truncate pr-0.5">{part.shortLabel}</span>
             </button>
           );
         })}

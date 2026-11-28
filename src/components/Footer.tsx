@@ -17,7 +17,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="relative cv-auto bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <footer className="relative cv-auto bg-primary-dark text-white/75 border-t border-white/10 pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-0">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#64B5EC]/55 via-45% to-[#E86A7D]/48"
@@ -26,7 +26,7 @@ export default function Footer() {
           {/* Brand & Legal Positioning */}
           <div className="sm:col-span-2 lg:col-span-4">
             <div className="flex flex-col items-start gap-1.5">
-              <p className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+              <p translate="no" className="notranslate text-xl sm:text-2xl font-extrabold tracking-tight text-white">
                 {business.name}
               </p>
               <div className="flex items-center gap-2.5">
@@ -40,14 +40,33 @@ export default function Footer() {
               </div>
             </div>
             <p className="mt-4 max-w-sm text-[13px] leading-relaxed">
-              Hausgeräte-Spezialist in {business.city} seit {business.founded}:{" "}
+              Hausgeräte-Spezialist in{" "}
+              <span translate="no" className="notranslate">
+                {business.city}
+              </span>{" "}
+              seit {business.founded}:{" "}
               <strong className="text-white font-semibold">
-                Persönliche Fachberatung, Original-Ersatzteile nach E-Nr.
+                Persönliche Fachberatung, Original-Ersatzteile nach{" "}
+                <span translate="no" className="notranslate">
+                  E-Nr.
+                </span>
               </strong>{" "}
-              &amp; ausgewählte Markengeräte auf Anfrage. Inhaber {business.owner}.
+              &amp; ausgewählte Markengeräte auf Anfrage. Inhaber{" "}
+              <span translate="no" className="notranslate">
+                {business.owner}
+              </span>
+              .
             </p>
             <p className="mt-2 max-w-sm text-[11px] leading-relaxed text-white/55">
-              Handelsgewerbe gemäß § 14 GewO (kein Handwerks- oder Meisterbetrieb i. S. d. HwO).{" "}
+              Handelsgewerbe gemäß{" "}
+              <span translate="no" className="notranslate">
+                § 14 GewO
+              </span>{" "}
+              (kein Handwerks- oder Meisterbetrieb i. S. d.{" "}
+              <span translate="no" className="notranslate">
+                HwO
+              </span>
+              ).{" "}
               <Link
                 href="/impressum#gewerbe"
                 className="text-sky-300/90 hover:text-white underline underline-offset-2"
@@ -74,8 +93,18 @@ export default function Footer() {
                     <FacebookIcon className="h-4 w-4" />
                   </span>
                   <span className="leading-tight min-w-0">
-                    <span className="block font-extrabold text-white truncate">Auf Facebook folgen</span>
-                    <span className="block text-[11px] font-medium text-sky-200 group-hover:text-white/90 truncate">
+                    <span className="block font-extrabold text-white truncate">
+                      Auf{" "}
+                      <span translate="no" className="notranslate">
+                        Facebook
+                      </span>{" "}
+                      folgen
+                    </span>
+                    <span
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate block text-[11px] font-medium text-sky-200 group-hover:text-white/90 truncate"
+                    >
                       @{business.facebookHandle}
                     </span>
                   </span>
@@ -135,10 +164,16 @@ export default function Footer() {
                 <MapPin size={15} className="mt-0.5 shrink-0 text-accent" />
                 <div>
                   <span className="block text-white font-semibold">
-                    {business.city} &amp; Umgebung
+                    <span translate="no" className="notranslate">
+                      {business.city}
+                    </span>{" "}
+                    &amp; Umgebung
                   </span>
                   <span className="block text-xs text-white/65">
-                    {business.street}, {business.zip} {business.city} · Termine nach Vereinbarung
+                    <span translate="no" className="notranslate">
+                      {business.street}, {business.zip} {business.city}
+                    </span>{" "}
+                    · Termine nach Vereinbarung
                   </span>
                 </div>
               </div>
@@ -146,7 +181,9 @@ export default function Footer() {
                 <Phone size={15} className="shrink-0 text-accent" />
                 <a
                   href={business.phoneHref}
-                  className="inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-semibold text-white tabular-nums"
+                  dir="ltr"
+                  translate="no"
+                  className="notranslate inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-semibold text-white tabular-nums"
                 >
                   {business.phoneDisplay}
                 </a>
@@ -155,7 +192,9 @@ export default function Footer() {
                 <Mail size={15} className="shrink-0 text-accent" aria-hidden="true" />
                 <a
                   href={`mailto:${business.email}`}
-                  className="inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-medium text-white/90 break-all"
+                  dir="ltr"
+                  translate="no"
+                  className="notranslate inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors font-medium text-white/90 break-all"
                 >
                   {business.email}
                 </a>
@@ -165,7 +204,10 @@ export default function Footer() {
                 <div>
                   <span>Mo. bis Sa., 08:00 bis 18:00 Uhr</span>
                   <span className="block text-[11px] font-semibold text-accent-light">
-                    Termine nach Vereinbarung · Telefon &amp; WhatsApp
+                    Termine nach Vereinbarung · Telefon &amp;{" "}
+                    <span translate="no" className="notranslate">
+                      WhatsApp
+                    </span>
                   </span>
                 </div>
               </div>
@@ -177,7 +219,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[44px] sm:min-h-0 items-center gap-1 hover:text-sky-300 transition-colors font-semibold text-white/90 text-xs"
                 >
-                  <span>Facebook · Hannachi Osnabrück</span>
+                  <span translate="no" className="notranslate">
+                    Facebook · Hannachi Osnabrück
+                  </span>
                   <ExternalLink size={11} className="opacity-75" aria-hidden="true" />
                 </a>
               </p>
@@ -189,7 +233,14 @@ export default function Footer() {
         <div className="border-t border-white/10">
           <div className="container-page flex flex-col items-center text-center gap-3 py-5 sm:py-6 text-[13px] text-white/60 lg:flex-row lg:items-center lg:justify-between lg:text-left">
             <p className="leading-relaxed">
-              © {new Date().getFullYear()} {business.name} {business.tagline} · {business.city}
+              © {new Date().getFullYear()}{" "}
+              <span translate="no" className="notranslate">
+                {business.name}
+              </span>{" "}
+              {business.tagline} ·{" "}
+              <span translate="no" className="notranslate">
+                {business.city}
+              </span>
             </p>
             <ul className="flex flex-wrap items-center justify-center lg:justify-end gap-x-4 gap-y-1 sm:gap-x-6">
               <li>
@@ -201,7 +252,9 @@ export default function Footer() {
                   className="inline-flex min-h-[44px] sm:min-h-[36px] items-center gap-1.5 font-semibold text-white/90 hover:text-sky-300 transition-colors"
                 >
                   <FacebookIcon className="h-3.5 w-3.5 text-sky-400" />
-                  <span>Facebook</span>
+                  <span translate="no" className="notranslate">
+                    Facebook
+                  </span>
                 </a>
               </li>
               <li>
@@ -220,7 +273,10 @@ export default function Footer() {
                   href="/impressum#garantie"
                   className="inline-flex min-h-[44px] sm:min-h-[36px] items-center hover:text-accent transition-colors"
                 >
-                  Garantie &amp; ElektroG
+                  Garantie &amp;{" "}
+                  <span translate="no" className="notranslate ml-1">
+                    ElektroG
+                  </span>
                 </Link>
               </li>
               <li>
@@ -268,7 +324,7 @@ function FooterCol({
       >
         <span>{title}</span>
         <span className="text-sm font-bold text-accent-light sm:hidden">
-          {openOnMobile ? "−" : "+"}
+          {openOnMobile ? <span key="f-minus">−</span> : <span key="f-plus">+</span>}
         </span>
       </button>
       <ul

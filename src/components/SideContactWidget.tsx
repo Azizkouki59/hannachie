@@ -267,11 +267,14 @@ export default function SideContactWidget({
                     />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-sm font-extrabold tracking-tight text-white truncate">
+                    <h2 translate="no" className="notranslate text-sm font-extrabold tracking-tight text-white truncate">
                       {business.owner}
                     </h2>
                     <p className="mt-0.5 text-xs text-white/65 truncate">
-                      Beratung &amp; Ersatzteile · {business.city}
+                      Beratung &amp; Ersatzteile ·{" "}
+                      <span translate="no" className="notranslate">
+                        {business.city}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -363,7 +366,10 @@ export default function SideContactWidget({
                 >
                   <span className="flex items-center gap-2 min-w-0">
                     <PackageSearch size={16} className="shrink-0 text-sky-100" aria-hidden="true" />
-                    <span className="truncate leading-tight text-left">
+                    <span
+                      key={savedDraft ? "draft" : "new"}
+                      className="truncate leading-tight text-left"
+                    >
                       {savedDraft ? "Entwurf fortsetzen" : "Online anfragen"}
                     </span>
                   </span>
@@ -394,7 +400,10 @@ export default function SideContactWidget({
                     <span className="flex items-center gap-2 min-w-0">
                       <MessageCircle size={16} className="shrink-0 text-emerald-400" aria-hidden="true" />
                       <span className="truncate leading-tight text-left">
-                        WhatsApp schreiben
+                        <span translate="no" className="notranslate">
+                          WhatsApp
+                        </span>{" "}
+                        schreiben
                       </span>
                     </span>
                     <ExternalLink size={14} className="shrink-0 opacity-80" aria-hidden="true" />
@@ -440,7 +449,11 @@ export default function SideContactWidget({
                     ))}
                   </div>
                   <p className="px-0.5 text-[10.5px] leading-snug text-white/55">
-                    Freiwilliger Chat über WhatsApp (Meta) ·{" "}
+                    Freiwilliger Chat über{" "}
+                    <span translate="no" className="notranslate">
+                      WhatsApp
+                    </span>{" "}
+                    (<span translate="no" className="notranslate">Meta</span>) ·{" "}
                     <Link
                       href="/datenschutz#whatsapp"
                       onClick={() => setOpen(false)}
@@ -460,7 +473,9 @@ export default function SideContactWidget({
                   >
                     <span className="flex items-center gap-2 min-w-0 tabular-nums">
                       <Phone size={15} className="text-sky-400 shrink-0" aria-hidden="true" />
-                      <span className="truncate">{phone}</span>
+                      <span dir="ltr" translate="no" className="notranslate truncate">
+                        {phone}
+                      </span>
                     </span>
                     <span className="hidden min-[360px]:inline text-[11px] font-semibold text-white/60 shrink-0">
                       Anrufen
@@ -474,15 +489,15 @@ export default function SideContactWidget({
                     className="flex min-h-[48px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/5 px-3 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white active:scale-95 transition-all cursor-pointer"
                   >
                     {copied ? (
-                      <>
+                      <span key="sc-copied" className="inline-flex items-center gap-1.5">
                         <Check size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
                         <span>Kopiert</span>
-                      </>
+                      </span>
                     ) : (
-                      <>
+                      <span key="sc-copy" className="inline-flex items-center gap-1.5">
                         <Copy size={13} className="shrink-0" aria-hidden="true" />
                         <span>Kopieren</span>
-                      </>
+                      </span>
                     )}
                   </button>
                 </div>
@@ -499,7 +514,10 @@ export default function SideContactWidget({
                   >
                     <MapPin size={15} className="text-sky-400 shrink-0" aria-hidden="true" />
                     <span className="truncate font-medium">
-                      Osnabrück · Termine nach Vereinbarung
+                      <span translate="no" className="notranslate">
+                        Osnabrück
+                      </span>{" "}
+                      · Termine nach Vereinbarung
                     </span>
                   </Link>
                   <a
@@ -510,7 +528,9 @@ export default function SideContactWidget({
                     aria-label={`Standort ${address} auf Google Maps`}
                     className="inline-flex min-h-[40px] shrink-0 items-center gap-1 px-2 text-[11px] font-semibold text-sky-400 hover:underline"
                   >
-                    <span>Maps</span>
+                    <span translate="no" className="notranslate">
+                      Maps
+                    </span>
                     <ExternalLink size={11} aria-hidden="true" />
                   </a>
                 </div>
@@ -540,7 +560,17 @@ export default function SideContactWidget({
                         </svg>
                       </span>
                       <span className="min-w-0 flex-1 truncate text-left">
-                        Facebook · <span className="font-medium text-sky-200 group-hover:text-white">@{business.facebookHandle}</span>
+                        <span translate="no" className="notranslate">
+                          Facebook
+                        </span>{" "}
+                        ·{" "}
+                        <span
+                          dir="ltr"
+                          translate="no"
+                          className="notranslate font-medium text-sky-200 group-hover:text-white"
+                        >
+                          @{business.facebookHandle}
+                        </span>
                       </span>
                     </span>
                     <ExternalLink size={13} className="shrink-0 opacity-80" aria-hidden="true" />
@@ -590,8 +620,8 @@ export default function SideContactWidget({
                     className="flex flex-col items-center justify-center"
                   >
                     <X size={19} strokeWidth={2.2} aria-hidden="true" />
-                    <span className="mt-0.5 text-[9.5px] font-bold uppercase tracking-wider leading-none">
-                      Zu
+                    <span className="mt-0.5 text-[8px] font-bold uppercase tracking-normal leading-none">
+                      Schließen
                     </span>
                   </motion.span>
                 ) : (
@@ -614,6 +644,7 @@ export default function SideContactWidget({
 
             {!open && savedDraft && draftShortBadge && (
               <span
+                key={draftShortBadge}
                 aria-hidden="true"
                 className="pointer-events-none absolute -top-1.5 -left-1.5 z-20 rounded-md border border-white/80 bg-emerald-600 px-1.5 py-0.5 text-[9.5px] font-extrabold leading-none text-white shadow-sm"
               >

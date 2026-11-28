@@ -324,13 +324,28 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
           </span>
         )}
       </div>
-      <blockquote className={`flex-1 leading-relaxed text-primary dark:text-slate-100 ${large ? "text-base sm:text-lg" : "text-[15px]"}`}>
+      <blockquote
+        dir="auto"
+        className={`flex-1 leading-relaxed text-primary dark:text-slate-100 ${large ? "text-base sm:text-lg" : "text-[15px]"}`}
+      >
         <Quote size={18} className="mb-2 text-accent/40" aria-hidden="true" />
-        {showEn && review.textEn ? review.textEn : review.text}
+        {showEn && review.textEn ? (
+          <span key="rev-en">{review.textEn}</span>
+        ) : (
+          <span key="rev-de">{review.text}</span>
+        )}
       </blockquote>
       {review.textEn && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-faint">
-          <span>{showEn ? "Übersetzt von Google (Englisch)" : "Original (Deutsch)"}</span>
+          <span key={showEn ? "lbl-en" : "lbl-de"}>
+            {showEn ? (
+              <>
+                Übersetzt von <span translate="no" className="notranslate">Google</span> (Englisch)
+              </>
+            ) : (
+              "Original (Deutsch)"
+            )}
+          </span>
           <span>·</span>
           <button
             type="button"
@@ -339,7 +354,9 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
             onClick={() => setShowEn((prev) => !prev)}
             className="inline-flex min-h-[44px] items-center px-1 font-semibold text-accent hover:underline cursor-pointer"
           >
-            {showEn ? "Original (Deutsch) ansehen" : "Englische Übersetzung"}
+            <span key={showEn ? "btn-de" : "btn-en"}>
+              {showEn ? "Original (Deutsch) ansehen" : "Englische Übersetzung"}
+            </span>
           </button>
         </div>
       )}
@@ -349,17 +366,28 @@ export function ReviewCard({ review, large = false }: { review: Review; large?: 
           className="mt-4 rounded-xl bg-surface dark:bg-slate-800/80 border border-primary/8 dark:border-white/10 px-3.5 py-2.5 text-xs"
         >
           <p className="font-bold text-primary dark:text-slate-100 mb-0.5">
-            Antwort vom Inhaber · Kamal Hannachi
+            Antwort vom Inhaber · <span translate="no" className="notranslate">Kamal Hannachi</span>
           </p>
-          <p className="text-ink-muted leading-relaxed">{review.ownerReply}</p>
+          <p dir="auto" className="text-ink-muted leading-relaxed">{review.ownerReply}</p>
         </div>
       )}
       <figcaption className="mt-5 border-t border-primary/8 dark:border-white/10 pt-4 text-sm flex items-center justify-between gap-2">
         <div>
-          <span className="font-semibold text-primary dark:text-slate-100">{review.author}</span>
+          <span translate="no" className="notranslate font-semibold text-primary dark:text-slate-100">
+            {review.author}
+          </span>
           <span className="block text-ink-faint text-xs mt-0.5">
             {review.localGuide ? `${review.localGuide} · ` : ""}
-            {review.relativeTime ? `${review.relativeTime} auf Google Maps` : "Google-Maps-Rezension"}
+            {review.relativeTime ? (
+              <>
+                {review.relativeTime} auf{" "}
+                <span translate="no" className="notranslate">Google Maps</span>
+              </>
+            ) : (
+              <>
+                <span translate="no" className="notranslate">Google Maps</span>-Rezension
+              </>
+            )}
           </span>
         </div>
       </figcaption>

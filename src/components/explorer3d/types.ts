@@ -408,7 +408,7 @@ export const EXPLORER_APPLIANCES: ExplorerApplianceMeta[] = [
           "Siebgewebe ist gerissen oder der Griff gebrochen",
           "Undichtigkeit am Pumpensumpf (Wasser in der Bodenwanne / E15)",
         ],
-        enrHint: "Komplette Siebkombination sowie Reparatursatz Pumpensumpf",
+        enrHint: "Komplette Siebkombination sowie Dichtungssatz Pumpensumpf",
         description:
           "Original-Edelstahl-Feinsieb, Mikrofilter-Zylinder und Pumpensumpf-Dichtungssatz gegen Leckagen im Boden.",
         inquirySymptom: "Originalteil nach Typenschild: Feinsieb / Pumpensumpf-Dichtung",
@@ -869,7 +869,7 @@ export const EXPLORER_APPLIANCES: ExplorerApplianceMeta[] = [
         location: "Unten hinten im Sockel neben dem Kondensatsumpf",
         frequency: "Sehr häufig",
         symptoms: [
-          "Anzeige ‚Wasserbehälter leeren‘ erscheint obwohl Tank leer ist",
+          "Anzeige ‚Wasserbehälter leeren‘ erscheint, obwohl der Tank leer ist",
           "Trockner bricht das Programm nach 10 bis 15 Minuten ab",
           "Wasser sammelt sich unten im Gerät statt im oberen Behälter",
         ],
@@ -898,7 +898,7 @@ export const EXPLORER_APPLIANCES: ExplorerApplianceMeta[] = [
           "Original-Flusensiebe, Klappsiebe und Sockel-Schwammfilter zum Schutz von Wärmepumpe und Luftkanal.",
         inquirySymptom: "Originalteil nach Typenschild: Flusensieb / Wärmetauscher-Filter",
         whatsappText:
-          "Hallo Herr Hannachi, ich suche ein neues Original-Flusensieb oder Wärmetauscher-Filter für meinen Wäschetrockner.",
+          "Hallo Herr Hannachi, ich suche ein neues Original-Flusensieb oder einen Wärmetauscher-Filter für meinen Wäschetrockner.",
       },
       {
         id: "tr_sensor",

@@ -576,7 +576,8 @@ const BRAND_LOGO_CATALOG: Record<string, BrandMeta> = {
 function BrandEmblem({ meta }: { meta: BrandMeta }) {
   return (
     <span
-      className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-800/80 transition-transform duration-200 group-hover/brand:scale-105"
+      translate="no"
+      className="notranslate relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/8 dark:border-white/10 bg-surface dark:bg-slate-800/80 transition-transform duration-200 group-hover/brand:scale-105"
       style={{
         boxShadow: `inset 0 0 0 1px ${meta.accentColor}22`,
       }}
@@ -602,7 +603,7 @@ function BrandEmblem({ meta }: { meta: BrandMeta }) {
           y="22"
           textAnchor="middle"
           fill={meta.accentColor}
-          className="font-sans text-[10.5px] font-black"
+          className="notranslate font-sans text-[10.5px] font-black"
         >
           {meta.monogram}
         </text>
@@ -624,6 +625,7 @@ export function Marquee({
 
   return (
     <div
+      dir="ltr"
       className={`group relative flex w-full overflow-hidden select-none py-2 ${
         prefersReduced ? "" : "mask-fade-edges"
       }`}
@@ -651,7 +653,11 @@ export function Marquee({
               <BrandEmblem meta={meta} />
               <span className="flex flex-col text-left leading-none">
                 <span className="flex items-center gap-1.5">
-                  <span className={`${meta.wordmarkClass} text-primary dark:text-slate-100 group-hover/brand:text-accent dark:group-hover/brand:text-accent-light transition-colors`}>
+                  <span
+                    dir="ltr"
+                    translate="no"
+                    className={`notranslate ${meta.wordmarkClass} text-primary dark:text-slate-100 group-hover/brand:text-accent dark:group-hover/brand:text-accent-light transition-colors`}
+                  >
                     {meta.name}
                   </span>
                   <span
@@ -1007,7 +1013,7 @@ export function FloatingSupportLauncher({
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
                 </span>
                 <span className="text-xs font-extrabold uppercase tracking-wider text-white">
-                  Direktkontakt Hannachi
+                  Direktkontakt <span translate="no" className="notranslate">Hannachi</span>
                 </span>
               </div>
               <button
@@ -1021,7 +1027,8 @@ export function FloatingSupportLauncher({
             </div>
 
             <p className="mt-2.5 text-xs text-white/70 leading-relaxed">
-              Formular ausfüllen &amp; direkt per WhatsApp an Herrn Hannachi senden:
+              Formular ausfüllen &amp; direkt per <span translate="no" className="notranslate">WhatsApp</span> an Herrn{" "}
+              <span translate="no" className="notranslate">Hannachi</span> senden:
             </p>
 
             {isServiceNoticeActive && serviceNotice && (
@@ -1060,7 +1067,7 @@ export function FloatingSupportLauncher({
                   <span>
                     <span className="block text-xs font-extrabold">Gerät / Ersatzteil anfragen</span>
                     <span className="block text-[11px] font-medium text-white/85">
-                      Gerätekauf, Ersatzteil &amp; Garantie → WhatsApp
+                      Gerätekauf, Ersatzteil &amp; Garantie → <span translate="no" className="notranslate">WhatsApp</span>
                     </span>
                   </span>
                 </span>
@@ -1087,7 +1094,7 @@ export function FloatingSupportLauncher({
                   <span>
                     <span className="block text-xs font-extrabold">Direkte Frage stellen</span>
                     <span className="block text-[11px] font-medium text-emerald-200/75 group-hover:text-white/90">
-                      Frage ausfüllen → fertig für WhatsApp
+                      Frage ausfüllen → fertig für <span translate="no" className="notranslate">WhatsApp</span>
                     </span>
                   </span>
                 </span>
@@ -1099,8 +1106,14 @@ export function FloatingSupportLauncher({
             </div>
 
             <div className="mt-3.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-white/55">
-              <span>{phone} · Iburger Str. 5</span>
-              <span className="text-emerald-300 font-semibold">Nur WhatsApp</span>
+              <span>
+                <span dir="ltr" translate="no" className="notranslate tabular-nums">{phone}</span>
+                {" · "}
+                <span translate="no" className="notranslate">Iburger Str. 5</span>
+              </span>
+              <span className="text-emerald-300 font-semibold">
+                Nur <span translate="no" className="notranslate">WhatsApp</span>
+              </span>
             </div>
           </motion.div>
         )}
@@ -1552,10 +1565,12 @@ export function WordmarkReveal({
   return (
     <motion.p
       aria-hidden="true"
+      dir="ltr"
+      translate="no"
       initial={prefersReduced ? false : "hidden"}
       whileInView="shown"
       viewport={{ once: true, amount: 0.4 }}
-      className={`flex w-full items-center justify-center whitespace-nowrap select-none overflow-hidden leading-[0.88] ${className}`}
+      className={`notranslate flex w-full items-center justify-center whitespace-nowrap select-none overflow-hidden leading-[0.88] ${className}`}
     >
       {text.split("").map((ch, i) => (
         <motion.span

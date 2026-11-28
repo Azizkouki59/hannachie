@@ -51,7 +51,7 @@ const drawerItemVariants: Variants = {
   },
 };
 
-const HANNACHI_LETTERS = ["H", "a", "n", "n", "a", "c", "h", "i"] as const;
+const ANNACHI_LETTERS = ["a", "n", "n", "a", "c", "h", "i"] as const;
 
 const desktopNav = [
   { href: "/", label: "Startseite" },
@@ -96,7 +96,7 @@ export default function Navbar() {
     {
       href: "/kundenbewertungen",
       label: "Bewertungen",
-      sub: `${ratingFormatted} ★ · ${place.userRatingCount} Stimmen`,
+      sub: `${ratingFormatted} ★ · ${place.userRatingCount} Bewertungen`,
       icon: Star,
     },
     {
@@ -184,7 +184,7 @@ export default function Navbar() {
     <>
       <div ref={sentinelRef} aria-hidden="true" className="h-0 w-full" />
       {isPinned && (
-        <div aria-hidden="true" className="h-[68px] lg:h-[74px] w-full shrink-0" />
+        <div aria-hidden="true" className="h-[84px] sm:h-[96px] lg:h-[108px] w-full shrink-0" />
       )}
       <header className={isPinned ? "fixed top-0 inset-x-0 z-50" : "sticky top-0 z-50"}>
         {/* Backdrop anchored beneath top bar & drawer */}
@@ -203,131 +203,192 @@ export default function Navbar() {
           )}
         </AnimatePresence>
 
-      {/* Top Navigation Bar (Clean 68px/74px midnight-sapphire architectural header) */}
+      {/* Top Navigation Bar (Heroic 84px mobile / 108px desktop flagship banner) */}
       <div
-        className={`relative z-30 h-[68px] lg:h-[74px] border-b border-white/[0.08] bg-[#071126]/95 backdrop-blur-2xl transition-[box-shadow,background-color] duration-200 ${
+        className={`relative z-30 h-[84px] sm:h-[96px] lg:h-[108px] border-b border-white/[0.08] bg-[#071126]/98 lg:bg-[#071126]/95 lg:backdrop-blur-2xl transition-[box-shadow,background-color] duration-200 ${
           isPinned
             ? "bg-[#060f22]/98 shadow-[0_14px_34px_-14px_rgba(2,6,23,0.78)]"
             : ""
         }`}
       >
-        <div className="container-page relative flex h-full items-center justify-between gap-3 sm:gap-5 lg:gap-8 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:items-center xl:gap-8">
-          {/* Zone 1: Integrated Animated Hannachi Crest + Letter-by-Letter Wordmark + Scroll-Driven Ruby Line */}
+        <div className="container-page relative flex h-full items-center justify-between gap-2.5 sm:gap-5 lg:gap-4 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:items-center xl:gap-8">
+          {/* Zone 1: Oversized Flagship Hannachi Wordmark with Continuous Rotating Blue Orbital H-Crest */}
           <div className="flex flex-1 min-w-0 max-w-full h-full items-center lg:flex-initial xl:justify-self-start">
             <Link
               href="/"
               onClick={() => triggerHapticFeedback(35)}
-              className="group relative inline-flex items-center gap-2.5 sm:gap-3 whitespace-nowrap py-1 focus-visible:outline-offset-4 rounded-xl"
+              className="group relative inline-flex items-center whitespace-nowrap pl-[14px] min-[375px]:pl-[16px] sm:pl-[22px] lg:pl-[26px] pr-2 py-1 focus-visible:outline-offset-4 rounded-xl"
               aria-label="Hannachi: zur Startseite"
             >
-              {/* Animated Signature Cobalt-Sapphire H-Crest */}
-              <motion.span
-                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.04 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative flex h-[38px] w-[38px] sm:h-[42px] sm:w-[42px] shrink-0 items-center justify-center select-none"
+              <span
                 aria-hidden="true"
+                dir="ltr"
+                translate="no"
+                className="notranslate inline-flex flex-col items-stretch overflow-visible"
               >
-                <svg
-                  viewBox="0 0 64 64"
-                  className="h-full w-full overflow-visible drop-shadow-[0_4px_12px_rgba(14,165,233,0.28)]"
-                >
-                  <defs>
-                    <radialGradient id="navCrestCore" cx="38%" cy="30%" r="80%">
-                      <stop offset="0%" stopColor="#1749B2" />
-                      <stop offset="48%" stopColor="#0C2E7A" />
-                      <stop offset="100%" stopColor="#071844" />
-                    </radialGradient>
-                    <linearGradient id="navCrestArc" x1="0%" y1="100%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#1974B8" stopOpacity="0.45" />
-                      <stop offset="55%" stopColor="#64B5EC" />
-                      <stop offset="100%" stopColor="#BAE6FD" />
-                    </linearGradient>
-                    <linearGradient id="navCrestRuby" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#F27D8E" />
-                      <stop offset="50%" stopColor="#C92A42" />
-                      <stop offset="100%" stopColor="#A11E33" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Deep cobalt medallion */}
-                  <ellipse cx="32" cy="33" rx="25" ry="22" fill="url(#navCrestCore)" />
-                  {/* Subtle top glass sheen */}
-                  <ellipse
-                    cx="32"
-                    cy="24"
-                    rx="18"
-                    ry="9.5"
-                    fill="#FFFFFF"
-                    fillOpacity="0.12"
-                  />
-                  {/* Fine sapphire rim */}
-                  <ellipse
-                    cx="32"
-                    cy="33"
-                    rx="24.6"
-                    ry="21.6"
-                    fill="none"
-                    stroke="#64B5EC"
-                    strokeWidth="1.25"
-                    strokeOpacity="0.58"
-                  />
-                  {/* Luminous sky-sapphire sweeping arc */}
-                  <motion.path
-                    d="M 11.5 46.5 A 26.5 23.5 0 0 1 56.5 24.5"
-                    fill="none"
-                    stroke="url(#navCrestArc)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0.2 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={
-                      prefersReducedMotion
-                        ? { duration: 0.01 }
-                        : { duration: 0.72, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-                    }
-                  />
-                  {/* Crisp geometric ruby H */}
-                  <path
-                    d="M 21.5 22.5 H 27.5 V 30.2 H 36.5 V 22.5 H 42.5 V 43.5 H 36.5 V 35.4 H 27.5 V 43.5 H 21.5 Z"
-                    fill="#040B1F"
-                    fillOpacity="0.45"
-                    transform="translate(0, 1.2)"
-                  />
-                  <path
-                    d="M 21.5 22.5 H 27.5 V 30.2 H 36.5 V 22.5 H 42.5 V 43.5 H 36.5 V 35.4 H 27.5 V 43.5 H 21.5 Z"
-                    fill="url(#navCrestRuby)"
-                  />
-                </svg>
-              </motion.span>
-
-              {/* Hannachi wordmark (staggered fade-in + slide-up) + Scroll-driven ruby line */}
-              <span aria-hidden="true" className="inline-flex flex-col items-stretch">
-                <span className="inline-flex items-baseline overflow-hidden">
-                  {HANNACHI_LETTERS.map((char, idx) => (
-                    <motion.span
-                      key={`${char}-${idx}`}
-                      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={
-                        prefersReducedMotion
-                          ? { duration: 0.01 }
-                          : {
-                              duration: 0.42,
-                              delay: 0.05 + idx * 0.044,
-                              ease: [0.22, 1, 0.36, 1],
-                            }
-                      }
-                      className="inline-block font-sans text-[22px] min-[375px]:text-[24px] sm:text-[26px] lg:text-[28px] font-black tracking-[-0.025em] leading-none bg-gradient-to-b from-[#F27D8E] via-[#E13B55] to-[#C92A42] bg-clip-text text-transparent pb-[2px] will-change-transform"
+                <span className="inline-flex items-baseline overflow-visible">
+                  {/* Integrated Complete Cobalt-Sapphire Medallion with Continuous Rotating Blue Orbits around H */}
+                  <motion.span
+                    initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={prefersReducedMotion ? undefined : { scale: 1.03 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative inline-flex items-baseline select-none font-sans text-[35px] min-[375px]:text-[39px] sm:text-[48px] lg:text-[52px] xl:text-[58px] font-black tracking-[-0.03em] leading-none overflow-visible"
+                  >
+                    <svg
+                      viewBox="0 0 92 78"
+                      className="pointer-events-none absolute -left-[0.58em] top-[51%] -translate-y-1/2 w-[1.86em] h-[1.58em] overflow-visible drop-shadow-[0_6px_20px_rgba(25,116,184,0.44)]"
+                      aria-hidden="true"
                     >
-                      {char}
-                    </motion.span>
-                  ))}
+                      <defs>
+                        <radialGradient id="navCrestCore" cx="38%" cy="28%" r="76%">
+                          <stop offset="0%" stopColor="#1E5FD9" />
+                          <stop offset="48%" stopColor="#0C2E7A" />
+                          <stop offset="100%" stopColor="#051336" />
+                        </radialGradient>
+                        <linearGradient id="navCrestArc" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#1974B8" stopOpacity="0.45" />
+                          <stop offset="55%" stopColor="#38BDF8" />
+                          <stop offset="100%" stopColor="#BAE6FD" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Complete closed deep cobalt medallion centered around H */}
+                      <ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="28"
+                        ry="26"
+                        fill="url(#navCrestCore)"
+                      />
+                      {/* Engraved inner depth shadow ring */}
+                      <ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="25.6"
+                        ry="23.8"
+                        fill="none"
+                        stroke="#03091B"
+                        strokeWidth="1.2"
+                        strokeOpacity="0.58"
+                      />
+                      {/* Top dimensional glass highlight */}
+                      <ellipse
+                        cx="46.5"
+                        cy="24.2"
+                        rx="19.5"
+                        ry="9.2"
+                        fill="#FFFFFF"
+                        fillOpacity="0.14"
+                      />
+                      {/* Complete closed sapphire metallic base rim */}
+                      <ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="28"
+                        ry="26"
+                        fill="none"
+                        stroke="#64B5EC"
+                        strokeWidth="1.2"
+                        strokeOpacity="0.42"
+                      />
+
+                      {/* Inner counter-rotating electric sky-blue orbit ring behind H */}
+                      <motion.ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="23.2"
+                        ry="21.4"
+                        fill="none"
+                        stroke="#38BDF8"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                        strokeOpacity="0.68"
+                        pathLength={100}
+                        strokeDasharray="28 72"
+                        animate={prefersReducedMotion ? undefined : { strokeDashoffset: [0, 100] }}
+                        transition={
+                          prefersReducedMotion
+                            ? undefined
+                            : { duration: 5.2, repeat: Infinity, ease: "linear" }
+                        }
+                      />
+
+                      {/* Outer continuously rotating luminous sapphire sweep arc */}
+                      <motion.ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="28"
+                        ry="26"
+                        fill="none"
+                        stroke="url(#navCrestArc)"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        pathLength={100}
+                        strokeDasharray="46 54"
+                        animate={prefersReducedMotion ? undefined : { strokeDashoffset: [0, -100] }}
+                        transition={
+                          prefersReducedMotion
+                            ? undefined
+                            : { duration: 4.2, repeat: Infinity, ease: "linear" }
+                        }
+                      />
+
+                      {/* Synchronized bright cyan specular tip leading the outer rotating orbit */}
+                      <motion.ellipse
+                        cx="46.5"
+                        cy="39"
+                        rx="28"
+                        ry="26"
+                        fill="none"
+                        stroke="#E0F2FE"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        strokeOpacity="0.92"
+                        pathLength={100}
+                        strokeDasharray="13 87"
+                        initial={{ strokeDashoffset: -33 }}
+                        animate={prefersReducedMotion ? undefined : { strokeDashoffset: [-33, -133] }}
+                        transition={
+                          prefersReducedMotion
+                            ? undefined
+                            : { duration: 4.2, repeat: Infinity, ease: "linear" }
+                        }
+                      />
+                    </svg>
+
+                    {/* Real H letter centered cleanly inside the rotating cobalt medallion */}
+                    <span className="relative z-10 inline-block bg-gradient-to-b from-[#FF9CA9] via-[#E8425C] to-[#C92A42] bg-clip-text text-transparent pb-[2px] drop-shadow-[0_2px_7px_rgba(3,8,24,0.96)]">
+                      H
+                    </span>
+                  </motion.span>
+
+                  {/* Trailing "annachi" letters tucked flush right against the outer oval edge */}
+                  <span className="ml-[0.18em] inline-flex items-baseline">
+                    {ANNACHI_LETTERS.map((char, idx) => (
+                      <motion.span
+                        key={`${char}-${idx}`}
+                        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0.01 }
+                            : {
+                                duration: 0.42,
+                                delay: 0.09 + idx * 0.044,
+                                ease: [0.22, 1, 0.36, 1],
+                              }
+                        }
+                        className="inline-block font-sans text-[35px] min-[375px]:text-[39px] sm:text-[48px] lg:text-[52px] xl:text-[58px] font-black tracking-[-0.03em] leading-none bg-gradient-to-b from-[#FF96A5] via-[#E53E58] to-[#C92A42] bg-clip-text text-transparent pb-[2px] will-change-transform"
+                      >
+                        {char}
+                      </motion.span>
+                    ))}
+                  </span>
                 </span>
 
-                {/* Scroll-driven ruby accent line directly underneath Hannachi */}
+                {/* Scroll-driven ruby accent line directly underneath unified Hannachi wordmark */}
                 <motion.span
                   initial={prefersReducedMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -336,11 +397,11 @@ export default function Navbar() {
                       ? { duration: 0.01 }
                       : { duration: 0.4, delay: 0.22, ease: [0.22, 1, 0.36, 1] }
                   }
-                  className="relative mt-[3px] h-[2.5px] w-full rounded-full bg-white/[0.1]"
+                  className="relative z-10 mt-[4px] h-[3.5px] w-full rounded-full bg-white/[0.1]"
                 >
                   <motion.span
                     style={prefersReducedMotion ? undefined : { scaleX: logoLineScaleX }}
-                    className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-[#A11E33] via-[#C92A42] to-[#E86A7D] shadow-[0_0_8px_rgba(201,42,66,0.55)] will-change-transform"
+                    className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-[#A11E33] via-[#C92A42] to-[#FF96A5] shadow-[0_0_10px_rgba(201,42,66,0.62)] will-change-transform"
                   />
                 </motion.span>
               </span>
@@ -348,7 +409,7 @@ export default function Navbar() {
           </div>
 
           {/* Zone 2: 5 Clean Single-Line Navigation Links (True Center) */}
-          <nav aria-label="Hauptnavigation" className="hidden lg:flex xl:justify-self-center items-center gap-6 xl:gap-8">
+          <nav aria-label="Hauptnavigation" className="hidden lg:flex xl:justify-self-center items-center gap-4 xl:gap-7">
             {desktopNav.map((n) => {
               const active = isActive(n.href);
               return (
@@ -356,7 +417,7 @@ export default function Navbar() {
                   key={n.href}
                   href={n.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative py-2.5 text-[14px] xl:text-[14.5px] tracking-[0.005em] whitespace-nowrap shrink-0 transition-colors duration-150 ${
+                  className={`relative py-2.5 text-[13.5px] xl:text-[14.5px] tracking-[0.005em] whitespace-nowrap shrink-0 transition-colors duration-150 ${
                     active
                       ? "text-white font-bold"
                       : "text-slate-300/85 font-medium hover:text-white"
@@ -428,8 +489,16 @@ export default function Navbar() {
                 setOpen((o) => !o);
               }}
             >
-              {open ? <X size={17} aria-hidden="true" /> : <Menu size={17} aria-hidden="true" />}
-              <span className="hidden sm:inline">{open ? "Zu" : "Menü"}</span>
+              {open ? <X key="nav-icon-close" size={17} aria-hidden="true" /> : <Menu key="nav-icon-open" size={17} aria-hidden="true" />}
+              {open ? (
+                <span key="nav-label-close" className="hidden sm:inline">
+                  Schließen
+                </span>
+              ) : (
+                <span key="nav-label-menu" className="hidden sm:inline">
+                  Menü
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -455,7 +524,7 @@ export default function Navbar() {
                 ? { duration: 0.12 }
                 : { type: "spring", stiffness: 390, damping: 32, mass: 0.85 }
             }
-            className="absolute inset-x-0 top-full z-20 rounded-b-3xl border-b border-white/12 bg-primary-dark/98 dark:bg-slate-950/98 backdrop-blur-2xl text-white shadow-2xl lg:hidden max-h-[calc(100dvh-4.25rem-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain will-change-transform"
+            className="absolute inset-x-0 top-full z-20 rounded-b-3xl border-b border-white/12 bg-primary-dark/98 dark:bg-slate-950/98 text-white shadow-2xl lg:hidden max-h-[calc(100dvh-3.75rem-env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain will-change-transform"
           >
             <nav
               id="mobile-nav-drawer"
@@ -536,7 +605,9 @@ export default function Navbar() {
                     className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-3 py-2.5 text-xs font-extrabold text-white hover:bg-white/15 transition-colors min-w-0"
                   >
                     <Phone size={15} className="text-emerald-400 shrink-0" />
-                    <span className="truncate">{place.phoneDisplay}</span>
+                    <span dir="ltr" translate="no" className="notranslate truncate">
+                      {place.phoneDisplay}
+                    </span>
                   </motion.a>
                   <motion.a
                     whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
@@ -550,7 +621,12 @@ export default function Navbar() {
                     className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-emerald-700 transition-colors whitespace-nowrap min-w-0"
                   >
                     <MessageCircle size={15} className="shrink-0" />
-                    <span className="truncate">WhatsApp starten</span>
+                    <span className="truncate">
+                      <span translate="no" className="notranslate">
+                        WhatsApp
+                      </span>{" "}
+                      starten
+                    </span>
                   </motion.a>
                 </div>
 
@@ -563,7 +639,10 @@ export default function Navbar() {
                     onClick={() => triggerHapticFeedback(35)}
                     className="inline-flex min-h-[44px] items-center px-1.5 -mr-1.5 font-bold text-sky-300 hover:underline shrink-0"
                   >
-                    Facebook →
+                    <span translate="no" className="notranslate">
+                      Facebook
+                    </span>{" "}
+                    →
                   </a>
                 </div>
               </div>

@@ -49,7 +49,7 @@ const URGENCY_OPTIONS: {
 }[] = [
   { id: "normal", label: "Normal", icon: Clock },
   { id: "express", label: "Dringend", icon: Zap },
-  { id: "notfall", label: "Notfall", icon: AlertTriangle },
+  { id: "notfall", label: "Sehr dringend", icon: AlertTriangle },
 ];
 
 /**
@@ -153,16 +153,42 @@ export default function WhatsAppPreview({
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-primary dark:text-white truncate">
-              {isReady ? "WhatsApp-Nachricht bereit" : "Noch kurz antippen:"}
+            <p
+              key={isReady ? "wa-ready" : "wa-pending"}
+              className="text-xs font-bold text-primary dark:text-white truncate"
+            >
+              {isReady ? (
+                <>
+                  <span translate="no" className="notranslate">WhatsApp</span>-Nachricht bereit
+                </>
+              ) : (
+                "Noch kurz antippen:"
+              )}
             </p>
             {isReady ? (
-              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate">
-                {model?.trim()
-                  ? `Mit E-Nr. (${model.trim()}) · startklar`
-                  : hasTypeplatePhoto
-                  ? "Mit Typenschild-Foto-Hinweis · startklar"
-                  : "Startklar · 1 Klick zum Chat"}
+              <p
+                key={
+                  model?.trim()
+                    ? "wa-enr"
+                    : hasTypeplatePhoto
+                    ? "wa-photo"
+                    : "wa-go"
+                }
+                className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate"
+              >
+                {model?.trim() ? (
+                  <>
+                    Mit <span translate="no" className="notranslate">E-Nr.</span> (
+                    <span dir="ltr" translate="no" className="notranslate">
+                      {model.trim()}
+                    </span>
+                    ) · startklar
+                  </>
+                ) : hasTypeplatePhoto ? (
+                  "Mit Typenschild-Foto-Hinweis · startklar"
+                ) : (
+                  "Startklar · 1 Klick zum Chat"
+                )}
               </p>
             ) : (
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
@@ -198,7 +224,9 @@ export default function WhatsAppPreview({
           aria-expanded={isBubbleOpen}
           className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-surface dark:bg-slate-800 px-2.5 py-1 text-[11px] font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors cursor-pointer shrink-0 whitespace-nowrap"
         >
-          <span>{isBubbleOpen ? "Zu" : "Vorschau"}</span>
+          <span key={isBubbleOpen ? "wp-close" : "wp-open"}>
+            {isBubbleOpen ? "Schließen" : "Vorschau"}
+          </span>
           <ChevronDown
             size={13}
             className={`transition-transform duration-200 ${isBubbleOpen ? "rotate-180" : ""}`}
@@ -212,7 +240,7 @@ export default function WhatsAppPreview({
           <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-muted dark:text-slate-300 min-w-0">
             <Camera size={13} className="text-accent shrink-0" aria-hidden="true" />
             <span className="truncate">
-              Schnellere Auskunft mit E-Nr. oder Typenschild-Foto
+              Schnellere Auskunft mit <span translate="no" className="notranslate">E-Nr.</span> oder Typenschild-Foto
             </span>
           </span>
           <button
@@ -285,26 +313,27 @@ export default function WhatsAppPreview({
                       className="inline-flex items-center gap-1 font-bold text-emerald-800 dark:text-emerald-300 hover:underline cursor-pointer"
                     >
                       {copiedPreview ? (
-                        <>
+                        <span key="wp-copied" className="inline-flex items-center gap-1">
                           <Check size={12} aria-hidden="true" />
                           <span>Text kopiert</span>
-                        </>
+                        </span>
                       ) : (
-                        <>
+                        <span key="wp-copy" className="inline-flex items-center gap-1">
                           <Copy size={12} aria-hidden="true" />
                           <span>Text kopieren</span>
-                        </>
+                        </span>
                       )}
                     </button>
                     <span className="inline-flex items-center gap-1 shrink-0">
-                      <span>An Herrn Hannachi</span>
+                      <span>An Herrn <span translate="no" className="notranslate">Hannachi</span></span>
                       <CheckCheck size={13} className="text-sky-600 dark:text-sky-400" />
                     </span>
                   </div>
                 </div>
               ) : (
                 <p className="text-xs text-ink-muted">
-                  Oben ein Anliegen antippen, die fertige WhatsApp-Nachricht erscheint sofort.
+                  Oben ein Anliegen antippen, die fertige{" "}
+                  <span translate="no" className="notranslate">WhatsApp</span>-Nachricht erscheint sofort.
                 </p>
               )}
 
@@ -318,7 +347,9 @@ export default function WhatsAppPreview({
                   className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent/25 bg-accent/8 px-3 py-1.5 text-[11px] font-bold text-accent hover:bg-accent/15 transition-colors cursor-pointer"
                 >
                   <Camera size={13} aria-hidden="true" />
-                  <span>+ E-Nr. / Typenschild-Foto für schnellere Antwort ergänzen</span>
+                  <span>
+                    + <span translate="no" className="notranslate">E-Nr.</span> / Typenschild-Foto für schnellere Antwort ergänzen
+                  </span>
                 </button>
               )}
             </div>

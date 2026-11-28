@@ -235,7 +235,7 @@ export default function AdminMarketplaceManager({
       setUploadProgress({
         current: idx + 1,
         total: batch.length,
-        statusText: `Foto ${idx + 1} von ${batch.length} wird optimiert & hochgeladen...`,
+        statusText: `Foto ${idx + 1} von ${batch.length} wird optimiert & hochgeladen…`,
       });
 
       try {
@@ -735,7 +735,9 @@ export default function AdminMarketplaceManager({
                 rel="noopener noreferrer"
                 className="font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
               >
-                <span>/marktplatz</span>
+                <span dir="ltr" translate="no" className="notranslate">
+                  /marktplatz
+                </span>
                 <ExternalLink size={11} />
               </a>{" "}
               veröffentlichen
@@ -764,15 +766,20 @@ export default function AdminMarketplaceManager({
                 : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             }`}
           >
-            {mpSettings.hideSoldPublicly ? (
-              <EyeOff size={13} className="shrink-0" />
-            ) : (
-              <Eye size={13} className="shrink-0" />
-            )}
-            <span>
-              {mpSettings.hideSoldPublicly
-                ? "Verkaufte versteckt"
-                : "Verkaufte sichtbar"}
+            <span
+              key={mpSettings.hideSoldPublicly ? "mp-hide" : "mp-show"}
+              className="inline-flex items-center gap-1.5"
+            >
+              {mpSettings.hideSoldPublicly ? (
+                <EyeOff size={13} className="shrink-0" />
+              ) : (
+                <Eye size={13} className="shrink-0" />
+              )}
+              <span>
+                {mpSettings.hideSoldPublicly
+                  ? "Verkaufte versteckt"
+                  : "Verkaufte sichtbar"}
+              </span>
             </span>
           </button>
 
@@ -781,7 +788,9 @@ export default function AdminMarketplaceManager({
             onClick={() => setIsExpanded((v) => !v)}
             className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 px-3 sm:px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer whitespace-nowrap"
           >
-            {isExpanded ? "Einklappen" : "Anzeigen"}
+            <span key={isExpanded ? "mp-col" : "mp-exp"}>
+              {isExpanded ? "Einklappen" : "Anzeigen"}
+            </span>
           </button>
         </div>
       </div>
@@ -869,20 +878,30 @@ export default function AdminMarketplaceManager({
                       referrerPolicy="no-referrer"
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                     />
-                    <span className="absolute bottom-1 right-1 rounded bg-slate-950/85 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white tabular-nums">
+                    <span
+                      key={uploadedCount > 0 ? "cnt" : "std"}
+                      className="absolute bottom-1 right-1 rounded bg-slate-950/85 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white tabular-nums"
+                    >
                       {uploadedCount > 0 ? `${uploadedCount} Fotos` : "Standard"}
                     </span>
                   </button>
 
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-extrabold text-slate-900 dark:text-white">
+                      <span
+                        translate="no"
+                        className="notranslate font-extrabold text-slate-900 dark:text-white"
+                      >
                         {item.brand}
                       </span>
                       <span aria-hidden="true" className="text-slate-400">
                         ·
                       </span>
-                      <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                      <span
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate font-mono text-[11px] text-slate-500 dark:text-slate-400"
+                      >
                         {item.skuOrEnr}
                       </span>
                       <span aria-hidden="true" className="text-slate-400">
@@ -892,21 +911,40 @@ export default function AdminMarketplaceManager({
                         {item.categoryLabel}
                       </span>
                       {isSold && (
-                        <>
+                        <span key="lnk-sold" className="inline-flex items-center gap-2">
                           <span aria-hidden="true" className="text-slate-400">
                             ·
                           </span>
                           <span className="font-bold text-emerald-700 dark:text-emerald-400">
                             Verkauft
-                            {item.linkedTicketId ? ` (Beleg ${item.linkedTicketId})` : ""}
+                            {item.linkedTicketId ? (
+                              <>
+                                {" "}
+                                <span
+                                  dir="ltr"
+                                  translate="no"
+                                  className="notranslate"
+                                >
+                                  (Beleg {item.linkedTicketId})
+                                </span>
+                              </>
+                            ) : (
+                              ""
+                            )}
                           </span>
-                        </>
+                        </span>
                       )}
                     </div>
-                    <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+                    <p
+                      dir="auto"
+                      className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate"
+                    >
                       {item.title}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p
+                      dir="auto"
+                      className="text-xs text-slate-500 dark:text-slate-400 truncate"
+                    >
                       {item.shortSpecs}
                     </p>
                   </div>
@@ -1031,7 +1069,7 @@ export default function AdminMarketplaceManager({
           <div className="w-full max-w-2xl max-h-[92dvh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-50 dark:bg-slate-950 shrink-0">
               <div className="min-w-0">
-                <h3 className="text-base font-extrabold truncate">
+                <h3 key={form.id ? "edit" : "new"} className="text-base font-extrabold truncate">
                   {form.id
                     ? "Angebot & Fotogalerie bearbeiten"
                     : "Neues Gerät oder Ersatzteil einstellen"}
@@ -1086,7 +1124,10 @@ export default function AdminMarketplaceManager({
                       <span>Produktfotos &amp; Typenschild-Galerie</span>
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Automatische WebP-Komprimierung · Bis zu {MAX_PHOTOS_PER_ITEM} Fotos pro Artikel ({form.photos.length}/{MAX_PHOTOS_PER_ITEM})
+                      Automatische{" "}
+                      <span translate="no" className="notranslate">WebP</span>
+                      -Komprimierung · Bis zu {MAX_PHOTOS_PER_ITEM} Fotos pro Artikel (
+                      {form.photos.length}/{MAX_PHOTOS_PER_ITEM})
                     </p>
                   </div>
 
@@ -1211,12 +1252,16 @@ export default function AdminMarketplaceManager({
                             <div className="min-w-0 flex-1 flex flex-col justify-between">
                               <div className="flex items-center justify-between gap-1">
                                 {isPrimary ? (
-                                  <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-sky-600 dark:text-sky-400">
+                                  <span
+                                    key="prim"
+                                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-sky-600 dark:text-sky-400"
+                                  >
                                     <Star size={12} className="fill-current" />
                                     <span>Titelbild</span>
                                   </span>
                                 ) : (
                                   <button
+                                    key="mkprim"
                                     type="button"
                                     onClick={() => handleSetPrimaryPhoto(idx)}
                                     className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:border-sky-500 hover:text-sky-600 cursor-pointer"
@@ -1467,7 +1512,9 @@ export default function AdminMarketplaceManager({
                   className="min-h-[44px] flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 font-extrabold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
                 >
                   <Check size={14} />
-                  <span>{isSaving ? "Speichert..." : "Im Marktplatz speichern"}</span>
+                  <span key={isSaving ? "save-busy" : "save-idle"}>
+                    {isSaving ? "Speichert…" : "Im Marktplatz speichern"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1489,7 +1536,10 @@ export default function AdminMarketplaceManager({
                 <h3 className="text-base font-extrabold truncate">
                   Verkauf bestätigen
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <p
+                  dir="auto"
+                  className="text-xs text-slate-500 dark:text-slate-400 truncate"
+                >
                   {soldModal.item.title}
                 </p>
               </div>
@@ -1557,7 +1607,7 @@ export default function AdminMarketplaceManager({
                         onChange={(e) =>
                           setSoldModal({ ...soldModal, buyerPhone: e.target.value })
                         }
-                        placeholder="z. B. 0170 ..."
+                        placeholder="z. B. 0170 …"
                         className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-base sm:text-xs font-mono"
                       />
                     </div>
@@ -1621,13 +1671,28 @@ export default function AdminMarketplaceManager({
                   data-testid="confirm-marketplace-sold-submit-btn"
                   className="min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 font-extrabold text-white hover:bg-emerald-500 disabled:opacity-50 cursor-pointer"
                 >
-                  {soldModal.createTicket ? <FileText size={14} /> : <Check size={14} />}
-                  <span>
-                    {savingSoldModal
-                      ? "Wird gespeichert..."
-                      : soldModal.createTicket
-                      ? "Als verkauft markieren & Beleg öffnen"
-                      : "Nur als verkauft markieren"}
+                  <span
+                    key={
+                      savingSoldModal
+                        ? "sm-save"
+                        : soldModal.createTicket
+                        ? "sm-ticket"
+                        : "sm-only"
+                    }
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    {soldModal.createTicket ? (
+                      <FileText size={14} />
+                    ) : (
+                      <Check size={14} />
+                    )}
+                    <span>
+                      {savingSoldModal
+                        ? "Wird gespeichert…"
+                        : soldModal.createTicket
+                        ? "Als verkauft markieren & Beleg öffnen"
+                        : "Nur als verkauft markieren"}
+                    </span>
                   </span>
                 </button>
               </div>

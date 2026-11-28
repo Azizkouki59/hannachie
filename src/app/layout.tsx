@@ -15,8 +15,8 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(business.url),
-  title: { default: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück", template: "%s | Hannachi Osnabrück" },
-  description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
+  title: { default: "Hannachi Hausgeräte & Ersatzteile | Osnabrück seit 1990", template: "%s | Hannachi Osnabrück" },
+  description: "Unabhängiger Fachhandel in Osnabrück seit 1990: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.",
   keywords: BASE_KEYWORDS,
   alternates: { canonical: `${business.url}/` },
   openGraph: {
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
     locale: "de_DE",
     url: `${business.url}/`,
     siteName: "Hannachi Elektrohaushaltsgeräte & Ersatzteile",
-    title: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück",
-    description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
+    title: "Hannachi Hausgeräte & Ersatzteile | Osnabrück seit 1990",
+    description: "Unabhängiger Fachhandel in Osnabrück seit 1990: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hannachi Elektrohaushaltsgeräte & Ersatzteile | Osnabrück",
-    description: "An- und Verkauf von Elektrohaushaltsgeräten & Original-Ersatzteilen in Osnabrück inkl. schriftlicher Verkäufergarantie: Waschmaschinen, Geschirrspüler, Kühlschränke und Backöfen.",
+    title: "Hannachi Hausgeräte & Ersatzteile | Osnabrück seit 1990",
+    description: "Unabhängiger Fachhandel in Osnabrück seit 1990: persönliche Fachberatung, Original-Ersatzteile nach Typenschild und ausgewählte Markengeräte auf Anfrage.",
   },
 };
 export const viewport: Viewport = { themeColor: "#0F172A" };
@@ -72,7 +72,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main id="main">{children}</main>
         <Footer />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
       </body>
     </html>
   );

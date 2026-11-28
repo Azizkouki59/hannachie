@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { sanitizeSingleLine, sanitizeText } from "../utils/sanitize.ts";
+import {
+  isSafeGoogleMapsUrl,
+  isValidBase64ImageDataUrl,
+  sanitizeSingleLine,
+  sanitizeText,
+} from "../utils/sanitize.ts";
 import { forwardGeocodeQuery, reverseGeocodeCoords } from "./geocode.ts";
 import { fetchGooglePlace } from "./googlePlace.ts";
 import {
@@ -223,6 +228,7 @@ function isSameOriginMutation(request: Request): boolean {
     request.headers.get("host") ||
     url.host
   ).toLowerCase();
+  if (!expectedHost) return false;
 
   const originHeader = request.headers.get("origin");
   if (originHeader) {
@@ -581,8 +587,8 @@ function sanitizePhotosList(rawPhotos: unknown): MarketplacePhoto[] {
     const obj = entry as Record<string, unknown>;
     const url = typeof obj.url === "string" ? obj.url.trim() : "";
     const isSafeUrl =
-      url.startsWith("/uploads/") ||
-      /^data:image\/(webp|jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/i.test(url);
+      (/^\/uploads\/ph-[a-z0-9-]+\.(webp|jpg|jpeg|png)$/i.test(url)) ||
+      isValidBase64ImageDataUrl(url);
     if (!isSafeUrl || url.length > 2_500_000) continue;
     const id =
       sanitizeSingleLine(obj.id, 60) || `ph-${Date.now().toString(36)}-${i}`;
@@ -917,19 +923,31 @@ export async function handleApiRequest(
       );
     }
 
+    const currentTickets = await loadTicketsEdge(env);
+    const existingIds = new Set(currentTickets.map((t) => t.id));
     const clientRefRaw =
       typeof rawBody.clientReferenceId === "string"
         ? rawBody.clientReferenceId.trim()
         : "";
-    const referenceId = /^HN-\d{4}$/.test(clientRefRaw)
-      ? clientRefRaw
-      : generateReferenceId();
+    let referenceId =
+      /^HN-\d{4}$/.test(clientRefRaw) &&
+      clientRefRaw !== "HN-0000" &&
+      !existingIds.has(clientRefRaw)
+        ? clientRefRaw
+        : generateReferenceId();
+    while (existingIds.has(referenceId) || referenceId === "HN-0000") {
+      referenceId = generateReferenceId();
+    }
     const receivedAt = new Date().toISOString();
 
     const isHomeVisit = parsed.data.visitType === "home_visit";
     const resolvedCoords = isHomeVisit
       ? resolveDefaultCoordsForZip(parsed.data.zip, parsed.data.coordinates || null)
       : { lat: 52.2647082, lng: 8.0567763, accuracy: 10 };
+
+    const safeMapsLocationUrl = isSafeGoogleMapsUrl(parsed.data.mapsLocationUrl)
+      ? parsed.data.mapsLocationUrl.trim()
+      : `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`;
 
     const marketplaceItemId = sanitizeSingleLine(rawBody.marketplaceItemId, 60);
     const marketplaceItemTitle = sanitizeSingleLine(rawBody.marketplaceItemTitle, 160);
@@ -951,9 +969,7 @@ export async function handleApiRequest(
       streetAddress: isHomeVisit
         ? parsed.data.streetAddress || ""
         : "Iburger Straße 5, Im Hof",
-      mapsLocationUrl:
-        parsed.data.mapsLocationUrl ||
-        `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`,
+      mapsLocationUrl: safeMapsLocationUrl,
       locationVerified: Boolean(parsed.data.locationVerified),
       coordinates: resolvedCoords,
       name: parsed.data.name || "Interessent (Osnabrück)",
@@ -970,7 +986,6 @@ export async function handleApiRequest(
       invoiceItems: [],
     };
 
-    const currentTickets = await loadTicketsEdge(env);
     await persistTicketsEdge([newTicket, ...currentTickets], env);
 
     return jsonResponse(
@@ -1081,9 +1096,9 @@ export async function handleApiRequest(
     const match = /^data:image\/(webp|jpeg|jpg|png);base64,([A-Za-z0-9+/=]+)$/i.exec(
       dataUrl
     );
-    if (!match) {
+    if (!match || !isValidBase64ImageDataUrl(dataUrl)) {
       return jsonResponse(
-        { ok: false, error: "Ungültiges Bildformat. Erlaubt sind WebP, JPEG und PNG." },
+        { ok: false, error: "Ungültiges Bildformat oder Bildsignatur. Erlaubt sind WebP, JPEG und PNG." },
         400
       );
     }
@@ -1308,9 +1323,9 @@ export async function handleApiRequest(
           sanitizeSingleLine(baseRaw.callbackTime, 120) || "Jederzeit erreichbar",
         zip,
         streetAddress: sanitizeSingleLine(baseRaw.streetAddress, 200),
-        mapsLocationUrl:
-          sanitizeSingleLine(baseRaw.mapsLocationUrl, 500) ||
-          `https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
+        mapsLocationUrl: isSafeGoogleMapsUrl(baseRaw.mapsLocationUrl)
+          ? String(baseRaw.mapsLocationUrl).trim()
+          : `https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
         locationVerified: Boolean(baseRaw.locationVerified),
         coordinates: coords,
         name: sanitizeSingleLine(baseRaw.name, 120) || "Kunde",

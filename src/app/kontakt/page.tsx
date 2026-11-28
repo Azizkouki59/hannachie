@@ -136,13 +136,22 @@ export default function Kontakt({
                     href={business.whatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-extrabold text-white transition-colors"
+                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] px-4 py-2 text-xs font-extrabold text-white transition-all"
                   >
-                    <MessageCircle size={14} aria-hidden="true" />
-                    <span>WhatsApp öffnen</span>
+                    <MessageCircle size={14} className="shrink-0" aria-hidden="true" />
+                    <span>
+                      <span translate="no" className="notranslate">
+                        WhatsApp
+                      </span>{" "}
+                      öffnen
+                    </span>
                   </a>
                   <p className="mt-1.5 text-[10.5px] leading-snug text-ink-faint">
-                    Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+                    Freiwillige Weiterleitung zu{" "}
+                    <span translate="no" className="notranslate">
+                      WhatsApp (Meta)
+                    </span>{" "}
+                    ·{" "}
                     <Link
                       href="/datenschutz#whatsapp"
                       className="underline underline-offset-2 hover:text-accent"
@@ -156,7 +165,9 @@ export default function Kontakt({
                   <ContactItem icon={Phone} title="Telefon">
                     <a
                       href={place.phoneHref}
-                      className="inline-flex min-h-[36px] items-center font-bold text-primary dark:text-slate-100 hover:text-accent transition-colors tabular-nums"
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate inline-flex min-h-[44px] items-center font-bold text-primary dark:text-slate-100 hover:text-accent transition-colors tabular-nums"
                     >
                       {place.phoneDisplay}
                     </a>
@@ -165,7 +176,9 @@ export default function Kontakt({
                   <ContactItem icon={Mail} title="E-Mail">
                     <a
                       href={`mailto:${business.email}`}
-                      className="inline-flex min-h-[36px] items-center font-semibold text-primary dark:text-slate-100 hover:text-accent transition-colors break-all"
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate inline-flex min-h-[44px] items-center font-semibold text-primary dark:text-slate-100 hover:text-accent transition-colors break-all"
                     >
                       {business.email}
                     </a>
@@ -183,11 +196,16 @@ export default function Kontakt({
 
                   <ContactItem icon={MapPin} title="Standort">
                     <address className="not-italic text-xs leading-relaxed">
-                      <span className="font-semibold text-primary dark:text-slate-100">
+                      <span translate="no" className="notranslate font-semibold text-primary dark:text-slate-100">
                         {business.owner}
                       </span>
                       <br />
-                      {business.street}, {business.zip} {business.city}
+                      <span translate="no" className="notranslate">
+                        {business.street},{" "}
+                        <span dir="ltr">
+                          {business.zip} {business.city}
+                        </span>
+                      </span>
                     </address>
                   </ContactItem>
                 </div>
@@ -198,16 +216,32 @@ export default function Kontakt({
             <div className="card overflow-hidden">
               <div className="flex flex-col gap-2 border-b border-primary/8 dark:border-white/10 p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-faint min-w-0">
+                  <span
+                    key={mapViewMode}
+                    className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-faint min-w-0"
+                  >
                     {mapViewMode === "service-area" ? (
                       <Radar size={13} className="text-sky-600 dark:text-sky-400 shrink-0" />
                     ) : (
                       <MapPin size={13} className="text-accent shrink-0" />
                     )}
                     <span className="truncate">
-                      {mapViewMode === "service-area"
-                        ? "Region Osnabrück · 25 km"
-                        : "Standort-Pin · Osnabrück"}
+                      {mapViewMode === "service-area" ? (
+                        <>
+                          Region{" "}
+                          <span translate="no" className="notranslate">
+                            Osnabrück
+                          </span>{" "}
+                          · <span dir="ltr">25 km</span>
+                        </>
+                      ) : (
+                        <>
+                          Standort-Pin ·{" "}
+                          <span translate="no" className="notranslate">
+                            Osnabrück
+                          </span>
+                        </>
+                      )}
                     </span>
                   </span>
 
@@ -216,18 +250,18 @@ export default function Kontakt({
                     onClick={handleCopyShareLink}
                     data-testid="contact-map-share-link"
                     title={`Link zu dieser Kartenansicht kopieren (?mode=${mapViewMode})`}
-                    className="inline-flex min-h-[32px] items-center gap-1 rounded-lg border border-primary/12 dark:border-white/15 bg-surface px-2 py-1 text-[11px] font-bold text-ink-muted hover:text-primary dark:hover:text-white hover:border-sky-500/40 transition-colors cursor-pointer shrink-0"
+                    className="inline-flex min-h-[44px] sm:min-h-[34px] items-center gap-1 rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-surface px-3 sm:px-2 py-1 text-xs sm:text-[11px] font-bold text-ink-muted hover:text-primary dark:hover:text-white hover:border-sky-500/40 active:scale-95 transition-all cursor-pointer shrink-0"
                   >
                     {copiedMapLink ? (
-                      <>
+                      <span key="km-copied" className="inline-flex items-center gap-1">
                         <Check size={12} className="text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                         <span className="text-emerald-700 dark:text-emerald-300">Kopiert</span>
-                      </>
+                      </span>
                     ) : (
-                      <>
+                      <span key="km-share" className="inline-flex items-center gap-1">
                         <Link2 size={12} aria-hidden="true" />
                         <span>Teilen</span>
-                      </>
+                      </span>
                     )}
                   </button>
                 </div>
@@ -243,7 +277,7 @@ export default function Kontakt({
                     onClick={() => handleMapViewModeChange("service-area")}
                     aria-pressed={mapViewMode === "service-area"}
                     data-testid="contact-map-toggle-service-area"
-                    className={`relative min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    className={`relative min-h-[44px] sm:min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                       mapViewMode === "service-area"
                         ? "text-white"
                         : "text-ink-muted hover:text-ink"
@@ -269,7 +303,7 @@ export default function Kontakt({
                     onClick={() => handleMapViewModeChange("pin")}
                     aria-pressed={mapViewMode === "pin"}
                     data-testid="contact-map-toggle-pin"
-                    className={`relative min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    className={`relative min-h-[44px] sm:min-h-[38px] px-2.5 py-1.5 rounded-lg text-xs font-extrabold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                       mapViewMode === "pin"
                         ? "text-white"
                         : "text-ink-muted hover:text-ink"

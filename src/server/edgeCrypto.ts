@@ -183,7 +183,7 @@ export async function verifyAdminPasswordEdge(
   candidate: string,
   envPassword?: string
 ): Promise<boolean> {
-  if (!candidate) return false;
+  if (!candidate || candidate.length > 256) return false;
   const trimmedEnv = (envPassword || "").trim();
   if (trimmedEnv) {
     const [a, b] = await Promise.all([sha256Bytes(candidate), sha256Bytes(trimmedEnv)]);

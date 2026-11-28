@@ -26,6 +26,14 @@ const ANCHORS = [
   { href: "#rechte", label: "Ihre Rechte" },
 ];
 
+function NoTx({ children, ltr = false }: { children: React.ReactNode; ltr?: boolean }) {
+  return (
+    <span translate="no" dir={ltr ? "ltr" : undefined} className="notranslate">
+      {children}
+    </span>
+  );
+}
+
 export default function Datenschutz() {
   const { dataProtectionAuthority } = business.legal;
 
@@ -45,7 +53,9 @@ export default function Datenschutz() {
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-ink-muted dark:text-slate-400">
                 <div className="inline-flex items-center gap-2 font-semibold text-primary dark:text-slate-200">
                   <Clock3 size={16} className="text-accent shrink-0" aria-hidden="true" />
-                  <span>Datenschutz nach DSGVO &amp; § 25 TDDDG</span>
+                  <span>
+                    Datenschutz nach <NoTx>DSGVO</NoTx> &amp; <NoTx>§ 25 TDDDG</NoTx>
+                  </span>
                 </div>
                 <Link
                   href="/impressum"
@@ -86,28 +96,36 @@ export default function Datenschutz() {
               <div className="flex items-center gap-2 text-accent">
                 <ShieldCheck size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  1. Verantwortlicher (Art. 4 Nr. 7 DSGVO)
+                  1. Verantwortlicher (<NoTx>Art. 4 Nr. 7 DSGVO</NoTx>)
                 </h2>
               </div>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 <strong className="font-semibold text-primary dark:text-slate-100">
-                  {business.owner}
+                  <NoTx>{business.owner}</NoTx>
                 </strong>{" "}
-                ({business.name} {business.tagline}, {business.legal.legalForm})
+                (<NoTx>{business.name}</NoTx> {business.tagline}, {business.legal.legalForm})
                 <br />
-                {business.street}, {business.zip} {business.city}, Deutschland
+                <NoTx>{business.street}</NoTx>,{" "}
+                <NoTx ltr>
+                  {business.zip} {business.city}
+                </NoTx>
+                , Deutschland
                 <br />
                 Telefon:{" "}
                 <a
                   href={business.phoneHref}
-                  className="font-semibold text-accent dark:text-accent-light underline underline-offset-4 tabular-nums"
+                  dir="ltr"
+                  translate="no"
+                  className="notranslate inline-block font-semibold text-accent dark:text-accent-light underline underline-offset-4 tabular-nums"
                 >
                   {business.phoneDisplay}
                 </a>{" "}
                 · E-Mail:{" "}
                 <a
                   href={`mailto:${business.email}`}
-                  className="font-semibold text-accent dark:text-accent-light underline underline-offset-4"
+                  dir="ltr"
+                  translate="no"
+                  className="notranslate inline-block font-semibold text-accent dark:text-accent-light underline underline-offset-4"
                 >
                   {business.email}
                 </a>
@@ -123,10 +141,14 @@ export default function Datenschutz() {
                 </h2>
               </div>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
-                Diese Website wird über HTTPS/TLS verschlüsselt ausgeliefert. Beim Aufruf
+                Diese Website wird über <NoTx ltr>HTTPS/TLS</NoTx> verschlüsselt ausgeliefert. Beim Aufruf
                 erfasst der Webserver automatisch technisch notwendige Verbindungsdaten
-                (IP-Adresse, Zeitpunkt, aufgerufene Seite, Browsertyp), um Betriebssicherheit
-                und Stabilität zu gewährleisten (<strong>Art. 6 Abs. 1 lit. f DSGVO</strong>).
+                (<NoTx>IP</NoTx>-Adresse, Zeitpunkt, aufgerufene Seite, Browsertyp), um Betriebssicherheit
+                und Stabilität zu gewährleisten (
+                <strong>
+                  <NoTx>Art. 6 Abs. 1 lit. f DSGVO</NoTx>
+                </strong>
+                ).
                 Server-Logfiles werden automatisch nach 7 bis 30 Tagen gelöscht.
               </p>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
@@ -143,7 +165,7 @@ export default function Datenschutz() {
               <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                 <MessageCircle size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  3. Kontaktaufnahme, Formular &amp; WhatsApp
+                  3. Kontaktaufnahme, Formular &amp; <NoTx>WhatsApp</NoTx>
                 </h2>
               </div>
 
@@ -154,28 +176,43 @@ export default function Datenschutz() {
                   </strong>{" "}
                   Angaben aus Ihrer Anfrage (z. B. Gerät, Anliegen, PLZ/Ort, optional Name und
                   Telefonnummer) verarbeiten wir ausschließlich zur Bearbeitung Ihrer Anfrage
-                  und Terminabstimmung (<strong>Art. 6 Abs. 1 lit. b &amp; f DSGVO</strong>).
+                  und Terminabstimmung (
+                  <strong>
+                    <NoTx>Art. 6 Abs. 1 lit. b &amp; f DSGVO</NoTx>
+                  </strong>
+                  ).
                   Eine Weitergabe an unbeteiligte Dritte findet nicht statt.
                 </p>
 
                 <p>
                   <strong className="font-semibold text-primary dark:text-slate-100">
-                    Freiwilliger WhatsApp-Kontakt:
+                    Freiwilliger <NoTx>WhatsApp</NoTx>-Kontakt:
                   </strong>{" "}
-                  Eine Verbindung zu <strong>WhatsApp Ireland Limited</strong> (Meta) entsteht
-                  erst, wenn Sie aktiv einen WhatsApp-Button anklicken (
-                  <strong>Art. 6 Abs. 1 lit. a &amp; b DSGVO</strong>). Alternativ erreichen Sie
+                  Eine Verbindung zu{" "}
+                  <strong>
+                    <NoTx>WhatsApp Ireland Limited</NoTx>
+                  </strong>{" "}
+                  (<NoTx>Meta</NoTx>) entsteht
+                  erst, wenn Sie aktiv einen <NoTx>WhatsApp</NoTx>-Button anklicken (
+                  <strong>
+                    <NoTx>Art. 6 Abs. 1 lit. a &amp; b DSGVO</NoTx>
+                  </strong>
+                  ). Alternativ erreichen Sie
                   uns jederzeit per Telefon (
                   <a
                     href={business.phoneHref}
-                    className="font-semibold text-accent underline underline-offset-2 tabular-nums"
+                    dir="ltr"
+                    translate="no"
+                    className="notranslate inline-block font-semibold text-accent underline underline-offset-2 tabular-nums"
                   >
                     {business.phoneDisplay}
                   </a>
                   ) oder E-Mail (
                   <a
                     href={`mailto:${business.email}`}
-                    className="font-semibold text-accent underline underline-offset-2"
+                    dir="ltr"
+                    translate="no"
+                    className="notranslate inline-block font-semibold text-accent underline underline-offset-2"
                   >
                     {business.email}
                   </a>
@@ -186,7 +223,9 @@ export default function Datenschutz() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-0.5 font-semibold text-accent underline underline-offset-2"
                   >
-                    <span>WhatsApp-Datenschutz (EWR)</span>
+                    <span>
+                      <NoTx>WhatsApp</NoTx>-Datenschutz (<NoTx>EWR</NoTx>)
+                    </span>
                     <ExternalLink size={11} aria-hidden="true" />
                   </a>
                 </p>
@@ -198,18 +237,26 @@ export default function Datenschutz() {
               <div className="flex items-center gap-2 text-accent">
                 <MapPin size={18} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  4. Google Maps, Standort-Erkennung &amp; externe Links
+                  4. <NoTx>Google Maps</NoTx>, Standort-Erkennung &amp; externe Links
                 </h2>
               </div>
 
               <div className="space-y-3 text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 <p>
                   <strong className="font-semibold text-primary dark:text-slate-100">
-                    Interaktive Karte (Google Maps):
+                    Interaktive Karte (<NoTx>Google Maps</NoTx>):
                   </strong>{" "}
-                  Karteninhalte von <strong>Google Ireland Limited</strong> (Google LLC, EU-US
-                  Data Privacy Framework) werden erst nach Ihrer Einwilligung bzw. Interaktion
-                  geladen (<strong>Art. 6 Abs. 1 lit. a DSGVO</strong>, § 25 TDDDG). Ihre
+                  Karteninhalte von{" "}
+                  <strong>
+                    <NoTx>Google Ireland Limited</NoTx>
+                  </strong>{" "}
+                  (<NoTx>Google LLC</NoTx>,{" "}
+                  <NoTx>EU-US Data Privacy Framework</NoTx>) werden erst nach Ihrer Einwilligung bzw. Interaktion
+                  geladen (
+                  <strong>
+                    <NoTx>Art. 6 Abs. 1 lit. a DSGVO</NoTx>
+                  </strong>
+                  , <NoTx>§ 25 TDDDG</NoTx>). Ihre
                   Einstellung können Sie jederzeit über <em>„Cookie-Einstellungen“</em> in der
                   Fußzeile widerrufen.
                 </p>
@@ -220,18 +267,23 @@ export default function Datenschutz() {
                   </strong>{" "}
                   Die Standortabfrage des Browsers erfolgt niemals automatisch, sondern nur
                   nach Ihrem aktiven Klick und Ihrer Browser-Freigabe (
-                  <strong>Art. 6 Abs. 1 lit. a DSGVO</strong>). Koordinaten werden serverseitig
-                  in PLZ und Ort umgewandelt (Google Geocoding API / OpenStreetMap-Fallback), um
-                  das Formular bequem vorauszufüllen oder die Entfernung nach Osnabrück
+                  <strong>
+                    <NoTx>Art. 6 Abs. 1 lit. a DSGVO</NoTx>
+                  </strong>
+                  ). Koordinaten werden serverseitig
+                  in PLZ und Ort umgewandelt (<NoTx>Google Geocoding API</NoTx> /{" "}
+                  <NoTx>OpenStreetMap</NoTx>-Fallback), um
+                  das Formular bequem vorauszufüllen oder die Entfernung nach{" "}
+                  <NoTx>Osnabrück</NoTx>{" "}
                   anzuzeigen.
                 </p>
 
                 <p>
                   <strong className="font-semibold text-primary dark:text-slate-100">
-                    Google-Bewertungen &amp; Facebook:
+                    <NoTx>Google</NoTx>-Bewertungen &amp; <NoTx>Facebook</NoTx>:
                   </strong>{" "}
                   Öffentliche Bewertungen unseres Profils werden serverseitig ohne
-                  Tracking-Cookies bereitgestellt. Der Verweis auf Facebook ist ein reiner
+                  Tracking-Cookies bereitgestellt. Der Verweis auf <NoTx>Facebook</NoTx> ist ein reiner
                   externer Link ohne Tracking-Pixel.
                 </p>
               </div>
@@ -240,19 +292,22 @@ export default function Datenschutz() {
             {/* 5. Cookies, lokale Speicherung & Speicherdauer */}
             <section id="speicherdauer" className="scroll-mt-24 space-y-3">
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                5. Cookies, lokale Speicherung (§ 25 TDDDG) &amp; Speicherdauer
+                5. Cookies, lokale Speicherung (<NoTx>§ 25 TDDDG</NoTx>) &amp; Speicherdauer
               </h2>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 Wir setzen <strong>keine Werbe- oder Tracking-Cookies</strong> ein. Im lokalen
                 Speicher Ihres Browsers werden ausschließlich technisch erforderliche
                 Einstellungen gespeichert (Farbdesign, Karten-Einwilligung sowie optional ein
                 Formular-Entwurf bzw. ein gewählter Ort während Ihrer Sitzung;{" "}
-                <strong>§ 25 Abs. 2 Nr. 2 TDDDG</strong>).
+                <strong>
+                  <NoTx>§ 25 Abs. 2 Nr. 2 TDDDG</NoTx>
+                </strong>
+                ).
               </p>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 Personenbezogene Daten werden gelöscht, sobald der Zweck entfällt und keine
-                gesetzlichen Aufbewahrungsfristen (z. B. 6 bis 10 Jahre für Kaufbelege nach
-                § 257 HGB, § 147 AO) entgegenstehen.
+                gesetzlichen Aufbewahrungsfristen (z. B. 6 bis 10 Jahre für Kaufbelege nach{" "}
+                <NoTx>§ 257 HGB</NoTx>, <NoTx>§ 147 AO</NoTx>) entgegenstehen.
               </p>
             </section>
 
@@ -264,41 +319,50 @@ export default function Datenschutz() {
               <div className="flex items-center gap-2 text-accent">
                 <Eye size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  6. Ihre Rechte nach DSGVO
+                  6. Ihre Rechte nach <NoTx>DSGVO</NoTx>
                 </h2>
               </div>
               <div className="grid gap-2 text-xs sm:text-sm text-ink-muted dark:text-slate-300">
                 <div className="flex items-start gap-2">
                   <CheckCircle2 size={15} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
                   <span>
-                    <strong>Auskunft, Berichtigung, Löschung &amp; Einschränkung</strong> (Art. 15–18 DSGVO)
+                    <strong>Auskunft, Berichtigung, Löschung &amp; Einschränkung</strong> (
+                    <NoTx>Art. 15–18 DSGVO</NoTx>)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle2 size={15} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
                   <span>
-                    <strong>Datenübertragbarkeit &amp; Widerspruch</strong> (Art. 20–21 DSGVO)
+                    <strong>Datenübertragbarkeit &amp; Widerspruch</strong> (
+                    <NoTx>Art. 20–21 DSGVO</NoTx>)
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle2 size={15} className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
                   <span>
-                    <strong>Widerruf erteilter Einwilligungen</strong> jederzeit mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO)
+                    <strong>Widerruf erteilter Einwilligungen</strong> jederzeit mit Wirkung für die Zukunft (
+                    <NoTx>Art. 7 Abs. 3 DSGVO</NoTx>)
                   </span>
                 </div>
               </div>
 
               <div className="pt-3 border-t border-primary/10 dark:border-white/10 space-y-1 text-xs sm:text-sm text-ink-muted dark:text-slate-300">
                 <p className="font-bold text-primary dark:text-slate-100">
-                  Beschwerderecht bei der Aufsichtsbehörde (Art. 77 DSGVO):
+                  Beschwerderecht bei der Aufsichtsbehörde (<NoTx>Art. 77 DSGVO</NoTx>):
                 </p>
                 <p>
-                  {dataProtectionAuthority.name}, {dataProtectionAuthority.street},{" "}
-                  {dataProtectionAuthority.zipCity} · Tel.{" "}
-                  <span className="tabular-nums">{dataProtectionAuthority.phone}</span> ·{" "}
+                  <NoTx>{dataProtectionAuthority.name}</NoTx>,{" "}
+                  <NoTx>{dataProtectionAuthority.street}</NoTx>,{" "}
+                  <NoTx ltr>{dataProtectionAuthority.zipCity}</NoTx> · Tel.{" "}
+                  <NoTx ltr>
+                    <span className="tabular-nums">{dataProtectionAuthority.phone}</span>
+                  </NoTx>{" "}
+                  ·{" "}
                   <a
                     href={`mailto:${dataProtectionAuthority.email}`}
-                    className="font-semibold text-accent underline underline-offset-2"
+                    dir="ltr"
+                    translate="no"
+                    className="notranslate inline-block font-semibold text-accent underline underline-offset-2"
                   >
                     {dataProtectionAuthority.email}
                   </a>{" "}
@@ -307,7 +371,9 @@ export default function Datenschutz() {
                     href={dataProtectionAuthority.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-0.5 font-semibold text-accent underline underline-offset-2"
+                    dir="ltr"
+                    translate="no"
+                    className="notranslate inline-flex items-center gap-0.5 font-semibold text-accent underline underline-offset-2"
                   >
                     <span>lfd.niedersachsen.de</span>
                     <ExternalLink size={11} aria-hidden="true" />

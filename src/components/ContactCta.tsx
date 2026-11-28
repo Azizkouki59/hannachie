@@ -25,12 +25,12 @@ export default function ContactCta() {
         {/* Text */}
         <div className="lg:col-span-7">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-accent-light">
-            <span>Seit {business.founded} · {business.city}</span>
+            <span>Seit {business.founded} · <span translate="no" className="notranslate">{business.city}</span></span>
             <span aria-hidden="true">·</span>
             <span>Termine nach Vereinbarung</span>
           </div>
           <h2 className="text-2xl font-extrabold leading-[1.15] sm:text-3xl lg:text-[34px] text-balance">
-            Direkt per WhatsApp anfragen.{" "}
+            Direkt per <span translate="no" className="notranslate">WhatsApp</span> anfragen.{" "}
             <span className="text-accent-light">Persönlich für Sie da.</span>
           </h2>
           <p className="mt-2.5 max-w-lg text-sm sm:text-base text-white/75">
@@ -39,12 +39,18 @@ export default function ContactCta() {
           </p>
           {/* Trust micro-items */}
           <ul className="mt-3.5 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-white/65">
-            {[`${yearsOfExperience}+ Jahre Erfahrung`, "Originalteile nach E-Nr.", "Geräte auf Anfrage"].map((item) => (
-              <li key={item} className="flex items-center gap-1.5">
-                <span className="h-1 w-1 rounded-full bg-accent/70 shrink-0" />
-                {item}
-              </li>
-            ))}
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-accent/70 shrink-0" />
+              <span>{yearsOfExperience}+ Jahre Erfahrung</span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-accent/70 shrink-0" />
+              <span>Originalteile nach <span translate="no" className="notranslate">E-Nr.</span></span>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-accent/70 shrink-0" />
+              <span>Geräte auf Anfrage</span>
+            </li>
           </ul>
         </div>
 
@@ -62,12 +68,14 @@ export default function ContactCta() {
                 <span className="whatsapp-hover-icon shrink-0" aria-hidden="true">
                   <MessageCircle size={16} />
                 </span>
-                <span className="truncate">Direkt per WhatsApp schreiben</span>
+                <span className="truncate">
+                  Direkt per <span translate="no" className="notranslate">WhatsApp</span> schreiben
+                </span>
               </span>
               <ArrowRight size={15} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
             </a>
             <p className="text-center text-[11px] leading-snug text-white/60">
-              Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+              Freiwillige Weiterleitung zu <span translate="no" className="notranslate">WhatsApp</span> (Meta) ·{" "}
               <Link
                 href="/datenschutz#whatsapp"
                 className="underline underline-offset-2 hover:text-white/90 transition-colors"
@@ -94,10 +102,10 @@ export default function ContactCta() {
           >
             <Phone size={13} className="text-accent-light shrink-0" />
             <span className="truncate sm:hidden">
-              <strong className="text-white tabular-nums">{business.phoneDisplay}</strong>
+              <strong dir="ltr" translate="no" className="notranslate text-white tabular-nums">{business.phoneDisplay}</strong>
             </span>
             <span className="hidden sm:inline truncate">
-              Anrufen: <strong className="text-white tabular-nums">{business.phoneDisplay}</strong>
+              Anrufen: <strong dir="ltr" translate="no" className="notranslate text-white tabular-nums">{business.phoneDisplay}</strong>
             </span>
           </a>
         </div>

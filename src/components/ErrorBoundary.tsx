@@ -64,7 +64,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               className="btn-primary w-full sm:w-auto"
             >
               <Home size={16} aria-hidden />
-              Zur Startseite
+              <span>Zur Startseite</span>
             </button>
             <button
               type="button"
@@ -72,14 +72,16 @@ export default class ErrorBoundary extends Component<Props, State> {
               className="btn-ghost w-full sm:w-auto"
             >
               <RotateCcw size={16} aria-hidden />
-              Seite neu laden
+              <span>Seite neu laden</span>
             </button>
             <a
               href={business.phoneHref}
               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-accent dark:text-accent-light hover:underline"
             >
               <Phone size={16} aria-hidden />
-              {business.phoneDisplay}
+              <span dir="ltr" translate="no" className="notranslate">
+                {business.phoneDisplay}
+              </span>
             </a>
           </div>
         </div>

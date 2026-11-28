@@ -1056,7 +1056,7 @@ export default function GoogleMapsPinModal({
                   ) : (
                     <Search size={14} className="shrink-0" />
                   )}
-                  <span>Suchen</span>
+                  <span key={isSearchingPlace ? "searching" : "search"}>Suchen</span>
                 </button>
               </div>
 
@@ -1128,7 +1128,9 @@ export default function GoogleMapsPinModal({
                   ) : (
                     <Navigation size={13} className="text-accent shrink-0" />
                   )}
-                  <span>{gpsLocating ? "Suche…" : "Mein Standort"}</span>
+                  <span key={gpsLocating ? "locating" : "locate"}>
+                    {gpsLocating ? "Suche…" : "Mein Standort"}
+                  </span>
                 </button>
               </div>
 

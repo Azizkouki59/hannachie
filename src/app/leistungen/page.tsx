@@ -119,7 +119,7 @@ export default function LeistungenPage() {
                     triggerHapticFeedback(25);
                     setActiveTab(tab.id);
                   }}
-                  className={`relative flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-extrabold transition-colors cursor-pointer ${
+                  className={`relative flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-extrabold transition-colors active:scale-[0.97] cursor-pointer ${
                     active
                       ? "text-white"
                       : "text-ink-muted hover:text-primary dark:hover:text-white"
@@ -152,24 +152,26 @@ export default function LeistungenPage() {
                 triggerHapticFeedback(35);
                 openQuickRequest("Waschmaschine", "", "", "repair");
               }}
-              className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-extrabold text-white hover:bg-accent-dark transition-colors whitespace-nowrap cursor-pointer"
+              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-center text-xs font-extrabold leading-tight text-white hover:bg-accent-dark active:scale-[0.97] transition-all sm:whitespace-nowrap cursor-pointer"
             >
-              <PackageSearch size={14} aria-hidden="true" />
+              <PackageSearch size={14} className="shrink-0" aria-hidden="true" />
               <span>Anfrage starten</span>
             </button>
             <Link
               href="/marktplatz"
-              className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors whitespace-nowrap"
+              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3.5 py-2 text-center text-xs font-bold leading-tight text-primary dark:text-slate-100 hover:border-accent active:scale-[0.97] transition-all sm:whitespace-nowrap"
             >
               <Package size={14} className="text-accent shrink-0" aria-hidden="true" />
               <span>Aktueller Bestand</span>
             </Link>
             <a
               href={business.phoneHref}
-              className="col-span-2 sm:col-span-1 inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors whitespace-nowrap"
+              className="col-span-2 sm:col-span-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.97] transition-all sm:whitespace-nowrap"
             >
               <Phone size={14} className="text-accent shrink-0" aria-hidden="true" />
-              <span className="tabular-nums">{business.phoneDisplay}</span>
+              <span dir="ltr" translate="no" className="notranslate tabular-nums">
+                {business.phoneDisplay}
+              </span>
             </a>
           </div>
         </div>
@@ -207,7 +209,10 @@ export default function LeistungenPage() {
                     Direktwahl · 1-Klick Anfrage nach Anliegen
                   </p>
                   <h2 className="mt-1 text-xl sm:text-2xl font-extrabold text-primary dark:text-slate-100 tracking-tight">
-                    Unsere 4 Kernbereiche in Osnabrück
+                    Unsere 4 Kernbereiche in{" "}
+                    <span translate="no" className="notranslate">
+                      Osnabrück
+                    </span>
                   </h2>
                 </div>
 
@@ -248,7 +253,7 @@ export default function LeistungenPage() {
                                         triggerHapticFeedback(30);
                                         openQuickRequest(s.title, symptom, "", "repair");
                                       }}
-                                      className="group/sym flex min-h-[38px] w-full items-center justify-between gap-2 py-1.5 text-left text-xs font-medium text-primary dark:text-slate-200 hover:text-accent transition-colors cursor-pointer"
+                                      className="group/sym flex min-h-[44px] w-full items-center justify-between gap-2 py-2 text-left text-xs font-medium text-primary dark:text-slate-200 hover:text-accent transition-colors cursor-pointer"
                                     >
                                       <span className="flex items-start gap-2 min-w-0">
                                         <Check size={13} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
@@ -273,14 +278,14 @@ export default function LeistungenPage() {
                                 triggerHapticFeedback(35);
                                 openQuickRequest(s.title, "", "", "repair");
                               }}
-                              className="inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl bg-primary dark:bg-accent px-3.5 py-2 text-xs font-extrabold text-white hover:bg-accent dark:hover:bg-accent-dark transition-colors cursor-pointer"
+                              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary dark:bg-accent px-4 py-2 text-xs font-extrabold text-white hover:bg-accent dark:hover:bg-accent-dark active:scale-[0.97] transition-all cursor-pointer"
                             >
                               <span>Anfragen</span>
                               <ArrowRight size={13} aria-hidden="true" />
                             </button>
                             <Link
                               href={`/leistungen/${s.slug}`}
-                              className="inline-flex min-h-[38px] items-center gap-1 px-2 text-xs font-bold text-ink-muted hover:text-accent transition-colors"
+                              className="inline-flex min-h-[44px] items-center gap-1 px-2.5 text-xs font-bold text-ink-muted hover:text-accent transition-colors"
                             >
                               <span>Details</span>
                               <ArrowRight size={13} aria-hidden="true" />
@@ -342,7 +347,7 @@ export default function LeistungenPage() {
                   <h2 className="text-base font-extrabold text-primary dark:text-slate-100">
                     Geführte Herstellermarken
                   </h2>
-                  <p className="text-sm font-semibold text-primary/90 dark:text-slate-200 leading-relaxed">
+                  <p translate="no" className="notranslate text-sm font-semibold text-primary/90 dark:text-slate-200 leading-relaxed">
                     {supportedManufacturers.join(" · ")}
                   </p>
                   <p className="pt-2 border-t border-primary/8 dark:border-white/10 inline-flex items-start gap-2 text-xs text-ink-muted leading-relaxed">
@@ -351,7 +356,7 @@ export default function LeistungenPage() {
                       {business.warrantyNotice}{" "}
                       <Link
                         href="/impressum#garantie"
-                        className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark whitespace-nowrap"
+                        className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark sm:whitespace-nowrap"
                       >
                         Garantiebedingungen
                       </Link>

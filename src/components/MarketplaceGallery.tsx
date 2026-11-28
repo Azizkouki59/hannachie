@@ -114,7 +114,7 @@ export function ProductCardGallery({
         <div className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
           <div className="pointer-events-auto flex items-center gap-1.5">
             {hasMultiple && (
-              <span className="rounded-md bg-slate-950/80 backdrop-blur-xs px-2 py-0.5 font-mono text-[11px] font-bold text-white tabular-nums">
+              <span dir="ltr" translate="no" className="notranslate rounded-md bg-slate-950/80 backdrop-blur-xs px-2 py-0.5 font-mono text-[11px] font-bold text-white tabular-nums">
                 {safeIndex + 1}/{slides.length}
               </span>
             )}
@@ -168,7 +168,7 @@ export function ProductCardGallery({
           <span className="font-semibold text-white/95 truncate">
             {activeSlide.label || item.categoryLabel}
           </span>
-          <span className="font-mono text-[10px] text-white/80 tabular-nums shrink-0">
+          <span dir="ltr" translate="no" className="notranslate font-mono text-[10px] text-white/80 tabular-nums shrink-0">
             {item.skuOrEnr}
           </span>
         </div>
@@ -265,9 +265,13 @@ export function ProductZoomLightbox({
       <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 sm:px-6 py-3.5 shrink-0">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
-            <span className="font-bold text-white">{item.brand}</span>
+            <span translate="no" className="notranslate font-bold text-white">
+              {item.brand}
+            </span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono tabular-nums">{item.skuOrEnr}</span>
+            <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
+              {item.skuOrEnr}
+            </span>
             {activeSlide.label && (
               <>
                 <span aria-hidden="true">·</span>
@@ -277,11 +281,11 @@ export function ProductZoomLightbox({
               </>
             )}
             <span aria-hidden="true">·</span>
-            <span className="font-mono tabular-nums">
+            <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
               {activeIndex + 1} / {slides.length}
             </span>
           </div>
-          <h3 className="mt-0.5 text-sm sm:text-base font-extrabold text-white truncate">
+          <h3 dir="auto" className="mt-0.5 text-sm sm:text-base font-extrabold text-white truncate">
             {item.title}
           </h3>
         </div>
@@ -291,10 +295,12 @@ export function ProductZoomLightbox({
             type="button"
             onClick={() => setZoomed((z) => !z)}
             aria-pressed={zoomed}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-white/20 transition-colors cursor-pointer whitespace-nowrap"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-center text-xs font-extrabold leading-tight text-white hover:bg-white/20 transition-colors cursor-pointer sm:whitespace-nowrap"
           >
-            {zoomed ? <ZoomOut size={15} /> : <ZoomIn size={15} />}
-            <span>{zoomed ? "1× Ansicht" : "2× Zoom (Typenschild)"}</span>
+            <span key={zoomed ? "zoom-out" : "zoom-in"} className="inline-flex items-center gap-1.5">
+              {zoomed ? <ZoomOut size={15} className="shrink-0" /> : <ZoomIn size={15} className="shrink-0" />}
+              <span>{zoomed ? "1× Ansicht" : "2× Zoom (Typenschild)"}</span>
+            </span>
           </button>
 
           <button

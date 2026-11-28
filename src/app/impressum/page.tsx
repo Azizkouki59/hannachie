@@ -20,12 +20,20 @@ import { buildRouteMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildRouteMetadata("/impressum");
 
 const ANCHORS = [
-  { href: "#anbieter", label: "Anbieter (§ 5 DDG)" },
-  { href: "#gewerbe", label: "Gewerbe & HwO" },
-  { href: "#garantie", label: "Garantie & BGB" },
-  { href: "#elektrog", label: "ElektroG" },
-  { href: "#streitbeilegung", label: "Streitbeilegung" },
+  { href: "#anbieter", label: "Anbieter", code: "§ 5 DDG" },
+  { href: "#gewerbe", label: "Gewerbe &", code: "HwO" },
+  { href: "#garantie", label: "Garantie &", code: "BGB" },
+  { href: "#elektrog", label: "", code: "ElektroG" },
+  { href: "#streitbeilegung", label: "Streitbeilegung", code: "" },
 ];
+
+function NoTx({ children, ltr = false }: { children: React.ReactNode; ltr?: boolean }) {
+  return (
+    <span translate="no" dir={ltr ? "ltr" : undefined} className="notranslate">
+      {children}
+    </span>
+  );
+}
 
 export default function Impressum() {
   const { legal } = business;
@@ -46,7 +54,7 @@ export default function Impressum() {
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-ink-muted dark:text-slate-400">
                 <div className="inline-flex items-center gap-2 font-semibold text-primary dark:text-slate-200">
                   <Clock3 size={16} className="text-accent shrink-0" aria-hidden="true" />
-                  <span>§ 5 DDG · § 14 GewO · § 479 BGB · § 17 ElektroG</span>
+                  <NoTx>§ 5 DDG · § 14 GewO · § 479 BGB · § 17 ElektroG</NoTx>
                 </div>
                 <Link
                   href="/datenschutz"
@@ -68,6 +76,20 @@ export default function Impressum() {
                       className="py-1 hover:text-accent transition-colors underline-offset-4 hover:underline"
                     >
                       {item.label}
+                      {item.code && item.label === "Anbieter" ? (
+                        <>
+                          {" ("}
+                          <NoTx>{item.code}</NoTx>
+                          {")"}
+                        </>
+                      ) : item.code && item.label ? (
+                        <>
+                          {" "}
+                          <NoTx>{item.code}</NoTx>
+                        </>
+                      ) : item.code ? (
+                        <NoTx>{item.code}</NoTx>
+                      ) : null}
                     </a>
                     {index < ANCHORS.length - 1 && (
                       <span aria-hidden="true" className="text-primary/20 dark:text-white/20">
@@ -87,7 +109,7 @@ export default function Impressum() {
               <div className="flex items-center gap-2 text-accent">
                 <Building2 size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  1. Angaben gemäß § 5 DDG (Diensteanbieter &amp; Kontakt)
+                  1. Angaben gemäß <NoTx>§ 5 DDG</NoTx> (Diensteanbieter &amp; Kontakt)
                 </h2>
               </div>
 
@@ -97,16 +119,17 @@ export default function Impressum() {
                     Unternehmen &amp; Rechtsform
                   </p>
                   <p className="font-extrabold text-base sm:text-lg text-primary dark:text-white">
-                    {business.name} {business.tagline}
+                    <NoTx>{business.name}</NoTx> {business.tagline}
                   </p>
                   <p className="text-ink-muted dark:text-slate-300">
                     Inhaber ({legal.legalForm}):{" "}
                     <strong className="font-semibold text-primary dark:text-slate-100">
-                      {business.owner}
+                      <NoTx>{business.owner}</NoTx>
                     </strong>
                   </p>
                   <p className="text-xs text-ink-muted dark:text-slate-400">
-                    {business.legalLicense} (seit {business.founded})
+                    {business.legalLicense} (seit{" "}
+                    <NoTx ltr>{business.founded}</NoTx>)
                   </p>
                 </div>
 
@@ -117,9 +140,11 @@ export default function Impressum() {
                   <address className="not-italic text-ink-muted dark:text-slate-300 flex items-start gap-2">
                     <MapPin size={16} className="text-accent shrink-0 mt-1" aria-hidden="true" />
                     <span>
-                      {business.street}
+                      <NoTx>{business.street}</NoTx>
                       <br />
-                      {business.zip} {business.city}
+                      <NoTx ltr>
+                        {business.zip} {business.city}
+                      </NoTx>
                       <br />
                       Deutschland
                       <br />
@@ -136,11 +161,13 @@ export default function Impressum() {
                   <Phone size={16} className="text-accent shrink-0 mt-1" aria-hidden="true" />
                   <div>
                     <span className="block text-xs font-bold uppercase tracking-wider text-ink-faint">
-                      Telefon &amp; WhatsApp
+                      Telefon &amp; <NoTx>WhatsApp</NoTx>
                     </span>
                     <a
                       href={business.phoneHref}
-                      className="font-bold text-primary dark:text-white hover:text-accent transition-colors tabular-nums"
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate inline-block font-bold text-primary dark:text-white hover:text-accent transition-colors tabular-nums"
                     >
                       {business.phoneDisplay}
                     </a>
@@ -158,7 +185,9 @@ export default function Impressum() {
                     </span>
                     <a
                       href={`mailto:${business.email}`}
-                      className="font-bold text-accent dark:text-accent-light underline underline-offset-4"
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate inline-block font-bold text-accent dark:text-accent-light underline underline-offset-4"
                     >
                       {business.email}
                     </a>
@@ -173,7 +202,7 @@ export default function Impressum() {
               <div className="border-t border-primary/10 dark:border-white/10 pt-5 space-y-2.5 text-xs sm:text-sm text-ink-muted dark:text-slate-300">
                 <p>
                   <strong className="font-semibold text-primary dark:text-slate-100">
-                    Gewerbeanmeldung (§ 14 GewO):
+                    Gewerbeanmeldung (<NoTx>§ 14 GewO</NoTx>):
                   </strong>{" "}
                   {legal.tradeAuthority}.
                 </p>
@@ -186,9 +215,11 @@ export default function Impressum() {
                 {legal.ustIdNr ? (
                   <p>
                     <strong className="font-semibold text-primary dark:text-slate-100">
-                      Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG:
+                      Umsatzsteuer-Identifikationsnummer gemäß <NoTx>§ 27a UStG</NoTx>:
                     </strong>{" "}
-                    <span className="font-mono">{legal.ustIdNr}</span>
+                    <span dir="ltr" translate="no" className="notranslate font-mono">
+                      {legal.ustIdNr}
+                    </span>
                   </p>
                 ) : (
                   <p>
@@ -201,9 +232,11 @@ export default function Impressum() {
                 {legal.wirtschaftsIdNr && (
                   <p>
                     <strong className="font-semibold text-primary dark:text-slate-100">
-                      Wirtschafts-Identifikationsnummer (W-IdNr.) gemäß § 139c AO:
+                      Wirtschafts-Identifikationsnummer (W-IdNr.) gemäß <NoTx>§ 139c AO</NoTx>:
                     </strong>{" "}
-                    <span className="font-mono">{legal.wirtschaftsIdNr}</span>
+                    <span dir="ltr" translate="no" className="notranslate font-mono">
+                      {legal.wirtschaftsIdNr}
+                    </span>
                   </p>
                 )}
               </div>
@@ -217,7 +250,7 @@ export default function Impressum() {
               <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                 <ShieldCheck size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  2. Gewerbeart (§ 14 GewO) &amp; Abgrenzung zur Handwerksordnung (HwO)
+                  2. Gewerbeart (<NoTx>§ 14 GewO</NoTx>) &amp; Abgrenzung zur Handwerksordnung (<NoTx>HwO</NoTx>)
                 </h2>
               </div>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
@@ -228,13 +261,13 @@ export default function Impressum() {
               </p>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 <strong className="font-semibold text-primary dark:text-slate-200">
-                  Klare Abgrenzung zur Anlage A HwO:
+                  Klare Abgrenzung zur <NoTx>Anlage A HwO</NoTx>:
                 </strong>{" "}
                 {business.hwoDisclaimer}
               </p>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 <strong className="font-semibold text-primary dark:text-slate-200">
-                  Kein Online-Shop / Preisangaben (PAngV):
+                  Kein Online-Shop / Preisangaben (<NoTx>PAngV</NoTx>):
                 </strong>{" "}
                 {legal.pangvNotice}
               </p>
@@ -248,7 +281,7 @@ export default function Impressum() {
               <div className="flex items-center gap-2 text-accent">
                 <Scale size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  3. Gesetzliche Mängelrechte (§ 476 BGB) &amp; Verkäufergarantie (§ 479 BGB)
+                  3. Gesetzliche Mängelrechte (<NoTx>§ 476 BGB</NoTx>) &amp; Verkäufergarantie (<NoTx>§ 479 BGB</NoTx>)
                 </h2>
               </div>
 
@@ -262,7 +295,7 @@ export default function Impressum() {
 
                 <div className="rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-950 p-4 sm:p-5 space-y-2.5 text-xs sm:text-sm">
                   <p className="font-bold text-primary dark:text-white">
-                    Pflichtangaben zur freiwilligen schriftlichen Verkäufergarantie (§ 479 BGB)
+                    Pflichtangaben zur freiwilligen schriftlichen Verkäufergarantie (<NoTx>§ 479 BGB</NoTx>)
                   </p>
                   <p className="font-semibold text-primary dark:text-slate-100">
                     {legal.warrantyBgb479.statutoryRightsNotice}
@@ -305,7 +338,7 @@ export default function Impressum() {
               <div className="flex items-center gap-2 text-accent">
                 <Recycle size={20} aria-hidden="true" />
                 <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                  4. Hinweise zur Altgeräteentsorgung (§ 17 ElektroG)
+                  4. Hinweise zur Altgeräteentsorgung (<NoTx>§ 17 ElektroG</NoTx>)
                 </h2>
               </div>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
@@ -325,12 +358,16 @@ export default function Impressum() {
             {/* 5. Inhaltlich Verantwortlicher (§ 18 Abs. 2 MStV) */}
             <div className="space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                5. Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
+                5. Verantwortlich für den Inhalt nach <NoTx>§ 18 Abs. 2 MStV</NoTx>
               </h2>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
-                {business.owner}
+                <NoTx>{business.owner}</NoTx>
                 <br />
-                {business.street}, {business.zip} {business.city}, Deutschland
+                <NoTx>{business.street}</NoTx>,{" "}
+                <NoTx ltr>
+                  {business.zip} {business.city}
+                </NoTx>
+                , Deutschland
               </p>
             </div>
 
@@ -340,9 +377,11 @@ export default function Impressum() {
                 6. Unabhängiger Fachhandel &amp; Markenhinweis
               </h2>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
-                {business.name} {business.tagline} ist ein unabhängiger Fachhandelsbetrieb (
-                <strong>Handelsgewerbe gemäß § 14 GewO</strong>) für Elektrohaushaltsgeräte,
-                persönliche Fachberatung, Original-Ersatzteile und ausgewählte Markengeräte auf
+                <NoTx>{business.name}</NoTx> {business.tagline} ist ein unabhängiger Fachhandelsbetrieb (
+                <strong>
+                  Handelsgewerbe gemäß <NoTx>§ 14 GewO</NoTx>
+                </strong>
+                ) für Elektrohaushaltsgeräte, persönliche Fachberatung, Original-Ersatzteile und ausgewählte Markengeräte auf
                 Anfrage und kein autorisierter Werkskundendienst der genannten Hersteller. Alle
                 aufgeführten Marken-, Produkt- und Herstellerbezeichnungen sind Eigentum der
                 jeweiligen Rechteinhaber und dienen ausschließlich der eindeutigen Identifikation
@@ -354,13 +393,14 @@ export default function Impressum() {
             {/* 7. Verbraucherstreitbeilegung (§ 36 VSBG) — bewusst ohne abgeschaltete EU-OS-Plattform */}
             <section id="streitbeilegung" className="scroll-mt-24 space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-primary dark:text-slate-100">
-                7. Verbraucherstreitbeilegung (§ 36 VSBG)
+                7. Verbraucherstreitbeilegung (<NoTx>§ 36 VSBG</NoTx>)
               </h2>
               <p className="text-sm sm:text-base text-ink-muted dark:text-slate-300">
                 Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer
                 Verbraucherschlichtungsstelle teilzunehmen. Bei Rückfragen oder Anliegen wenden Sie
-                sich bitte direkt an Inhaber {business.owner} ({business.email} /{" "}
-                {business.phoneDisplay}).
+                sich bitte direkt an Inhaber <NoTx>{business.owner}</NoTx> (
+                <NoTx ltr>{business.email}</NoTx> /{" "}
+                <NoTx ltr>{business.phoneDisplay}</NoTx>).
               </p>
             </section>
 
@@ -372,19 +412,20 @@ export default function Impressum() {
                 </h3>
                 <p className="mt-1">
                   Als Diensteanbieter sind wir gemäß den allgemeinen Gesetzen für eigene Inhalte auf
-                  diesen Seiten verantwortlich. Für Inhalte externer Websites Dritter (z. B. Google
-                  Maps, WhatsApp oder Facebook), auf die direkt oder indirekt
+                  diesen Seiten verantwortlich. Für Inhalte externer Websites Dritter (z. B.{" "}
+                  <NoTx>Google Maps</NoTx>, <NoTx>WhatsApp</NoTx> oder{" "}
+                  <NoTx>Facebook</NoTx>), auf die direkt oder indirekt
                   verwiesen wird, übernehmen wir keine Gewähr; verantwortlich ist stets der
                   jeweilige Anbieter.
                 </p>
               </div>
               <div>
                 <h3 className="font-bold text-primary dark:text-slate-200">
-                  Hinweis zu Google-Maps-Kundenbewertungen
+                  Hinweis zu <NoTx>Google-Maps</NoTx>-Kundenbewertungen
                 </h3>
                 <p className="mt-1">
                   Auf dieser Website dargestellte Kundenrezensionen sind Auszüge öffentlich
-                  einsehbarer Bewertungen Dritter auf Google Maps und geben ausschließlich die
+                  einsehbarer Bewertungen Dritter auf <NoTx>Google Maps</NoTx> und geben ausschließlich die
                   persönlichen Eindrücke der jeweiligen Verfasser wieder. Sie stellen kein Angebot
                   handwerklicher Reparaturleistungen dar.
                 </p>

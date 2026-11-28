@@ -6,7 +6,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { fetchGooglePlace } from "./src/server/googlePlace.ts";
-import { sanitizeSingleLine, sanitizeText } from "./src/utils/sanitize.ts";
+import {
+  hasValidImageMagicBytes,
+  isSafeGoogleMapsUrl,
+  isValidBase64ImageDataUrl,
+  sanitizeSingleLine,
+  sanitizeText,
+} from "./src/utils/sanitize.ts";
 import {
   buildSingleGrossInvoiceItems,
   createInitialSeedTickets,
@@ -66,8 +72,8 @@ function sanitizePhotosList(rawPhotos: unknown): MarketplacePhoto[] {
     const obj = entry as Record<string, unknown>;
     const url = typeof obj.url === "string" ? obj.url.trim() : "";
     const isSafeUrl =
-      url.startsWith("/uploads/") ||
-      /^data:image\/(webp|jpeg|jpg|png);base64,[A-Za-z0-9+/=]+$/i.test(url);
+      (/^\/uploads\/ph-[a-z0-9-]+\.(webp|jpg|jpeg|png)$/i.test(url)) ||
+      isValidBase64ImageDataUrl(url);
     if (!isSafeUrl || url.length > 2_500_000) continue;
     const id =
       sanitizeSingleLine(obj.id, 60) ||
@@ -232,7 +238,7 @@ function clearAdminSessionCookie(req: Request, res: Response): void {
 }
 
 function verifyAdminPassword(candidate: string): boolean {
-  if (!candidate) return false;
+  if (!candidate || candidate.length > 256) return false;
   const envPass = (process.env.ADMIN_PASSWORD || process.env.ADMIN_PIN || "").trim();
   if (envPass) {
     const a = crypto.createHash("sha256").update(candidate).digest();
@@ -251,6 +257,17 @@ const adminLoginAttempts = new Map<string, number[]>();
 function isAdminLoginRateLimited(ip: string): boolean {
   const now = Date.now();
   const cutoff = now - ADMIN_LOGIN_WINDOW_MS;
+  if (adminLoginAttempts.size > 2000) {
+    for (const [k, tsList] of adminLoginAttempts.entries()) {
+      const active = tsList.filter((ts) => ts > cutoff);
+      if (active.length === 0) adminLoginAttempts.delete(k);
+      else adminLoginAttempts.set(k, active);
+    }
+    if (adminLoginAttempts.size > 2000) {
+      const oldestKey = adminLoginAttempts.keys().next().value;
+      if (oldestKey) adminLoginAttempts.delete(oldestKey);
+    }
+  }
   const recent = (adminLoginAttempts.get(ip) || []).filter((ts) => ts > cutoff);
   if (recent.length >= ADMIN_LOGIN_MAX_ATTEMPTS) {
     adminLoginAttempts.set(ip, recent);
@@ -422,6 +439,7 @@ function isSameOriginMutation(req: Request): boolean {
     req.headers.host ||
     ""
   ).toLowerCase();
+  if (!expectedHost) return false;
   const originHeader = req.headers.origin;
   if (typeof originHeader === "string" && originHeader.length > 0) {
     try {
@@ -498,16 +516,24 @@ const cleanupTimer = setInterval(() => {
 cleanupTimer.unref?.();
 
 function getClientIp(req: Request): string {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.length > 0) {
-    return forwarded.split(",")[0].trim();
-  }
+  // Rely on Express's trusted proxy resolution (trust proxy = 1) rather than untrusted leftmost X-Forwarded-For values
   return req.ip || req.socket.remoteAddress || "unknown";
 }
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const cutoff = now - RATE_LIMIT_WINDOW_MS;
+  if (rateLimitStore.size > 2000) {
+    for (const [k, tsList] of rateLimitStore.entries()) {
+      const active = tsList.filter((ts) => ts > cutoff);
+      if (active.length === 0) rateLimitStore.delete(k);
+      else rateLimitStore.set(k, active);
+    }
+    if (rateLimitStore.size > 2000) {
+      const oldestKey = rateLimitStore.keys().next().value;
+      if (oldestKey) rateLimitStore.delete(oldestKey);
+    }
+  }
   const recent = (rateLimitStore.get(ip) || []).filter((ts) => ts > cutoff);
   if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
     rateLimitStore.set(ip, recent);
@@ -659,6 +685,7 @@ async function createApp() {
       immutable: true,
       fallthrough: false,
       setHeaders: (res, filePath) => {
+        res.setHeader("Content-Disposition", "inline");
         if (filePath.endsWith(".webp")) {
           res.setHeader("Content-Type", "image/webp");
         } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
@@ -706,6 +733,14 @@ async function createApp() {
         res.status(400).json({
           ok: false,
           error: "Bildgröße außerhalb des zulässigen Bereichs (max. 8 MB).",
+        });
+        return;
+      }
+
+      if (!hasValidImageMagicBytes(buffer, ext)) {
+        res.status(400).json({
+          ok: false,
+          error: "Ungültige Bilddatei-Signatur. Erlaubt sind WebP, JPEG und PNG.",
         });
         return;
       }
@@ -807,11 +842,8 @@ async function createApp() {
   app.get("/api/google-place", async (req: Request, res: Response) => {
     res.setHeader("Cache-Control", "no-store");
 
-    const requestedPlaceId =
-      typeof req.query.placeId === "string" ? req.query.placeId.trim() : "";
-    const placeId = /^[A-Za-z0-9_-]{10,120}$/.test(requestedPlaceId)
-      ? requestedPlaceId
-      : DEFAULT_HANNACHI_PLACE_ID;
+    // Pin Place lookup strictly to the business's own Place ID to prevent quota/cache abuse
+    const placeId = DEFAULT_HANNACHI_PLACE_ID;
     const forceRefresh = req.query.refresh === "1" || req.query.refresh === "true";
 
     const cached = googlePlaceMemoryCache.get(placeId);
@@ -853,6 +885,10 @@ async function createApp() {
       }
       const payload = result.body;
 
+      if (googlePlaceMemoryCache.size >= 20) {
+        const oldestKey = googlePlaceMemoryCache.keys().next().value;
+        if (oldestKey) googlePlaceMemoryCache.delete(oldestKey);
+      }
       googlePlaceMemoryCache.set(placeId, {
         expiresAt: now + GOOGLE_PLACE_CACHE_TTL_MS,
         fetchedAtMs: now,
@@ -1532,19 +1568,31 @@ async function createApp() {
       return;
     }
 
+    const currentTickets = loadStoredTickets();
+    const existingIds = new Set(currentTickets.map((t) => t.id));
     const clientRefRaw =
       typeof rawBody.clientReferenceId === "string"
         ? rawBody.clientReferenceId.trim()
         : "";
-    const referenceId = /^HN-\d{4}$/.test(clientRefRaw)
-      ? clientRefRaw
-      : `HN-${crypto.randomInt(1000, 10000)}`;
+    let referenceId =
+      /^HN-\d{4}$/.test(clientRefRaw) &&
+      clientRefRaw !== "HN-0000" &&
+      !existingIds.has(clientRefRaw)
+        ? clientRefRaw
+        : `HN-${crypto.randomInt(1000, 10000)}`;
+    while (existingIds.has(referenceId) || referenceId === "HN-0000") {
+      referenceId = `HN-${crypto.randomInt(1000, 10000)}`;
+    }
     const receivedAt = new Date().toISOString();
 
     const isHomeVisit = parsed.data.visitType === "home_visit";
     const resolvedCoords = isHomeVisit
       ? resolveDefaultCoordsForZip(parsed.data.zip, parsed.data.coordinates || null)
       : { lat: 52.2647082, lng: 8.0567763, accuracy: 10 };
+
+    const safeMapsLocationUrl = isSafeGoogleMapsUrl(parsed.data.mapsLocationUrl)
+      ? parsed.data.mapsLocationUrl.trim()
+      : `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`;
 
     const marketplaceItemId = sanitizeSingleLine(rawBody.marketplaceItemId, 60);
     const marketplaceItemTitle = sanitizeSingleLine(rawBody.marketplaceItemTitle, 160);
@@ -1566,9 +1614,7 @@ async function createApp() {
       streetAddress: isHomeVisit
         ? parsed.data.streetAddress || ""
         : "Iburger Straße 5, Im Hof",
-      mapsLocationUrl:
-        parsed.data.mapsLocationUrl ||
-        `https://www.google.com/maps?q=${resolvedCoords.lat},${resolvedCoords.lng}`,
+      mapsLocationUrl: safeMapsLocationUrl,
       locationVerified: Boolean(parsed.data.locationVerified),
       coordinates: resolvedCoords,
       name: parsed.data.name || "Interessent (Osnabrück)",
@@ -1585,7 +1631,6 @@ async function createApp() {
       invoiceItems: [],
     };
 
-    const currentTickets = loadStoredTickets();
     persistStoredTickets([newTicket, ...currentTickets]);
 
     res.status(201).json({
@@ -1846,7 +1891,9 @@ async function createApp() {
         callbackTime: sanitizeSingleLine(baseRaw.callbackTime, 120) || "Jederzeit erreichbar",
         zip,
         streetAddress: sanitizeSingleLine(baseRaw.streetAddress, 200),
-        mapsLocationUrl: sanitizeSingleLine(baseRaw.mapsLocationUrl, 500) || `https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
+        mapsLocationUrl: isSafeGoogleMapsUrl(baseRaw.mapsLocationUrl)
+          ? String(baseRaw.mapsLocationUrl).trim()
+          : `https://www.google.com/maps?q=${coords.lat},${coords.lng}`,
         locationVerified: Boolean(baseRaw.locationVerified),
         coordinates: coords,
         name: sanitizeSingleLine(baseRaw.name, 120) || "Kunde",

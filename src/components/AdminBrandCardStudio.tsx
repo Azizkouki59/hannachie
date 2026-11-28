@@ -1686,12 +1686,19 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-ink">
-                1. Visitenkarten-Studio &amp; Design-Generator (85 × 55 mm)
+                1. Visitenkarten-Studio &amp; Design-Generator ({" "}
+                <span dir="ltr" translate="no" className="notranslate">
+                  85 × 55 mm
+                </span>
+                )
               </h2>
               <p className="text-xs sm:text-sm text-ink-muted mt-0.5">
-                Inspiriert vom offiziellen Hannachi-Logo – generieren Sie verschiedene
+                Inspiriert vom offiziellen{" "}
+                <span translate="no" className="notranslate">Hannachi</span>-Logo – generieren Sie verschiedene
                 Entwürfe, passen Sie jeden Text &amp; Stil frei an und laden Sie
-                druckfertige 300-DPI-PNGs herunter.
+                druckfertige{" "}
+                <span dir="ltr" translate="no" className="notranslate">300-DPI-PNGs</span>{" "}
+                herunter.
               </p>
             </div>
           </div>
@@ -1808,7 +1815,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     <div>
                       <div className="text-xs font-extrabold text-ink flex items-center gap-1">
                         {isSelected && (
-                          <Check className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+                          <Check key="chk" className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
                         )}
                         <span className="truncate">{layout.name}</span>
                       </div>
@@ -1871,7 +1878,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                       : "bg-background dark:bg-slate-950 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
                   }`}
                 >
-                  Kamal Hannachi
+                  <span translate="no" className="notranslate">Kamal Hannachi</span>
                 </button>
                 <button
                   type="button"
@@ -1882,7 +1889,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                       : "bg-background dark:bg-slate-950 text-ink border-primary/15 dark:border-white/15 hover:border-sky-500"
                   }`}
                 >
-                  Frau Hannachi
+                  <span translate="no" className="notranslate">Frau Hannachi</span>
                 </button>
                 <button
                   type="button"
@@ -1933,7 +1940,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                       />
                       <span className="text-[11px] font-bold text-ink leading-tight flex items-center gap-1">
                         {isSelected && (
-                          <Check className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
+                          <Check key="chk" className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
                         )}
                         <span>{logo.shortLabel}</span>
                       </span>
@@ -1958,7 +1965,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   className="min-h-[44px] px-3 py-2 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 hover:border-sky-400 text-xs font-bold text-ink flex items-center justify-between cursor-pointer"
                 >
                   <span>Logo-Stil</span>
-                  <span className="text-sky-600 dark:text-sky-400 font-extrabold">
+                  <span key={logoFraming} className="text-sky-600 dark:text-sky-400 font-extrabold">
                     {logoFraming === "seamless" ? "Nahtlos" : "Rahmen"}
                   </span>
                 </button>
@@ -1970,7 +1977,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   className="min-h-[44px] px-3 py-2 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-900 hover:border-sky-400 text-xs font-bold text-ink flex items-center justify-between cursor-pointer"
                 >
                   <span>Ecken</span>
-                  <span className="text-sky-600 dark:text-sky-400 font-extrabold">
+                  <span key={cornerStyle} className="text-sky-600 dark:text-sky-400 font-extrabold">
                     {cornerStyle === "rounded" ? "Abgerundet" : "Eckig (Druck)"}
                   </span>
                 </button>
@@ -2247,7 +2254,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
             {layoutId === "atelier_porcelain" && (
               <div
-                className={`relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-slate-200 bg-white text-slate-900 p-4 sm:p-6 flex flex-col justify-between`}
+                translate="no"
+                className={`notranslate relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-slate-200 bg-white text-slate-900 p-4 sm:p-6 flex flex-col justify-between`}
               >
                 {/* Top Dual Midnight + Accent Bar */}
                 <div className="absolute top-0 left-0 right-[34%] h-1.5 bg-[#071126]" />
@@ -2400,7 +2408,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
             {layoutId === "ruby_sapphire_split" && (
               <div
-                className={`relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-slate-300/70 bg-white flex`}
+                translate="no"
+                className={`notranslate relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-slate-300/70 bg-white flex`}
               >
                 {/* Left Midnight Sapphire Logo Wing */}
                 <div className="w-[38%] bg-gradient-to-b from-[#071126] to-[#0C2558] text-white p-3 sm:p-4 flex flex-col items-center justify-between text-center relative overflow-hidden">
@@ -2528,7 +2537,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
             {layoutId === "editorial_monogram" && (
               <div
-                className={`relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-[#64B5EC]/30 bg-gradient-to-br from-[#050B18] via-[#081734] to-[#0B224E] text-white p-4 sm:p-6 flex flex-col justify-between`}
+                translate="no"
+                className={`notranslate relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-[#64B5EC]/30 bg-gradient-to-br from-[#050B18] via-[#081734] to-[#0B224E] text-white p-4 sm:p-6 flex flex-col justify-between`}
               >
                 {/* Inner fine hairline */}
                 <div
@@ -2648,7 +2658,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
 
             {layoutId === "signature_midnight" && (
               <div
-                className={`relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-[#64B5EC]/35 bg-gradient-to-br from-[#071126] via-[#0B1E47] to-[#071126] text-white p-4 sm:p-6 flex flex-col justify-between`}
+                translate="no"
+                className={`notranslate relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border border-[#64B5EC]/35 bg-gradient-to-br from-[#071126] via-[#0B1E47] to-[#071126] text-white p-4 sm:p-6 flex flex-col justify-between`}
               >
                 {/* Top Dual Bar */}
                 <div
@@ -2813,10 +2824,15 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
               className="w-full min-h-[44px] px-4 py-2 rounded-xl bg-[#1974B8] hover:bg-[#145E96] disabled:opacity-60 text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
               <ImageDown className="w-4 h-4 shrink-0" />
-              <span>
-                {exportingMode === "front"
-                  ? "Exportiere Vorderseite..."
-                  : `Vorderseite (${personName}) als Druck-PNG laden`}
+              <span key={exportingMode === "front" ? "f-busy" : "f-idle"}>
+                {exportingMode === "front" ? (
+                  "Exportiere Vorderseite…"
+                ) : (
+                  <>
+                    Vorderseite (<span dir="auto">{personName}</span>) als Druck-
+                    <span translate="no" className="notranslate">PNG</span> laden
+                  </>
+                )}
               </span>
             </button>
           </div>
@@ -2825,14 +2841,17 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-bold text-ink-muted px-1">
               <span>RÜCKSEITE (Marken-Siegel &amp; Direkt-QR)</span>
-              <span className="font-mono tabular-nums">85 × 55 mm · 1050×675 px</span>
+              <span dir="ltr" translate="no" className="notranslate font-mono tabular-nums">
+                85 × 55 mm · 1050×675 px
+              </span>
             </div>
 
             {(() => {
               const isBackLight = layoutId === "atelier_porcelain";
               return (
                 <div
-                  className={`relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border p-5 sm:p-6 flex flex-col items-center justify-between text-center ${
+                  translate="no"
+                  className={`notranslate relative aspect-[85/55] w-full ${radiusClass} overflow-hidden shadow-xl border p-5 sm:p-6 flex flex-col items-center justify-between text-center ${
                     isBackLight
                       ? "bg-white text-[#071126] border-slate-200"
                       : "bg-gradient-to-br from-[#071126] via-[#0C2558] to-[#071126] text-white border-[#64B5EC]/35"
@@ -2956,10 +2975,15 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
               className="w-full min-h-[44px] px-4 py-2 rounded-xl border border-primary/20 dark:border-white/20 hover:border-sky-500 disabled:opacity-60 text-ink font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
               <Download className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-              <span>
-                {exportingMode === "back"
-                  ? "Exportiere Rückseite..."
-                  : `Rückseite (${personName}) als Druck-PNG laden`}
+              <span key={exportingMode === "back" ? "b-busy" : "b-idle"}>
+                {exportingMode === "back" ? (
+                  "Exportiere Rückseite…"
+                ) : (
+                  <>
+                    Rückseite (<span dir="auto">{personName}</span>) als Druck-
+                    <span translate="no" className="notranslate">PNG</span> laden
+                  </>
+                )}
               </span>
             </button>
           </div>
@@ -2969,7 +2993,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
         <div className="pt-2 border-t border-primary/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs text-ink-muted">
             <strong className="text-ink">Druckerei-Komplettbogen:</strong> Exportiert
-            Vorder- und Rückseite nebeneinander in einem hochauflösenden PNG (2240 × 840 px)
+            Vorder- und Rückseite nebeneinander in einem hochauflösenden{" "}
+            <span translate="no" className="notranslate">PNG</span> (2240 × 840 px)
             inklusive Formatangaben.
           </div>
           <button
@@ -2979,10 +3004,15 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#071126] hover:bg-[#0C2558] disabled:opacity-60 text-white border border-[#64B5EC]/40 text-xs sm:text-sm font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer shrink-0 transition-colors"
           >
             <ImageDown className="w-4 h-4 text-[#64B5EC]" />
-            <span>
-              {exportingMode === "sheet"
-                ? "Erstelle Druckbogen..."
-                : "Kombi-Druckbogen (Vorder- & Rückseite PNG) laden"}
+            <span key={exportingMode === "sheet" ? "s-busy" : "s-idle"}>
+              {exportingMode === "sheet" ? (
+                "Erstelle Druckbogen…"
+              ) : (
+                <>
+                  Kombi-Druckbogen (Vorder- &amp; Rückseite{" "}
+                  <span translate="no" className="notranslate">PNG</span>) laden
+                </>
+              )}
             </span>
           </button>
         </div>
@@ -2993,13 +3023,18 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-primary/10 dark:border-white/10">
           <div>
             <h3 className="text-base sm:text-lg font-extrabold text-ink">
-              2. Offizielle Marken-Logos &amp; Design-Derivate (SVG + Studio-Varianten)
+              2. Offizielle Marken-Logos &amp; Design-Derivate (
+              <span translate="no" className="notranslate">SVG</span> + Studio-Varianten)
             </h3>
             <p className="text-xs text-ink-muted mt-0.5">
               Einheitliche Weiterentwicklungen auf Basis des Hauptlogos (Saphirblau, Lichtbogen &amp; Rubinrot) – direkt auf der Visitenkarte nutzbar oder einzeln herunterladbar.
             </p>
           </div>
-          <span className="text-xs font-mono text-sky-700 dark:text-sky-300 font-bold">
+          <span
+            dir="ltr"
+            translate="no"
+            className="notranslate text-xs font-mono text-sky-700 dark:text-sky-300 font-bold"
+          >
             Farbpalette: #071126 · #1974B8 · #64B5EC · #C92A42 · #FFFFFF
           </span>
         </div>
@@ -3056,7 +3091,7 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     }`}
                   >
                     <Check className="w-4 h-4 shrink-0" />
-                    <span>
+                    <span key={isSelected ? "l-act" : "l-use"}>
                       {isSelected ? "Auf Visitenkarte aktiv" : "Auf Visitenkarte nutzen"}
                     </span>
                   </button>
@@ -3066,7 +3101,9 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                     className="flex-1 min-h-[44px] px-4 py-2 rounded-lg bg-[#1974B8] hover:bg-[#145E96] text-white text-xs sm:text-sm font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
                   >
                     <Download className="w-4 h-4 shrink-0" />
-                    <span>PNG laden</span>
+                    <span>
+                      <span translate="no" className="notranslate">PNG</span> laden
+                    </span>
                   </button>
                   {logo.svgDownload && logo.svgFilename && (
                     <button
@@ -3077,7 +3114,9 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                       className="min-h-[44px] px-3.5 py-2 rounded-lg border border-sky-500/35 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 text-xs font-extrabold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <Download className="w-3.5 h-3.5 shrink-0" />
-                      <span>SVG Vektor</span>
+                      <span>
+                        <span translate="no" className="notranslate">SVG</span> Vektor
+                      </span>
                     </button>
                   )}
                 </div>
@@ -3094,7 +3133,8 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
             3. Marken-Vision, Beschilderung &amp; Studio-Welten
           </h3>
           <p className="text-xs text-ink-muted mt-0.5">
-            Fassaden- &amp; Fahrzeug-Beschilderung, 4K-Markenbanner, App-Icons und gebrandete Showroom-Fotos aus einer einheitlichen visuellen Linie.
+            Fassaden- &amp; Fahrzeug-Beschilderung, <span translate="no" className="notranslate">4K</span>-Markenbanner,{" "}
+            <span translate="no" className="notranslate">App</span>-Icons und gebrandete Showroom-Fotos aus einer einheitlichen visuellen Linie.
           </p>
         </div>
 
@@ -3126,7 +3166,13 @@ export default function AdminBrandCardStudio({ onToast }: AdminBrandCardStudioPr
                   className="w-full min-h-[44px] px-3.5 py-2 rounded-lg bg-[#071126] hover:bg-[#0C2558] text-white text-xs font-extrabold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 >
                   <Download className="w-4 h-4 text-[#64B5EC]" />
-                  <span>Herunterladen ({asset.filename})</span>
+                  <span>
+                    Herunterladen (
+                    <span dir="ltr" translate="no" className="notranslate">
+                      {asset.filename}
+                    </span>
+                    )
+                  </span>
                 </button>
               </div>
             </div>

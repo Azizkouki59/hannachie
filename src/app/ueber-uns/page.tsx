@@ -122,15 +122,24 @@ export default function UeberUns() {
               <div className="space-y-5 sm:space-y-6">
                 {/* Quiet unboxed metadata line (zero pills) */}
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-sky-300/90">
-                  <span>{business.city}</span>
+                  <span translate="no" className="notranslate">
+                    {business.city}
+                  </span>
                   <span aria-hidden="true" className="text-white/30">
                     ·
                   </span>
-                  <span>{business.street}</span>
+                  <span translate="no" className="notranslate">
+                    {business.street}
+                  </span>
                   <span aria-hidden="true" className="text-white/30">
                     ·
                   </span>
-                  <span className="tabular-nums">Seit {business.founded}</span>
+                  <span className="tabular-nums">
+                    Seit{" "}
+                    <span dir="ltr" translate="no" className="notranslate">
+                      {business.founded}
+                    </span>
+                  </span>
                 </div>
 
                 <h1 className="text-[clamp(2.15rem,4.2vw,3.65rem)] font-extrabold leading-[1.07] tracking-tight text-white text-balance max-w-2xl">
@@ -149,12 +158,18 @@ export default function UeberUns() {
 
                 <p className="max-w-xl text-base sm:text-lg leading-relaxed text-slate-300">
                   Seit{" "}
-                  <strong className="font-semibold text-white tabular-nums">
+                  <strong dir="ltr" translate="no" className="notranslate font-semibold text-white tabular-nums">
                     {business.founded}
                   </strong>{" "}
                   steht Inhaber{" "}
-                  <strong className="font-semibold text-white">{business.owner}</strong>{" "}
-                  in Osnabrück persönlich für ehrliche Fachberatung rund um
+                  <strong translate="no" className="notranslate font-semibold text-white">
+                    {business.owner}
+                  </strong>{" "}
+                  in{" "}
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>{" "}
+                  persönlich für ehrliche Fachberatung rund um
                   Elektrohaushaltsgeräte, passgenaue Original-Ersatzteile nach Typenschild
                   und ausgewählte Markengeräte auf Anfrage.
                 </p>
@@ -167,28 +182,32 @@ export default function UeberUns() {
                       triggerHapticFeedback(35);
                       openQuickRequest("Waschmaschine", "", "", "question");
                     }}
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white shadow-[0_10px_30px_-8px_rgba(14,165,233,0.55)] hover:bg-accent-dark active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap shrink-0"
+                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-center text-sm font-bold leading-tight text-white shadow-[0_10px_30px_-8px_rgba(14,165,233,0.55)] hover:bg-accent-dark active:scale-[0.98] transition-all cursor-pointer sm:whitespace-nowrap shrink-0"
                   >
                     <span>Persönlich anfragen</span>
-                    <ArrowRight size={15} aria-hidden="true" />
+                    <ArrowRight size={15} className="shrink-0" aria-hidden="true" />
                   </button>
 
                   <a
                     href={business.phoneHref}
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 hover:border-white/35 transition-colors whitespace-nowrap shrink-0"
+                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white hover:bg-white/10 hover:border-white/35 transition-colors sm:whitespace-nowrap shrink-0"
                   >
                     <Phone size={15} className="text-sky-300 shrink-0" aria-hidden="true" />
-                    <span className="tabular-nums">{business.phoneDisplay}</span>
+                    <span dir="ltr" translate="no" className="notranslate tabular-nums">
+                      {business.phoneDisplay}
+                    </span>
                   </a>
 
                   <a
                     href={business.whatsappHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20 hover:text-white transition-colors whitespace-nowrap shrink-0"
+                    className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20 hover:text-white transition-colors sm:whitespace-nowrap shrink-0"
                   >
                     <MessageCircle size={15} className="shrink-0" aria-hidden="true" />
-                    <span>WhatsApp</span>
+                    <span translate="no" className="notranslate">
+                      WhatsApp
+                    </span>
                   </a>
                 </div>
               </div>
@@ -196,24 +215,31 @@ export default function UeberUns() {
               {/* Clean Hairline Architectural Ledger (unboxed, tabular numerals) */}
               <div className="grid grid-cols-3 gap-4 sm:gap-6 border-t border-white/14 pt-6">
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
+                  <p dir="ltr" translate="no" className="notranslate text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {business.founded}
                   </p>
                   <p className="mt-1 text-xs sm:text-[13px] text-slate-400">
-                    Gründungsjahr in {business.city}
+                    Gründungsjahr in{" "}
+                    <span translate="no" className="notranslate">
+                      {business.city}
+                    </span>
                   </p>
                 </div>
                 <div className="border-l border-white/12 pl-4 sm:pl-6">
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
+                  <p dir="ltr" translate="no" className="notranslate text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     {ratingFormatted}
                     <span className="text-sky-400 text-lg sm:text-xl font-bold"> / 5</span>
                   </p>
                   <p className="mt-1 text-xs sm:text-[13px] text-slate-400 tabular-nums">
-                    {place.userRatingCount} Google-Bewertungen
+                    {place.userRatingCount}{" "}
+                    <span translate="no" className="notranslate">
+                      Google
+                    </span>
+                    -Bewertungen
                   </p>
                 </div>
                 <div className="border-l border-white/12 pl-4 sm:pl-6">
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
+                  <p dir="ltr" translate="no" className="notranslate text-2xl sm:text-3xl font-extrabold text-white tabular-nums tracking-tight">
                     100 %
                   </p>
                   <p className="mt-1 text-xs sm:text-[13px] text-slate-400">
@@ -241,7 +267,7 @@ export default function UeberUns() {
                   {/* Measured bottom scrim guaranteeing >= 4.5:1 text contrast */}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
                   <figcaption className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                    <p className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                    <p translate="no" className="notranslate text-lg sm:text-xl font-extrabold text-white tracking-tight">
                       {business.owner}
                     </p>
                     <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-slate-300">
@@ -269,7 +295,15 @@ export default function UeberUns() {
                   Die Geschichte hinter dem Namen
                 </p>
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-primary dark:text-slate-100 tracking-tight text-balance">
-                  Ehrliche Beratung, die in Osnabrück seit {business.founded} trägt.
+                  Ehrliche Beratung, die in{" "}
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>{" "}
+                  seit{" "}
+                  <span dir="ltr" translate="no" className="notranslate">
+                    {business.founded}
+                  </span>{" "}
+                  trägt.
                 </h2>
               </div>
 
@@ -278,9 +312,13 @@ export default function UeberUns() {
                   Wer seit über drei Jahrzehnten täglich mit Waschmaschinen,
                   Geschirrspülern, Kühlgeräten und Backöfen zu tun hat, kennt jedes
                   Typenschild, jede Baureihe und jede Schwachstelle aus eigener Erfahrung.
-                  Bei Hannachi sprechen Sie nicht mit einem anonymen Callcenter, sondern
+                  Bei{" "}
+                  <span translate="no" className="notranslate">
+                    Hannachi
+                  </span>{" "}
+                  sprechen Sie nicht mit einem anonymen Callcenter, sondern
                   direkt mit{" "}
-                  <strong className="font-semibold text-primary dark:text-white">
+                  <strong translate="no" className="notranslate font-semibold text-primary dark:text-white">
                     {business.owner}
                   </strong>
                   .
@@ -294,8 +332,15 @@ export default function UeberUns() {
                   <strong className="font-semibold text-primary dark:text-white">
                     Original-Ersatzteile
                   </strong>{" "}
-                  für Marken wie {brands.join(", ")} und Liebherr sowie auf ausgewählten,
-                  geprüften{" "}
+                  für Marken wie{" "}
+                  <span translate="no" className="notranslate">
+                    {brands.join(", ")}
+                  </span>{" "}
+                  und{" "}
+                  <span translate="no" className="notranslate">
+                    Liebherr
+                  </span>{" "}
+                  sowie auf ausgewählten, geprüften{" "}
                   <strong className="font-semibold text-primary dark:text-white">
                     Markengeräten auf Anfrage
                   </strong>{" "}
@@ -318,7 +363,14 @@ export default function UeberUns() {
                   Wahl ist.“
                 </p>
                 <footer className="text-xs font-semibold text-ink-muted">
-                  — {business.owner}, {business.city}
+                  —{" "}
+                  <span translate="no" className="notranslate">
+                    {business.owner}
+                  </span>
+                  ,{" "}
+                  <span translate="no" className="notranslate">
+                    {business.city}
+                  </span>
                 </footer>
               </blockquote>
 
@@ -328,7 +380,7 @@ export default function UeberUns() {
                   <dt className="text-xs font-medium text-ink-muted">Standort</dt>
                   <dd className="font-semibold text-primary dark:text-slate-100 inline-flex items-center gap-1.5">
                     <MapPin size={13} className="text-accent shrink-0" aria-hidden="true" />
-                    <span>
+                    <span translate="no" className="notranslate">
                       {business.street}, {business.zip} {business.city}
                     </span>
                   </dd>
@@ -341,19 +393,22 @@ export default function UeberUns() {
                 </div>
                 <div className="py-3 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
                   <dt className="text-xs font-medium text-ink-muted">Direktkontakt</dt>
-                  <dd className="font-semibold text-primary dark:text-slate-100 tabular-nums">
+                  <dd className="inline-flex flex-wrap items-center gap-x-2 font-semibold text-primary dark:text-slate-100 tabular-nums">
                     <a
                       href={business.phoneHref}
-                      className="hover:text-accent transition-colors"
+                      dir="ltr"
+                      translate="no"
+                      className="notranslate inline-flex min-h-[44px] sm:min-h-0 items-center hover:text-accent transition-colors"
                     >
                       {business.phoneDisplay}
-                    </a>{" "}
-                    <span className="text-ink-muted font-normal">·</span>{" "}
+                    </a>
+                    <span className="text-ink-muted font-normal" aria-hidden="true">·</span>
                     <a
                       href={business.whatsappHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-emerald-700 dark:text-emerald-400 hover:underline"
+                      translate="no"
+                      className="notranslate inline-flex min-h-[44px] sm:min-h-0 items-center text-emerald-700 dark:text-emerald-400 hover:underline"
                     >
                       WhatsApp
                     </a>
@@ -380,7 +435,7 @@ export default function UeberUns() {
                   <div
                     role="tablist"
                     aria-label="Zeitraum auswählen"
-                    className="inline-flex items-center gap-1 rounded-xl bg-white dark:bg-slate-950 p-1 border border-primary/10 dark:border-white/10"
+                    className="snap-rail sm:inline-flex items-center gap-1 rounded-xl bg-white dark:bg-slate-950 p-1 border border-primary/10 dark:border-white/10 max-w-full"
                   >
                     {MILESTONE_ERAS.map((era) => {
                       const isActive = era.id === activeEra;
@@ -394,7 +449,7 @@ export default function UeberUns() {
                             triggerHapticFeedback(18);
                             setActiveEra(era.id);
                           }}
-                          className={`relative min-h-[36px] rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
+                          className={`relative snap-start min-h-[44px] sm:min-h-[36px] rounded-lg px-3.5 sm:px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer tabular-nums ${
                             isActive
                               ? "text-white"
                               : "text-ink-muted hover:text-primary dark:hover:text-white"
@@ -442,7 +497,7 @@ export default function UeberUns() {
                             {" "}
                             <Link
                               href="/impressum#garantie"
-                              className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark whitespace-nowrap"
+                              className="font-semibold text-accent underline underline-offset-2 hover:text-accent-dark sm:whitespace-nowrap"
                             >
                               (Garantiebedingungen)
                             </Link>
@@ -473,7 +528,14 @@ export default function UeberUns() {
                 </div>
                 <figcaption className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-muted">
                   <span>
-                    Standort {business.street} · {business.zip} {business.city}
+                    Standort{" "}
+                    <span translate="no" className="notranslate">
+                      {business.street}
+                    </span>{" "}
+                    ·{" "}
+                    <span dir="ltr" translate="no" className="notranslate">
+                      {business.zip} {business.city}
+                    </span>
                   </span>
                   <span>Persönliche Übergabe nach Terminvereinbarung</span>
                 </figcaption>
@@ -492,7 +554,14 @@ export default function UeberUns() {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <p className="text-xs font-semibold text-sky-400">
-                3D-Kurzfilm · Osnabrück seit {business.founded}
+                3D-Kurzfilm ·{" "}
+                <span translate="no" className="notranslate">
+                  Osnabrück
+                </span>{" "}
+                seit{" "}
+                <span dir="ltr" translate="no" className="notranslate">
+                  {business.founded}
+                </span>
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight text-balance">
                 Alle Hausgeräte in Bewegung: unser Spektrum in 4 Szenen.
@@ -523,8 +592,21 @@ export default function UeberUns() {
                 />
               </div>
               <figcaption className="border-t border-white/10 px-4 py-3 text-xs text-slate-300 flex items-center justify-between gap-2">
-                <span className="font-semibold text-white">Original-Ersatzteile nach E-Nr.</span>
-                <span className="font-mono text-sky-300">Osnabrück · Seit {business.founded}</span>
+                <span className="font-semibold text-white">
+                  Original-Ersatzteile nach{" "}
+                  <span translate="no" className="notranslate">
+                    E-Nr.
+                  </span>
+                </span>
+                <span className="font-mono text-sky-300">
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>{" "}
+                  · Seit{" "}
+                  <span dir="ltr" translate="no" className="notranslate">
+                    {business.founded}
+                  </span>
+                </span>
               </figcaption>
             </figure>
 
@@ -557,7 +639,14 @@ export default function UeberUns() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <p className="text-xs font-semibold text-accent">
-                Wofür Hannachi steht · Seit {business.founded}
+                Wofür{" "}
+                <span translate="no" className="notranslate">
+                  Hannachi
+                </span>{" "}
+                steht · Seit{" "}
+                <span dir="ltr" translate="no" className="notranslate">
+                  {business.founded}
+                </span>
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-primary dark:text-slate-100 tracking-tight text-balance">
                 Vier klare Grundsätze ohne Kleingedrucktes.
@@ -565,10 +654,10 @@ export default function UeberUns() {
             </div>
             <Link
               href="/leistungen"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-accent hover:underline whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-accent hover:underline sm:whitespace-nowrap leading-tight shrink-0"
             >
               <span>Geräte &amp; Ersatzteile entdecken</span>
-              <ArrowRight size={14} aria-hidden="true" />
+              <ArrowRight size={14} className="shrink-0" aria-hidden="true" />
             </Link>
           </div>
 
@@ -581,12 +670,26 @@ export default function UeberUns() {
                   01 · Persönliche Fachberatung
                 </p>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight text-balance">
-                  Direkter Kontakt mit Kamal Hannachi ohne Umwege.
+                  Direkter Kontakt mit{" "}
+                  <span translate="no" className="notranslate">
+                    Kamal Hannachi
+                  </span>{" "}
+                  ohne Umwege.
                 </h3>
                 <p className="text-sm sm:text-[15px] leading-relaxed text-slate-600 dark:text-slate-300 max-w-xl">
-                  Ob am Telefon, per WhatsApp-Foto oder nach persönlicher
-                  Terminvereinbarung in Osnabrück: Sie erhalten eine ehrliche, verständliche
-                  Einschätzung auf Basis von {yearsOfExperience}+ Jahren Praxiserfahrung.
+                  Ob am Telefon, per{" "}
+                  <span translate="no" className="notranslate">
+                    WhatsApp
+                  </span>
+                  -Foto oder nach persönlicher Terminvereinbarung in{" "}
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>
+                  : Sie erhalten eine ehrliche, verständliche Einschätzung auf Basis von{" "}
+                  <span dir="ltr" translate="no" className="notranslate">
+                    {yearsOfExperience}+
+                  </span>{" "}
+                  Jahren Praxiserfahrung.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-primary/8 dark:border-white/10 pt-4 text-xs font-medium text-ink-muted">
@@ -613,10 +716,12 @@ export default function UeberUns() {
                 </p>
               </div>
               <p className="border-t border-primary/8 dark:border-white/10 pt-4 text-xs leading-relaxed text-ink-muted">
-                {sparePartsBrands
-                  .slice(0, 8)
-                  .map((b) => b.name)
-                  .join(" · ")}{" "}
+                <span translate="no" className="notranslate">
+                  {sparePartsBrands
+                    .slice(0, 8)
+                    .map((b) => b.name)
+                    .join(" · ")}
+                </span>{" "}
                 u. v. m.
               </p>
             </article>
@@ -631,7 +736,10 @@ export default function UeberUns() {
                   Auf Anfrage inkl. schriftlicher Verkäufergarantie.
                 </h3>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  Wenn ein Ersatzgerät sinnvoller ist, vermittelt und verkauft Hannachi
+                  Wenn ein Ersatzgerät sinnvoller ist, vermittelt und verkauft{" "}
+                  <span translate="no" className="notranslate">
+                    Hannachi
+                  </span>{" "}
                   ausgewählte geprüfte Markengeräte nach aktueller Verfügbarkeit, mit{" "}
                   <Link
                     href="/impressum#garantie"
@@ -671,21 +779,36 @@ export default function UeberUns() {
                   />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight text-balance">
-                  Ehrliche Preise und persönliche Übergabe in Osnabrück.
+                  Ehrliche Preise und persönliche Übergabe in{" "}
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>
+                  .
                 </h3>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 max-w-xl">
                   Keine versteckten Kosten, kein anonymer Ablauf: Sie erhalten vorab eine klare
                   Einschätzung zu passendem Ersatzteil oder Gerät und vereinbaren Ihren Termin
-                  unkompliziert direkt mit {business.owner} per Telefon oder WhatsApp.
+                  unkompliziert direkt mit{" "}
+                  <span translate="no" className="notranslate">
+                    {business.owner}
+                  </span>{" "}
+                  per Telefon oder{" "}
+                  <span translate="no" className="notranslate">
+                    WhatsApp
+                  </span>
+                  .
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/8 dark:border-white/10 pt-4 text-xs">
                 <span className="font-medium text-ink-muted">
-                  {business.street}, {business.zip} {business.city} · Termine nach Vereinbarung
+                  <span translate="no" className="notranslate">
+                    {business.street}, {business.zip} {business.city}
+                  </span>{" "}
+                  · Termine nach Vereinbarung
                 </span>
                 <Link
                   href="/kontakt"
-                  className="font-bold text-accent hover:underline whitespace-nowrap"
+                  className="font-bold text-accent hover:underline sm:whitespace-nowrap leading-tight"
                 >
                   Kontakt &amp; Termin anfragen →
                 </Link>
@@ -698,15 +821,22 @@ export default function UeberUns() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold text-accent">
-                  Stimmen aus {business.city}
+                  Stimmen aus{" "}
+                  <span translate="no" className="notranslate">
+                    {business.city}
+                  </span>
                 </p>
                 <h3 className="mt-1 text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight">
-                  Warum Kunden Kamal Hannachi weiterempfehlen
+                  Warum Kunden{" "}
+                  <span translate="no" className="notranslate">
+                    Kamal Hannachi
+                  </span>{" "}
+                  weiterempfehlen
                 </h3>
               </div>
               <Link
                 href="/kundenbewertungen"
-                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-accent hover:underline whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-accent hover:underline sm:whitespace-nowrap leading-tight shrink-0"
               >
                 <Star
                   size={14}
@@ -714,7 +844,15 @@ export default function UeberUns() {
                   aria-hidden="true"
                 />
                 <span className="tabular-nums">
-                  Alle {place.userRatingCount} Google-Bewertungen ({ratingFormatted} ★) →
+                  Alle {place.userRatingCount}{" "}
+                  <span translate="no" className="notranslate">
+                    Google
+                  </span>
+                  -Bewertungen (
+                  <span dir="ltr" translate="no" className="notranslate">
+                    {ratingFormatted} ★
+                  </span>
+                  ) →
                 </span>
               </Link>
             </div>
@@ -739,12 +877,12 @@ export default function UeberUns() {
                         />
                       ))}
                     </div>
-                    <blockquote className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                    <blockquote dir="auto" className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                       „{item.quote}“
                     </blockquote>
                   </div>
                   <figcaption className="border-t border-primary/8 dark:border-white/10 pt-3.5 text-xs">
-                    <p className="font-bold text-primary dark:text-white">
+                    <p translate="no" className="notranslate font-bold text-primary dark:text-white">
                       {item.author}
                     </p>
                     <p className="text-ink-muted">{item.context}</p>

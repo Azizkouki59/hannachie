@@ -3,7 +3,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+  type PanInfo,
+} from "framer-motion";
 import {
   CheckCircle2,
   MapPin,
@@ -31,7 +39,7 @@ import {
 } from "@/data/marketplaceItems";
 import { business } from "@/data/site";
 import { useGoogleLivePlace } from "@/lib/googlePlaceLive";
-import { triggerHapticFeedback } from "@/lib/haptics";
+import { hapticDismiss, triggerHapticFeedback } from "@/lib/haptics";
 import { buildRouteMetadata } from "@/lib/seo";
 import { buildWhatsAppDirectUrl } from "@/utils/whatsapp";
 
@@ -50,6 +58,18 @@ export default function MarktplatzPage() {
   const [category, setCategory] = useState<MarketplaceCategoryId>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const drawerDragControls = useDragControls();
+  const drawerDragY = useMotionValue(0);
+  const drawerBackdropOpacity = useTransform(drawerDragY, [0, 260], [1, 0.15]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobileViewport(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -84,12 +104,32 @@ export default function MarktplatzPage() {
 
   useEffect(() => {
     if (!selectedItem) return undefined;
+    drawerDragY.set(0);
+    const prevOverflowY = document.documentElement.style.overflowY;
+    document.documentElement.style.overflowY = "hidden";
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedItem(null);
+      if (e.key === "Escape") {
+        hapticDismiss();
+        setSelectedItem(null);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedItem]);
+    return () => {
+      document.documentElement.style.overflowY = prevOverflowY;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [selectedItem, drawerDragY]);
+
+  const handleDrawerDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (info.offset.y > 95 || info.velocity.y > 420) {
+      hapticDismiss();
+      setSelectedItem(null);
+      drawerDragY.set(0);
+    }
+  };
 
   const publicItems = useMemo(() => {
     return items.filter((item) =>
@@ -157,16 +197,24 @@ export default function MarktplatzPage() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-accent">
-                  Osnabrück · Persönliche Bestandsprüfung
+                  <span translate="no" className="notranslate">
+                    Osnabrück
+                  </span>{" "}
+                  · Persönliche Bestandsprüfung
                 </p>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-primary dark:text-white tracking-tight">
                   Aktuell alle Geräte &amp; Originalteile auf persönliche Anfrage
                 </h2>
                 <p className="mx-auto max-w-xl text-sm text-ink-muted leading-relaxed">
-                  Unser Bestand an geprüften Markengeräten und Original-Ersatzteilen (Miele,
-                  Bosch, Siemens, AEG, Liebherr) wechselt täglich. Senden Sie uns kurz Ihr
-                  Wunschgerät oder ein Foto vom Typenschild. Herr Hannachi prüft
-                  die Verfügbarkeit direkt für Sie.
+                  Unser Bestand an geprüften Markengeräten und Original-Ersatzteilen (
+                  <span translate="no" className="notranslate">
+                    Miele, Bosch, Siemens, AEG, Liebherr
+                  </span>
+                  ) wechselt täglich. Senden Sie uns kurz Ihr Wunschgerät oder ein Foto vom Typenschild.{" "}
+                  <span translate="no" className="notranslate">
+                    Herr Hannachi
+                  </span>{" "}
+                  prüft die Verfügbarkeit direkt für Sie.
                 </p>
               </div>
 
@@ -178,8 +226,14 @@ export default function MarktplatzPage() {
                   onClick={() => triggerHapticFeedback(35)}
                   className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-extrabold text-white transition-colors"
                 >
-                  <MessageCircle size={15} aria-hidden="true" />
-                  <span>Per WhatsApp fragen</span>
+                  <MessageCircle size={15} className="shrink-0" aria-hidden="true" />
+                  <span>
+                    Per{" "}
+                    <span translate="no" className="notranslate">
+                      WhatsApp
+                    </span>{" "}
+                    fragen
+                  </span>
                 </a>
                 <button
                   type="button"
@@ -189,7 +243,7 @@ export default function MarktplatzPage() {
                   }}
                   className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-accent hover:bg-accent-dark px-4 py-2.5 text-xs font-extrabold text-white transition-colors cursor-pointer"
                 >
-                  <Sparkles size={15} aria-hidden="true" />
+                  <Sparkles size={15} className="shrink-0" aria-hidden="true" />
                   <span>Bestand anfragen</span>
                 </button>
                 <a
@@ -197,7 +251,9 @@ export default function MarktplatzPage() {
                   className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-4 py-2.5 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors tabular-nums"
                 >
                   <Phone size={15} className="text-accent shrink-0" aria-hidden="true" />
-                  <span>{place.phoneDisplay}</span>
+                  <span dir="ltr" translate="no" className="notranslate">
+                    {place.phoneDisplay}
+                  </span>
                 </a>
               </div>
 
@@ -211,18 +267,23 @@ export default function MarktplatzPage() {
                 </Link>
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin size={14} className="text-accent" aria-hidden="true" />
-                  <span>Termine nach Vereinbarung in {business.city}</span>
+                  <span>
+                    Termine nach Vereinbarung in{" "}
+                    <span translate="no" className="notranslate">
+                      {business.city}
+                    </span>
+                  </span>
                 </span>
               </div>
             </div>
           ) : (
             <>
-              {/* Compact Category Tabs & Search Toolbar */}
-              <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-3.5 sm:p-4 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Compact Category Snap Rail & Search Toolbar */}
+              <div className="rounded-2xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-900 p-3 sm:p-4 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 sm:gap-3">
                 <div
                   role="tablist"
                   aria-label="Bestand nach Kategorie filtern"
-                  className="flex flex-wrap items-center gap-1.5"
+                  className="snap-rail items-center gap-1.5 -mx-1 px-1 pb-0.5 lg:mx-0 lg:px-0 lg:pb-0 lg:flex-wrap"
                 >
                   {MARKETPLACE_CATEGORIES.map((cat) => {
                     const active = category === cat.id;
@@ -241,7 +302,7 @@ export default function MarktplatzPage() {
                           triggerHapticFeedback(20);
                           setCategory(cat.id);
                         }}
-                        className={`min-h-[36px] rounded-xl px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer tabular-nums ${
+                        className={`shrink-0 snap-start whitespace-nowrap min-h-[44px] lg:min-h-[38px] rounded-xl px-3.5 py-2 text-xs font-bold transition-colors active:scale-95 cursor-pointer tabular-nums ${
                           active
                             ? "bg-primary text-white dark:bg-accent"
                             : "bg-primary/5 dark:bg-white/5 text-ink-muted hover:text-primary dark:hover:text-white"
@@ -256,7 +317,7 @@ export default function MarktplatzPage() {
                 <div className="relative w-full lg:w-72 shrink-0">
                   <Search
                     size={15}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint"
                     aria-hidden="true"
                   />
                   <input
@@ -264,7 +325,7 @@ export default function MarktplatzPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Marke, Modell oder E-Nr. suchen…"
-                    className="w-full min-h-[40px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 pl-9 pr-3 py-1.5 text-xs sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
+                    className="w-full min-h-[44px] lg:min-h-[40px] rounded-xl border border-primary/12 dark:border-white/12 bg-surface dark:bg-slate-800 pl-9 pr-3 py-2 text-base sm:text-sm text-primary dark:text-slate-100 placeholder:text-ink-faint focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
@@ -313,18 +374,21 @@ export default function MarktplatzPage() {
                           <div className="p-4 sm:p-5 space-y-2.5">
                             <div className="flex items-center justify-between gap-2 text-[11px]">
                               <span className="font-bold text-accent uppercase tracking-wider truncate">
-                                {item.brand} · {item.categoryLabel}
+                                <span translate="no" className="notranslate">
+                                  {item.brand}
+                                </span>{" "}
+                                · {item.categoryLabel}
                               </span>
-                              <span className="font-mono text-ink-faint truncate">
+                              <span dir="ltr" translate="no" className="notranslate font-mono text-ink-faint truncate">
                                 {item.skuOrEnr}
                               </span>
                             </div>
 
-                            <h2 className="text-base font-extrabold text-primary dark:text-white leading-snug line-clamp-2">
+                            <h2 dir="auto" className="text-base font-extrabold text-primary dark:text-white leading-snug line-clamp-2">
                               {item.title}
                             </h2>
 
-                            <p className="text-xs text-ink-muted line-clamp-2 leading-relaxed">
+                            <p dir="auto" className="text-xs text-ink-muted line-clamp-2 leading-relaxed">
                               {item.shortSpecs}
                             </p>
 
@@ -353,26 +417,28 @@ export default function MarktplatzPage() {
                               triggerHapticFeedback(25);
                               setSelectedItem(item);
                             }}
-                            className="inline-flex min-h-[40px] items-center justify-center rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent transition-colors cursor-pointer"
+                            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-primary/15 dark:border-white/15 bg-surface dark:bg-slate-800 px-3 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent active:scale-[0.97] transition-all cursor-pointer"
                           >
-                            Details
+                            <span>Details</span>
                           </button>
                           {sold ? (
                             <button
+                              key="mp-sold"
                               type="button"
                               disabled
-                              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-slate-300 dark:bg-slate-700 px-3 py-2 text-xs font-extrabold text-white cursor-not-allowed"
+                              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-slate-300 dark:bg-slate-700 px-3 py-2 text-xs font-extrabold text-white cursor-not-allowed"
                             >
                               <MessageCircle size={13} aria-hidden="true" />
                               <span>Vergriffen</span>
                             </button>
                           ) : (
                             <a
+                              key="mp-avail"
                               href={getItemWhatsAppUrl(item)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => triggerHapticFeedback(35)}
-                              className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-extrabold text-white transition-colors"
+                              className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] px-3 py-2 text-xs font-extrabold text-white transition-all"
                             >
                               <MessageCircle size={13} aria-hidden="true" />
                               <span>Anfragen</span>
@@ -389,7 +455,11 @@ export default function MarktplatzPage() {
 
           {/* Concise availability & warranty links */}
           <p className="mx-auto max-w-3xl text-center text-[11px] leading-relaxed text-ink-faint pt-2">
-            Unverbindliche Bestandsübersicht · Alle Preise inkl. gesetzlicher MwSt. ·{" "}
+            Unverbindliche Bestandsübersicht · Alle Preise inkl. gesetzlicher{" "}
+            <span translate="no" className="notranslate">
+              MwSt.
+            </span>{" "}
+            ·{" "}
             <Link
               href="/impressum#garantie"
               className="underline underline-offset-2 hover:text-accent transition-colors"
@@ -408,52 +478,109 @@ export default function MarktplatzPage() {
         </div>
       </section>
 
-      {/* Slide-Over Detail Drawer */}
+      {/* Responsive Bottom Sheet (Mobile) / Slide-Over Drawer (Desktop) */}
       <AnimatePresence>
         {selectedItem && (
           <div
-            className="fixed inset-0 z-[80] flex justify-end"
+            className="fixed inset-0 z-[80] flex flex-col justify-end sm:flex-row sm:items-stretch sm:justify-end"
             role="dialog"
             aria-modal="true"
             aria-labelledby="marketplace-drawer-title"
           >
             <motion.div
+              style={
+                prefersReducedMotion || !isMobileViewport
+                  ? undefined
+                  : { opacity: drawerBackdropOpacity }
+              }
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedItem(null)}
-              className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
+              onClick={() => {
+                hapticDismiss();
+                setSelectedItem(null);
+              }}
+              className="fixed inset-0 bg-slate-950/65 touch-none overscroll-none"
             />
             <motion.aside
-              initial={prefersReducedMotion ? { opacity: 0 } : { x: "100%" }}
-              animate={prefersReducedMotion ? { opacity: 1 } : { x: 0 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { x: "100%" }}
+              drag={prefersReducedMotion || !isMobileViewport ? false : "y"}
+              dragControls={drawerDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.04, bottom: 0.85 }}
+              onDragEnd={handleDrawerDragEnd}
+              style={
+                prefersReducedMotion || !isMobileViewport
+                  ? undefined
+                  : { y: drawerDragY }
+              }
+              initial={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : isMobileViewport
+                  ? { y: "100%", opacity: 0.9 }
+                  : { x: "100%" }
+              }
+              animate={
+                prefersReducedMotion
+                  ? { opacity: 1 }
+                  : { x: 0, y: 0, opacity: 1 }
+              }
+              exit={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : isMobileViewport
+                  ? { y: "100%", opacity: 0.65 }
+                  : { x: "100%" }
+              }
               transition={{ type: "spring", stiffness: 360, damping: 34 }}
-              className="relative z-10 flex h-full w-full max-w-lg flex-col bg-white dark:bg-slate-900 shadow-2xl border-l border-primary/10 dark:border-white/10 overflow-hidden"
+              className="relative z-10 flex max-h-[90dvh] sm:max-h-none sm:h-full w-full sm:max-w-lg flex-col rounded-t-3xl sm:rounded-none bg-white dark:bg-slate-900 shadow-2xl border-t sm:border-t-0 sm:border-l border-primary/10 dark:border-white/10 overflow-hidden will-change-transform"
             >
-              <div className="flex items-center justify-between gap-3 border-b border-primary/10 dark:border-white/10 px-5 py-4">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-accent truncate">
-                    {selectedItem.brand} · {selectedItem.skuOrEnr}
-                  </p>
-                  <h2
-                    id="marketplace-drawer-title"
-                    className="text-base font-extrabold text-primary dark:text-white truncate"
+              {/* Mobile Swipe-Down Grab Handle + Sticky Header */}
+              <div
+                onPointerDown={(e) => {
+                  if (!prefersReducedMotion && isMobileViewport) {
+                    drawerDragControls.start(e);
+                  }
+                }}
+                className="shrink-0 border-b border-primary/10 dark:border-white/10 px-4 sm:px-5 pt-2 sm:pt-4 pb-3 sm:pb-4 touch-none sm:touch-auto select-none cursor-grab active:cursor-grabbing sm:cursor-default"
+              >
+                <div aria-hidden="true" className="mx-auto mb-2 h-1.5 w-11 rounded-full bg-primary/20 dark:bg-white/25 sm:hidden" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-accent truncate">
+                      <span translate="no" className="notranslate">
+                        {selectedItem.brand}
+                      </span>{" "}
+                      ·{" "}
+                      <span dir="ltr" translate="no" className="notranslate">
+                        {selectedItem.skuOrEnr}
+                      </span>
+                    </p>
+                    <h2
+                      id="marketplace-drawer-title"
+                      dir="auto"
+                      className="text-base font-extrabold text-primary dark:text-white truncate"
+                    >
+                      {selectedItem.title}
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      hapticDismiss();
+                      setSelectedItem(null);
+                    }}
+                    aria-label="Details schließen"
+                    className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-primary/12 dark:border-white/12 text-ink-muted hover:text-primary dark:hover:text-white active:scale-95 transition-all cursor-pointer"
                   >
-                    {selectedItem.title}
-                  </h2>
+                    <X size={18} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedItem(null)}
-                  aria-label="Details schließen"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/12 dark:border-white/12 text-ink-muted hover:text-primary dark:hover:text-white cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-5">
                 <div className="overflow-hidden rounded-xl border border-primary/10 dark:border-white/10">
                   <ProductCardGallery item={selectedItem} compact />
                 </div>
@@ -505,7 +632,10 @@ export default function MarktplatzPage() {
 
                 <div className="rounded-xl border border-primary/10 dark:border-white/10 bg-surface dark:bg-slate-950/60 p-4 space-y-2 text-xs text-ink-muted">
                   <p className="font-bold text-primary dark:text-slate-100">
-                    Garantie, Gewährleistung &amp; Übergabe in Osnabrück
+                    Garantie, Gewährleistung &amp; Übergabe in{" "}
+                    <span translate="no" className="notranslate">
+                      Osnabrück
+                    </span>
                   </p>
                   <p>{selectedItem.warrantyTerms}</p>
                   <p>{selectedItem.pickupInfo}</p>
@@ -522,26 +652,33 @@ export default function MarktplatzPage() {
                 </div>
               </div>
 
-              <div className="border-t border-primary/10 dark:border-white/10 p-4 grid grid-cols-2 gap-2.5 bg-surface dark:bg-slate-950">
+              <div className="shrink-0 border-t border-primary/10 dark:border-white/10 p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] grid grid-cols-2 gap-2.5 bg-surface dark:bg-slate-950">
                 {isMarketplaceItemSold(selectedItem) ? (
                   <button
+                    key="drawer-sold"
                     type="button"
                     disabled
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-slate-400 px-4 py-2 text-xs font-extrabold text-white cursor-not-allowed"
+                    className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl bg-slate-400 px-4 py-2.5 text-xs font-extrabold text-white cursor-not-allowed"
                   >
                     <MessageCircle size={15} aria-hidden="true" />
                     <span>Vergriffen</span>
                   </button>
                 ) : (
                   <a
+                    key="drawer-wa"
                     href={getItemWhatsAppUrl(selectedItem)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(35)}
-                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-extrabold text-white transition-colors"
+                    className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] px-4 py-2.5 text-xs font-extrabold text-white transition-all"
                   >
-                    <MessageCircle size={15} aria-hidden="true" />
-                    <span>WhatsApp anfragen</span>
+                    <MessageCircle size={15} className="shrink-0" aria-hidden="true" />
+                    <span>
+                      <span translate="no" className="notranslate">
+                        WhatsApp
+                      </span>{" "}
+                      anfragen
+                    </span>
                   </a>
                 )}
                 <button
@@ -557,7 +694,7 @@ export default function MarktplatzPage() {
                       "repair"
                     );
                   }}
-                  className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark disabled:bg-slate-400 px-4 py-2 text-xs font-extrabold text-white transition-colors cursor-pointer disabled:cursor-not-allowed"
+                  className="inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl bg-accent hover:bg-accent-dark active:scale-[0.98] disabled:bg-slate-400 px-4 py-2.5 text-xs font-extrabold text-white transition-all cursor-pointer disabled:cursor-not-allowed"
                 >
                   <span>Kurzformular</span>
                 </button>

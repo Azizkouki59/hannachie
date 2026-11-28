@@ -256,8 +256,11 @@ export function buildAdminWhatsAppReplyUrl(
 }
 
 function escapeCsvCell(value: unknown): string {
-  const str = String(value ?? "").replace(/\r?\n/g, " ").trim();
-  if (str.includes(";") || str.includes('"') || str.includes(",")) {
+  let str = String(value ?? "").replace(/\r?\n/g, " ").trim();
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  if (str.includes(";") || str.includes('"') || str.includes(",") || str.startsWith("'")) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;

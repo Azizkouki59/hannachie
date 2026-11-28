@@ -313,11 +313,17 @@ export function QuickRequestProvider({ children }: { children: React.ReactNode }
                     <MessageCircle size={18} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-extrabold leading-tight truncate">
+                    <p
+                      key={mode}
+                      className="text-xs sm:text-sm font-extrabold leading-tight truncate"
+                    >
                       {mode === "question" ? "Direkte Frage" : "Kurze Anfrage"}
                     </p>
                     <p className="text-[11px] text-white/65 truncate">
-                      Osnabrück · Termine nach Vereinbarung
+                      <span translate="no" className="notranslate">
+                        Osnabrück
+                      </span>{" "}
+                      · Termine nach Vereinbarung
                     </p>
                   </div>
                 </div>

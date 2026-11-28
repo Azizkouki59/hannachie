@@ -256,7 +256,7 @@ export default function SparePartsExplorer3D({
                 className="mt-1.5 text-2xl font-extrabold text-primary dark:text-slate-100 sm:text-3xl lg:text-[34px] text-balance"
               >
                 <RevealText
-                  segments={[{ text: "Defektes Ersatzteil im 3D-Modell sicher erkennen" }]}
+                  segments={[{ text: "Benötigtes Ersatzteil im 3D-Modell sicher erkennen" }]}
                 />
               </h2>
               <p className="mt-1.5 text-xs sm:text-sm text-ink-muted">
@@ -304,7 +304,7 @@ export default function SparePartsExplorer3D({
                       aria-selected={isActive}
                       data-compact-label="true"
                       onClick={() => handleSelectAppliance(app.id)}
-                      className={`min-h-[42px] sm:min-h-[40px] rounded-xl px-2 py-1.5 text-[11.5px] sm:text-xs font-extrabold transition-all active:scale-[0.98] cursor-pointer touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 min-w-0 ${
+                      className={`min-h-[44px] sm:min-h-[40px] rounded-xl px-2 py-1.5 text-[11.5px] sm:text-xs font-extrabold transition-all active:scale-[0.98] cursor-pointer touch-manipulation flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 min-w-0 ${
                         isActive
                           ? "bg-primary dark:bg-accent text-white shadow-sm"
                           : "text-primary/80 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/80 hover:text-primary dark:hover:text-white"
@@ -342,7 +342,7 @@ export default function SparePartsExplorer3D({
                         setActiveSymptomId(null);
                         setSelectedPartId(null);
                       }}
-                      className="inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2 text-[11px] font-bold text-ink-muted hover:text-accent transition-colors cursor-pointer touch-manipulation lg:hidden"
+                      className="inline-flex min-h-[40px] items-center gap-1 rounded-lg px-2.5 text-[11px] font-bold text-ink-muted hover:text-accent transition-colors cursor-pointer touch-manipulation lg:hidden"
                     >
                       <X size={13} aria-hidden="true" />
                       <span>Filter lösen</span>
@@ -373,7 +373,7 @@ export default function SparePartsExplorer3D({
                             }
                           }}
                           aria-pressed={isActive}
-                          className={`snap-start shrink-0 inline-flex min-h-[38px] sm:min-h-[32px] items-center gap-1.5 rounded-xl sm:rounded-lg border px-3 sm:px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11.5px] font-bold transition-all active:scale-[0.97] cursor-pointer touch-manipulation whitespace-nowrap ${
+                          className={`snap-start shrink-0 inline-flex min-h-[44px] sm:min-h-[32px] items-center gap-1.5 rounded-xl sm:rounded-lg border px-3 sm:px-2.5 py-2 sm:py-1 text-xs sm:text-[11.5px] font-bold transition-all active:scale-[0.97] cursor-pointer touch-manipulation whitespace-nowrap ${
                             isActive
                               ? "border-amber-500 bg-amber-500 text-white shadow-xs"
                               : "border-primary/12 dark:border-white/12 bg-white dark:bg-slate-800/90 text-primary dark:text-slate-200 hover:border-accent hover:text-accent"
@@ -440,13 +440,13 @@ export default function SparePartsExplorer3D({
               <StudioFallbackPoster label={activeMeta.label} />
             )}
 
-            {/* Top-Left Minimal Context Chip (NO backdrop-filter over WebGL, NO pulsing dots) */}
-            <div className="pointer-events-none absolute top-3 left-3 z-20 max-w-[calc(100%-198px)] sm:max-w-[calc(100%-270px)]">
-              <div className="inline-flex items-center gap-2 rounded-xl border border-primary/12 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 px-2.5 sm:px-3 py-2 sm:py-1.5 text-[11px] font-extrabold text-primary dark:text-white shadow-sm min-w-0">
+            {/* Top-Left Minimal Context Chip (strictly clear of top-right toolbar at every viewport) */}
+            <div className="pointer-events-none absolute top-3 left-3 z-20 max-w-[calc(100%-202px)] sm:max-w-[calc(100%-276px)] md:max-w-[calc(100%-312px)]">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-primary/12 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 px-2.5 sm:px-3 py-2 sm:py-1.5 text-[11px] font-extrabold text-primary dark:text-white shadow-sm min-w-0">
                 <Move3d size={13} className="text-accent shrink-0" aria-hidden="true" />
                 <span className="truncate">{activeMeta.label}</span>
-                <span className="hidden md:inline text-primary/25 dark:text-white/25">·</span>
-                <span className="hidden md:inline font-semibold text-ink-muted dark:text-slate-300 truncate">
+                <span className="hidden lg:inline text-primary/25 dark:text-white/25 shrink-0">·</span>
+                <span className="hidden lg:inline font-semibold text-ink-muted dark:text-slate-300 truncate">
                   360° frei drehen · Bauteil antippen
                 </span>
               </div>
@@ -460,7 +460,7 @@ export default function SparePartsExplorer3D({
                 aria-pressed={xrayMode}
                 title="Röntgenansicht (Gehäuse transparent)"
                 aria-label="Röntgenansicht umschalten"
-                className={`inline-flex h-9 w-9 sm:h-8 sm:w-auto sm:px-2.5 items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold transition-all active:scale-95 cursor-pointer touch-manipulation ${
+                className={`inline-flex h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold transition-all active:scale-95 cursor-pointer touch-manipulation ${
                   xrayMode
                     ? "bg-accent text-white shadow-xs"
                     : "text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent"
@@ -477,7 +477,7 @@ export default function SparePartsExplorer3D({
                 onClick={() => triggerZoom("in")}
                 title="Heranzoomen"
                 aria-label="3D-Modell heranzoomen"
-                className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
+                className="inline-flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
               >
                 <ZoomIn size={16} className="sm:h-[14px] sm:w-[14px]" aria-hidden="true" />
               </button>
@@ -486,7 +486,7 @@ export default function SparePartsExplorer3D({
                 onClick={() => triggerZoom("out")}
                 title="Herauszoomen"
                 aria-label="3D-Modell herauszoomen"
-                className="inline-flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
+                className="inline-flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
               >
                 <ZoomOut size={16} className="sm:h-[14px] sm:w-[14px]" aria-hidden="true" />
               </button>
@@ -498,7 +498,7 @@ export default function SparePartsExplorer3D({
                 onClick={() => triggerPreset("reset")}
                 title="Ansicht zurücksetzen"
                 aria-label="3D-Ansicht zurücksetzen"
-                className="inline-flex h-9 w-9 sm:h-8 sm:w-auto sm:px-2.5 items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
+                className="inline-flex h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold text-primary dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-accent transition-all active:scale-95 cursor-pointer touch-manipulation"
               >
                 <RotateCcw size={15} className="sm:h-[13px] sm:w-[13px]" aria-hidden="true" />
                 <span className="hidden md:inline">Reset</span>
@@ -511,9 +511,9 @@ export default function SparePartsExplorer3D({
                 <button
                   type="button"
                   onClick={scrollToDetailDrawer}
-                  className="pointer-events-auto inline-flex max-w-full min-h-[40px] items-center gap-2 rounded-xl border border-emerald-500/40 bg-white/96 dark:bg-slate-900/96 px-3 py-1.5 text-xs font-extrabold text-primary dark:text-white shadow-[0_8px_22px_-8px_rgba(15,23,42,0.55)] active:scale-[0.98] transition-transform cursor-pointer touch-manipulation"
+                  className="pointer-events-auto inline-flex max-w-full min-h-[44px] items-center gap-2 rounded-xl border border-emerald-500/40 bg-white/96 dark:bg-slate-900/96 px-3.5 py-2 text-xs font-extrabold text-primary dark:text-white shadow-[0_8px_22px_-8px_rgba(15,23,42,0.55)] active:scale-[0.98] transition-transform cursor-pointer touch-manipulation"
                 >
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 font-mono text-[10px] font-black text-white tabular-nums shrink-0">
+                  <span dir="ltr" translate="no" className="notranslate inline-flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 font-mono text-[10px] font-black text-white tabular-nums shrink-0">
                     {selectedPart.code}
                   </span>
                   <span className="truncate">{selectedPart.name}</span>
@@ -525,8 +525,8 @@ export default function SparePartsExplorer3D({
               </div>
             ) : (
               !hasInteracted && (
-                <div className="lg:hidden pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-3">
-                  <span className="rounded-full border border-primary/12 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 px-3.5 py-1.5 text-[10.5px] font-bold text-primary/85 dark:text-slate-200 shadow-xs">
+                <div className="lg:hidden pointer-events-none absolute inset-x-3 bottom-3 z-20 flex justify-center">
+                  <span className="max-w-full truncate rounded-full border border-primary/12 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 px-3 py-1.5 text-[10px] min-[375px]:text-[10.5px] font-bold text-primary/85 dark:text-slate-200 shadow-xs">
                     360° frei ziehen · 2 Finger zum Zoomen · Teil antippen
                   </span>
                 </div>
@@ -549,7 +549,7 @@ export default function SparePartsExplorer3D({
                 ) : (
                   <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-2.5 text-xs font-bold text-primary dark:text-slate-200">
-                      <span className="whitespace-nowrap">Explosion</span>
+                      <span className="whitespace-nowrap">Explosionsansicht</span>
                       <input
                         type="range"
                         min={0}
@@ -609,7 +609,7 @@ export default function SparePartsExplorer3D({
           <div className="lg:hidden border-t border-primary/10 dark:border-white/10 bg-slate-50/70 dark:bg-slate-900/90 px-3 py-2.5 sm:px-5 sm:py-3">
             <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
               <label className="flex w-full sm:flex-1 items-center gap-3 min-h-[40px] text-xs font-bold text-primary dark:text-slate-200">
-                <span className="shrink-0">Explosion</span>
+                <span className="shrink-0">Explosionsansicht</span>
                 <input
                   type="range"
                   min={0}
@@ -632,14 +632,14 @@ export default function SparePartsExplorer3D({
                 <button
                   type="button"
                   onClick={() => triggerPreset("overview")}
-                  className="min-h-[42px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-3 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent hover:text-accent transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
+                  className="min-h-[44px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-3 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent hover:text-accent transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
                 >
                   Gesamtansicht
                 </button>
                 <button
                   type="button"
                   onClick={() => triggerPreset("interior")}
-                  className="min-h-[42px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-3 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent hover:text-accent transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
+                  className="min-h-[44px] sm:min-h-[36px] rounded-xl sm:rounded-lg border border-primary/12 dark:border-white/15 bg-white dark:bg-slate-800 px-3 text-xs sm:text-[11px] font-bold text-primary dark:text-slate-200 hover:border-accent hover:text-accent transition-all active:scale-[0.98] cursor-pointer touch-manipulation"
                 >
                   Innenleben
                 </button>
@@ -673,7 +673,7 @@ export default function SparePartsExplorer3D({
                     aria-pressed={isSelected}
                     className={`${
                       isOddLastMobile ? "col-span-2 sm:col-span-1" : ""
-                    } group inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-start gap-2 rounded-xl border px-2.5 py-2 sm:py-1.5 text-left text-xs font-bold transition-all active:scale-[0.98] cursor-pointer touch-manipulation min-w-0 ${
+                    } group inline-flex min-h-[44px] sm:min-h-[40px] items-center justify-start gap-1.5 sm:gap-2 rounded-xl border px-2 sm:px-2.5 py-2 sm:py-1.5 text-left text-[11.5px] sm:text-xs font-bold transition-all active:scale-[0.98] cursor-pointer touch-manipulation min-w-0 ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-600 text-white shadow-sm"
                         : isSecondary
@@ -683,7 +683,9 @@ export default function SparePartsExplorer3D({
                   >
                     <span
                       data-compact-label="true"
-                      className={`inline-flex h-5 w-5 items-center justify-center rounded-md font-mono text-[10px] font-black tabular-nums shrink-0 ${
+                      dir="ltr"
+                      translate="no"
+                      className={`notranslate inline-flex h-5 w-5 items-center justify-center rounded-md font-mono text-[10px] font-black tabular-nums shrink-0 ${
                         isSelected
                           ? "bg-white/22 text-white"
                           : isSecondary
@@ -693,13 +695,15 @@ export default function SparePartsExplorer3D({
                     >
                       {part.code}
                     </span>
-                    <span className="truncate flex-1">{part.shortLabel}</span>
+                    <span className="min-w-0 truncate flex-1">{part.shortLabel}</span>
                     {!isSelected && part.frequency === "Sehr häufig" && (
                       <span
                         title="Sehr häufiges Verschleißteil"
+                        className="text-[10px] font-black text-amber-600 dark:text-amber-400 shrink-0"
                         aria-hidden="true"
-                        className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0"
-                      />
+                      >
+                        ★
+                      </span>
                     )}
                   </button>
                 );
@@ -724,7 +728,7 @@ export default function SparePartsExplorer3D({
                         {/* Title Row */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-2 min-w-0">
-                            <span className="inline-flex items-center rounded-lg bg-emerald-600 px-2 py-0.5 font-mono text-[11px] font-black text-white tabular-nums shrink-0">
+                            <span dir="ltr" translate="no" className="notranslate inline-flex items-center rounded-lg bg-emerald-600 px-2 py-0.5 font-mono text-[11px] font-black text-white tabular-nums shrink-0">
                               {selectedPart.code}
                             </span>
                             <h3 className="text-base sm:text-lg font-extrabold text-primary dark:text-white leading-snug">
@@ -745,9 +749,9 @@ export default function SparePartsExplorer3D({
                               setActiveSymptomId(null);
                             }}
                             aria-label="Bauteil-Auswahl schließen"
-                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-800 text-ink-muted hover:text-primary dark:hover:text-white transition-colors cursor-pointer touch-manipulation"
+                            className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-[36px] sm:min-w-[36px] shrink-0 items-center justify-center rounded-xl border border-primary/10 dark:border-white/10 bg-white dark:bg-slate-800 text-ink-muted hover:text-primary dark:hover:text-white active:scale-95 transition-all cursor-pointer touch-manipulation"
                           >
-                            <X size={15} aria-hidden="true" />
+                            <X size={16} aria-hidden="true" />
                           </button>
                         </div>
 
@@ -805,7 +809,7 @@ export default function SparePartsExplorer3D({
                                 onClick={() => handleSelectPart(altPart.id)}
                                 className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/12 hover:bg-amber-500 hover:text-white px-3 py-1 text-xs font-extrabold text-amber-900 dark:text-amber-200 transition-colors cursor-pointer touch-manipulation"
                               >
-                                <span className="font-mono text-[10px]">{altPart.code}</span>
+                                <span dir="ltr" translate="no" className="notranslate font-mono text-[10px]">{altPart.code}</span>
                                 <span>{altPart.shortLabel} prüfen</span>
                                 <ArrowRight size={12} aria-hidden="true" />
                               </button>
@@ -857,13 +861,17 @@ export default function SparePartsExplorer3D({
                             className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all active:scale-[0.98] touch-manipulation"
                           >
                             <MessageCircle size={14} aria-hidden="true" className="shrink-0" />
-                            <span className="truncate">Per WhatsApp</span>
+                            <span className="truncate">
+                              Per <span translate="no" className="notranslate">WhatsApp</span>
+                            </span>
                           </a>
                         </div>
 
                         {/* Required quiet 1-line GDPR notice directly beneath the WhatsApp button */}
                         <p className="text-center text-[11px] leading-snug text-ink-faint">
-                          Freiwillige Weiterleitung zu WhatsApp (Meta) ·{" "}
+                          Freiwillige Weiterleitung zu{" "}
+                          <span translate="no" className="notranslate">WhatsApp</span> (
+                          <span translate="no" className="notranslate">Meta</span>) ·{" "}
                           <Link
                             href="/datenschutz#whatsapp"
                             className="underline underline-offset-2 hover:text-accent"
@@ -881,13 +889,13 @@ export default function SparePartsExplorer3D({
                     animate={{ opacity: 1 }}
                     exit={prefersReducedMotion ? undefined : { opacity: 0 }}
                     transition={{ duration: 0.16 }}
-                    className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/8 dark:border-white/8 bg-slate-50/80 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs text-ink-muted"
+                    className="mt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4 rounded-xl border border-primary/8 dark:border-white/8 bg-slate-50/80 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs text-ink-muted"
                   >
                     <span>
                       Tippen Sie ein Problem oder ein Bauteil an, um Einbauort, Defekt-Anzeichen
                       und Originalteil-Anfrage direkt anzuzeigen.
                     </span>
-                    <span className="text-[11px] font-semibold text-accent">
+                    <span className="text-[11px] font-semibold text-accent shrink-0">
                       Typenschild: {activeMeta.typeplateLocation}
                     </span>
                   </motion.div>

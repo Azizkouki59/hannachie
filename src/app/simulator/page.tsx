@@ -42,9 +42,10 @@ export default function SimulatorPage() {
             <button
               type="button"
               onClick={() => openQuickRequest()}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:underline whitespace-nowrap cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:underline sm:whitespace-nowrap text-center leading-tight cursor-pointer"
             >
-              Direkt zum Anfrageformular <ArrowRight size={14} />
+              <span>Direkt zum Anfrageformular</span>
+              <ArrowRight size={14} className="shrink-0" aria-hidden="true" />
             </button>
           </div>
 
@@ -71,7 +72,11 @@ export default function SimulatorPage() {
               Originalersatzteile für alle Marken
             </h2>
             <p className="mt-3 text-sm sm:text-base text-ink-muted">
-              Gängige Original-Ersatzteile nach Typenschild, mit persönlicher Abstimmung und Übergabe nach Terminvereinbarung in Osnabrück.
+              Gängige Original-Ersatzteile nach Typenschild, mit persönlicher Abstimmung und Übergabe nach Terminvereinbarung in{" "}
+              <span translate="no" className="notranslate">
+                Osnabrück
+              </span>
+              .
             </p>
           </div>
 
@@ -135,8 +140,9 @@ export default function SimulatorPage() {
                   <button
                     key={b.name}
                     type="button"
+                    translate="no"
                     onClick={() => openQuickRequest("Waschmaschine", `Ersatzteil für ${b.name}`, b.name)}
-                    className="rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 hover:bg-accent hover:border-accent transition-colors cursor-pointer"
+                    className="notranslate rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 hover:bg-accent hover:border-accent transition-colors cursor-pointer"
                   >
                     {b.name}
                   </button>
@@ -151,14 +157,22 @@ export default function SimulatorPage() {
                   Sie suchen ein bestimmtes Bauteil?
                 </p>
                 <p className="text-xs text-white/75 mt-0.5">
-                  Senden Sie uns einfach ein Foto vom Typenschild (E-Nr. / Modell) per WhatsApp oder über das Formular.
+                  Senden Sie uns einfach ein Foto vom Typenschild (
+                  <span translate="no" className="notranslate">
+                    E-Nr.
+                  </span>{" "}
+                  / Modell) per{" "}
+                  <span translate="no" className="notranslate">
+                    WhatsApp
+                  </span>{" "}
+                  oder über das Formular.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full sm:w-auto shrink-0">
                 <button
                   type="button"
                   onClick={() => openQuickRequest("Waschmaschine", "Ersatzteilanfrage mit Typenschild", "", "repair")}
-                  className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-center text-xs font-bold text-white hover:bg-accent-dark transition-all sm:whitespace-nowrap cursor-pointer"
+                  className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-center text-xs font-bold text-white hover:bg-accent-dark transition-all sm:whitespace-nowrap leading-tight cursor-pointer"
                 >
                   <PackageSearch size={14} className="shrink-0" />
                   <span>Komplette Ersatzteilanfrage</span>
@@ -166,14 +180,23 @@ export default function SimulatorPage() {
                 <button
                   type="button"
                   onClick={() => openQuickRequest("Waschmaschine", "Frage zu Ersatzteil / Modell", "", "question")}
-                  className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-600/25 px-4 py-2.5 text-center text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all sm:whitespace-nowrap cursor-pointer"
+                  className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-600/25 px-4 py-2.5 text-center text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all sm:whitespace-nowrap leading-tight cursor-pointer"
                 >
                   <MessageCircle size={14} className="shrink-0" />
-                  <span>Direkte Frage (WhatsApp)</span>
+                  <span>
+                    Direkte Frage (
+                    <span translate="no" className="notranslate">
+                      WhatsApp
+                    </span>
+                    )
+                  </span>
                 </button>
               </div>
               <p className="sr-only">
-                <Phone size={12} /> {business.phoneDisplay}
+                <Phone size={12} />{" "}
+                <span dir="ltr" translate="no" className="notranslate">
+                  {business.phoneDisplay}
+                </span>
               </p>
             </div>
           </div>

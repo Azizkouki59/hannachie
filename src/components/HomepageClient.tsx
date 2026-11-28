@@ -239,7 +239,7 @@ export default function HomepageClient() {
     label: string;
     icon: typeof Award;
   }> = [
-    { value: yearsOfExperience, suffix: "+ J.", label: "Erfahrung seit 1990", icon: Award },
+    { value: yearsOfExperience, suffix: "+", label: "Jahre Erfahrung seit 1990", icon: Award },
     {
       value: place.rating,
       decimals: 1,
@@ -364,7 +364,7 @@ export default function HomepageClient() {
       ══════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroSectionRef}
-        className="relative overflow-hidden bg-primary-dark pt-7 pb-8 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-16 border-b border-white/10"
+        className="relative overflow-x-clip bg-primary-dark pt-4 pb-6 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-16 border-b border-white/10"
       >
         <HeroAnimatedBackdrop variant="hero-water-drum" />
 
@@ -385,11 +385,15 @@ export default function HomepageClient() {
                     className="inline-flex items-center gap-1.5 text-accent-light font-extrabold hover:underline"
                   >
                     <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" aria-hidden="true" />
-                    <span className="tabular-nums">{ratingFormatted} ★ Google ({place.userRatingCount})</span>
+                    <span className="tabular-nums">
+                      <span translate="no" className="notranslate">{ratingFormatted}</span> ★{" "}
+                      <span translate="no" className="notranslate">Google</span> ({place.userRatingCount})
+                    </span>
                   </a>
                   <span aria-hidden="true" className="text-white/30">·</span>
                   <span className="font-bold text-white/95">
-                    Seit <span className="text-[#E86A7D]">{business.founded}</span> in Osnabrück
+                    Seit <span className="text-[#E86A7D]">{business.founded}</span> in{" "}
+                    <span translate="no" className="notranslate">Osnabrück</span>
                   </span>
                   <span aria-hidden="true" className="hidden sm:inline text-white/30">·</span>
                   <AvailabilityBadge className="basis-full sm:basis-auto" />
@@ -419,12 +423,12 @@ export default function HomepageClient() {
                 className="mt-3 sm:mt-4 max-w-[58ch] text-[13.5px] sm:text-[15.5px] lg:text-[16.5px] leading-[1.6] text-white/85"
               >
                 Unabhängiger Fachhandel von Inhaber{" "}
-                <strong className="text-white font-semibold">{business.owner}</strong> seit{" "}
+                <strong translate="no" className="notranslate text-white font-semibold">{business.owner}</strong> seit{" "}
                 <strong className="text-white font-semibold">{business.founded}</strong>:
                 persönliche Fachberatung, passgenaue Original- und Qualitäts-Ersatzteile nach
                 Typenschild für Waschmaschinen, Geschirrspüler, Kühlgeräte und Herde aller
                 gängigen Marken sowie ausgewählte Markengeräte auf Anfrage, direkt in{" "}
-                {business.city} nach Terminvereinbarung.
+                <span translate="no" className="notranslate">{business.city}</span> nach Terminvereinbarung.
               </motion.p>
 
               {/* Interactive Specular Glass Console: 1-Tap Appliance Selector + Quick Topics + Direct Contact */}
@@ -454,7 +458,7 @@ export default function HomepageClient() {
                     <button
                       type="button"
                       onClick={handleScrollToExplorer}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-accent-light hover:text-white transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex min-h-[36px] -my-1.5 items-center gap-1 px-1.5 text-[11px] font-bold text-accent-light hover:text-white transition-colors shrink-0 cursor-pointer"
                     >
                       <span>Bauteile in 3D ↓</span>
                     </button>
@@ -579,7 +583,7 @@ export default function HomepageClient() {
                       <button
                         type="button"
                         onClick={() => setSelectedSymptom("")}
-                        className="text-accent-light hover:underline font-semibold cursor-pointer shrink-0"
+                        className="inline-flex min-h-[36px] -my-1.5 items-center px-1.5 text-accent-light hover:underline font-semibold cursor-pointer shrink-0"
                       >
                         Zurücksetzen
                       </button>
@@ -602,7 +606,7 @@ export default function HomepageClient() {
                           aria-pressed={active}
                           className={`${
                             isOddLast ? "col-span-2 sm:col-span-1" : ""
-                          } inline-flex min-h-[42px] sm:min-h-[34px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-1.5 sm:py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-center sm:text-left leading-tight cursor-pointer ${
+                          } inline-flex min-h-[44px] sm:min-h-[36px] max-w-full items-center justify-center sm:justify-start gap-1.5 rounded-xl sm:rounded-lg border px-2.5 py-2 sm:py-1 text-[11.5px] sm:text-[11px] font-bold transition-colors text-center sm:text-left leading-tight cursor-pointer ${
                             active
                               ? "border-emerald-400/80 bg-emerald-500/25 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                               : "border-white/15 bg-white/[0.045] text-white/85 hover:border-white/30 hover:bg-white/[0.09] hover:text-white"
@@ -640,11 +644,11 @@ export default function HomepageClient() {
                     rel="noopener noreferrer"
                     onClick={() => triggerHapticFeedback(50)}
                     data-testid="hero-direct-whatsapp-btn"
-                    className="btn-shimmer-beam hero-cta-specular col-span-2 sm:col-span-6 min-w-0 inline-flex min-h-[46px] sm:min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/50 bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-[0_10px_24px_-8px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors"
+                    className="btn-shimmer-beam hero-cta-specular col-span-2 sm:col-span-6 min-w-0 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-emerald-400/50 bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-3 sm:px-3.5 py-2 text-xs sm:text-[13px] font-extrabold text-white shadow-[0_10px_24px_-8px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.28)] transition-colors"
                   >
                     <MessageCircle size={16} className="text-white shrink-0" aria-hidden="true" />
                     <span className="truncate inline-flex items-center min-w-0">
-                      <span>WhatsApp ·&nbsp;</span>
+                      <span translate="no" className="notranslate">WhatsApp ·&nbsp;</span>
                       <AnimatePresence mode="popLayout" initial={false}>
                         <motion.span
                           key={`${whatsappDeviceLabel}-${selectedSymptom}`}
@@ -670,7 +674,7 @@ export default function HomepageClient() {
                     className="col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-white/18 bg-white/[0.07] hover:bg-white/13 hover:border-white/30 px-2 sm:px-2.5 py-2 text-[11px] min-[375px]:text-[11.5px] sm:text-xs font-extrabold text-white transition-colors tabular-nums overflow-hidden"
                   >
                     <Phone size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{place.phoneDisplay}</span>
+                    <span dir="ltr" translate="no" className="notranslate truncate">{place.phoneDisplay}</span>
                   </motion.a>
                   <motion.button
                     whileHover={prefersReducedMotion ? undefined : { y: -1 }}
@@ -681,7 +685,7 @@ export default function HomepageClient() {
                     data-testid="hero-direct-form-btn"
                     className="group/hero-form col-span-1 sm:col-span-3 min-w-0 w-full inline-flex min-h-[48px] items-center justify-center gap-1 sm:gap-1.5 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] hover:from-[#D4334C] hover:to-[#AE2238] px-2.5 py-2 text-[11.5px] sm:text-xs font-extrabold text-white shadow-[0_8px_22px_-6px_rgba(201,42,66,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] transition-colors cursor-pointer overflow-hidden"
                   >
-                    <span className="truncate">
+                    <span key={selectedSymptom ? "btn-form" : "btn-termin"} className="truncate">
                       {selectedSymptom ? "Formular" : "Termin"}
                     </span>
                     <ArrowRight
@@ -692,7 +696,7 @@ export default function HomepageClient() {
                   </motion.button>
                 </div>
                 <p className="relative z-10 text-[10.5px] leading-snug text-white/60">
-                  Freiwilliger Chat über WhatsApp (Meta) ·{" "}
+                  Freiwilliger Chat über <span translate="no" className="notranslate">WhatsApp</span> (Meta) ·{" "}
                   <Link
                     href="/datenschutz"
                     className="underline underline-offset-2 text-white/75 hover:text-white transition-colors"
@@ -709,7 +713,7 @@ export default function HomepageClient() {
                 transition={{ duration: 0.58, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-4 mx-auto w-full max-w-[440px] lg:hidden"
               >
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
+                <div className="relative aspect-square sm:aspect-[4/5] max-h-[340px] sm:max-h-none w-full overflow-hidden rounded-2xl border border-sky-300/25 bg-slate-900/90 shadow-[0_22px_48px_-14px_rgba(2,6,23,0.85),0_0_0_1px_rgba(56,189,248,0.14),inset_0_1px_0_rgba(255,255,255,0.2)]">
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute top-0 inset-x-6 z-20 h-px bg-gradient-to-r from-[#64B5EC]/60 via-sky-200/45 to-[#E86A7D]/45"
@@ -748,15 +752,17 @@ export default function HomepageClient() {
                     className="hero-badge absolute inset-x-2.5 bottom-2.5 z-10 flex items-center justify-between gap-2.5 rounded-xl border border-white/22 bg-slate-950/88 px-3 py-2.5 backdrop-blur-md text-white"
                   >
                     <div className="min-w-0">
-                      <p className="text-[12px] font-extrabold leading-tight text-white truncate">
+                      <p translate="no" className="notranslate text-[12px] font-extrabold leading-tight text-white truncate">
                         {business.owner}
                       </p>
                       <p className="mt-0.5 inline-flex items-center gap-1 text-[10.5px] font-semibold text-white/75 leading-tight max-w-full">
                         <MapPin size={10.5} className="shrink-0 text-accent-light" aria-hidden="true" />
-                        <span className="truncate">{business.city} · Termine nach Vereinbarung</span>
+                        <span className="truncate">
+                          <span translate="no" className="notranslate">{business.city}</span> · Termine nach Vereinbarung
+                        </span>
                       </p>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-400/12 px-2 py-1 text-[11px] font-extrabold text-amber-300 tabular-nums shrink-0">
+                    <span translate="no" className="notranslate inline-flex items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-400/12 px-2 py-1 text-[11px] font-extrabold text-amber-300 tabular-nums shrink-0">
                       <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
                       <span>{ratingFormatted}</span>
                     </span>
@@ -815,17 +821,19 @@ export default function HomepageClient() {
                     <span>Hausgeräte-Spezialist seit {business.founded}</span>
                     <span className="inline-flex items-center gap-1">
                       <MapPin size={12} className="shrink-0" aria-hidden="true" />
-                      <span>{business.city} &amp; Umgebung</span>
+                      <span><span translate="no" className="notranslate">{business.city}</span> &amp; Umgebung</span>
                     </span>
                   </div>
                   <p className="mt-1 text-sm font-extrabold text-white leading-snug">
-                    Persönlich &amp; kompetent: {business.owner}
+                    Persönlich &amp; kompetent: <span translate="no" className="notranslate">{business.owner}</span>
                   </p>
                   <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between text-[11px] text-white/80">
                     <span>Termine nach Vereinbarung</span>
                     <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 tabular-nums">
                       <Star size={11} className="fill-amber-300 text-amber-300 shrink-0" aria-hidden="true" />
-                      <span>{ratingFormatted} Google ({place.userRatingCount})</span>
+                      <span>
+                        <span translate="no" className="notranslate">{ratingFormatted} Google</span> ({place.userRatingCount})
+                      </span>
                     </span>
                   </div>
                 </motion.div>
@@ -944,11 +952,18 @@ export default function HomepageClient() {
             </div>
           </FadeUp>
 
-          <StaggerContainer className="grid gap-4 sm:gap-5 md:grid-cols-3 lg:gap-6">
+          <div className="mb-2.5 flex items-center justify-end text-[11px] font-semibold text-ink-faint md:hidden">
+            <span>← Wischen für alle 3 Bereiche →</span>
+          </div>
+
+          <StaggerContainer className="snap-rail gap-3.5 -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-3 md:gap-5 lg:gap-6">
             {helpPillars.map((pillar, idx) => {
               const Icon = pillar.icon;
               return (
-                <StaggerItem key={pillar.num} className="h-full">
+                <StaggerItem
+                  key={pillar.num}
+                  className="h-full w-[83vw] max-w-[330px] shrink-0 snap-center md:w-auto md:max-w-none"
+                >
                   <Spatial3DCard
                     maxTilt={5.8}
                     scrollYaw={idx === 0 ? 1.8 : idx === 2 ? -1.8 : 0}
@@ -1051,14 +1066,14 @@ export default function HomepageClient() {
                 <div className="lg:col-span-6 p-5 sm:p-7 flex flex-col justify-between gap-4 border-b lg:border-b-0 lg:border-r border-white/12 bg-gradient-to-br from-[#071126] to-[#0b1b3a]">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7AC4F4]">
-                      Fachhandel · Osnabrück seit {business.founded}
+                      Fachhandel · <span translate="no" className="notranslate">Osnabrück</span> seit {business.founded}
                     </p>
                     <h3 className="mt-1.5 text-lg sm:text-xl font-extrabold text-white leading-snug text-balance">
                       Persönliche Auskunft statt anonymer Warteschleife
                     </h3>
                     <p className="mt-2 text-xs sm:text-[13.5px] leading-relaxed text-white/75">
                       Ob Original-Ersatzteil nach Typenschild oder ausgewähltes Markengerät mit schriftlicher Verkäufergarantie — Inhaber{" "}
-                      <strong className="font-semibold text-white">{business.owner}</strong> berät Sie direkt und ehrlich.
+                      <strong translate="no" className="notranslate font-semibold text-white">{business.owner}</strong> berät Sie direkt und ehrlich.
                     </p>
                   </div>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-white/10 text-xs text-white/88">
@@ -1068,7 +1083,7 @@ export default function HomepageClient() {
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
-                      <span>Prüfung nach Typenschild (E-Nr.)</span>
+                      <span>Prüfung nach Typenschild (<span translate="no" className="notranslate">E-Nr.</span>)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle2 size={14} className="text-[#64B5EC] shrink-0" aria-hidden="true" />
@@ -1092,7 +1107,7 @@ export default function HomepageClient() {
                   <div className="relative z-10 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#93D5FF] [text-shadow:0_1px_8px_rgba(2,6,23,0.95)]">
-                        Geprüfter Fachhandel · Osnabrück seit {business.founded}
+                        Geprüfter Fachhandel · <span translate="no" className="notranslate">Osnabrück</span> seit {business.founded}
                       </p>
                       <h3 className="mt-1 text-base sm:text-lg font-extrabold text-white leading-snug [text-shadow:0_2px_10px_rgba(2,6,23,0.95)]">
                         Technik-Kompetenz &amp; Original-Ersatzteile aus einer Hand
@@ -1100,7 +1115,7 @@ export default function HomepageClient() {
                     </div>
                     <Link
                       href="/ueber-uns"
-                      className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] hover:from-[#D4334C] hover:to-[#AE2238] px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_6px_18px_-4px_rgba(201,42,66,0.46)] transition-colors whitespace-nowrap"
+                      className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#E86A7D]/45 bg-gradient-to-b from-[#C92A42] to-[#A11E33] hover:from-[#D4334C] hover:to-[#AE2238] px-4 py-2 text-center text-xs font-extrabold text-white shadow-[0_6px_18px_-4px_rgba(201,42,66,0.46)] transition-colors sm:whitespace-nowrap"
                     >
                       <span>Mehr über uns</span>
                       <ArrowRight size={13} aria-hidden="true" />
@@ -1162,14 +1177,14 @@ export default function HomepageClient() {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   href="/leistungen"
-                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
                 >
                   <span>Alle Gerätebereiche</span>
                   <ArrowRight size={13} aria-hidden="true" />
                 </Link>
                 <Link
                   href="/kontakt"
-                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-primary/14 dark:border-white/14 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-primary dark:text-slate-100 hover:border-accent hover:text-accent transition-colors"
                 >
                   <span>Kontakt &amp; Anfahrt</span>
                 </Link>
@@ -1271,7 +1286,7 @@ export default function HomepageClient() {
                       <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7AC4F4]">
                         Fachhandel seit {business.founded}
                       </span>
-                      <span className="h-1.5 w-10 rounded-full bg-gradient-to-r from-[#C92A42] to-[#64B5EC]" aria-hidden="true" />
+                      <span className="h-[2px] w-10 rounded-full bg-gradient-to-r from-[#C92A42] to-[#64B5EC]" aria-hidden="true" />
                     </div>
                     <div className="flex items-center gap-3.5 sm:gap-4 pb-4 border-b border-white/10">
                       <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0">
@@ -1293,11 +1308,11 @@ export default function HomepageClient() {
                         <p className="text-xs font-semibold text-accent-light">
                           Inhaber · Direktkontakt
                         </p>
-                        <h3 className="text-base sm:text-lg font-extrabold text-white truncate">
+                        <h3 translate="no" className="notranslate text-base sm:text-lg font-extrabold text-white truncate">
                           {business.owner}
                         </h3>
                         <p className="text-xs text-white/65">
-                          Seit {business.founded} · {business.city}
+                          Seit {business.founded} · <span translate="no" className="notranslate">{business.city}</span>
                         </p>
                       </div>
                     </div>
@@ -1309,7 +1324,7 @@ export default function HomepageClient() {
                       </li>
                       <li className="flex items-center gap-2.5">
                         <CheckCircle2 size={15} className="text-accent-light shrink-0" />
-                        <span>Originalteile nach E-Nr.</span>
+                        <span>Originalteile nach <span translate="no" className="notranslate">E-Nr.</span></span>
                       </li>
                       <li className="flex items-center gap-2.5">
                         <CheckCircle2 size={15} className="text-accent-light shrink-0" />
@@ -1321,16 +1336,23 @@ export default function HomepageClient() {
                   <div className="mt-4 pt-4 border-t border-white/10 space-y-2 text-xs">
                     <div className="flex items-start gap-2 text-white/80 min-w-0">
                       <MapPin size={14} className="text-accent-light shrink-0 mt-0.5" />
-                      <span className="min-w-0 break-words">
+                      <span translate="no" className="notranslate min-w-0 break-words">
                         {business.street}, {business.zip} {business.city}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-white/80 min-w-0">
                       <Phone size={14} className="text-accent-light shrink-0" />
-                      <a href={business.phoneHref} className="inline-flex min-h-[44px] items-center font-bold hover:underline tabular-nums">
+                      <a
+                        href={business.phoneHref}
+                        dir="ltr"
+                        translate="no"
+                        className="notranslate inline-flex min-h-[44px] items-center font-bold hover:underline tabular-nums"
+                      >
                         {business.phoneDisplay}
                       </a>
-                      <span className="text-white/55">Telefon &amp; WhatsApp</span>
+                      <span className="text-white/55">
+                        Telefon &amp; <span translate="no" className="notranslate">WhatsApp</span>
+                      </span>
                     </div>
                   </div>
                 </div>

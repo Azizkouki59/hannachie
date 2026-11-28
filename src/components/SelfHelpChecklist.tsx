@@ -238,7 +238,7 @@ export default function SelfHelpChecklist() {
     const symptomSummary =
       checkedTitles.length > 0
         ? `Selbst-Checkliste vorab geprüft (${checkedTitles.join(", ")}), Fehler besteht weiterhin.`
-        : "Einfache Fehler vorab geprüft, benötige fachliche Unterstützung.";
+        : "Einfache Prüfpunkte vorab kontrolliert, benötige Beratung zu Ersatzteil oder Gerät.";
 
     openQuickRequest(activeGroup.key, symptomSummary, "", "repair");
   }
@@ -262,7 +262,7 @@ export default function SelfHelpChecklist() {
                 id="self-help-checklist-heading"
                 className="text-2xl sm:text-3xl font-extrabold text-primary dark:text-slate-100"
               >
-                Bevor Sie eine Anfrage senden: Einfache Fehler selbst prüfen
+                Bevor Sie eine Anfrage senden: Einfache Prüfpunkte selbst kontrollieren
               </h2>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">
                 Oft lässt sich eine Störung in wenigen Minuten selbst beheben, z. B. durch
@@ -451,7 +451,8 @@ export default function SelfHelpChecklist() {
                         Perfekt, Ihr Gerät funktioniert wieder!
                       </p>
                       <p className="mt-0.5 text-xs text-ink-muted">
-                        Schön, dass unser Kurz-Check geholfen hat. Bei Bedarf an Original-Ersatzteilen oder einem geprüften Ersatzgerät in Osnabrück helfen wir Ihnen jederzeit weiter.
+                        Schön, dass unser Kurz-Check geholfen hat. Bei Bedarf an Original-Ersatzteilen oder einem geprüften Ersatzgerät in{" "}
+                        <span translate="no" className="notranslate">Osnabrück</span> helfen wir Ihnen jederzeit weiter.
                       </p>
                     </div>
                   </div>
@@ -472,14 +473,18 @@ export default function SelfHelpChecklist() {
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div>
-                    <p className="text-sm font-extrabold text-primary dark:text-slate-100">
+                    <p
+                      key={completedCount > 0 ? "sh-some" : "sh-none"}
+                      className="text-sm font-extrabold text-primary dark:text-slate-100"
+                    >
                       {completedCount > 0
                         ? `${completedCount} von ${totalCount} Prüfpunkten bei „${activeGroup.label}“ erledigt`
                         : `Hat ein Check bei „${activeGroup.label}“ geholfen?`}
                     </p>
                     <p className="mt-0.5 text-xs text-ink-muted">
                       Falls der Fehler weiter besteht, übernehmen wir Ihre geprüften Schritte direkt in
-                      Ihre Ersatzteil- oder Beratungsanfrage. Herr Hannachi sieht sofort, was bereits ausgeschlossen wurde.
+                      Ihre Ersatzteil- oder Beratungsanfrage.{" "}
+                      <span translate="no" className="notranslate">Herr Hannachi</span> sieht sofort, was bereits ausgeschlossen wurde.
                     </p>
                   </div>
 
@@ -499,7 +504,7 @@ export default function SelfHelpChecklist() {
                       className="inline-flex min-h-[44px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-center text-xs font-extrabold leading-snug text-white shadow-sm hover:bg-accent-dark transition-colors cursor-pointer sm:whitespace-nowrap"
                     >
                       <Sparkles size={14} className="shrink-0" aria-hidden="true" />
-                      <span>
+                      <span key={completedCount > 0 ? "sh-btn-some" : "sh-btn-none"}>
                         {completedCount > 0
                           ? "Mit Prüfergebnis anfragen"
                           : "Besteht weiterhin → Anfrage starten"}
